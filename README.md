@@ -1,8 +1,8 @@
 # orderly
 
 [![Project Status: Concept – Minimal or no implementation has been done yet, or the repository is only intended to be a limited example, demo, or proof-of-concept.](http://www.repostatus.org/badges/latest/concept.svg)](http://www.repostatus.org/#concept)
-[![Build Status](https://travis-ci.org/richfitz/orderly.svg?branch=master)](https://travis-ci.org/richfitz/orderly)
-[![codecov.io](https://codecov.io/github/richfitz/orderly/coverage.svg?branch=master)](https://codecov.io/github/richfitz/orderly?branch=master)
+[![Build Status](https://travis-ci.org/vimc/orderly.svg?branch=master)](https://travis-ci.org/vimc/orderly)
+[![codecov.io](https://codecov.io/github/vimc/orderly/coverage.svg?branch=master)](https://codecov.io/github/vimc/orderly?branch=master)
 
 > 1. an attendant in a hospital responsible for the non-medical care of patients and the maintenance of order and cleanliness.
 > 2. a soldier who carries orders or performs minor tasks for an officer.
