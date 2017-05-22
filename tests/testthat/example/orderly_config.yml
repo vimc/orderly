@@ -1,0 +1,11 @@
+source:
+  driver: RPostgres::Postgres
+  host: montagu.dide.ic.ac.uk
+  port: 8888
+  username: vimc
+  database: montagu
+  password: changeme
+
+destination:
+  driver: RSQLite::SQLite
+  path: reports.sqlite

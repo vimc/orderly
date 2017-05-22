@@ -1,0 +1,17 @@
+Package: orderly
+Title: R support for montagu-reports
+Version: 0.1.0
+Description: Order, create and store reports from R.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Author: Rich FitzJohn
+Maintainer: Rich FitzJohn <rich.fitzjohn@gmail.com>
+Imports:
+    DBI,
+    R6,
+    digest,
+    yaml
+Suggests:
+    RSQLite,
+    testthat
+RoxygenNote: 6.0.1
