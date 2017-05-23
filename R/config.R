@@ -29,6 +29,13 @@ config_read_yaml <- function(filename, path) {
     driver <- check_symbol_from_str(info[[name]]$driver,
                                     sprintf("%s:%s:driver", filename, name))
     args <- info[[name]][setdiff(names(info[[name]]), "driver")]
+
+    if (info[[name]]$driver == "RSQLite::SQLite") {
+      ## TODO: error on empty string or ":memory:"
+      ## TODO: don't join path on absolute path
+      args$dbname <- file.path(normalizePath(path, mustWork = TRUE),
+                               args$dbname)
+    }
     list(driver = driver, args = args)
   }
 
@@ -65,6 +72,18 @@ orderly_default_config <- function(locate = FALSE) {
   cfg
 }
 
+orderly_get_config <- function(x, locate) {
+  if (inherits(x, "orderly_config")) {
+    x
+  } else if (is.null(x)) {
+    orderly_default_config(locate)
+  } else if (is.character(x)) {
+    config_read(x)
+  } else {
+    stop("Invalid input")
+  }
+}
+
 orderly_init <- function(root, doc = TRUE) {
   if (file.exists(root)) {
     if (!file.info(root)$isdir || length(dir(root)) > 0) {
@@ -91,3 +110,19 @@ orderly_init <- function(root, doc = TRUE) {
   message(sprintf("Now, edit the file 'orderly_root.yml' within '%s'", root))
   root
 }
+
+orderly_db <- function(type, config = NULL, locate = TRUE) {
+  config <- orderly_get_config(config, locate)
+  if (type == "rds") {
+    file_store_rds(path_rds(config$path))
+  } else if (type == "csv") {
+    file_store_rds(path_csv(config$path))
+  } else if (type %in% c("source", "destination")) {
+    x <- config[[type]]
+    driver <- getExportedValue(x$driver[[1L]], x$driver[[2L]])
+    do.call(DBI::dbConnect, c(list(driver()), x$args))
+  } else {
+    stop(sprintf("Invalid db type '%s'", type))
+  }
+}
+c

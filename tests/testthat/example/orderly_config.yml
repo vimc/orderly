@@ -2,10 +2,10 @@ source:
   driver: RPostgres::Postgres
   host: montagu.dide.ic.ac.uk
   port: 8888
-  username: vimc
-  database: montagu
+  user: vimc
+  dbname: montagu
   password: changeme
 
 destination:
   driver: RSQLite::SQLite
-  path: reports.sqlite
+  dbname: reports.sqlite

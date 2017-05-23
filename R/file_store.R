@@ -23,7 +23,8 @@ R6_file_store <- R6::R6Class(
 
     initialize = function(path, read, write, ext) {
       dir.create(path, FALSE, TRUE)
-      self$path <- path
+      ## Ensures safety with setwd():
+      self$path <- normalizePath(path, mustWork = TRUE)
       self$read <- read
       self$write <- write
       self$ext <- ext

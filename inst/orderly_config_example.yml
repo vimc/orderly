@@ -9,8 +9,8 @@
 #     driver: RPostgres::Postgres
 #     host: localhost
 #     port: 5432
-#     username: myuser
-#     database: databasename
+#     user: myuser
+#     dbname: databasename
 #     password: p4ssw0rd
 #
 # All arguments other than driver are optional and will be passed
@@ -29,7 +29,6 @@
 # Other options accepted by RSQLite are allowed but are much less
 # commonly useful (as of RSQLite v1.1-2, loadable.extensions,
 # cache_size, synchronous, flags, vfs)
-
 source:
   driver: ~
 
