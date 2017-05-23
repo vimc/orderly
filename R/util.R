@@ -65,3 +65,7 @@ find_file_descend <- function(target, start = ".", limit = "/") {
 orderly_file <- function(...) {
   system.file(..., package = "orderly", mustWork = TRUE)
 }
+
+`%||%` <- function(a, b) {
+  if (is.null(a)) b else a
+}
