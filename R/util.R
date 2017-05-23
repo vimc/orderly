@@ -69,3 +69,30 @@ orderly_file <- function(...) {
 `%||%` <- function(a, b) {
   if (is.null(a)) b else a
 }
+
+check_fields <- function(x, name, required, optional) {
+  msg <- setdiff(required, names(x))
+  if (length(msg) > 0L) {
+    stop(sprintf("Fields missing from %s: %s",
+                 name, paste(msg, collapse = ", ")))
+  }
+  extra <- setdiff(names(x), c(required, optional))
+  if (length(extra) > 0L) {
+    stop(sprintf("Unknown fields in %s: %s",
+                 name, paste(extra, collapse = ", ")))
+  }
+}
+
+is_within_dir <- function(files, path = getwd()) {
+  files <- normalizePath(files, mustWork = TRUE)
+  path <- normalizePath(path, mustWork = TRUE)
+  substr(files, 1, nchar(path)) == path
+}
+
+is_absolute_path <- function(path) {
+  grepl("^(/|[A-Z][a-z]:)", path)
+}
+
+is_relative_path <- function(path) {
+  !is_absolute_path(path)
+}
