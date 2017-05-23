@@ -39,3 +39,55 @@ config_read_yaml <- function(filename, path) {
   class(info) <- "orderly_config"
   info
 }
+
+## package level stuff; we need to arrange to try and find the
+## appropriate configuration.
+orderly_default_config_set <- function(x) {
+  if (!is.null(x)) {
+    assert_is(x, "orderly_config")
+  }
+  options(orderly.config = x)
+}
+
+orderly_default_config <- function(locate = FALSE) {
+  cfg <- getOption("orderly.config")
+  if (is.null(cfg)) {
+    if (locate) {
+      path <- find_file_descend("orderly_config.yml")
+      if (is.null(path)) {
+        stop("Reached root without finding 'orderly_config.yml'")
+      }
+      cfg <- config_read(path)
+    } else {
+      stop("orderly configuration not found")
+    }
+  }
+  cfg
+}
+
+orderly_init <- function(root, doc = TRUE) {
+  if (file.exists(root)) {
+    if (!file.info(root)$isdir || length(dir(root)) > 0) {
+      stop("'root', if it already exists, must be an empty directory")
+    }
+  } else {
+    dir.create(root, FALSE, TRUE)
+  }
+  dir.create(file.path(root, "data"))
+  dir.create(file.path(root, "src"))
+  dir.create(file.path(root, "archive"))
+  if (doc) {
+    readme <- function(path) {
+      file.path(root, path, "README.md")
+    }
+    file.copy(orderly_file("readme_src.md"), readme("src"))
+    file.copy(orderly_file("readme_data.md"), readme("data"))
+    file.copy(orderly_file("readme_archive.md"), readme("archive"))
+    file.copy(orderly_file("readme_root.md"),
+              file.path(root, "README.md"))
+  }
+  file.copy(orderly_file("orderly_config_example.yml"),
+            file.path(root, "orderly_config.yml"))
+  message(sprintf("Now, edit the file 'orderly_root.yml' within '%s'", root))
+  root
+}

@@ -31,6 +31,8 @@ A research group with a potentially changing SQL database who want to create rep
        - orderly_config.yml
        - src/
          - project1/
+           - orderly.yml
+           - script.R
          - project2/ (etc)
        - data/
          - csv/
@@ -43,4 +45,4 @@ A research group with a potentially changing SQL database who want to create rep
              - orderly.yml
              - orderly_run.yml
              - orderly_packages.yml
-             - bunchartefacts
+             - <bunchaartefacts>
