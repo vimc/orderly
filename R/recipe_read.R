@@ -1,4 +1,7 @@
-recipe_read <- function(path) {
+## The bulk of this is validating the yaml; that turns out to be quite
+## unpleasant unfortunately.
+recipe_read <- function(path, config) {
+  assert_is(config, "orderly_config")
   filename <- file.path(path, "orderly.yml")
   if (!file.exists(filename)) {
     stop("Did not find file 'orderly.yml' at path ", path)
@@ -9,34 +12,22 @@ recipe_read <- function(path) {
                 "requester", # is this blank?  other information here
                 "artefacts",
                 "author",
-                "data")
+                "data",
+                config$fields$name[config$fields$required])
   optional <- c("parameters", # character >= 1
                 "comment",    # character
                 "views",
                 "packages",
-                "resources")
+                "resources",
+                config$fields$name[!config$fields$required])
   check_fields(info, filename, required, optional)
 
   fieldname <- function(name) {
     sprintf("%s:%s", filename, name)
   }
 
-  check_artefact <- function(nm) {
-    v <- c("format", "description")
-    x <- info$artefacts[[nm]]
-    check_fields(x, sprintf("%s:artefacts:%s", filename, nm), v, NULL)
-    for (i in v) {
-      assert_character(x[[i]], fieldname(sprintf("artefacts:%s:%s", nm, i)))
-    }
-    c(name = nm, unlist(x[v]))
-  }
-  if (length(info$artefacts) == 0L) {
-    stop("At least one artefact required")
-  }
-  assert_named(info$artefacts, TRUE)
-  info$artefacts <-
-    t(vapply(names(info$artefacts), check_artefact, character(3)))
-  rownames(info$artefacts) <- NULL
+  info$artefacts <- recipe_read_check_artefacts(info$artefacts, filename)
+  info$resources <- recipe_read_check_resources(info$resources, filename)
 
   assert_scalar_character(info$script, fieldname("script"))
   assert_scalar_character(info$author, fieldname("author"))
@@ -51,44 +42,37 @@ recipe_read <- function(path) {
   if (!is.null(info$packages)) {
     assert_character(info$packages, fieldname("packages"))
   }
-  if (!is.null(info$resources)) {
-    assert_character(info$resources, fieldname("resources"))
-    msg <- info$resources[file.exists(info$resources)]
-    if (length(msg) > 0L) {
-      stop("Declared resources missing: ", paste(msg, collapse = ", "))
-    }
-    ## TODO: this is not quite right because the files need to be
-    ## tested (as done here) with names within that directory.
-    err <- info$resources[!is_within_dir(file.path(path, info$resources), path)]
-    if (length(msg) > 0L) {
-      stop("Declared resources not in right place: ",
-           paste(err, collapse = ", "))
-    }
-    ## TODO: At this point we should also return the normalised
-    ## *relative* path perhaps to prevent valid, but absolute, paths
-    ## being used.
-  }
 
   ## Then some processing:
   assert_named(info$data, TRUE, fieldname("data"))
   info$data <- string_or_filename(info$data, path, fieldname("data"))
   info$resources <- c(info$resources, attr(info$data, "files"))
+
   if (!is.null(info$views)) {
     assert_named(info$data, TRUE, fieldname("data"))
     info$views <- string_or_filename(info$views, path, fieldname("views"))
     info$resources <- c(info$resources, attr(info$views, "files"))
-    info$views <- paste0(sprintf("CREATE TEMPORARY VIEW %s AS\n",
-                                 names(info$views)), info$views)
   }
 
   if (!file.exists(file.path(path, info$script))) {
     stop(sprintf("script file %s does not exist", info$script))
   }
 
+  for (i in seq_len(nrow(config$fields))) {
+    el <- config$fields[i, ]
+    x <- info[[el$name]]
+    if (!is.null(x)) {
+      assert_type(x, el$type, fieldname(el$name))
+    }
+  }
+
+  info$name <- basename(normalizePath(path))
+
   ## TODO: we probably need to reference any additional on-disk
   ## resources here too
   info$script_hash <- unname(tools::md5sum(file.path(path, info$script)))
   info$hash <- digest::digest(info)
+
   ## Must add this after hashing
   info$path <- path
 
@@ -117,5 +101,47 @@ string_or_filename <- function(x, path, name) {
     x[i] <- vcapply(file.path(path, files), read_lines)
     attr(x, "files") <- unname(files)
   }
+  x
+}
+
+recipe_read_check_artefacts <- function(x, filename) {
+  check_artefact <- function(nm) {
+    v <- c("format", "description")
+    x <- x[[nm]]
+    check_fields(x, sprintf("%s:artefacts:%s", filename, nm), v, NULL)
+    for (i in v) {
+      assert_character(x[[i]], fieldname(sprintf("artefacts:%s:%s", nm, i)))
+    }
+    c(filename = nm, unlist(x[v]))
+  }
+  if (length(x) == 0L) {
+    stop("At least one artefact required")
+  }
+  assert_named(x, TRUE)
+  x <-
+    t(vapply(names(x), check_artefact, character(3)))
+  rownames(x) <- NULL
+  x
+}
+
+recipe_read_check_resources <- function(x, filename) {
+  if (is.null(x)) {
+    return(NULL)
+  }
+  assert_character(x, sprintf("%s:%s", filename, "resouces"))
+  msg <- x[file.exists(x)]
+  if (length(msg) > 0L) {
+    stop("Declared resources missing: ", paste(msg, collapse = ", "))
+  }
+  ## TODO: this is not quite right because the files need to be
+  ## tested (as done here) with names within that directory.
+  err <- x[!is_within_dir(file.path(path, x), path)]
+  if (length(msg) > 0L) {
+    stop("Declared resources not in right place: ",
+         paste(err, collapse = ", "))
+  }
+  ## TODO: At this point we should also return the normalised
+  ## *relative* path perhaps to prevent valid, but absolute, paths
+  ## being used.
   x
 }

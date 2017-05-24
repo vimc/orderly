@@ -10,9 +10,20 @@ assert_character <- function(x, name = deparse(substitute(x))) {
   }
 }
 
+assert_logical <- function(x, name = deparse(substitute(x))) {
+  if (!is.logical(x)) {
+    stop(sprintf("'%s' must be logical", name), call. = FALSE)
+  }
+}
+
 assert_scalar_character <- function(x, name = deparse(substitute(x))) {
   assert_scalar(x, name)
   assert_character(x, name)
+}
+
+assert_scalar_logical <- function(x, name = deparse(substitute(x))) {
+  assert_scalar(x, name)
+  assert_logical(x, name)
 }
 
 assert_named <- function(x, unique = FALSE, name = deparse(substitute(x))) {
@@ -29,4 +40,19 @@ assert_is <- function(x, what, name = deparse(substitute(x))) {
     stop(sprintf("'%s' must be a %s", name,
                  paste(what, collapse = " / ")), call. = FALSE)
   }
+}
+
+match_value <- function(arg, choices, name = deparse(substitute(arg))) {
+  assert_scalar_character(arg)
+  if (!(arg %in% choices)) {
+    stop(sprintf("%s must be one of %s",
+                 name, paste(dQuote(choices), collapse = ", ")))
+  }
+  arg
+}
+
+assert_type <- function(x, type, name = deparse(substitute(x))) {
+  switch(type,
+         numeric = assert_scalar_numeric(x, name),
+         character = assert_scalar_character(x, name))
 }

@@ -10,6 +10,8 @@ Imports:
     DBI,
     R6,
     digest,
+    ids,
+    jsonlite,
     yaml
 Suggests:
     RSQLite,

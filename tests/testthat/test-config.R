@@ -1,6 +1,6 @@
 context("config")
 
 test_that("read", {
-  cfg <- config_read("example")
+  cfg <- orderly_config("example")
   expect_is(cfg, "orderly_config")
 })

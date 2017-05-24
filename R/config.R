@@ -1,15 +1,12 @@
-## There are going to be so many configuration options that we need to
-## make another file to hold them I think.  The basic organisation can
-## be such:
-config_read <- function(path) {
-  filename <- file.path(path, "orderly_config.yml")
+orderly_config <- function(path) {
+  filename <- path_orderly_config_yml(path)
   if (!file.exists(filename)) {
     stop("Did not find file 'orderly_config.yml' at path ", path)
   }
-  config_read_yaml(filename, path)
+  orderly_config_read_yaml(filename, path)
 }
 
-config_read_yaml <- function(filename, path) {
+orderly_config_read_yaml <- function(filename, path) {
   info <- yaml_read(filename)
   required <- c("source", "destination")
   msg <- setdiff(required, names(info))
@@ -39,12 +36,46 @@ config_read_yaml <- function(filename, path) {
     list(driver = driver, args = args)
   }
 
+  info$fields <- config_check_fields(info$fields, filename)
   info$source <- driver_config("source")
   info$destination <- driver_config("destination")
 
   info$path <- path
   class(info) <- "orderly_config"
   info
+}
+
+config_check_fields <- function(x, filename) {
+  if (is.null(x)) {
+    return(data.frame(name = character(0), required = logical(0),
+                      type = character(0), type_sql = character(0),
+                      stringsAsFactors = FALSE))
+  }
+  types <- c("character", "numeric")
+  assert_named(x, TRUE, sprintf("%s:fields", filename))
+  check1 <- function(nm) {
+    d <- x[[nm]]
+    check_fields(d, sprintf("%s:fields:%s", filename, nm),
+                 c("required", "type"), NULL)
+    assert_scalar_logical(d$required,
+                          sprintf("%s:fields:%s:required", filename, nm))
+    assert_scalar_character(d$type,
+                            sprintf("%s:fields:%s:type", filename, nm))
+    d$type_sql <- sql_type(d$type, sprintf("%s:fields:%s:type", filename, nm))
+    d
+  }
+  dat <- lapply(names(x), check1)
+  data.frame(name = names(x),
+             required = vlapply(dat, "[[", "required"),
+             type = vcapply(dat, "[[", "type"),
+             type_sql = vcapply(dat, "[[", "type_sql"),
+             stringsAsFactors = FALSE)
+}
+
+sql_type <- function(type, name) {
+  tr <- c(numeric = "DECIMAL",
+          character = "TEXT")
+  tr[[match_value(type, names(tr), name)]]
 }
 
 ## package level stuff; we need to arrange to try and find the
@@ -64,7 +95,7 @@ orderly_default_config <- function(locate = FALSE) {
       if (is.null(path)) {
         stop("Reached root without finding 'orderly_config.yml'")
       }
-      cfg <- config_read(path)
+      cfg <- orderly_config(path)
     } else {
       stop("orderly configuration not found")
     }
@@ -72,13 +103,13 @@ orderly_default_config <- function(locate = FALSE) {
   cfg
 }
 
-orderly_get_config <- function(x, locate) {
+orderly_config_get <- function(x, locate) {
   if (inherits(x, "orderly_config")) {
     x
   } else if (is.null(x)) {
     orderly_default_config(locate)
   } else if (is.character(x)) {
-    config_read(x)
+    orderly_config(x)
   } else {
     stop("Invalid input")
   }
@@ -92,9 +123,10 @@ orderly_init <- function(root, doc = TRUE) {
   } else {
     dir.create(root, FALSE, TRUE)
   }
-  dir.create(file.path(root, "data"))
-  dir.create(file.path(root, "src"))
-  dir.create(file.path(root, "archive"))
+  dir_create(path_data(root))
+  dir_create(path_src(root))
+  dir_create(path_archive(root))
+  dir_create(path_draft(root))
   if (doc) {
     readme <- function(path) {
       file.path(root, path, "README.md")
@@ -106,23 +138,8 @@ orderly_init <- function(root, doc = TRUE) {
               file.path(root, "README.md"))
   }
   file.copy(orderly_file("orderly_config_example.yml"),
-            file.path(root, "orderly_config.yml"))
-  message(sprintf("Now, edit the file 'orderly_root.yml' within '%s'", root))
+            path_orderly_config_yml(root))
+  message(sprintf("Now, edit the file 'orderly_config.yml' within '%s'", root))
+
   root
 }
-
-orderly_db <- function(type, config = NULL, locate = TRUE) {
-  config <- orderly_get_config(config, locate)
-  if (type == "rds") {
-    file_store_rds(path_rds(config$path))
-  } else if (type == "csv") {
-    file_store_rds(path_csv(config$path))
-  } else if (type %in% c("source", "destination")) {
-    x <- config[[type]]
-    driver <- getExportedValue(x$driver[[1L]], x$driver[[2L]])
-    do.call(DBI::dbConnect, c(list(driver()), x$args))
-  } else {
-    stop(sprintf("Invalid db type '%s'", type))
-  }
-}
-c

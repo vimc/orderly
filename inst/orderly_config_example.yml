@@ -34,3 +34,17 @@ source:
 
 destination:
   driver: ~
+
+# In addition, it may contain a 'fields' section defining custom
+# fields, for example:
+#
+#   fields:
+#     comment:
+#       required: true
+#       type: character
+#
+# Each field is named, and has two required entries; 'required'
+# (either false or true) and 'type' (either 'character' or 'numeric').
+#
+# The fields must not clash with built-in field names.
+fields: ~

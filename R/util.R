@@ -96,3 +96,53 @@ is_absolute_path <- function(path) {
 is_relative_path <- function(path) {
   !is_absolute_path(path)
 }
+
+sql_str_sub <- function(s, data, ...) {
+  vcapply(s, function(el) DBI::sqlInterpolate(DBI::ANSI(), el, .dots = data),
+          ...)
+}
+
+read_csv <- function(filename, ...) {
+  read.csv(filename, stringsAsFactors = FALSE)
+}
+
+write_csv <- function(data, filename, ...) {
+  write.csv(data, filename, ..., row.names = FALSE)
+}
+
+set_names <- function(x, nms) {
+  names(x) <- nms
+  x
+}
+
+dir_create <- function(x) {
+  for (i in unique(x)) {
+    dir.create(i, FALSE, TRUE)
+  }
+
+}
+
+hash_files <- function(filenames, named = TRUE) {
+  if (is.null(filenames)) {
+    set_names(character(0), if (named) character(0) else NULL)
+  } else {
+    h <- tools::md5sum(filenames)
+    if (!named) {
+      names(h) <- NULL
+    }
+    h
+  }
+}
+
+to_json <- function(x, auto_unbox = TRUE, ...) {
+  jsonlite::toJSON(x, auto_unbox = auto_unbox)
+}
+
+to_json_string <- function(...) {
+  as.character(to_json(...))
+}
+
+list_dirs <- function(path) {
+  files <- dir(path, full.names = TRUE)
+  files[file.info(files, extra_cols = FALSE)$isdir]
+}
