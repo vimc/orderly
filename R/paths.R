@@ -1,5 +1,5 @@
 path_data <- function(root) {
-  file.path(path, "data")
+  file.path(root, "data")
 }
 path_rds <- function(root) {
   file.path(path_data(root), "rds")
