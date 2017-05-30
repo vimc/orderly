@@ -27,7 +27,7 @@ recipe_read <- function(path, config) {
   }
 
   info$artefacts <- recipe_read_check_artefacts(info$artefacts, filename)
-  info$resources <- recipe_read_check_resources(info$resources, filename)
+  info$resources <- recipe_read_check_resources(info$resources, filename, path)
 
   assert_scalar_character(info$script, fieldname("script"))
   assert_scalar_character(info$author, fieldname("author"))
@@ -110,7 +110,7 @@ recipe_read_check_artefacts <- function(x, filename) {
     x <- x[[nm]]
     check_fields(x, sprintf("%s:artefacts:%s", filename, nm), v, NULL)
     for (i in v) {
-      assert_character(x[[i]], fieldname(sprintf("artefacts:%s:%s", nm, i)))
+      assert_character(x[[i]], sprintf("artefacts:%s:%s", nm, i))
     }
     c(filename = nm, unlist(x[v]))
   }
@@ -124,7 +124,7 @@ recipe_read_check_artefacts <- function(x, filename) {
   x
 }
 
-recipe_read_check_resources <- function(x, filename) {
+recipe_read_check_resources <- function(x, filename, path) {
   if (is.null(x)) {
     return(NULL)
   }

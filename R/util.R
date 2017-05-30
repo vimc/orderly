@@ -103,11 +103,11 @@ sql_str_sub <- function(s, data, ...) {
 }
 
 read_csv <- function(filename, ...) {
-  read.csv(filename, stringsAsFactors = FALSE)
+  utils::read.csv(filename, stringsAsFactors = FALSE)
 }
 
 write_csv <- function(data, filename, ...) {
-  write.csv(data, filename, ..., row.names = FALSE)
+  utils::write.csv(data, filename, ..., row.names = FALSE)
 }
 
 set_names <- function(x, nms) {
@@ -134,6 +134,10 @@ hash_files <- function(filenames, named = TRUE) {
   }
 }
 
+hash_object <- function(object) {
+  digest::digest(object)
+}
+
 to_json <- function(x, auto_unbox = TRUE, ...) {
   jsonlite::toJSON(x, auto_unbox = auto_unbox)
 }
@@ -145,4 +149,15 @@ to_json_string <- function(...) {
 list_dirs <- function(path) {
   files <- dir(path, full.names = TRUE)
   files[file.info(files, extra_cols = FALSE)$isdir]
+}
+
+file_copy <- function(...) {
+  ok <- file.copy(...)
+  if (any(!ok)) {
+    stop("Error copying files")
+  }
+}
+
+is_directory <- function(x) {
+  file.info(x, extra_cols = FALSE)$isdir
 }

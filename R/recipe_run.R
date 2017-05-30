@@ -13,7 +13,7 @@ recipe_run <- function(info, parameters, envir = .GlobalEnv,
   for (p in info$packages) {
     library(p, character.only = TRUE)
   }
-  n_dev <- length(dev.list())
+  n_dev <- length(grDevices::dev.list())
   source(info$script, local = new.env(parent = data),
          echo = TRUE, max.deparse.length = Inf)
   recipe_check_device_stack(n_dev)
@@ -24,14 +24,10 @@ recipe_run <- function(info, parameters, envir = .GlobalEnv,
   hash_data_rds <- con$rds$mset(ldata)
   stopifnot(identical(hash_data_csv, hash_data_rds))
 
-  ## The question here is do we actually want to store the data files
-  ## by name or store hashes to the global set of these?  Probably the
-  ## latter!
-
   meta <- list(id = id,
                name = info$name,
                parameters = parameters,
-               date = Sys.time(),
+               date = as.character(Sys.time()),
                ## Don't know what of these two are most useful:
                hash_orderly = info$hash,
                hash_input = hash_files("orderly.yml", FALSE),
@@ -41,7 +37,7 @@ recipe_run <- function(info, parameters, envir = .GlobalEnv,
                hash_artefacts = hash_files(info$artefacts[, "filename"]),
                identifier = ids::adjective_animal())
 
-  saveRDS(sessionInfo(), path_orderly_run_rds("."))
+  saveRDS(utils::sessionInfo(), path_orderly_run_rds("."))
   writeLines(yaml::as.yaml(meta), path_orderly_run_yml("."))
   invisible(workdir)
 }
@@ -81,14 +77,13 @@ recipe_prepare_workdir <- function(info, workdir) {
   if (file.exists(workdir)) {
     stop("'workdir' must be an empty directory")
   }
+  src <- normalizePath(info$path, mustWork = TRUE)
   dir_create(workdir)
   owd <- setwd(workdir)
 
-  src <- file.path(owd, info$path)
-
   dir.create(dirname(info$script), FALSE, TRUE)
-  file.copy(file.path(src, info$script), info$script)
-  file.copy(file.path(src, "orderly.yml"), "orderly.yml")
+  file_copy(file.path(src, info$script), info$script)
+  file_copy(file.path(src, "orderly.yml"), "orderly.yml")
 
   if (!is.null(info$resources)) {
     dir_create(dirname(info$resources))
@@ -108,26 +103,20 @@ recipe_check_artefacts <- function(info) {
   }
 }
 
-recipe_save_data <- function(data) {
-  dir.create("data")
-  ## Then we collect up all our bits:
-  dest <- file.path("data", paste0(names(data)), ".csv")
-  for (i in seq_along(data)) {
-    write.csv(data[[i]], dest[[i]], row.names = FALSE)
-  }
-  hash_files(dest)
-}
-
-recipe_commit <- function(workdir, config = NULL, locate = TRUE) {
-  config <- orderly_config_get(config, locate)
+recipe_commit <- function(workdir, config) {
+  config <- orderly_config_get(config)
   dat <- report_read_data(workdir)
   con <- orderly_db("destination", config)
   tbl <- report_db_init(con, config)
-  dest <- copy_report(workdir, info$name, config)
+  dest <- copy_report(workdir, dat$name, config)
   on.exit(unlink(dest, recursive = TRUE))
   if (DBI::dbWriteTable(con, tbl, dat, append = TRUE)) {
     unlink(workdir, recursive = TRUE)
     on.exit()
+  } else {
+    ## Really not sure about this, and until the error handling is
+    ## done this will be a worry.
+    stop("Unknown error")
   }
   dest
 }
@@ -137,7 +126,7 @@ report_read_data <- function(path) {
   if (!file.exists(yml)) {
     stop("Did not find run metadata file!")
   }
-  info <- modifyList(yaml_read(file.path(path, "orderly.yml")),
+  info <- utils::modifyList(yaml_read(file.path(path, "orderly.yml")),
                      yaml_read(yml))
   if (info$id != basename(path)) {
     stop("Unexpected path") # should never happen
@@ -189,12 +178,13 @@ temporary_view <- function(name, sql) {
   sprintf("CREATE TEMPORARY VIEW %s AS\n%s", name, sql)
 }
 
-recipes_check_device_stack <- function(expected) {
-  check <- length(dev.list()) - n_dev
+recipe_check_device_stack <- function(expected) {
+  check <- length(grDevices::dev.list()) - expected
   if (check == 0) {
+    return()
   } else if (check > 1) {
     for (i in seq_len(check)) {
-      dev.off()
+      grDevices::dev.off()
     }
     stop(ngettext(check,
                   "Report left device open",

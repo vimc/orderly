@@ -43,7 +43,7 @@ R6_file_store <- R6::R6Class(
     },
 
     set = function(data) {
-      hash <- digest::digest(data)
+      hash <- hash_object(data) ## self$hash(data)
       dest <- self$filename(hash)
       if (!file.exists(dest)) {
         self$write(data, dest)
@@ -51,18 +51,30 @@ R6_file_store <- R6::R6Class(
       invisible(hash)
     },
     mset = function(data) {
-      ## It's not clear what we do here where 'data' is an environment
-      ## rather than a list.
       vcapply(data, self$set)
     },
 
     get = function(hash) {
-      ## Scalar name
-      self$read(self$filename(hash))
+      assert_scalar(hash)
+      filename <- self$filename(hash, TRUE)
+      if (is.na(filename)) {
+        stop(HashError(hash))
+      }
+      self$read(filename)
     },
 
-    mget = function(hash) {
-      lapply(hash, self$get)
+    mget = function(hash, missing = NULL) {
+      filename <- self$filename(hash, TRUE)
+      if (anyNA(filename)) {
+        ret <- vector("list", length(hash))
+        is_missing <- is.na(filename)
+        ret[is_missing] <- list(missing)
+        ret[!is_missing] <- lapply(filename[!is_missing], self$read)
+        attr(ret, "missing") <- which(is_missing)
+      } else {
+        ret <- lapply(filename, self$read)
+      }
+      ret
     },
 
     list = function() {
@@ -70,14 +82,28 @@ R6_file_store <- R6::R6Class(
           dir(self$path, pattern = paste0("^[[:xdigit:]]{32}", self$ext, "$")))
     },
 
-    filename = function(hash) {
-      if (!all(grepl("^[[:xdigit:]]+$", hash))) {
-        stop("Invalid name")
-      }
+    filename = function(hash, existing_only = FALSE) {
+      assert_hash(hash)
       if (length(hash) > 0L) {
-        file.path(self$path, paste0(hash, self$ext))
+        ret <- file.path(self$path, paste0(hash, self$ext))
+        if (existing_only) {
+          ret[!file.exists(ret)] <- NA_character_
+        }
+        ret
       } else {
         character(0)
       }
+    },
+
+    hash_object = function(object) {
+      hash_object(object)
     }
   ))
+
+## This is directly from storr
+HashError <- function(hash) {
+  structure(list(hash = hash,
+                 message = sprintf("hash '%s' not found", hash),
+                 call = NULL),
+            class = c("HashError", "error", "condition"))
+}

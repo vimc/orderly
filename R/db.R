@@ -7,9 +7,9 @@ orderly_connect <- function(config = NULL, locate = TRUE) {
 orderly_db <- function(type, config = NULL, locate = TRUE) {
   config <- orderly_config_get(config, locate)
   if (type == "rds") {
-    file_store_rds(path_rds(config$path))
+    file_store_rds(config$path)
   } else if (type == "csv") {
-    file_store_rds(path_csv(config$path))
+    file_store_csv(config$path)
   } else if (type %in% c("source", "destination")) {
     x <- config[[type]]
     driver <- getExportedValue(x$driver[[1L]], x$driver[[2L]])
