@@ -8,12 +8,7 @@ orderly_config <- function(path) {
 
 orderly_config_read_yaml <- function(filename, path) {
   info <- yaml_read(filename)
-  required <- c("source", "destination")
-  msg <- setdiff(required, names(info))
-  if (length(msg) > 0L) {
-    stop(sprintf("Fields missing from %s: %s",
-                 filename, paste(msg, collapse = ", ")))
-  }
+  check_fields(info, filename, c("source", "destination"), "fields")
 
   ## There's heaps of really boring validation to do here that I am
   ## going to skip.  The drama that we will have is that there are
@@ -91,16 +86,20 @@ orderly_default_config <- function(locate = FALSE) {
   cfg <- getOption("orderly.config")
   if (is.null(cfg)) {
     if (locate) {
-      path <- find_file_descend("orderly_config.yml")
-      if (is.null(path)) {
-        stop("Reached root without finding 'orderly_config.yml'")
-      }
-      cfg <- orderly_config(path)
+      cfg <- orderly_locate_config()
     } else {
       stop("orderly configuration not found")
     }
   }
   cfg
+}
+
+orderly_locate_config <- function() {
+  path <- find_file_descend("orderly_config.yml")
+  if (is.null(path)) {
+    stop("Reached root without finding 'orderly_config.yml'")
+  }
+  orderly_config(path)
 }
 
 orderly_config_get <- function(x, locate) {

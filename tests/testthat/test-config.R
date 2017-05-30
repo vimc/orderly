@@ -4,3 +4,33 @@ test_that("read", {
   cfg <- orderly_config("example")
   expect_is(cfg, "orderly_config")
 })
+
+test_that("not found", {
+  expect_error(orderly_config(tempfile()),
+               "Did not find file 'orderly_config.yml' at path")
+})
+
+test_that("get: invalid config", {
+  expect_error(orderly_config_get(1), "Invalid input")
+})
+
+test_that("get: default", {
+  cfg <- orderly_config("example")
+  oo <- orderly_default_config_set(cfg)
+  on.exit(options(oo))
+
+  expect_identical(orderly_default_config(), cfg)
+  expect_identical(orderly_config_get(NULL), cfg)
+
+  orderly_default_config_set(NULL)
+  expect_error(orderly_default_config(),
+               "orderly configuration not found")
+
+  path <- tempfile()
+  dir_create(path)
+  expect_error(with_wd(path, orderly_default_config(TRUE)),
+               "Reached root")
+  file.copy(file.path("example/orderly_config.yml"), path)
+  cfg2 <- with_wd(path, orderly_default_config(TRUE))
+  expect_identical(cfg2$path, normalizePath(path))
+})
