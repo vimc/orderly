@@ -45,18 +45,18 @@ report_db_init <- function(con, config, must_create = FALSE) {
   } else if (must_create) {
     stop(sprintf("Table '%s' already exists", orderly_table))
   } else {
+    sql <- sprintf("SELECT * FROM %s LIMIT 0", orderly_table)
+    d <- DBI::dbGetQuery(con, sql)
     custom_name <- config$fields$name
-    if (length(custom_name) > 0L) {
-      sql <- sprintf("SELECT * FROM %s LIMIT 0",
-                     orderly_table)
-      d <- DBI::dbGetQuery(con, sql)
-      if (!all(custom_name %in% names(d))) {
-        stop("custom fields not present in existing database")
-      }
-      extra <- setdiff(setdiff(names(d), names(report_db_cols())), custom_name)
-      if (length(extra) > 0L) {
-        stop("custom fields in database not present in config")
-      }
+    msg <- setdiff(custom_name, names(d))
+    if (length(msg) > 0L) {
+      stop(sprintf("custom fields %s not present in existing database",
+                   paste(squote(msg), collapse = ", ")))
+    }
+    extra <- setdiff(setdiff(names(d), names(report_db_cols())), custom_name)
+    if (length(extra) > 0L) {
+      stop(sprintf("custom fields %s in database not present in config",
+                   paste(squote(extra), collapse = ", ")))
     }
   }
   orderly_table
@@ -66,8 +66,10 @@ report_db_init <- function(con, config, must_create = FALSE) {
 report_db_rebuild <- function(root, config, con) {
   tbl <- report_db_init(con, config, TRUE)
   reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
-  dat <- do.call("rbind", lapply(reports, report_read_data))
-  DBI::dbWriteTable(con, tbl, dat, append = TRUE)
+  if (length(reports) > 0L) {
+    dat <- do.call("rbind", lapply(reports, report_read_data))
+    DBI::dbWriteTable(con, tbl, dat, append = TRUE)
+  }
 }
 
 report_db_cols <- function() {

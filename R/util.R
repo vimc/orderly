@@ -161,3 +161,11 @@ file_copy <- function(...) {
 is_directory <- function(x) {
   file.info(x, extra_cols = FALSE)$isdir
 }
+
+rbind_df <- function(x) {
+  do.call("rbind", x)
+}
+
+squote <- function(x) {
+  sprintf("'%s'", x)
+}
