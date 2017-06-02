@@ -9,13 +9,10 @@ recipe_read <- function(path, config) {
   info <- yaml_read(filename)
 
   required <- c("script", # filename
-                "requester", # is this blank?  other information here
                 "artefacts",
-                "author",
                 "data",
                 config$fields$name[config$fields$required])
   optional <- c("parameters", # character >= 1
-                "comment",    # character
                 "views",
                 "packages",
                 "resources",
@@ -30,12 +27,7 @@ recipe_read <- function(path, config) {
   info$resources <- recipe_read_check_resources(info$resources, filename, path)
 
   assert_scalar_character(info$script, fieldname("script"))
-  assert_scalar_character(info$author, fieldname("author"))
-  assert_scalar_character(info$requester, fieldname("requester"))
 
-  if (!is.null(info$comment)) {
-    assert_scalar_character(info$comment, fieldname("comment"))
-  }
   if (!is.null(info$parameters)) {
     assert_character(info$parameters, fieldname("parameters"))
   }
@@ -54,6 +46,7 @@ recipe_read <- function(path, config) {
     info$resources <- c(info$resources, attr(info$views, "files"))
   }
 
+  assert_scalar_character(info$script, fieldname("script"))
   if (!file.exists(file.path(path, info$script))) {
     stop(sprintf("script file %s does not exist", info$script))
   }
@@ -79,8 +72,11 @@ recipe_read <- function(path, config) {
   info
 }
 
+## TODO: this whole thing needs thought: this is not really the
+## *format* (which we can get from the extension) but an intent of
+## use.
 valid_formats <- function() {
-  c("png", "pdf", "html", "csv", "multi")
+  c("staticgraph", "interactivegraph", "data")
 }
 
 string_or_filename <- function(x, path, name) {
@@ -96,9 +92,9 @@ string_or_filename <- function(x, path, name) {
     msg <- !file.exists(file.path(path, files))
     if (any(msg)) {
       stop(sprintf("File for %s does not exist: %s",
-                   name, paste(msg, collapse = ", ")))
+                   name, paste(files[msg], collapse = ", ")))
     }
-    x[i] <- vcapply(file.path(path, files), read_lines)
+    x[i] <- vcapply(file.path(path, files), read_lines, USE.NAMES = FALSE)
     attr(x, "files") <- unname(files)
   }
   x
@@ -112,6 +108,7 @@ recipe_read_check_artefacts <- function(x, filename) {
     for (i in v) {
       assert_character(x[[i]], sprintf("artefacts:%s:%s", nm, i))
     }
+    match_value(x$format, valid_formats())
     c(filename = nm, unlist(x[v]))
   }
   if (length(x) == 0L) {
@@ -129,14 +126,14 @@ recipe_read_check_resources <- function(x, filename, path) {
     return(NULL)
   }
   assert_character(x, sprintf("%s:%s", filename, "resouces"))
-  msg <- x[file.exists(x)]
+  msg <- x[!file.exists(file.path(path, x))]
   if (length(msg) > 0L) {
     stop("Declared resources missing: ", paste(msg, collapse = ", "))
   }
   ## TODO: this is not quite right because the files need to be
   ## tested (as done here) with names within that directory.
   err <- x[!is_within_dir(file.path(path, x), path)]
-  if (length(msg) > 0L) {
+  if (length(err) > 0L) {
     stop("Declared resources not in right place: ",
          paste(err, collapse = ", "))
   }
