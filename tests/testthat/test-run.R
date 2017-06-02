@@ -34,7 +34,7 @@ test_that("run", {
   info <- recipe_read(file.path(path, "src", "example"), config)
   expect_equal(info$name, basename(path_example))
 
-  p <- recipe_run(info, parameters, config = path)
+  p <- recipe_run(info, parameters, config = path, echo = FALSE)
   expect_true(is_directory(p))
   expect_equal(normalizePath(dirname(p)),
                normalizePath(path_draft(path)))
@@ -106,4 +106,78 @@ test_that("run", {
   expect_true(all(vlapply(d, is.character)))
 
   expect_equal(d$id, basename(q))
+})
+
+## Same as in read; we generate a report and then break it
+test_that("minimal", {
+  path <- prepare_minimal()
+  on.exit(unlink(path, recursive = TRUE))
+
+  config <- orderly_config(path)
+  src <- orderly_db("source", config)
+  info <- recipe_read(file.path(path, "src/example"), config)
+  data <- recipe_data(src, info, NULL, new.env(parent = .GlobalEnv))
+  expect_is(data$dat, "data.frame")
+
+  expect_error(
+    recipe_data(src, info, list(a = 1), new.env(parent = .GlobalEnv)),
+    "Extra parameters: 'a'")
+  expect_error(
+    recipe_data(src, info, NULL, NULL),
+    "Invalid input for 'dest'")
+
+  workdir <- tempfile()
+  dir.create(workdir)
+  expect_error(recipe_prepare_workdir(info, workdir),
+               "'workdir' must not exist")
+  unlink(workdir, recursive = TRUE)
+
+  res <- recipe_run(info, NULL, config = config, echo = FALSE)
+  files <- dir(res)
+  expect_true(file.exists(file.path(res, "orderly.yml")))
+  expect_true(file.exists(file.path(res, "orderly_run.yml")))
+  expect_true(file.exists(file.path(res, "orderly_run.rds")))
+  expect_true(file.exists(file.path(res, "script.R")))
+  expect_true(file.exists(file.path(res, "mygraph.png")))
+})
+
+test_that("fail to create artefact", {
+  path <- prepare_minimal()
+  on.exit(unlink(path, recursive = TRUE))
+  config <- orderly_config(path)
+  writeLines("1 + 1", file.path(path, "src/example/script.R"))
+  info <- recipe_read(file.path(path, "src/example"), config)
+  expect_error(recipe_run(info, NULL, config = config, echo = FALSE),
+               "Script did not produce expected artefacts: mygraph.png")
+})
+
+test_that("leave device open", {
+  path <- prepare_minimal()
+  on.exit(unlink(path, recursive = TRUE))
+  config <- orderly_config(path)
+  txt <- readLines(file.path(path, "src/example/script.R"))
+  writeLines(txt[!grepl("dev.off()", txt, fixed = TRUE)],
+             file.path(path, "src/example/script.R"))
+  info <- recipe_read(file.path(path, "src/example"), config)
+  expect_error(recipe_run(info, NULL, config = config, echo = FALSE),
+               "Report left 1 device open")
+})
+
+test_that("close too many devices", {
+  path <- prepare_minimal()
+  png(tempfile())
+  n <- length(dev.list())
+  on.exit({
+    unlink(path, recursive = TRUE)
+    if (length(dev.list()) == n) {
+      dev.off()
+    }
+  })
+
+  config <- orderly_config(path)
+  txt <- readLines(file.path(path, "src/example/script.R"))
+  writeLines(c(txt, "dev.off()"), file.path(path, "src/example/script.R"))
+  info <- recipe_read(file.path(path, "src/example"), config)
+  expect_error(recipe_run(info, NULL, config = config, echo = FALSE),
+               "Report closed 1 more devices than it opened")
 })

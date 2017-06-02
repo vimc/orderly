@@ -114,7 +114,7 @@ orderly_config_get <- function(x, locate) {
   }
 }
 
-orderly_init <- function(root, doc = TRUE) {
+orderly_init <- function(root, doc = TRUE, quiet = FALSE) {
   if (file.exists(root)) {
     if (!file.info(root)$isdir || length(dir(root)) > 0) {
       stop("'root', if it already exists, must be an empty directory")
@@ -138,7 +138,10 @@ orderly_init <- function(root, doc = TRUE) {
   }
   file.copy(orderly_file("orderly_config_example.yml"),
             path_orderly_config_yml(root))
-  message(sprintf("Now, edit the file 'orderly_config.yml' within '%s'", root))
+  if (!quiet) {
+    message(sprintf("Now, edit the file 'orderly_config.yml' within '%s'",
+                    root))
+  }
 
   root
 }

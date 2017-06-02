@@ -67,7 +67,7 @@ report_db_rebuild <- function(root, config, con) {
   tbl <- report_db_init(con, config, TRUE)
   reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
   if (length(reports) > 0L) {
-    dat <- do.call("rbind", lapply(reports, report_read_data))
+    dat <- rbind_df(lapply(reports, report_read_data))
     DBI::dbWriteTable(con, tbl, dat, append = TRUE)
   }
 }

@@ -1,5 +1,5 @@
 recipe_run <- function(info, parameters, envir = .GlobalEnv,
-                       config = NULL, locate = TRUE) {
+                       config = NULL, locate = TRUE, echo = TRUE) {
   config <- orderly_config_get(config, locate)
   con <- orderly_connect(config)
   data <- recipe_data(con$source, info, parameters,
@@ -15,7 +15,7 @@ recipe_run <- function(info, parameters, envir = .GlobalEnv,
   }
   n_dev <- length(grDevices::dev.list())
   source(info$script, local = new.env(parent = data),
-         echo = TRUE, max.deparse.length = Inf)
+         echo = echo, max.deparse.length = Inf)
   recipe_check_device_stack(n_dev)
   recipe_check_artefacts(info)
 
@@ -43,8 +43,13 @@ recipe_run <- function(info, parameters, envir = .GlobalEnv,
 }
 
 recipe_substitute <- function(info, parameters) {
-  if (!setequal(names(parameters), info$parameters)) {
-    stop("Unexpected parameters")
+  msg <- setdiff(info$parameters, names(parameters))
+  if (length(msg) > 0L) {
+    stop("Missing parameters: ", pasteq(msg))
+  }
+  extra <- setdiff(names(parameters), info$parameters)
+  if (length(extra) > 0L) {
+    stop("Extra parameters: ", pasteq(extra))
   }
   if (length(parameters) > 0L) {
     info$views <- sql_str_sub(info$views, parameters)
@@ -75,7 +80,7 @@ recipe_data <- function(con, info, parameters, dest) {
 
 recipe_prepare_workdir <- function(info, workdir) {
   if (file.exists(workdir)) {
-    stop("'workdir' must be an empty directory")
+    stop("'workdir' must not exist")
   }
   src <- normalizePath(info$path, mustWork = TRUE)
   dir_create(workdir)
@@ -115,8 +120,9 @@ recipe_commit <- function(workdir, config) {
     on.exit()
   } else {
     ## Really not sure about this, and until the error handling is
-    ## done this will be a worry.
-    stop("Unknown error")
+    ## done this will be a worry; not sure what dbWriteTable can fail
+    ## on.
+    stop("Unknown error [orderly bug]") # nocov
   }
   dest
 }
@@ -182,14 +188,14 @@ recipe_check_device_stack <- function(expected) {
   check <- length(grDevices::dev.list()) - expected
   if (check == 0) {
     return()
-  } else if (check > 1) {
+  } else if (check > 0) {
     for (i in seq_len(check)) {
       grDevices::dev.off()
     }
     stop(ngettext(check,
-                  "Report left device open",
+                  "Report left 1 device open",
                   sprintf("Report left %d devices open", check)))
   } else {
-    stop(sprintf("Report closed %d more devices than it opened!", check))
+    stop(sprintf("Report closed %d more devices than it opened!", abs(check)))
   }
 }

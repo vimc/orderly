@@ -169,3 +169,7 @@ rbind_df <- function(x) {
 squote <- function(x) {
   sprintf("'%s'", x)
 }
+
+pasteq <- function(x, sep = ", ") {
+  paste(squote(x), collapse = ", ")
+}
