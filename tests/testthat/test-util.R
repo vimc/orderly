@@ -20,3 +20,13 @@ test_that("Descend failure", {
   expect_null(find_file_descend(".orderly_foobar", "/", path))
   expect_null(find_file_descend(".orderly_foobar", "/", "/"))
 })
+
+test_that("copy failure", {
+  path1 <- tempfile()
+  path2 <- tempfile()
+  writeLines("a", path1)
+  writeLines("b", path2)
+  on.exit(file.remove(path1, path2))
+  expect_error(file_copy(path1, path2), "Error copying files")
+  expect_equal(readLines(path2), "b")
+})
