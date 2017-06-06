@@ -43,11 +43,6 @@ assert_scalar_character <- function(x, name = deparse(substitute(x))) {
   assert_character(x, name)
 }
 
-assert_scalar_hash <- function(x, name = deparse(substitute(x))) {
-  assert_scalar(x, name)
-  assert_hash(x, name)
-}
-
 assert_named <- function(x, unique = FALSE, name = deparse(substitute(x))) {
   if (is.null(names(x))) {
     stop(sprintf("'%s' must be named", name), call. = FALSE)
