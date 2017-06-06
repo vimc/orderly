@@ -7,9 +7,9 @@ orderly_connect <- function(config = NULL, locate = TRUE) {
 orderly_db <- function(type, config = NULL, locate = TRUE) {
   config <- orderly_config_get(config, locate)
   if (type == "rds") {
-    file_store_rds(config$path)
+    file_store_rds(path_rds(config$path))
   } else if (type == "csv") {
-    file_store_csv(config$path)
+    file_store_csv(path_csv(config$path))
   } else if (type %in% c("source", "destination")) {
     x <- config[[type]]
     driver <- getExportedValue(x$driver[[1L]], x$driver[[2L]])
@@ -90,12 +90,4 @@ report_db_cols <- function() {
     hash_resources = "TEXT", # should be json (dict)
     hash_data = "TEXT",      # should be json (dict)
     hash_artefacts = "TEXT")  # should be json (dict)
-}
-
-file_store_rds <- function(path) {
-  file_store(path_rds(path), readRDS, saveRDS, ".rds")
-}
-
-file_store_csv <- function(path) {
-  file_store(path_csv(path), read_csv, write_csv, ".csv")
 }

@@ -13,6 +13,11 @@ file_store <- function(path, read, write, ext) {
 ## that an option.  One slight downside is that unless some serious
 ## work is done, then different versions of R will write out different
 ## versions of the file based on the first few bits.
+##
+## This is somewhat closer to the usual storrs than the remake "file
+## store" because we store an R object, by value, in a file.  The
+## paths to do this are via csv and rds in our case, and the filename
+## is going to be derived from the hash of the object itself.
 R6_file_store <- R6::R6Class(
   "file_store",
   public = list(
@@ -43,7 +48,9 @@ R6_file_store <- R6::R6Class(
     },
 
     set = function(data) {
-      hash <- hash_object(data) ## self$hash(data)
+      ## We only save data.frames
+      assert_is(data, "data.frame")
+      hash <- self$hash_object(data) ## self$hash(data)
       dest <- self$filename(hash)
       if (!file.exists(dest)) {
         self$write(data, dest)
@@ -74,6 +81,7 @@ R6_file_store <- R6::R6Class(
       } else {
         ret <- lapply(filename, self$read)
       }
+      names(ret) <- names(hash)
       ret
     },
 
@@ -100,10 +108,20 @@ R6_file_store <- R6::R6Class(
     }
   ))
 
-## This is directly from storr
+## This is directly from storr and needs to have a PascalCase class
+## because that's what storr uses.
 HashError <- function(hash) {
   structure(list(hash = hash,
                  message = sprintf("hash '%s' not found", hash),
                  call = NULL),
             class = c("HashError", "error", "condition"))
+}
+
+## Helpers
+file_store_rds <- function(path) {
+  file_store(path, readRDS, saveRDS, ".rds")
+}
+
+file_store_csv <- function(path) {
+  file_store(path, read_csv, write_csv, ".csv")
 }
