@@ -1,10 +1,4 @@
-PACKAGE := $(shell grep '^Package:' DESCRIPTION | sed -E 's/^Package:[[:space:]]+//')
 RSCRIPT = Rscript --no-init-file
-
-all: compile
-
-compile:
-	${RSCRIPT} -e 'library(methods); devtools::compile_dll()'
 
 test:
 	${RSCRIPT} -e 'library(methods); devtools::test()'
@@ -19,9 +13,6 @@ install:
 build:
 	R CMD build .
 
-docker:
-	docker build --tag vimc-client --file docker/Dockerfile .
-
 check:
 	_R_CHECK_CRAN_INCOMING_=FALSE make check_all
 
@@ -34,9 +25,9 @@ vignettes/%.Rmd: vignettes/src/%.R
 ## This will eventually swap out for devtools::build_vignettes(), but
 ## in current version it's not working when offline.  For now I'll
 ## just do the copy manually.
-vignettes: vignettes/vimc.Rmd
+vignettes: vignettes/orderly.Rmd
 	${RSCRIPT} -e 'tools::buildVignettes(dir = ".")'
 	mkdir -p inst/doc
 	cp vignettes/*.html vignettes/*.Rmd inst/doc
 
-.PHONY: all test document install vignettes docker
+.PHONY: test roxygen install build check check_all vignettes
