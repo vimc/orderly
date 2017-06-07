@@ -19,6 +19,13 @@ recipe_read <- function(path, config) {
                 config$fields$name[!config$fields$required])
   check_fields(info, filename, required, optional)
 
+  ## Fill any any missing optional fields:
+  i <- !(config$fields$name %in% names(info))
+  if (any(i)) {
+    info[config$fields$name[i]] <-
+      lapply(config$fields$type[i], set_mode, x = NA)
+  }
+
   fieldname <- function(name) {
     sprintf("%s:%s", filename, name)
   }

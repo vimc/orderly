@@ -36,7 +36,7 @@ test_that("run", {
 
   p <- recipe_run(info, parameters, config = path, echo = FALSE)
   expect_true(is_directory(p))
-  expect_equal(normalizePath(dirname(p)),
+  expect_equal(normalizePath(dirname(dirname(p))),
                normalizePath(path_draft(path)))
 
   expect_true(file.exists(file.path(p, "mygraph.png")))
@@ -65,7 +65,6 @@ test_that("run", {
   expect_equal(run$name, info$name)
   expect_identical(run$hash_artefacts,
                    hash_files(file.path(p, "mygraph.png"), FALSE))
-  expect_is(run$identifier, "character")
   ## TODO: set to NULL instead?
   expect_identical(run$hash_resources, list())
   expect_identical(run$parameters, parameters)

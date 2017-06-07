@@ -1,23 +1,47 @@
+orderly_run <- function(name, parameters = NULL, envir = .GlobalEnv,
+                        config = NULL, locate = TRUE, echo = TRUE) {
+  config <- orderly_config_get(config, locate)
+  info <- recipe_read(file.path(path_src(config$path), name), config)
+  path <- recipe_run(info, parameters, envir,
+                     config = config, locate = FALSE, echo = echo)
+  ## I might want to give this as <name>/<id> - not sure?
+  basename(path)
+}
+
 recipe_run <- function(info, parameters, envir = .GlobalEnv,
                        config = NULL, locate = TRUE, echo = TRUE) {
   config <- orderly_config_get(config, locate)
   con <- orderly_connect(config)
+
+  orderly_log("name", info$name)
+  id <- new_report_id()
+  orderly_log("id", id)
+
   data <- recipe_data(con$source, info, parameters,
                       new.env(parent = envir))
 
-  id <- new_report_id()
-  workdir <- file.path(path_draft(config$path), id)
+  workdir <- file.path(path_draft(config$path), info$name, id)
   owd <- recipe_prepare_workdir(info, workdir)
   on.exit(setwd(owd))
+
+  hash_resources <- hash_files(info$resources)
+  if (length(info$resources) > 0L) {
+    orderly_log("resources", sprintf("%s: %s", info$resources, hash_resources))
+  }
 
   for (p in info$packages) {
     library(p, character.only = TRUE)
   }
   n_dev <- length(grDevices::dev.list())
+  orderly_log("start", as.character(Sys.time()))
+  ## TODO: perhaps like context do the ok/fail logging here.  Perhaps
+  ## *use* context because this looks an awful lot like the same thing.
   source(info$script, local = new.env(parent = data),
          echo = echo, max.deparse.length = Inf)
+  orderly_log("end", as.character(Sys.time()))
+
   recipe_check_device_stack(n_dev)
-  recipe_check_artefacts(info)
+  hash_artefacts <- recipe_check_artefacts(info)
 
   ldata <- as.list(data)
   hash_data_csv <- con$csv$mset(ldata)
@@ -32,10 +56,9 @@ recipe_run <- function(info, parameters, envir = .GlobalEnv,
                hash_orderly = info$hash,
                hash_input = hash_files("orderly.yml", FALSE),
                ## Below here all seems sensible enough to track
-               hash_resources = hash_files(info$resources),
+               hash_resources = hash_resources,
                hash_data = hash_data_rds,
-               hash_artefacts = hash_files(info$artefacts[, "filename"]),
-               identifier = ids::adjective_animal())
+               hash_artefacts = hash_artefacts)
 
   saveRDS(utils::sessionInfo(), path_orderly_run_rds("."))
   writeLines(yaml::as.yaml(meta), path_orderly_run_yml("."))
@@ -43,6 +66,9 @@ recipe_run <- function(info, parameters, envir = .GlobalEnv,
 }
 
 recipe_substitute <- function(info, parameters) {
+  if (!is.null(parameters)) {
+    assert_named(parameters, unique = TRUE)
+  }
   msg <- setdiff(info$parameters, names(parameters))
   if (length(msg) > 0L) {
     stop("Missing parameters: ", pasteq(msg))
@@ -54,6 +80,7 @@ recipe_substitute <- function(info, parameters) {
   if (length(parameters) > 0L) {
     info$views <- sql_str_sub(info$views, parameters)
     info$data <- sql_str_sub(info$data, parameters)
+    orderly_log("parameter", sprintf("%s: %s", names(parameters), parameters))
   }
   info$hash_parameters <- digest::digest(parameters)
   info
@@ -68,11 +95,14 @@ recipe_data <- function(con, info, parameters, dest) {
 
   views <- info$views
   for (v in names(views)) {
+    orderly_log("view", v)
     DBI::dbExecute(con, temporary_view(v, views[[v]]))
   }
 
   for (v in names(info$data)) {
     dest[[v]] <- DBI::dbGetQuery(con, info$data[[v]])
+    orderly_log("data",
+                sprintf("%s: %s x %s", v, nrow(dest[[v]]), ncol(dest[[v]])))
   }
 
   dest
@@ -106,78 +136,17 @@ recipe_check_artefacts <- function(info) {
     stop("Script did not produce expected artefacts: ",
          paste(expected[msg], collapse = ", "))
   }
+  h <- hash_files(expected)
+  orderly_log("artefact", sprintf("%s: %s", expected, h))
+  h
 }
 
-recipe_commit <- function(workdir, config) {
-  config <- orderly_config_get(config)
-  dat <- report_read_data(workdir)
-  con <- orderly_db("destination", config)
-  tbl <- report_db_init(con, config)
-  dest <- copy_report(workdir, dat$name, config)
-  on.exit(unlink(dest, recursive = TRUE))
-  if (DBI::dbWriteTable(con, tbl, dat, append = TRUE)) {
-    unlink(workdir, recursive = TRUE)
-    on.exit()
-  } else {
-    ## Really not sure about this, and until the error handling is
-    ## done this will be a worry; not sure what dbWriteTable can fail
-    ## on.
-    stop("Unknown error [orderly bug]") # nocov
-  }
-  dest
-}
-
-report_read_data <- function(path) {
-  yml <- path_orderly_run_yml(path)
-  if (!file.exists(yml)) {
-    stop("Did not find run metadata file!")
-  }
-  info <- utils::modifyList(yaml_read(file.path(path, "orderly.yml")),
-                     yaml_read(yml))
-  if (info$id != basename(path)) {
-    stop("Unexpected path") # should never happen
-  }
-  data.frame(id = info$id,
-             name = info$name,
-             ## Inputs
-             requester = info$requester,
-             author = info$author,
-             views = to_json_string(info$views),
-             data = to_json_string(info$data),
-             script = info$script,
-             artefacts = to_json_string(info$artefacts),
-             resources = to_json_string(info$resources),
-             ## Outputs
-             parameters = to_json_string(info$parameters),
-             date = info$date,
-             hash_orderly = info$hash_orderly,
-             hash_input = info$hash_input,
-             hash_resources = to_json_string(info$hash_resources),
-             hash_data = to_json_string(info$hash_data),
-             hash_artefacts = to_json_string(info$hash_artefacts),
-             stringsAsFactors = FALSE)
-}
-
-copy_report <- function(workdir, name, config) {
-  assert_is(config, "orderly_config")
-  id <- basename(workdir)
-  parent <- path_archive(config$path, name)
-  dest <- file.path(parent, id)
-  if (file.exists(dest)) {
-    stop("Already been copied?")
-  }
-
-  dir_create(parent)
-  ok <- file.copy(workdir, parent, recursive = TRUE)
-  if (!ok) {
-    try(unlink(dest, recursive = TRUE), silent = TRUE)
-    stop("Error copying file")
-  }
-  dest
+iso_time_str <- function(time = Sys.time()) {
+  strftime(time, "%Y%m%d-%H%M%S")
 }
 
 new_report_id <- function() {
-  ids::random_id()
+  sprintf("%s-%s", iso_time_str(), ids::random_id(bytes = 4))
 }
 
 temporary_view <- function(name, sql) {
