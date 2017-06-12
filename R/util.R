@@ -178,3 +178,18 @@ set_mode <- function(x, mode) {
   storage.mode(x) <- mode
   x
 }
+
+capture_log <- function(expr, filename, suppress_messages = FALSE) {
+  con <- file(filename, "w")
+  sink(con, split = FALSE)
+  on.exit({
+    sink(NULL)
+    close(con)
+  })
+  handle_message <- function(e) cat(e$message, file = stdout())
+  if (suppress_messages) {
+    suppressMessages(withCallingHandlers(force(expr), message = handle_message))
+  } else {
+    withCallingHandlers(force(expr), message = handle_message)
+  }
+}
