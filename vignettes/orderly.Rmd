@@ -214,12 +214,11 @@ If the report requires parameters then these must be passed through
 too; in the above case the report takes the parameter `cyl` which
 must be passed through as a named list.  So we might run this
 report as
-``` {r }
-orderly:::orderly_run("example", list(cyl = 4))
+``` {r collapse = TRUE}
+id <- orderly:::orderly_run("example", list(cyl = 4))
 ```
 
 ``` {r echo = FALSE, results = "hide"}
-p <- orderly:::orderly_drafts()$id
 h <- sub("\\.rds$", "", dir(file.path(path, "data", "rds")))
 ```
 
@@ -228,13 +227,16 @@ second line of log output) and is always in the format
 `YYYYMMDD-HHMMSS-abcdef01` where the last 8 characters are a hex
 digits (i.e., 4 random bytes).  This means reports will
 automatically sort nicely but we'll have some collision resistance.
+``` {r }
+id
+```
 
 Having run the report, the directory layout now looks like:
 ``` {r results = "asis", echo = FALSE}
 plain_output(tree(path, "<root>"))
 ```
 
-Within `drafts`, the directory `r file.path("example", p)` has been
+Within `drafts`, the directory ``r file.path("example", id)`` has been
 created which contains the result of running the report.  In here
 there are the files:
 
@@ -249,12 +251,12 @@ there are the files:
 
 Every time a report is run it will create a new directory at this
 level with a new id.  Running the report again now might create the
-directory`r file.path("example", orderly:::new_report_id())`
+directory ``r file.path("example", orderly:::new_report_id())``
 
 Note that there are other files created;
 
-* `r file.path("data", "csv", paste0(h, ".csv"))`
-* `r file.path("data", "rds", paste0(h, ".rds"))`
+* ``r file.path("data", "csv", paste0(h, ".csv"))``
+* ``r file.path("data", "rds", paste0(h, ".rds"))``
 
 These are a copy of the data as extracted from the database and
 used in the report.  The filenames are derived from a hash of the
@@ -271,8 +273,7 @@ orderly:::orderly_drafts()
 ```
 
 Once you're happy with a report, then "commit" it with
-``` {r }
-id <- orderly:::orderly_drafts()$id
+``` {r collapse = TRUE}
 orderly:::orderly_commit("example", id)
 ```
 
@@ -281,7 +282,7 @@ is built and how we might synchronise reports across people and
 machines.
 
 After this step our directory structure looks like:
-``` {r }
+``` {r results = "asis", echo = FALSE}
 plain_output(tree(path, "<root>"))
 ```
 

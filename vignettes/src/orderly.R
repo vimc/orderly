@@ -207,11 +207,11 @@ orderly:::orderly_list()
 ## too; in the above case the report takes the parameter `cyl` which
 ## must be passed through as a named list.  So we might run this
 ## report as
-orderly:::orderly_run("example", list(cyl = 4))
+##+ collapse = TRUE
+id <- orderly:::orderly_run("example", list(cyl = 4))
 
 ### need this for later:
 ##+ echo = FALSE, results = "hide"
-p <- orderly:::orderly_drafts()$id
 h <- sub("\\.rds$", "", dir(file.path(path, "data", "rds")))
 
 ## The return value is the id of the report (also printed on the
@@ -219,12 +219,13 @@ h <- sub("\\.rds$", "", dir(file.path(path, "data", "rds")))
 ## `YYYYMMDD-HHMMSS-abcdef01` where the last 8 characters are a hex
 ## digits (i.e., 4 random bytes).  This means reports will
 ## automatically sort nicely but we'll have some collision resistance.
+id
 
 ## Having run the report, the directory layout now looks like:
 ##+ results = "asis", echo = FALSE
 plain_output(tree(path, "<root>"))
 
-## Within `drafts`, the directory `r file.path("example", p)` has been
+## Within `drafts`, the directory ``r file.path("example", id)`` has been
 ## created which contains the result of running the report.  In here
 ## there are the files:
 ##
@@ -239,12 +240,12 @@ plain_output(tree(path, "<root>"))
 
 ## Every time a report is run it will create a new directory at this
 ## level with a new id.  Running the report again now might create the
-## directory`r file.path("example", orderly:::new_report_id())`
+## directory ``r file.path("example", orderly:::new_report_id())``
 
 ## Note that there are other files created;
 ##
-## * `r file.path("data", "csv", paste0(h, ".csv"))`
-## * `r file.path("data", "rds", paste0(h, ".rds"))`
+## * ``r file.path("data", "csv", paste0(h, ".csv"))``
+## * ``r file.path("data", "rds", paste0(h, ".rds"))``
 ##
 ## These are a copy of the data as extracted from the database and
 ## used in the report.  The filenames are derived from a hash of the
@@ -259,7 +260,7 @@ plain_output(tree(path, "<root>"))
 orderly:::orderly_drafts()
 
 ## Once you're happy with a report, then "commit" it with
-id <- orderly:::orderly_drafts()$id
+##+ collapse = TRUE
 orderly:::orderly_commit("example", id)
 
 ## **THIS WILL CHANGE A LITTLE I THINK** - but mostly in how the index
@@ -267,6 +268,7 @@ orderly:::orderly_commit("example", id)
 ## machines.
 
 ## After this step our directory structure looks like:
+##+ results = "asis", echo = FALSE
 plain_output(tree(path, "<root>"))
 
 ## Which looks very like the previous, but files have been moved from
