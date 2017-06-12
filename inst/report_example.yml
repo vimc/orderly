@@ -1,0 +1,12 @@
+data:
+  cars: SELECT * FROM mtcars WHERE cyl = ?cyl
+parameters:
+  - cyl
+script: script.R
+artefacts:
+  disp_vs_wt.png:
+    format: staticgraph
+    description: plot of displacement vs weight
+  distribution.png:
+    format: staticgraph
+    description: overall distribution of displacement
