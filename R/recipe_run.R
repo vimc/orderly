@@ -43,7 +43,7 @@ recipe_run <- function(info, parameters, envir = .GlobalEnv,
   recipe_check_device_stack(n_dev)
   hash_artefacts <- recipe_check_artefacts(info)
 
-  ldata <- as.list(data)
+  ldata <- as.list(data)[names(info$data)]
   hash_data_csv <- con$csv$mset(ldata)
   hash_data_rds <- con$rds$mset(ldata)
   stopifnot(identical(hash_data_csv, hash_data_rds))
@@ -92,6 +92,13 @@ recipe_data <- function(con, info, parameters, dest) {
   }
 
   info <- recipe_substitute(info, parameters)
+  for (i in seq_along(parameters)) {
+    if (is.environment(dest)) {
+      list2env(parameters, dest)
+    } else {
+      dest <- modifyList(dest, parameters)
+    }
+  }
 
   views <- info$views
   for (v in names(views)) {

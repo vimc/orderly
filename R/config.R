@@ -130,10 +130,11 @@ orderly_init <- function(root, doc = TRUE, quiet = FALSE) {
     readme <- function(path) {
       file.path(root, path, "README.md")
     }
-    file.copy(orderly_file("readme_src.md"), readme("src"))
-    file.copy(orderly_file("readme_data.md"), readme("data"))
-    file.copy(orderly_file("readme_archive.md"), readme("archive"))
-    file.copy(orderly_file("readme_root.md"),
+    file_copy(orderly_file("readme_src.md"), readme("src"))
+    file_copy(orderly_file("readme_data.md"), readme("data"))
+    file_copy(orderly_file("readme_draft.md"), readme("draft"))
+    file_copy(orderly_file("readme_archive.md"), readme("archive"))
+    file_copy(orderly_file("readme_root.md"),
               file.path(root, "README.md"))
   }
   file.copy(orderly_file("orderly_config_example.yml"),
