@@ -2,3 +2,4 @@
 .Rhistory
 .RData
 tests/testthat/test
+inst/doc
