@@ -49,7 +49,7 @@ write_script <- function(path) {
   }
   code <- c("#!/usr/bin/env Rscript", "orderly:::main()")
   path_bin <- file.path(path, "orderly")
-  writeLines(code, path_bin, "orderly")
+  writeLines(code, path_bin)
   Sys.chmod(path_bin, "755")
   invisible(path_bin)
 }
