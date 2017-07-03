@@ -3,6 +3,12 @@ context("config")
 test_that("read", {
   cfg <- orderly_config("example")
   expect_is(cfg, "orderly_config")
+
+  ## default destination database:
+  expect_equal(cfg$destination$driver, c("RSQLite", "SQLite"))
+  expect_equal(cfg$destination$args,
+               list(dbname =
+                      file.path(normalizePath(cfg$path), "orderly.sqlite")))
 })
 
 test_that("not found", {

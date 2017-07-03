@@ -2,10 +2,6 @@ source:
   driver: RSQLite::SQLite
   dbname: source.sqlite
 
-destination:
-  driver: RSQLite::SQLite
-  dbname: reports.sqlite
-
 fields:
   requester:
     required: true

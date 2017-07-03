@@ -8,7 +8,7 @@ orderly_config <- function(path) {
 
 orderly_config_read_yaml <- function(filename, path) {
   info <- yaml_read(filename)
-  check_fields(info, filename, c("source", "destination"), "fields")
+  check_fields(info, filename, "source", c("destination", "fields"))
 
   ## There's heaps of really boring validation to do here that I am
   ## going to skip.  The drama that we will have is that there are
@@ -18,15 +18,23 @@ orderly_config_read_yaml <- function(filename, path) {
   ## cannot be totally opaque when reading information in.
 
   driver_config <- function(name) {
+    if (name == "destination" && is.null(info[[name]])) {
+      info[[name]] <- list(driver = "RSQLite::SQLite",
+                           dbname = "orderly.sqlite")
+    }
     driver <- check_symbol_from_str(info[[name]]$driver,
                                     sprintf("%s:%s:driver", filename, name))
     args <- info[[name]][setdiff(names(info[[name]]), "driver")]
 
     if (info[[name]]$driver == "RSQLite::SQLite") {
-      ## TODO: error on empty string or ":memory:"
-      ## TODO: don't join path on absolute path
-      args$dbname <- file.path(normalizePath(path, mustWork = TRUE),
-                               args$dbname)
+      dbname <- args$dbname
+      if (!nzchar(dbname) || tolower(dbname) == ":memory:") {
+        stop("Cannot use a transient SQLite database with orderly")
+      }
+      if (is_relative_path(args$dbname)) {
+        args$dbname <- file.path(normalizePath(path, mustWork = TRUE),
+                                 args$dbname)
+      }
     }
     list(driver = driver, args = args)
   }

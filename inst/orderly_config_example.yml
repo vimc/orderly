@@ -1,9 +1,10 @@
-# This file must contain keys 'source' and 'destination'; each of
-# those must contain a field 'driver' that will be one of
-# RSQLite::SQLite or RPostgres::Postgres (other drives may work too).
+# This file must contain the field 'source', which must contain a
+# field 'driver' that will be one of RSQLite::SQLite or
+# RPostgres::Postgres (other drivers may work too in future, but not
+# yet).
 #
-# For example, a configuration to use Postgres as the *source*
-# database might look like:
+# For example, a configuration to use Postgres as the source database
+# might look like:
 #
 #   source:
 #     driver: RPostgres::Postgres
@@ -16,15 +17,9 @@
 # All arguments other than driver are optional and will be passed
 # through during the 'DBI::dbConnect()' call.
 #
-# A configuration that uses SQLite for the destination database might
-# look like
-#
-#   destination:
-#     driver: RSQLite::SQLite
-#     dbname: reports.sqlite
-#
-# The "dbname" argument will be interpreted relative to the orderly
-# root.  Be sure to exclude this path using .gitignore
+# If using SQLite, then the "dbname" argument will be interpreted
+# relative to the orderly root if not absolute .  Be sure to exclude
+# this path using .gitignore
 #
 # Other options accepted by RSQLite are allowed but are much less
 # commonly useful (as of RSQLite v1.1-2, loadable.extensions,
@@ -32,8 +27,14 @@
 source:
   driver: ~
 
-destination:
-  driver: ~
+# It is not necessary to configure a destination driver explicitly
+# unless you want to change the default (which is into a SQLite
+# database called "orderly.sqlite" at the orderly root.  If you do
+# specify it, the options are the same as for "source", e.g.:
+#
+#   destination:
+#     driver: RSQLite::SQLite
+#     dbname: different.sqlite
 
 # In addition, it may contain a 'fields' section defining custom
 # fields, for example:

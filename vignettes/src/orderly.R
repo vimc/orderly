@@ -164,14 +164,9 @@ plain_output(tree(path, "<root>"))
 ##+ results = "asis", echo = FALSE
 yaml_output(readLines(file.path(path, "orderly_config.yml")))
 
-## This defines two key fields:
-##
-## * `source`: the database that we pull results from (the database
-##   that the report queries are run against)
-## * `destination:` the database that we will put information about
-##   complete reports (those in `archive`) into.
-
-## Each entry takes the field `driver` which must declare a
+## This defines the field `source`, which describes the database that
+## we pull results from (the database that the report queries are run
+## against).  This contains a field `driver` which must declare a
 ## DBI-compatible driver (realistically this is going to be
 ## `RSQLite::SQLite` for a local SQLite database and
 ## `RPostgres::Posgres` for accessing a postgres database), and then
@@ -276,3 +271,8 @@ plain_output(tree(path, "<root>"))
 ## difference is that the index `orderly.sqlite` has been created.
 
 ## ## Developing a report
+
+## First, create a directory within `src`.  The name is important and
+## should not contain spaces (nor should it change as this will change
+## the key report id and you'll lose a chain of history).
+dir.create(file.path(path, "src", "new"))

@@ -5,7 +5,3 @@ source:
   user: vimc
   dbname: montagu
   password: changeme
-
-destination:
-  driver: RSQLite::SQLite
-  dbname: reports.sqlite
