@@ -22,6 +22,7 @@ main <- function(args = commandArgs(TRUE)) {
 }
 
 main_args <- function(args) {
+  ## TODO: could use a rebuild-index mode
   c("Usage:",
     "  orderly [--root=<path>] [--no-commit] [--parameters=<json>] <name>",
     "",

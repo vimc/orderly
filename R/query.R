@@ -2,23 +2,40 @@
 ## This will not include things that have been deleted in source but
 ## are present in the database, because I want this to be useful for
 ## getting targets that one can run.
+
+##' List the \emph{names} of reports known to orderly.  These are the
+##' \emph{source} names, not the results of running reports.
+##'
+##' @title List orderly reports
+##'
+##' @param config An orderly configuration, or the path to one (or
+##'   \code{NULL} to locate one if \code{locate} is \code{TRUE}).
+##'
+##' @param locate Logical, indicating if the configuration should be
+##'   searched for.  If \code{TRUE} and \code{config} is not given,
+##'   then orderly looks in the working directory and up through its
+##'   parents until it finds an \code{orderly_config.yml} file.
+##'
+##' @export
 orderly_list <- function(config = NULL, locate = TRUE) {
   config <- orderly_config_get(config, locate)
   basename(list_dirs(path_src(config$path)))
 }
 
-## Not sure about the name here: should it be
-##
-##   orderly_list_drafts
-##   orderly_drafts
-##
-## or something else?  Using list_drafts is not ideal because it
-## returns a different type to orderly_list
-orderly_drafts <- function(config = NULL, locate = TRUE) {
+##' List draft and archived reports.  This returns a data.frame with
+##' columns \code{name} (see \code{\link{orderly_list}} and \code{id}.
+##' It will expand in future.
+##'
+##' @title List draft and archived reports
+##' @inheritParams orderly_list
+##' @export
+orderly_list_drafts <- function(config = NULL, locate = TRUE) {
   orderly_list2(TRUE, config, locate)
 }
 
-orderly_archive <- function(config = NULL, locate = TRUE) {
+##' @export
+##' @rdname orderly_list_drafts
+orderly_list_archive <- function(config = NULL, locate = TRUE) {
   orderly_list2(FALSE, config, locate)
 }
 

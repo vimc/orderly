@@ -20,7 +20,7 @@ orderly_file <- function(...) {
   system.file(..., package = "orderly", mustWork = TRUE)
 }
 
-path <- orderly:::orderly_init(tempfile(), quiet = TRUE)
+path <- orderly::orderly_init(tempfile(), quiet = TRUE)
 path_example <- file.path(path, "src", "example")
 dir.create(path_example)
 orderly:::file_copy(orderly_file("orderly_config_sqlite.yml"),
@@ -32,7 +32,7 @@ local({
   con <- orderly:::orderly_db("source")
   DBI::dbWriteTable(con, "mtcars", mtcars)
 })
-orderly:::orderly_log_start()
+orderly::orderly_log_start()
 
 tree <- function(path, header = path) {
   paste1 <- function(a, b) {
@@ -202,7 +202,7 @@ Reports are run by *name*.  In the above configuration the report
 is called `example` because it is in the directory `src/example`.
 A list of report names can be returned by running
 ``` {r }
-orderly:::orderly_list()
+orderly::orderly_list()
 ```
 
 If the report requires parameters then these must be passed through
@@ -264,7 +264,7 @@ by other applications.
 
 You can see the list of draft reports like so:
 ``` {r }
-orderly:::orderly_drafts()
+orderly::orderly_list_drafts()
 ```
 
 Once you're happy with a report, then "commit" it with
