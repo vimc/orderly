@@ -44,8 +44,12 @@ main_run <- function(name, parameters, config, commit) {
 }
 
 write_script <- function(path) {
+  if (!is_directory(path)) {
+    stop("'path' must be a directory")
+  }
   code <- c("#!/usr/bin/env Rscript", "orderly:::main()")
-  writeLines(code, path)
-  Sys.chmod(path, "755")
-  invisible(path)
+  path_bin <- file.path(path, "orderly")
+  writeLines(code, path_bin, "orderly")
+  Sys.chmod(path_bin, "755")
+  invisible(path_bin)
 }
