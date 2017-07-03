@@ -121,37 +121,3 @@ orderly_config_get <- function(x, locate) {
     stop("Invalid input")
   }
 }
-
-orderly_init <- function(root, doc = TRUE, quiet = FALSE) {
-  if (file.exists(root)) {
-    if (!file.info(root)$isdir || length(dir(root)) > 0) {
-      stop("'root', if it already exists, must be an empty directory")
-    }
-  } else {
-    dir.create(root, FALSE, TRUE)
-  }
-  dir_create(path_data(root))
-  dir_create(path_src(root))
-  dir_create(path_archive(root))
-  dir_create(path_draft(root))
-  write_script(root)
-  if (doc) {
-    readme <- function(path) {
-      file.path(root, path, "README.md")
-    }
-    file_copy(orderly_file("readme_src.md"), readme("src"))
-    file_copy(orderly_file("readme_data.md"), readme("data"))
-    file_copy(orderly_file("readme_draft.md"), readme("draft"))
-    file_copy(orderly_file("readme_archive.md"), readme("archive"))
-    file_copy(orderly_file("readme_root.md"),
-              file.path(root, "README.md"))
-  }
-  file.copy(orderly_file("orderly_config_example.yml"),
-            path_orderly_config_yml(root))
-  if (!quiet) {
-    message(sprintf("Now, edit the file 'orderly_config.yml' within '%s'",
-                    root))
-  }
-
-  root
-}
