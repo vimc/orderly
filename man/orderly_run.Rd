@@ -34,8 +34,6 @@ parents until it finds an \code{orderly_config.yml} file.}
 \item{echo}{Print the result of running the R code to the console}
 }
 \description{
-Run a report.  The \code{orderly_data} function is for preparing the
-}
-\details{
-.. content for \details{} ..
+Run a report.  The \code{orderly_data} function is for testing the
+queries (and developing the report).
 }

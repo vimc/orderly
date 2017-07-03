@@ -1,6 +1,6 @@
-##' Run a report.  The \code{orderly_data} function is for preparing the
+##' Run a report.  The \code{orderly_data} function is for testing the
+##' queries (and developing the report).
 ##'
-##' .. content for \details{} ..
 ##' @title Run a report
 ##'
 ##' @param name Name of the report to run (see
