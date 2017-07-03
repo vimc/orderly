@@ -9,13 +9,13 @@ Maintainer: Rich FitzJohn <rich.fitzjohn@gmail.com>
 Imports:
     DBI,
     R6,
+    RSQLite,
     digest,
     docopt,
     ids,
     jsonlite,
     yaml
 Suggests:
-    RSQLite,
     knitr,
     rmarkdown,
     testthat
