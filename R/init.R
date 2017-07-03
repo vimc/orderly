@@ -24,7 +24,6 @@ orderly_init <- function(root, doc = TRUE, quiet = FALSE) {
   dir_create(path_src(root))
   dir_create(path_archive(root))
   dir_create(path_draft(root))
-  write_script(root)
   if (doc) {
     readme <- function(path) {
       file.path(root, path, "README.md")
