@@ -1,3 +1,22 @@
+##' Run a report.  The \code{orderly_data} function is for preparing the
+##'
+##' .. content for \details{} ..
+##' @title Run a report
+##'
+##' @param name Name of the report to run (see
+##'   \code{\link{orderly_list}}).
+##'
+##' @param parameters Parameters passed to the report
+##'
+##' @param envir The parent of environment to evalute the report in;
+##'   by default a new environment will be made with the global
+##'   environment as the parent.  For \code{orderly_data}, this may be
+##'   \code{NULL} in which case a list will be returned (rather than
+##'   an environment).
+##'
+##' @inheritParams orderly_list
+##' @param echo Print the result of running the R code to the console
+##' @export
 orderly_run <- function(name, parameters = NULL, envir = .GlobalEnv,
                         config = NULL, locate = TRUE, echo = TRUE) {
   config <- orderly_config_get(config, locate)
@@ -6,6 +25,17 @@ orderly_run <- function(name, parameters = NULL, envir = .GlobalEnv,
                      config = config, locate = FALSE, echo = echo)
   ## I might want to give this as <name>/<id> - not sure?
   basename(path)
+}
+
+##' @export
+##' @rdname orderly_run
+orderly_data <- function(name, parameters = NULL, envir = NULL,
+                         config = NULL, locate = TRUE) {
+  config <- orderly_config_get(config, locate)
+  info <- recipe_read(file.path(path_src(config$path), name), config)
+  con <- orderly_db("source", config)
+  dest <- if (is.null(envir)) list() else new.env(parent = envir)
+  recipe_data(con, info, parameters, dest)
 }
 
 recipe_run <- function(info, parameters, envir = .GlobalEnv,

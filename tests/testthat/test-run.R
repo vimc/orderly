@@ -140,6 +140,21 @@ test_that("minimal", {
   expect_true(file.exists(file.path(res, "mygraph.png")))
 })
 
+test_that("orderly_data", {
+  path <- prepare_minimal()
+  on.exit(unlink(path, recursive = TRUE))
+
+  d <- orderly_data("example", config = path)
+  expect_is(d, "list")
+  expect_is(d$dat, "data.frame")
+
+  e <- orderly_data("example", config = path, envir = baseenv())
+  expect_is(e, "environment")
+  expect_identical(parent.env(e), baseenv())
+
+  expect_identical(e$dat, d$dat)
+})
+
 test_that("fail to create artefact", {
   path <- prepare_minimal()
   on.exit(unlink(path, recursive = TRUE))
