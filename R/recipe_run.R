@@ -126,7 +126,7 @@ recipe_data <- function(con, info, parameters, dest) {
     if (is.environment(dest)) {
       list2env(parameters, dest)
     } else {
-      dest <- modifyList(dest, parameters)
+      dest <- utils::modifyList(dest, parameters)
     }
   }
 
