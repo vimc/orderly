@@ -1,9 +1,23 @@
+##' Connect to the orderly databases.  \code{orderly_connect} returns
+##' a list with all four connections (source, destination, csv and
+##' rds) while \code{orderly_db} returns a single connection to one of
+##' these.  These should be treated as as \emph{read only} (with the
+##' exception of \code{source}).
+##'
+##' @title Connect to orderly databases
+##' @inheritParams orderly_list
+##' @export
 orderly_connect <- function(config = NULL, locate = TRUE) {
   config <- orderly_config_get(config, locate)
   types <- c("source", "destination", "csv", "rds")
   set_names(lapply(types, orderly_db, config), types)
 }
 
+##' @export
+##' @rdname orderly_connect
+##'
+##' @param type The type of connection to make (\code{source},
+##'   \code{destination}, \code{csv} or \code{rds}).
 orderly_db <- function(type, config = NULL, locate = TRUE) {
   config <- orderly_config_get(config, locate)
   if (type == "rds") {

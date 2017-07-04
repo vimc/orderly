@@ -29,7 +29,7 @@ orderly:::file_copy(orderly_file(c("report_example.yml", "report_example.R")),
                     file.path(path_example, c("orderly.yml", "script.R")))
 orderly:::orderly_default_config_set(orderly:::orderly_config(path))
 local({
-  con <- orderly:::orderly_db("source")
+  con <- orderly::orderly_db("source")
   DBI::dbWriteTable(con, "mtcars", mtcars)
 })
 orderly::orderly_log_start()
