@@ -24,4 +24,10 @@ RUN Rscript -e 'remotes::install_github("rstats-db/RPostgres");' && \
 RUN Rscript -e 'remotes::install_github("vimc/orderly", dependencies = FALSE)' \
   && Rscript -e 'orderly:::write_script("/usr/bin")'
 
+# Packages that we might want to use; this list should *probably* be
+# in another docker image built on top of this one but leaving here
+# for now:
+RUN install.r \
+  ggplot2
+
 ENTRYPOINT ["/usr/bin/orderly"]
