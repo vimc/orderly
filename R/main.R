@@ -39,7 +39,7 @@ main_args <- function(args) {
 main_run <- function(name, parameters, config, commit) {
   id <- orderly_run(name, parameters, config = config)
   if (commit) {
-    orderly_commit(name, id, config)
+    orderly_commit(id, name, config)
   }
   id
 }

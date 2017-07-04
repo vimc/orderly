@@ -23,7 +23,10 @@ orderly_run <- function(name, parameters = NULL, envir = .GlobalEnv,
   info <- recipe_read(file.path(path_src(config$path), name), config)
   path <- recipe_run(info, parameters, envir,
                      config = config, locate = FALSE, echo = echo)
-  ## I might want to give this as <name>/<id> - not sure?
+  ## TODO: I might want to give this as <name>/<id> - not sure?
+  ##
+  ## The disadvantage of this is that we need to parse these, check
+  ## them, etc, and they don't deal well with renames.
   basename(path)
 }
 
@@ -92,7 +95,7 @@ recipe_run <- function(info, parameters, envir = .GlobalEnv,
 
   saveRDS(utils::sessionInfo(), path_orderly_run_rds("."))
   writeLines(yaml::as.yaml(meta), path_orderly_run_yml("."))
-  invisible(workdir)
+  workdir
 }
 
 recipe_substitute <- function(info, parameters) {

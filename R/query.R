@@ -48,3 +48,21 @@ orderly_list2 <- function(draft, config = NULL, locate = TRUE) {
              id = as.character(unlist(res)),
              stringsAsFactors = FALSE)
 }
+
+orderly_find_name <- function(id, config, locate = FALSE, draft = TRUE,
+                              must_work = FALSE) {
+  config <- orderly_config_get(config, locate)
+  path <- (if (draft) path_draft else path_archive)(config$path)
+  for (name in orderly_list(config)) {
+    if (file.exists(file.path(path, name, id))) {
+      return(name)
+    }
+  }
+  ## Error case:
+  if (must_work) {
+    stop(sprintf("Did not find %s report %s",
+                 if (draft) "draft" else "archive", id))
+  } else {
+    NULL
+  }
+}

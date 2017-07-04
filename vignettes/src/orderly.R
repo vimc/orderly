@@ -203,7 +203,7 @@ orderly::orderly_list()
 ## must be passed through as a named list.  So we might run this
 ## report as
 ##+ collapse = TRUE
-id <- orderly:::orderly_run("example", list(cyl = 4))
+id <- orderly::orderly_run("example", list(cyl = 4))
 
 ### need this for later:
 ##+ echo = FALSE, results = "hide"
@@ -256,7 +256,7 @@ orderly::orderly_list_drafts()
 
 ## Once you're happy with a report, then "commit" it with
 ##+ collapse = TRUE
-orderly:::orderly_commit("example", id)
+orderly::orderly_commit(id)
 
 ## **THIS WILL CHANGE A LITTLE I THINK** - but mostly in how the index
 ## is built and how we might synchronise reports across people and

@@ -1,10 +1,21 @@
-orderly_commit <- function(name, id, config = NULL, locate = TRUE) {
+##' Commit a generated report
+##' @title Commit a generated report
+##'
+##' @param id The identifier of the report
+##'
+##' @param name The name of the report - this can be ommited and the
+##'   name will be determined from the \code{id}.
+##'
+##' @inheritParams orderly_list
+##' @export
+orderly_commit <- function(id, name = NULL, config = NULL, locate = TRUE) {
   config <- orderly_config_get(config, locate)
-  p <- file.path(path_draft(config$path), name, id)
-  ret <- recipe_commit(p, config$path)
-  ret
+  if (is.null(name)) {
+    name <- orderly_find_name(id, config, draft = TRUE, must_work = TRUE)
+  }
+  workdir <- file.path(path_draft(config$path), name, id)
+  recipe_commit(workdir, config$path)
 }
-
 
 recipe_commit <- function(workdir, config) {
   config <- orderly_config_get(config)
