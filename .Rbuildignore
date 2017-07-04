@@ -3,3 +3,4 @@
 ^Makefile$
 ^\.travis.yml$
 ^api\.md$
+^docker$
