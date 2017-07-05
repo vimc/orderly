@@ -10,10 +10,10 @@ RUN install.r \
   R6 \
   RSQLite \
   digest \
-  docopt \
   ids \
   jsonlite \
   knitr \
+  optparse \
   remotes \
   rmarkdown \
   yaml
