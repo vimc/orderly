@@ -30,6 +30,7 @@ RUN install.r \
 
 COPY . /orderly
 RUN R CMD INSTALL /orderly && \
+  Rscript -e 'orderly:::write_script("/usr/bin")' && \
   rm -rf /orderly
 
 ENTRYPOINT ["/usr/bin/orderly"]
