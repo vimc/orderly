@@ -108,24 +108,38 @@ string_or_filename <- function(x, path, name) {
 }
 
 recipe_read_check_artefacts <- function(x, filename) {
-  check_artefact <- function(nm) {
-    v <- c("format", "description")
-    x <- x[[nm]]
-    check_fields(x, sprintf("%s:artefacts:%s", filename, nm), v, NULL)
-    for (i in v) {
-      assert_character(x[[i]], sprintf("artefacts:%s:%s", nm, i))
+  check_artefact <- function(i) {
+    format <- names(x)[[i]]
+    el <- x[[i]]
+    v <- c("filename", "description")
+    check_fields(el, sprintf("%s:artefacts[%d]", filename, i), v, NULL)
+    for (j in v) {
+      assert_character(el[[j]], sprintf("artefacts:%s:%s", i, j))
     }
-    match_value(x$format, valid_formats())
-    c(filename = nm, unlist(x[v]))
+    c(el[v], list(format = format))
   }
   if (length(x) == 0L) {
     stop("At least one artefact required")
   }
-  assert_named(x, TRUE)
-  x <-
-    t(vapply(names(x), check_artefact, character(3)))
-  rownames(x) <- NULL
-  x
+
+  assert_named(x, FALSE, "artefacts")
+  unk <- setdiff(names(x), valid_formats())
+  if (length(unk) > 0L) {
+    stop("Unknown artefact %s: %s",
+         ngettext(length(unk), "type", "types"),
+         paste(unk, collapse = ", "))
+  }
+
+  res <- t(vapply(seq_along(x), check_artefact, vector("list", 3L)))
+
+  filenames <- unlist(res[, "filename"])
+  dups <- unique(filenames[duplicated(filenames)])
+  if (length(dups) > 0L) {
+    stop("Duplicate artefact filenames are not allowed: ",
+         paste(dups, collapse = ", "))
+  }
+
+  res
 }
 
 recipe_read_check_resources <- function(x, filename, path) {

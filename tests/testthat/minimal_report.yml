@@ -2,6 +2,6 @@ data:
   dat: SELECT name, number FROM thing
 script: script.R
 artefacts:
-  mygraph.png:
-    format: staticgraph
+  staticgraph:
     description: A graph of things
+    filename: mygraph.png

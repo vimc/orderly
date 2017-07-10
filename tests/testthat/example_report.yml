@@ -21,6 +21,6 @@ parameters:
 script: script.R
 
 artefacts:
-  mygraph.png:
-    format: staticgraph
+  staticgraph:
+    filename: mygraph.png
     description: A graph of coverage over time
