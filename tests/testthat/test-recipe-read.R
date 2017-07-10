@@ -12,7 +12,7 @@ test_that("nonexistant file", {
 test_that("minimal", {
   path <- tempfile()
   on.exit(unlink(path))
-  orderly_init(path)
+  orderly_init(path, quiet = TRUE)
   fake_db(file.path(path, "source.sqlite"))
   file_copy("minimal_config.yml", file.path(path, "orderly_config.yml"),
             overwrite = TRUE)

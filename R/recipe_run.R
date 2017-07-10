@@ -60,6 +60,8 @@ recipe_run <- function(info, parameters, envir = .GlobalEnv,
   hash_resources <- hash_files(info$resources)
   if (length(info$resources) > 0L) {
     orderly_log("resources", sprintf("%s: %s", info$resources, hash_resources))
+  } else {
+    hash_resources <- NULL
   }
 
   for (p in info$packages) {
@@ -89,9 +91,10 @@ recipe_run <- function(info, parameters, envir = .GlobalEnv,
                hash_orderly = info$hash,
                hash_input = hash_files("orderly.yml", FALSE),
                ## Below here all seems sensible enough to track
+               hash_script = hash_files(info$script, FALSE),
                hash_resources = hash_resources,
-               hash_data = hash_data_rds,
-               hash_artefacts = hash_artefacts)
+               hash_data = as.list(hash_data_rds),
+               hash_artefacts = as.list(hash_artefacts))
 
   saveRDS(utils::sessionInfo(), path_orderly_run_rds("."))
   writeLines(yaml::as.yaml(meta), path_orderly_run_yml("."))

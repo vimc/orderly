@@ -63,10 +63,9 @@ test_that("run", {
   run <- yaml_read(file.path(p, "orderly_run.yml"))
   expect_equal(run$id, basename(p))
   expect_equal(run$name, info$name)
-  expect_identical(run$hash_artefacts,
+  expect_identical(unname(unlist(run$hash_artefacts, use.names = FALSE)),
                    hash_files(file.path(p, "mygraph.png"), FALSE))
-  ## TODO: set to NULL instead?
-  expect_identical(run$hash_resources, list())
+  expect_null(run$hash_resources)
   expect_identical(run$parameters, parameters)
   expect_is(run$date, "character")
   ## I feel hash_orderly and hash_input have the wrong names here
@@ -74,12 +73,12 @@ test_that("run", {
   expect_identical(run$hash_input,
                    hash_files(file.path(p, "orderly.yml"), FALSE))
 
-  expect_is(run$hash_data, "character")
+  expect_is(run$hash_data, "list")
   expect_equal(length(run$hash_data), 1)
 
   con <- orderly_connect(config)
-  expect_identical(con$rds$list(), run$hash_data)
-  expect_identical(con$csv$list(), run$hash_data)
+  expect_identical(con$rds$list(), unlist(run$hash_data, use.names = FALSE))
+  expect_identical(con$csv$list(), unlist(run$hash_data, use.names = FALSE))
 
   ## Confirm that things are OK:
   expect_equal(con$rds$get(run$hash_data),
@@ -138,6 +137,8 @@ test_that("minimal", {
   expect_true(file.exists(file.path(res, "orderly_run.rds")))
   expect_true(file.exists(file.path(res, "script.R")))
   expect_true(file.exists(file.path(res, "mygraph.png")))
+
+  recipe_commit(res, config)
 })
 
 test_that("orderly_data", {

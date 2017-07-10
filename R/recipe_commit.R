@@ -104,6 +104,7 @@ report_read_data <- function(workdir, config) {
                     script = info$script,
                     artefacts = to_json_string(info$artefacts),
                     resources = to_json_string(info$resources),
+                    hash_script = info$hash_script,
                     ## Outputs
                     parameters = to_json_string(info$parameters),
                     date = info$date,

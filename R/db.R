@@ -96,6 +96,7 @@ report_db_cols <- function() {
     script = "TEXT",
     artefacts = "TEXT",      # should be json (array)
     resources = "TEXT",      # should be json (array)
+    hash_script = "TEXT",
     ## OUTPUTS
     parameters = "TEXT",     # should be json (dict with values)
     date = "DATETIME",
