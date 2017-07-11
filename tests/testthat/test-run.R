@@ -196,3 +196,10 @@ test_that("close too many devices", {
   expect_error(recipe_run(info, NULL, config = config, echo = FALSE),
                "Report closed 1 more devices than it opened")
 })
+
+test_that("included example", {
+  path <- prepare_example()
+  id <- orderly_run("example", list(cyl = 4), config = path, echo = FALSE)
+  p <- orderly_commit(id, config = path)
+  expect_true(is_directory(p))
+})

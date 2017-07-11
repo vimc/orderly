@@ -122,6 +122,24 @@ recipe_read_check_artefacts <- function(x, filename) {
     stop("At least one artefact required")
   }
 
+  ## There are two valid options here:
+  ##
+  ## artefacts:
+  ##   staticgraph:
+  ##     ...
+  ##
+  ## or
+  ##
+  ## artefacts:
+  ##   - staticgraph:
+  ##       ...
+  ##   - staticgraph:
+  ##       ...
+  ##
+  ## This converts the latter into the former:
+  if (is.null(names(x)) && all(lengths(x) == 1L)) {
+    x <- set_names(lapply(x, "[[", 1L), vcapply(x, names))
+  }
   assert_named(x, FALSE, "artefacts")
   unk <- setdiff(names(x), valid_formats())
   if (length(unk) > 0L) {

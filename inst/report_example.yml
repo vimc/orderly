@@ -4,9 +4,9 @@ parameters:
   - cyl
 script: script.R
 artefacts:
-  staticgraph:
-    filename: disp_vs_wt.png
-    description: plot of displacement vs weight
-  staticgraph:
-    filename: distribution.png
-    description: overall distribution of displacement
+  - staticgraph:
+      filename: disp_vs_wt.png
+      description: plot of displacement vs weight
+  - staticgraph:
+      filename: distribution.png
+      description: overall distribution of displacement
