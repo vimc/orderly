@@ -12,7 +12,6 @@ create_orderly_demo <- function(path = tempfile()) {
   ## Here's a handle to the source database
   con <- orderly::orderly_db("source", path, FALSE)
   fake_db(con)
-  DBI::dbDisconnect(con)
 
   path_minimal <- file.path(path, "src", "minimal")
   dir.create(path_minimal)
@@ -38,6 +37,7 @@ create_orderly_demo <- function(path = tempfile()) {
 
   ## Update the db
   fake_db(con, 2)
+  DBI::dbDisconnect(con)
   ids[[4]] <- orderly_run("minimal", config = config, echo = FALSE)
   ids[[5]] <- orderly_run("other", list(nmin = 0), config = config,
                           echo = FALSE)
