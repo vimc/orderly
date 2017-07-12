@@ -16,12 +16,15 @@ test_that("minimal", {
 
   fake_db(DBI::dbConnect(RSQLite::SQLite(), file.path(path, "source.sqlite")))
 
-  file_copy("minimal_config.yml", file.path(path, "orderly_config.yml"),
+  file_copy(orderly_file("minimal_config.yml"),
+            file.path(path, "orderly_config.yml"),
             overwrite = TRUE)
   path_example <- file.path(path, "src", "example")
   dir.create(path_example)
-  file.copy("minimal_report.yml", file.path(path_example, "orderly.yml"))
-  file.copy("minimal_script.R", file.path(path_example, "script.R"))
+  file.copy(orderly_file("minimal_report.yml"),
+            file.path(path_example, "orderly.yml"))
+  file.copy(orderly_file("minimal_script.R"),
+            file.path(path_example, "script.R"))
 
   config <- orderly_config(path)
   info <- recipe_read(path_example, config)

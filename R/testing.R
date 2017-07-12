@@ -3,7 +3,7 @@ create_orderly_demo <- function(path = tempfile()) {
     stop(sprintf("path %s already exists - delete first", path))
   }
   suppressMessages(orderly_init(path, quiet = TRUE))
-  file_copy("minimal_config.yml",
+  file_copy(orderly_file("minimal_config.yml"),
             file.path(path, "orderly_config.yml"),
             overwrite = TRUE)
 
@@ -13,8 +13,10 @@ create_orderly_demo <- function(path = tempfile()) {
 
   path_minimal <- file.path(path, "src", "minimal")
   dir.create(path_minimal)
-  file.copy("minimal_report.yml", file.path(path_minimal, "orderly.yml"))
-  file.copy("minimal_script.R", file.path(path_minimal, "script.R"))
+  file.copy(orderly_file("minimal_report.yml"),
+            file.path(path_minimal, "orderly.yml"))
+  file.copy(orderly_file("minimal_script.R"),
+            file.path(path_minimal, "script.R"))
 
   path_other <- file.path(path, "src", "other")
   dir.create(path_other)
