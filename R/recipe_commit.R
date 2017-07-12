@@ -30,7 +30,10 @@ recipe_commit <- function(workdir, config) {
   ## Copy the _files_ over, but we'll roll this back if anything fails
   success <- FALSE
   dest <- copy_report(workdir, dat$name, config)
-  on.exit(if (!success) unlink(dest, recursive = TRUE))
+  on.exit({
+    if (!success) unlink(dest, recursive = TRUE)
+    DBI::dbDisconnect(con)
+  })
 
   success <- DBI::dbWriteTable(con, tbl, dat, append = TRUE)
   if (success) {
