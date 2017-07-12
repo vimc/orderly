@@ -1,6 +1,6 @@
-demo_orderly <- function(path = tempfile()) {
+create_orderly_demo <- function(path = tempfile()) {
   if (file.exists(path)) {
-    unlink(path, recursive = TRUE)
+    stop(sprintf("path %s already exists - delete first", path))
   }
   suppressMessages(orderly_init(path, quiet = TRUE))
   file_copy("minimal_config.yml",
@@ -70,4 +70,22 @@ demo_orderly <- function(path = tempfile()) {
   res <- vcapply(seq_along(ids), function(i) fixup(ids[[i]], time[[i]], path))
 
   path
+}
+
+fake_db <- function(con, seed = 1) {
+  set.seed(seed)
+
+  id <- ids::adjective_animal(20)
+  n <- 200
+
+  d <- data.frame(id = seq_along(id),
+                  name = id,
+                  number = runif(length(id)))
+  DBI::dbWriteTable(con, "thing", d, overwrite = TRUE)
+
+  d <- data.frame(id = seq_len(n),
+                  thing = sample(length(id), n, replace = TRUE),
+                  value = rnorm(n),
+                  stringsAsFactors = FALSE)
+  DBI::dbWriteTable(con, "data", d, overwrite = TRUE)
 }

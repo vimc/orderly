@@ -1,21 +1,3 @@
-fake_db <- function(con, seed = 1) {
-  set.seed(seed)
-
-  id <- ids::adjective_animal(20)
-  n <- 200
-
-  d <- data.frame(id = seq_along(id),
-                  name = id,
-                  number = runif(length(id)))
-  DBI::dbWriteTable(con, "thing", d, overwrite = TRUE)
-
-  d <- data.frame(id = seq_len(n),
-                  thing = sample(length(id), n, replace = TRUE),
-                  value = rnorm(n),
-                  stringsAsFactors = FALSE)
-  DBI::dbWriteTable(con, "data", d, overwrite = TRUE)
-}
-
 with_wd <- function(path, code) {
   owd <- setwd(path)
   on.exit(setwd(owd))
