@@ -37,6 +37,7 @@ orderly_data <- function(name, parameters = NULL, envir = NULL,
   config <- orderly_config_get(config, locate)
   info <- recipe_read(file.path(path_src(config$path), name), config)
   con <- orderly_db("source", config)
+  on.exit(DBI::dbDisconnect(con))
   dest <- if (is.null(envir)) list() else new.env(parent = envir)
   recipe_data(con, info, parameters, dest)
 }
@@ -44,7 +45,12 @@ orderly_data <- function(name, parameters = NULL, envir = NULL,
 recipe_run <- function(info, parameters, envir = .GlobalEnv,
                        config = NULL, locate = TRUE, echo = TRUE) {
   config <- orderly_config_get(config, locate)
+  ## TODO: do this more tidily
   con <- orderly_connect(config)
+  on.exit({
+    DBI::dbDisconnect(con$source)
+    DBI::dbDisconnect(con$destination)
+  })
 
   orderly_log("name", info$name)
   id <- new_report_id()
@@ -55,7 +61,7 @@ recipe_run <- function(info, parameters, envir = .GlobalEnv,
 
   workdir <- file.path(path_draft(config$path), info$name, id)
   owd <- recipe_prepare_workdir(info, workdir)
-  on.exit(setwd(owd))
+  on.exit(setwd(owd), add = TRUE)
 
   hash_resources <- hash_files(info$resources)
   if (length(info$resources) > 0L) {
