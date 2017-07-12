@@ -99,13 +99,22 @@ report_read_data <- function(workdir, config) {
     stop("Unexpected path") # should never happen
   }
 
+  artefacts <- info$artefacts
+  if (length(artefacts) == 1L) {
+    artefacts <- list(artefacts)
+  }
+  for (i in seq_along(artefacts)) {
+    artefacts[[i]][[1]]$description <-
+                        jsonlite::unbox(artefacts[[i]][[1]]$description)
+  }
+
   ret <- data.frame(id = info$id,
                     name = info$name,
                     ## Inputs
                     views = to_json_string(info$views),
                     data = to_json_string(info$data),
                     script = info$script,
-                    artefacts = to_json_string(info$artefacts),
+                    artefacts = to_json_string(artefacts, FALSE),
                     resources = to_json_string(info$resources),
                     hash_script = info$hash_script,
                     ## Outputs
