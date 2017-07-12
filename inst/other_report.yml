@@ -1,0 +1,12 @@
+data:
+  extract: SELECT name, number FROM thing WHERE number > ?nmin
+parameters:
+  nmin
+script: script.R
+artefacts:
+  - data:
+      description: A summary table
+      filename: summary.csv
+  - staticgraph:
+      description: A summary graph
+      filename: graph.png

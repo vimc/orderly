@@ -1,6 +1,8 @@
 create_orderly_demo <- function(path = tempfile()) {
   if (file.exists(path)) {
-    stop(sprintf("path %s already exists - delete first", path))
+    if (!is_directory(path) || length(dir(path)) > 0) {
+      stop(sprintf("path %s already exists - delete first", path))
+    }
   }
   suppressMessages(orderly_init(path, quiet = TRUE))
   file_copy(orderly_file("minimal_config.yml"),
@@ -20,8 +22,10 @@ create_orderly_demo <- function(path = tempfile()) {
 
   path_other <- file.path(path, "src", "other")
   dir.create(path_other)
-  file.copy("other_report.yml", file.path(path_other, "orderly.yml"))
-  file.copy("other_script.R", file.path(path_other, "script.R"))
+  file.copy(orderly_file("other_report.yml"),
+            file.path(path_other, "orderly.yml"))
+  file.copy(orderly_file("other_script.R"),
+            file.path(path_other, "script.R"))
 
   ids <- character()
 
