@@ -13,7 +13,9 @@ test_that("minimal", {
   path <- tempfile()
   on.exit(unlink(path))
   orderly_init(path, quiet = TRUE)
-  fake_db(file.path(path, "source.sqlite"))
+
+  fake_db(DBI::dbConnect(RSQLite::SQLite(), file.path(path, "source.sqlite")))
+
   file_copy("minimal_config.yml", file.path(path, "orderly_config.yml"),
             overwrite = TRUE)
   path_example <- file.path(path, "src", "example")

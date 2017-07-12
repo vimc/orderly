@@ -15,7 +15,7 @@ test_that("run", {
   })
 
   orderly_init(path)
-  fake_db(file.path(path, "source.sqlite"))
+  fake_db(DBI::dbConnect(RSQLite::SQLite(), file.path(path, "source.sqlite")))
   file.copy("example_config.yml", file.path(path, "orderly_config.yml"),
             overwrite = TRUE)
 

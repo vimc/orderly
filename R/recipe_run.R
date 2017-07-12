@@ -188,8 +188,8 @@ iso_time_str <- function(time = Sys.time()) {
   strftime(time, "%Y%m%d-%H%M%S")
 }
 
-new_report_id <- function() {
-  sprintf("%s-%s", iso_time_str(), ids::random_id(bytes = 4))
+new_report_id <- function(time = Sys.time()) {
+  sprintf("%s-%s", iso_time_str(time), ids::random_id(bytes = 4))
 }
 
 temporary_view <- function(name, sql) {

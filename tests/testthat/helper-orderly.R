@@ -1,7 +1,5 @@
-fake_db <- function(path) {
-  con <- DBI::dbConnect(RSQLite::SQLite(), path)
-
-  set.seed(1)
+fake_db <- function(con, seed = 1) {
+  set.seed(seed)
 
   id <- ids::adjective_animal(20)
   n <- 200
@@ -16,8 +14,6 @@ fake_db <- function(path) {
                   value = rnorm(n),
                   stringsAsFactors = FALSE)
   DBI::dbWriteTable(con, "data", d, overwrite = TRUE)
-
-  invisible(path)
 }
 
 with_wd <- function(path, code) {
@@ -29,7 +25,7 @@ with_wd <- function(path, code) {
 prepare_minimal <- function() {
   path <- tempfile()
   suppressMessages(orderly_init(path, quiet = TRUE))
-  fake_db(file.path(path, "source.sqlite"))
+  fake_db(DBI::dbConnect(RSQLite::SQLite(), file.path(path, "source.sqlite")))
   file_copy("minimal_config.yml", file.path(path, "orderly_config.yml"),
             overwrite = TRUE)
   path_example <- file.path(path, "src", "example")
