@@ -1,4 +1,5 @@
 #!/bin/sh
+set -ex
 TAG=$(git rev-parse --short HEAD)
 DEST=demo
 docker run --rm --entrypoint create_orderly_demo.sh \
@@ -7,5 +8,3 @@ docker run --rm --entrypoint create_orderly_demo.sh \
        -w /orderly \
        "docker.montagu.dide.ic.ac.uk:5000/orderly:${TAG}" \
        "$DEST"
-zip -r $DEST.zip $DEST
-rm -r $DEST
