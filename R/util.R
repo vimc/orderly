@@ -1,10 +1,11 @@
 yaml_load <- function(string) {
   ## More restrictive true/false handling.  Only accept if it maps to
-  ## full true/false:
-  handlers <- list("bool#yes" = function(x) {
-    if (identical(toupper(x), "TRUE")) TRUE else x},
-                   "bool#no" = function(x) {
-    if (identical(toupper(x), "FALSE")) FALSE else x})
+  ## full (true|yes) / (false|no):
+  handlers <- list(
+    "bool#yes" = function(x)
+      if (tolower(x) %in% c("true", "yes")) TRUE else x,
+    "bool#no" = function(x)
+      if (tolower(x) %in% c("false", "no")) FALSE else x)
   yaml::yaml.load(string, handlers = handlers)
 }
 
@@ -15,6 +16,10 @@ yaml_read <- function(filename) {
   }
   tryCatch(yaml_load(read_lines(filename)),
            error = catch_yaml)
+}
+
+yaml_write <- function(data, filename) {
+  writeLines(yaml::as.yaml(data), filename)
 }
 
 read_lines <- function(...) {

@@ -101,7 +101,8 @@ test_that("run", {
 
   expect_equal(DBI::dbListTables(con$destination), "orderly")
   d <- DBI::dbReadTable(con$destination, "orderly")
-  expect_true(all(vlapply(d, is.character)))
+  expect_true(all(vlapply(d[names(d) != "published"], is.character)))
+  expect_true(is.numeric(d$published))
 
   expect_equal(d$id, basename(q))
 })

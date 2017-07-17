@@ -108,6 +108,13 @@ report_read_data <- function(workdir, config) {
                         jsonlite::unbox(artefacts[[i]][[1]]$description)
   }
 
+  published_yml <- path_orderly_published_yml(workdir)
+  if (file.exists(published_yml)) {
+    published <- yaml_read(published_yml)$published
+  } else {
+    published <- FALSE
+  }
+
   ret <- data.frame(id = info$id,
                     name = info$name,
                     ## Inputs
@@ -125,6 +132,7 @@ report_read_data <- function(workdir, config) {
                     hash_resources = to_json_string(info$hash_resources),
                     hash_data = to_json_string(info$hash_data),
                     hash_artefacts = to_json_string(info$hash_artefacts),
+                    published = jsonlite::unbox(published),
                     stringsAsFactors = FALSE)
 
   ## If specified, add custom fields.
