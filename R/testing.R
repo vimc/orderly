@@ -5,9 +5,26 @@ create_orderly_demo <- function(path = tempfile()) {
     }
   }
   suppressMessages(orderly_init(path, quiet = TRUE))
-  file_copy(orderly_file("minimal_config.yml"),
-            file.path(path, "orderly_config.yml"),
-            overwrite = TRUE)
+
+  txt <- readLines(orderly_file("minimal_config.yml"))
+  fields <- c("fields:",
+              "  requester:",
+              "    required: true",
+              "    type: character",
+              "  author:",
+              "    required: true",
+              "    type: character",
+              "  comment:",
+              "    required: false",
+              "    type: character")
+  writeLines(c(txt, fields), file.path(path, "orderly_config.yml"))
+
+  extra1 <- c("author: Researcher McResearcherface",
+             "requester: Funder McFunderface",
+             "comment: This is a comment")
+  extra2 <- c("author: Dr Serious",
+             "requester: ACME",
+             "comment: This is another comment")
 
   ## Here's a handle to the source database
   con <- orderly::orderly_db("source", path, FALSE)
@@ -15,15 +32,15 @@ create_orderly_demo <- function(path = tempfile()) {
 
   path_minimal <- file.path(path, "src", "minimal")
   dir.create(path_minimal)
-  file.copy(orderly_file("minimal_report.yml"),
-            file.path(path_minimal, "orderly.yml"))
+  writeLines(c(readLines(orderly_file("minimal_report.yml")), extra1),
+             file.path(path_minimal, "orderly.yml"))
   file.copy(orderly_file("minimal_script.R"),
             file.path(path_minimal, "script.R"))
 
   path_other <- file.path(path, "src", "other")
   dir.create(path_other)
-  file.copy(orderly_file("other_report.yml"),
-            file.path(path_other, "orderly.yml"))
+  writeLines(c(readLines(orderly_file("other_report.yml")), extra2),
+             file.path(path_other, "orderly.yml"))
   file.copy(orderly_file("other_script.R"),
             file.path(path_other, "script.R"))
 
@@ -43,7 +60,6 @@ create_orderly_demo <- function(path = tempfile()) {
                           echo = FALSE)
   ids[[6]] <- orderly_run("other", list(nmin = 0.5), config = config,
                           echo = FALSE)
-
   ## Update the code
   txt <- readLines(file.path(path_other, "script.R"))
   writeLines(c("extract$number <- extract$number * 1.2", txt),
@@ -51,7 +67,6 @@ create_orderly_demo <- function(path = tempfile()) {
 
   ids[[7]] <- orderly_run("other", list(nmin = 0), config = config,
                           echo = FALSE)
-
   ## Then let's create a series of times and update things.  Push the
   ## times back through to ~1 week ago
   dt <- sort(runif(length(ids), 0, 60 * 60 * 24 * 7), decreasing = TRUE)
@@ -72,9 +87,14 @@ create_orderly_demo <- function(path = tempfile()) {
     writeLines(yaml::as.yaml(dat), yml)
 
     orderly_commit(id_new, name, path)
+    id_new
   }
 
   res <- vcapply(seq_along(ids), function(i) fixup(ids[[i]], time[[i]], path))
+
+  for (id in res[c(2, 6, 7)]) {
+    orderly_publish(id, config = config)
+  }
 
   path
 }
