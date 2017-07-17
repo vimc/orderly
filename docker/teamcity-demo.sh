@@ -2,6 +2,7 @@
 set -ex
 TAG=$(git rev-parse --short HEAD)
 DEST=build/demo
+rm -rf $DEST
 docker run --rm --entrypoint create_orderly_demo.sh \
        -u `id -u teamcity` \
        -v "${PWD}":/orderly \
