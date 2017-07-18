@@ -90,6 +90,8 @@ report_db_cols <- function() {
   c(## INPUTS:
     id = "TEXT PRIMARY KEY NOT NULL",
     name = "TEXT",
+    displayname = "TEXT",
+    description = "TEXT",
     views = "TEXT",          # should be json (dict)
     data = "TEXT",           # should be json (dict)
     packages = "TEXT",       # should be json (array)

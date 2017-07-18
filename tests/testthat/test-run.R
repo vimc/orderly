@@ -203,4 +203,20 @@ test_that("included example", {
   id <- orderly_run("example", list(cyl = 4), config = path, echo = FALSE)
   p <- orderly_commit(id, config = path)
   expect_true(is_directory(p))
+  db <- orderly_db("destination", path)
+  dat <- DBI::dbReadTable(db, "orderly")
+  expect_equal(dat$description, NA_character_)
+  expect_equal(dat$displayname, NA_character_)
+})
+
+test_that("included other", {
+  path <- prepare_other()
+  id <- orderly_run("other", list(nmin = 0), config = path, echo = FALSE)
+  p <- orderly_commit(id, config = path)
+  info <- recipe_read(file.path(path_src(path), "other"),
+                      orderly_config(path))
+  db <- orderly_db("destination", path)
+  dat <- DBI::dbReadTable(db, "orderly")
+  expect_equal(dat$description, info$description)
+  expect_equal(dat$displayname, info$displayname)
 })

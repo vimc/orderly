@@ -117,6 +117,8 @@ report_read_data <- function(workdir, config) {
 
   ret <- data.frame(id = info$id,
                     name = info$name,
+                    displayname = info$displayname %||% NA_character_,
+                    description = info$description %||% NA_character_,
                     ## Inputs
                     views = to_json_string(info$views),
                     data = to_json_string(info$data),

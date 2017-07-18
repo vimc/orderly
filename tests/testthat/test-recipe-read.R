@@ -38,6 +38,9 @@ test_that("minimal", {
   expect_equal(info$path, path_example)
   expect_is(info$hash, "character")
 
+  expect_null(info$displayname)
+  expect_null(info$description)
+
   ## Now, with this in place, check the parse:
   yml <- file.path(path_example, "orderly.yml")
   dat <- yaml_read(yml)
@@ -91,4 +94,12 @@ test_that("minimal", {
   write(modifyList(dat, list(packages = 10)))
   expect_error(recipe_read(path_example, config),
                "orderly.yml:packages' must be character")
+})
+
+test_that("other", {
+  path <- prepare_other()
+  config <- orderly_config(path)
+  info <- recipe_read(file.path(path_src(path), "other"), config)
+  expect_is(info$displayname, "character")
+  expect_is(info$description, "character")
 })

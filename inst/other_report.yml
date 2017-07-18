@@ -10,3 +10,7 @@ artefacts:
   - staticgraph:
       description: A summary graph
       filename: graph.png
+displayname: another report
+description: >-
+  An extended comment field.  This can be quite long.  This is not so
+  long though, but long enough I'm sure.

@@ -12,7 +12,9 @@ recipe_read <- function(path, config) {
                 "artefacts",
                 "data",
                 config$fields$name[config$fields$required])
-  optional <- c("parameters", # character >= 1
+  optional <- c("displayname",
+                "description",
+                "parameters", # character >= 1
                 "views",
                 "packages",
                 "resources",
