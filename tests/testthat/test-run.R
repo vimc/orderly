@@ -220,3 +220,23 @@ test_that("included other", {
   expect_equal(dat$description, info$description)
   expect_equal(dat$displayname, info$displayname)
 })
+
+test_that("connection", {
+  path <- prepare_minimal()
+  on.exit(unlink(path, recursive = TRUE))
+
+  path_example <- file.path(path, "src", "example")
+  yml <- file.path(path_example, "orderly.yml")
+  txt <- readLines(yml)
+  writeLines(c(txt, "connection: con"), yml)
+
+  config <- orderly_config(path)
+  info <- recipe_read(path_example, config)
+  expect_identical(info$connection, "con")
+
+  data <- orderly_data("example",
+                       envir = new.env(parent = .GlobalEnv),
+                       config = path)
+  expect_is(data$con, "SQLiteConnection")
+  expect_is(DBI::dbReadTable(data$con, "data"), "data.frame")
+})

@@ -18,6 +18,7 @@ recipe_read <- function(path, config) {
                 "views",
                 "packages",
                 "resources",
+                "connection",
                 config$fields$name[!config$fields$required])
   check_fields(info, filename, required, optional)
 
@@ -42,6 +43,9 @@ recipe_read <- function(path, config) {
   }
   if (!is.null(info$packages)) {
     assert_character(info$packages, fieldname("packages"))
+  }
+  if (!is.null(info$connection)) {
+    assert_scalar_character(info$connection)
   }
 
   ## Then some processing:

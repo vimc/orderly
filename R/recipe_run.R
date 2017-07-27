@@ -37,7 +37,9 @@ orderly_data <- function(name, parameters = NULL, envir = NULL,
   config <- orderly_config_get(config, locate)
   info <- recipe_read(file.path(path_src(config$path), name), config)
   con <- orderly_db("source", config)
-  on.exit(DBI::dbDisconnect(con))
+  if (is.null(info$connection)) {
+    on.exit(DBI::dbDisconnect(con))
+  }
   dest <- if (is.null(envir)) list() else new.env(parent = envir)
   recipe_data(con, info, parameters, dest)
 }
@@ -152,6 +154,10 @@ recipe_data <- function(con, info, parameters, dest) {
     dest[[v]] <- DBI::dbGetQuery(con, info$data[[v]])
     orderly_log("data",
                 sprintf("%s: %s x %s", v, nrow(dest[[v]]), ncol(dest[[v]])))
+  }
+
+  if (!is.null(info$connection)) {
+    dest[[info$connection]] <- con
   }
 
   dest
