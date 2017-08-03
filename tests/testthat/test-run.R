@@ -240,3 +240,27 @@ test_that("connection", {
   expect_is(data$con, "SQLiteConnection")
   expect_is(DBI::dbReadTable(data$con, "data"), "data.frame")
 })
+
+test_that("no data", {
+  path <- prepare_minimal()
+  yml <- c("data: ~",
+           "script: script.R",
+           "artefacts:",
+           "  data:",
+           "    filename: data.rds",
+           "    description: the data")
+  script <- "saveRDS(mtcars, 'data.rds')"
+  path_example <- file.path(path, "src", "example")
+  writeLines(yml, file.path(path_example, "orderly.yml"))
+  writeLines(script, file.path(path_example, "script.R"))
+
+  data <- orderly_data("example",
+                       envir = new.env(parent = .GlobalEnv),
+                       config = path)
+  expect_equal(ls(data, all.names = TRUE), character(0))
+
+  id <- orderly_run("example", config = path, echo = FALSE)
+  p <- file.path(path_draft(path), "example", id, "data.rds")
+  expect_true(file.exists(p))
+  expect_equal(readRDS(p), mtcars)
+})

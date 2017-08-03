@@ -49,12 +49,14 @@ recipe_read <- function(path, config) {
   }
 
   ## Then some processing:
-  assert_named(info$data, TRUE, fieldname("data"))
-  info$data <- string_or_filename(info$data, path, fieldname("data"))
-  info$resources <- c(info$resources, attr(info$data, "files"))
+  if (!is.null(info$data)) {
+    assert_named(info$data, TRUE, fieldname("data"))
+    info$data <- string_or_filename(info$data, path, fieldname("data"))
+    info$resources <- c(info$resources, attr(info$data, "files"))
+  }
 
   if (!is.null(info$views)) {
-    assert_named(info$data, TRUE, fieldname("data"))
+    assert_named(info$views, TRUE, fieldname("views"))
     info$views <- string_or_filename(info$views, path, fieldname("views"))
     info$resources <- c(info$resources, attr(info$views, "files"))
   }
