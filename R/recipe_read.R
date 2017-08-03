@@ -89,7 +89,7 @@ recipe_read <- function(path, config) {
 ## *format* (which we can get from the extension) but an intent of
 ## use.
 valid_formats <- function() {
-  c("staticgraph", "interactivegraph", "data")
+  c("staticgraph", "interactivegraph", "data", "report")
 }
 
 string_or_filename <- function(x, path, name) {
