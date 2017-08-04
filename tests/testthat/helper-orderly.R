@@ -64,3 +64,20 @@ read_orderly_db <- function(path) {
 
 ## Via wikimedia:
 MAGIC_PNG <- as.raw(c(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a))
+
+prepare_orderly_example <- function(name, path = tempfile()) {
+  src <- orderly_file(file.path("examples", name))
+  orderly_init(path, quiet = TRUE)
+  src_files <- dir(src, full.names = TRUE)
+  file.copy(src_files, path, overwrite = TRUE, recursive = TRUE)
+
+  if (file.exists(file.path(path, "source.R"))) {
+    generator <- source(file.path(path, "source.R"), local = TRUE)$value
+  } else {
+    generator <- fake_db
+  }
+  con <- orderly_db("source", config = path)
+  on.exit(DBI::dbDisconnect(con))
+  generator(con)
+  path
+}

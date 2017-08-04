@@ -1,0 +1,12 @@
+data: ~
+depends:
+  example:
+    id: latest
+    draft: true
+    use:
+      previous.rds: data.rds
+script: script.R
+artefacts:
+  staticgraph:
+    description: a plot
+    filename: mygraph.png

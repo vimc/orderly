@@ -266,58 +266,19 @@ test_that("no data", {
 })
 
 test_that("use artefact", {
-  orderly_log_start()
-  path <- prepare_minimal()
+  path <- prepare_orderly_example("depends")
 
-  ## First the report that creates a data artefact
   path_example <- file.path(path, "src", "example")
-
-  yml <- c("data:",
-           "  dat: SELECT name, number FROM thing",
-           "script: script.R",
-           "artefacts:",
-           "  data:",
-           "    description: some data",
-           "    filename: data.rds")
-  script <- c("dat$number <- dat$number + rnorm(nrow(dat))",
-              "saveRDS(dat, 'data.rds')")
-  writeLines(yml, file.path(path_example, "orderly.yml"))
-  writeLines(script, file.path(path_example, "script.R"))
-
+  path_depend <- file.path(path, "src", "depend")
   id1 <- orderly_run("example", config = path, echo = FALSE)
   orderly_log_break()
-
   path_orig <- file.path(path_draft(path), "example", id1, "data.rds")
   expect_true(file.exists(path_orig))
-
-  path_depend <- file.path(path, "src", "depend")
-  dir.create(path_depend)
-
-  yml <- c("data: ~",
-           "depends:",
-           "  example:",
-           "    id: latest",
-           "    draft: true",
-           "    use:",
-           "      previous.rds: data.rds",
-           "script: script.R",
-           "artefacts:",
-           "  staticgraph:",
-           "    description: a plot",
-           "    filename: mygraph.png")
-  script <- c("dat <- readRDS('previous.rds')",
-              "png('mygraph.png')",
-              "par(mar = c(15, 4, .5, .5))",
-              "barplot(setNames(dat$number, dat$name), las = 2)",
-              "dev.off()")
-  writeLines(yml, file.path(path_depend, "orderly.yml"))
-  writeLines(script, file.path(path_depend, "script.R"))
 
   data <- orderly_data("depend",
                        envir = new.env(parent = .GlobalEnv),
                        config = path)
   expect_identical(ls(data), character(0))
-
   id2 <- orderly_run("depend", config = path, echo = FALSE)
   orderly_log_break()
 

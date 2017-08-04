@@ -1,0 +1,7 @@
+data:
+  dat: SELECT name, number FROM thing
+script: script.R
+artefacts:
+  data:
+    description: some data
+    filename: data.rds
