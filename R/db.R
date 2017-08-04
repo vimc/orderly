@@ -106,7 +106,8 @@ report_db_cols <- function() {
     hash_input = "TEXT",
     hash_resources = "TEXT", # should be json (dict)
     hash_data = "TEXT",      # should be json (dict)
-    hash_artefacts = "TEXT",  # should be json (dict)
+    hash_artefacts = "TEXT", # should be json (dict)
+    depends = "TEXT",        # should be json (array of dicts)
     ## PUBLISHING
     published = "BOOLEAN")
 }

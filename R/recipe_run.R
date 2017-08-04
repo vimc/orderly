@@ -91,6 +91,14 @@ recipe_run <- function(info, parameters, envir = .GlobalEnv,
   hash_data_rds <- con$rds$mset(ldata)
   stopifnot(identical(hash_data_csv, hash_data_rds))
 
+  if (is.null(info$depends)) {
+    depends <- NULL
+  } else {
+    depends <- info$depends
+    depends$id <- basename(depends$path)
+    depends <- depends[c("name", "id", "filename", "as", "hash")]
+  }
+
   meta <- list(id = id,
                name = info$name,
                parameters = parameters,
@@ -102,10 +110,12 @@ recipe_run <- function(info, parameters, envir = .GlobalEnv,
                hash_script = hash_files(info$script, FALSE),
                hash_resources = hash_resources,
                hash_data = as.list(hash_data_rds),
-               hash_artefacts = as.list(hash_artefacts))
+               hash_artefacts = as.list(hash_artefacts),
+               depends = depends)
 
-  saveRDS(utils::sessionInfo(), path_orderly_run_rds("."))
-  writeLines(yaml::as.yaml(meta), path_orderly_run_yml("."))
+  saveRDS(session_info(), path_orderly_run_rds("."))
+  writeLines(yaml::as.yaml(meta, column.major = FALSE),
+             path_orderly_run_yml("."))
   workdir
 }
 
@@ -136,11 +146,11 @@ recipe_data <- function(con, info, parameters, dest) {
   }
 
   info <- recipe_substitute(info, parameters)
-  for (i in seq_along(parameters)) {
+  if (!is.null(parameters)) {
     if (is.environment(dest)) {
       list2env(parameters, dest)
     } else {
-      dest <- utils::modifyList(dest, parameters)
+      dest <- modify_list(dest, parameters)
     }
   }
 
@@ -170,6 +180,7 @@ recipe_prepare_workdir <- function(info, workdir) {
   src <- normalizePath(info$path, mustWork = TRUE)
   dir_create(workdir)
   owd <- setwd(workdir)
+  on.exit(setwd(owd)) # (or use withCallingHandlers to do this on error)
 
   dir.create(dirname(info$script), FALSE, TRUE)
   file_copy(file.path(src, info$script), info$script)
@@ -179,6 +190,21 @@ recipe_prepare_workdir <- function(info, workdir) {
     dir_create(dirname(info$resources))
     file.copy(file.path(src, info$resources), info$resources)
   }
+
+  if (!is.null(info$depends)) {
+    src <- file.path(info$depends$path, info$depends$filename)
+    dst <- file.path(workdir, info$depends$as)
+    dir_create(dirname(dst))
+    str <- sprintf("%s@%s:%s -> %s",
+                   info$depends$name,
+                   basename(info$depends$path),
+                   info$depends$filename,
+                   info$depends$as)
+    orderly_log("depends", str)
+    file.copy(src, dst)
+  }
+
+  on.exit() # did not fail
 
   owd
 }

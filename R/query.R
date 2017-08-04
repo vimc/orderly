@@ -66,3 +66,41 @@ orderly_find_name <- function(id, config, locate = FALSE, draft = TRUE,
     NULL
   }
 }
+
+orderly_find_report <- function(id, name, config, locate = FALSE,
+                                draft = TRUE, must_work = FALSE) {
+  config <- orderly_config_get(config, locate)
+  path <-
+    file.path((if (draft) path_draft else path_archive)(config$path), name)
+  if (id == "latest") {
+    pos <- dir(path)
+    if (length(pos) > 0L) {
+      if (length(pos) > 1L) {
+        re <- "^([0-9]{8}-[0-9]{6})-[[:xdigit:]]{8}$"
+        stopifnot(grepl(re, pos))
+        isodate <- sub(re, "\\1", pos)
+        pos <- pos[isodate == last(isodate)]
+        if (length(pos) > 1L) {
+          ## We have no choice here but to look at the actual times to
+          ## determine which is the most recent report.
+          times <- lapply(path_orderly_run_rds(file.path(path, pos)),
+                          function(x) readRDS(x)$time)
+          pos <- pos[[which_max_time(times)]]
+        }
+      }
+      return(file.path(path, pos))
+    }
+  } else {
+    path_report <- file.path(path, id)
+    if (file.exists(path_report)) {
+      return(path_report)
+    }
+  }
+
+  if (must_work) {
+    stop(sprintf("Did not find %s report %s:%s",
+                 if (draft) "draft" else "archived", name, id))
+  } else {
+    NULL
+  }
+}

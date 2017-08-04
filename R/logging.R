@@ -45,3 +45,8 @@ orderly_log <- function(topic, value) {
     message(str)
   }
 }
+
+orderly_log_break <- function() {
+  orderly_log(strrep("-", 9),
+              strrep("-", max(getOption("width") - 18, 0)))
+}

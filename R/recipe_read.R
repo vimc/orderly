@@ -19,6 +19,7 @@ recipe_read <- function(path, config) {
                 "packages",
                 "resources",
                 "connection",
+                "depends",
                 config$fields$name[!config$fields$required])
   check_fields(info, filename, required, optional)
 
@@ -35,6 +36,7 @@ recipe_read <- function(path, config) {
 
   info$artefacts <- recipe_read_check_artefacts(info$artefacts, filename)
   info$resources <- recipe_read_check_resources(info$resources, filename, path)
+  info$depends <- recipe_read_check_depends(info$depends, filename, config)
 
   assert_scalar_character(info$script, fieldname("script"))
 
@@ -188,4 +190,65 @@ recipe_read_check_resources <- function(x, filename, path) {
   ## *relative* path perhaps to prevent valid, but absolute, paths
   ## being used.
   x
+}
+
+recipe_read_check_depends <- function(x, filename, config) {
+  ## TODO: this is going to assume that the artefacts are all in place
+  ## - that need not actually be the case here - so we need a flag on
+  ## this function that indicates that we're actually going to try and
+  ## run things!
+  if (is.null(x)) {
+    return(NULL)
+  }
+  assert_named(x, TRUE,sprintf("%s:%s", filename, "depends"))
+
+  msg <- setdiff(names(x), orderly_list(config))
+  if (length(msg) > 0L) {
+    stop("Declared upstream reports: ", paste(msg, collapse = ", "))
+  }
+
+  check_use1 <- function(i) {
+    name <- names(x)[[i]]
+    el <- x[[i]]
+    v <- c("id", "use")
+    check_fields(el, sprintf("%s:depends:%s", filename, name), v, "draft")
+    el$name <- name
+
+    assert_character(el$id, sprintf("%s:depends:%s:id", filename, name))
+    if (is.null(el$draft)) {
+      el$draft <- FALSE
+    } else {
+      assert_scalar_logical(el$draft,
+                            sprintf("%s:depends:%s:draft", filename, name))
+    }
+    el$path <- orderly_find_report(el$id, name, config, draft = el$draft,
+                                   must_work = TRUE)
+    assert_named(el$use, TRUE, sprintf("%s:depends:%s:use", filename, name))
+    ## TODO: should check that these are not listed as resources I think
+    err <- !vapply(el$use, function(x) is.character(x) && length(x) == 1, TRUE)
+    if (any(err)) {
+      stop(sprintf("%s:depends:%s:use must all be scalar character",
+                   filename, name))
+    }
+
+    el$filename = vapply(el$use, identity, character(1), USE.NAMES = FALSE)
+    el$as = names(el$use)
+    el$use <- NULL
+
+    filename_full <- file.path(el$path, el$filename)
+
+    msg <- !file.exists(filename_full)
+    if (any(msg)) {
+      stop(sprintf("Did not find file %s at %s",
+                   el$filename[msg],
+                   el$path))
+    }
+    el$hash <- hash_files(filename_full, FALSE)
+
+    ## Bit of a faff here to get the format into something that will
+    ## serialise and interrogate nicely.
+    as.data.frame(el, stringsAsFactors = FALSE)
+  }
+
+  rbind_df(lapply(seq_along(x), check_use1))
 }

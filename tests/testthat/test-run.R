@@ -264,3 +264,91 @@ test_that("no data", {
   expect_true(file.exists(p))
   expect_equal(readRDS(p), mtcars)
 })
+
+test_that("use artefact", {
+  orderly_log_start()
+  path <- prepare_minimal()
+
+  ## First the report that creates a data artefact
+  path_example <- file.path(path, "src", "example")
+
+  yml <- c("data:",
+           "  dat: SELECT name, number FROM thing",
+           "script: script.R",
+           "artefacts:",
+           "  data:",
+           "    description: some data",
+           "    filename: data.rds")
+  script <- c("dat$number <- dat$number + rnorm(nrow(dat))",
+              "saveRDS(dat, 'data.rds')")
+  writeLines(yml, file.path(path_example, "orderly.yml"))
+  writeLines(script, file.path(path_example, "script.R"))
+
+  id1 <- orderly_run("example", config = path, echo = FALSE)
+  orderly_log_break()
+
+  path_orig <- file.path(path_draft(path), "example", id1, "data.rds")
+  expect_true(file.exists(path_orig))
+
+  path_depend <- file.path(path, "src", "depend")
+  dir.create(path_depend)
+
+  yml <- c("data: ~",
+           "depends:",
+           "  example:",
+           "    id: latest",
+           "    draft: true",
+           "    use:",
+           "      previous.rds: data.rds",
+           "script: script.R",
+           "artefacts:",
+           "  staticgraph:",
+           "    description: a plot",
+           "    filename: mygraph.png")
+  script <- c("dat <- readRDS('previous.rds')",
+              "png('mygraph.png')",
+              "par(mar = c(15, 4, .5, .5))",
+              "barplot(setNames(dat$number, dat$name), las = 2)",
+              "dev.off()")
+  writeLines(yml, file.path(path_depend, "orderly.yml"))
+  writeLines(script, file.path(path_depend, "script.R"))
+
+  data <- orderly_data("depend",
+                       envir = new.env(parent = .GlobalEnv),
+                       config = path)
+  expect_identical(ls(data), character(0))
+
+  id2 <- orderly_run("depend", config = path, echo = FALSE)
+  orderly_log_break()
+
+  path_previous <- file.path(path_draft(path), "depend", id2, "previous.rds")
+  expect_true(file.exists(path_previous))
+  expect_equal(hash_files(path_previous, FALSE),
+               hash_files(path_orig, FALSE))
+
+  d <-
+    yaml_read(path_orderly_run_yml(file.path(path_draft(path), "depend", id2)))
+  expect_equal(d$depends[[1]]$hash, hash_files(path_previous, FALSE))
+
+  ## Then rebuild the original:
+  id3 <- orderly_run("example", config = path, echo = FALSE)
+  orderly_log_break()
+  id4 <- orderly_run("depend", config = path, echo = FALSE)
+  orderly_log_break()
+  path_orig2 <- file.path(path_draft(path), "example", id3, "data.rds")
+  path_previous2 <- file.path(path_draft(path), "depend", id4, "previous.rds")
+
+  expect_equal(hash_files(path_previous2, FALSE),
+               hash_files(path_orig2, FALSE))
+  expect_true(hash_files(path_previous2, FALSE) !=
+              hash_files(path_previous, FALSE))
+
+  ## Then we need to commit things and check that it all still works OK.
+  expect_error(orderly_commit(id2, config = path),
+               "Report uses draft id - commit first")
+  p1 <- orderly_commit(id1, config = path)
+  p2 <- orderly_commit(id2, config = path)
+  expect_error(orderly_commit(id4, config = path), id3)
+  p3 <- orderly_commit(id3, config = path)
+  p4 <- orderly_commit(id4, config = path)
+})

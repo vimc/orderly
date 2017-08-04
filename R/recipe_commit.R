@@ -93,8 +93,8 @@ report_read_data <- function(workdir, config) {
   }
   ## This does *not* go through the read_recipe bits because we want
   ## the unmodified yml contents here.
-  info <- utils::modifyList(yaml_read(file.path(workdir, "orderly.yml")),
-                            yaml_read(yml))
+  info <- modify_list(yaml_read(file.path(workdir, "orderly.yml")),
+                      yaml_read(yml))
   if (info$id != basename(workdir)) {
     stop("Unexpected path") # should never happen
   }
@@ -113,6 +113,23 @@ report_read_data <- function(workdir, config) {
     published <- yaml_read(published_yml)$published
   } else {
     published <- FALSE
+  }
+
+  if (!is.null(info$depends)) {
+    used <- unique(vcapply(info$depends, "[[", "id"))
+    msg <- vlapply(used, function(id)
+      is.null(orderly_find_name(id, config, draft = FALSE)))
+    if (any(msg)) {
+      err <- used[msg]
+      is_draft <- vlapply(used, function(id)
+        !is.null(orderly_find_name(id, config, draft = TRUE)))
+      if (any(!is_draft)) {
+      stop("Report uses nonexistant id:\n",
+           paste(sprintf("\t- %s", err[!is_draft]), collapse = "\n"))
+      }
+      stop("Report uses draft id - commit first:\n",
+           paste(sprintf("\t- %s", err), collapse = "\n"))
+    }
   }
 
   ret <- data.frame(id = info$id,
@@ -135,6 +152,7 @@ report_read_data <- function(workdir, config) {
                     hash_data = to_json_string(info$hash_data),
                     hash_artefacts = to_json_string(info$hash_artefacts),
                     published = jsonlite::unbox(published),
+                    depends = to_json_string(info$depends %||% list()),
                     stringsAsFactors = FALSE)
 
   ## If specified, add custom fields.

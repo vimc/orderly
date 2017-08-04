@@ -198,3 +198,32 @@ capture_log <- function(expr, filename, suppress_messages = FALSE) {
     withCallingHandlers(force(expr), message = handle_message)
   }
 }
+
+last <- function(x) {
+  x[[length(x)]]
+}
+
+modify_list <- function(a, b) {
+  a[names(b)] <- b
+  a
+}
+
+session_info <- function() {
+  dat <- utils::sessionInfo()
+  dat$time <- Sys.time()
+  dat
+}
+
+## Because time handling is a total faff:
+which_max_time <- function(x) {
+  idx <- 1L
+  t <- x[[idx]]
+  for (i in seq_along(x)[-1]) {
+    ti <- x[[i]]
+    if (ti > t) {
+      t <- ti
+      idx <- i
+    }
+  }
+  idx
+}
