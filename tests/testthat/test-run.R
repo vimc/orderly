@@ -281,7 +281,6 @@ test_that("use artefact", {
   expect_identical(ls(data), character(0))
   id2 <- orderly_run("depend", config = path, echo = FALSE)
   orderly_log_break()
-
   path_previous <- file.path(path_draft(path), "depend", id2, "previous.rds")
   expect_true(file.exists(path_previous))
   expect_equal(hash_files(path_previous, FALSE),

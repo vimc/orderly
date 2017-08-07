@@ -11,6 +11,27 @@ test_that("read", {
                       file.path(normalizePath(cfg$path), "orderly.sqlite")))
 })
 
+test_that("environment variables", {
+  path <- tempfile()
+  dir.create(path)
+
+  dat <- list(source = list(driver = "RPostgres::Postgres",
+                            host = "OURHOST",
+                            port = "OURPORT",
+                            user = "OURUSER",
+                            dbname = "OURDBNAME",
+                            password = "OURPASSWORD"))
+  writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
+
+  cfg <- orderly_config(path)
+  expect_equal(cfg$source$args$password, "OURPASSWORD")
+
+  cfg2 <- withr::with_envvar(
+    c(OURPASSWORD = "foo"),
+    orderly_config(path))
+  expect_equal(cfg2$source$args$password, "foo")
+})
+
 test_that("not found", {
   expect_error(orderly_config(tempfile()),
                "Did not find file 'orderly_config.yml' at path")

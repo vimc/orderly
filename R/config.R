@@ -26,6 +26,11 @@ orderly_config_read_yaml <- function(filename, path) {
                                     sprintf("%s:%s:driver", filename, name))
     args <- info[[name]][setdiff(names(info[[name]]), "driver")]
 
+    resolve_env <- function(x) {
+      if (grepl("^[0-9A-Z]+$", x)) Sys.getenv(x, x) else x
+    }
+    args <- lapply(args, resolve_env)
+
     if (info[[name]]$driver == "RSQLite::SQLite") {
       dbname <- args$dbname
       if (!nzchar(dbname) || tolower(dbname) == ":memory:") {
