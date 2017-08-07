@@ -75,6 +75,9 @@ recipe_run <- function(info, parameters, envir = .GlobalEnv,
   for (p in info$packages) {
     library(p, character.only = TRUE)
   }
+  for (s in info$sources) {
+    source(s, envir)
+  }
   n_dev <- length(grDevices::dev.list())
   orderly_log("start", as.character(Sys.time()))
   ## TODO: perhaps like context do the ok/fail logging here.  Perhaps

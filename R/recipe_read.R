@@ -17,6 +17,7 @@ recipe_read <- function(path, config) {
                 "parameters", # character >= 1
                 "views",
                 "packages",
+                "sources",
                 "resources",
                 "connection",
                 "depends",
@@ -45,6 +46,12 @@ recipe_read <- function(path, config) {
   }
   if (!is.null(info$packages)) {
     assert_character(info$packages, fieldname("packages"))
+  }
+  if (!is.null(info$sources)) {
+    assert_character(info$sources, fieldname("sources"))
+    assert_file_exists(file.path(path,info$sources))
+    ## TODO: check relative path
+    info$resources <- c(info$resources, info$sources)
   }
   if (!is.null(info$connection)) {
     assert_scalar_character(info$connection)

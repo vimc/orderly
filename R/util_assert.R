@@ -59,6 +59,13 @@ assert_is <- function(x, what, name = deparse(substitute(x))) {
   }
 }
 
+assert_file_exists <- function(x, name = deparse(substitute(x))) {
+  err <- !file.exists(x)
+  if (any(err)) {
+    stop("File does not exist: ", paste(x[err], collapse = "\n"))
+  }
+}
+
 match_value <- function(arg, choices, name = deparse(substitute(arg))) {
   assert_scalar_character(arg)
   if (!(arg %in% choices)) {
