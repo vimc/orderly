@@ -27,7 +27,7 @@ orderly_config_read_yaml <- function(filename, path) {
     args <- info[[name]][setdiff(names(info[[name]]), "driver")]
 
     resolve_env <- function(x) {
-      if (grepl("^[0-9A-Z]+$", x)) Sys.getenv(x, x) else x
+      if (grepl("^[0-9A-Z_]+$", x)) Sys.getenv(x, x) else x
     }
     args <- lapply(args, resolve_env)
 
