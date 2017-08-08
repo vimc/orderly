@@ -227,3 +227,8 @@ which_max_time <- function(x) {
   }
   idx
 }
+
+append_text <- function(filename, txt) {
+  orig <- readLines(filename)
+  writeLines(c(orig, txt), filename)
+}

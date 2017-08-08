@@ -10,23 +10,11 @@ test_that("nonexistant file", {
 })
 
 test_that("minimal", {
-  path <- tempfile()
+  path <- prepare_orderly_example("minimal")
   on.exit(unlink(path))
-  orderly_init(path, quiet = TRUE)
-
-  fake_db(DBI::dbConnect(RSQLite::SQLite(), file.path(path, "source.sqlite")))
-
-  file_copy(orderly_file("minimal_config.yml"),
-            file.path(path, "orderly_config.yml"),
-            overwrite = TRUE)
-  path_example <- file.path(path, "src", "example")
-  dir.create(path_example)
-  file.copy(orderly_file("minimal_report.yml"),
-            file.path(path_example, "orderly.yml"))
-  file.copy(orderly_file("minimal_script.R"),
-            file.path(path_example, "script.R"))
 
   config <- orderly_config(path)
+  path_example <- file.path(path, "src", "example")
   info <- recipe_read(path_example, config)
 
   expect_is(info$data, "character")
@@ -97,7 +85,7 @@ test_that("minimal", {
 })
 
 test_that("other", {
-  path <- prepare_other()
+  path <- prepare_orderly_example("other")
   config <- orderly_config(path)
   info <- recipe_read(file.path(path_src(path), "other"), config)
   expect_is(info$displayname, "character")

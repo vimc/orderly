@@ -3,7 +3,7 @@ context("query")
 test_that("empty", {
   path <- tempfile()
   orderly_init(path, quiet = TRUE)
-  file_copy(orderly_file("minimal_config.yml"),
+  file_copy(orderly_file("examples/minimal/orderly_config.yml"),
             file.path(path, "orderly_config.yml"),
             overwrite = TRUE)
   expect_equal(orderly_list(path), character(0))
@@ -14,13 +14,13 @@ test_that("empty", {
 })
 
 test_that("non-empty", {
-  path <- prepare_minimal()
+  path <- prepare_orderly_example("minimal")
   expect_equal(orderly_list(path), "example")
 })
 
 test_that("query through lifecycle", {
   orderly_log_start()
-  path <- prepare_minimal()
+  path <- prepare_orderly_example("minimal")
   expect_equal(orderly_list(config = path), "example")
 
   empty <- data.frame(name = character(0), id = character(0),

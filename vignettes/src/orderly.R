@@ -20,18 +20,9 @@ orderly_file <- function(...) {
   system.file(..., package = "orderly", mustWork = TRUE)
 }
 
-path <- orderly::orderly_init(tempfile(), quiet = TRUE)
+path <- orderly:::prepare_orderly_example("example")
 path_example <- file.path(path, "src", "example")
-dir.create(path_example)
-orderly:::file_copy(orderly_file("orderly_config_sqlite.yml"),
-                    file.path(path, "orderly_config.yml"), overwrite = TRUE)
-orderly:::file_copy(orderly_file(c("report_example.yml", "report_example.R")),
-                    file.path(path_example, c("orderly.yml", "script.R")))
 orderly:::orderly_default_config_set(orderly:::orderly_config(path))
-local({
-  con <- orderly::orderly_db("source")
-  DBI::dbWriteTable(con, "mtcars", mtcars)
-})
 orderly::orderly_log_start()
 
 tree <- function(path, header = path) {

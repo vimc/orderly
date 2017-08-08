@@ -109,7 +109,7 @@ test_that("run", {
 
 ## Same as in read; we generate a report and then break it
 test_that("minimal", {
-  path <- prepare_minimal()
+  path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
   config <- orderly_config(path)
@@ -143,7 +143,7 @@ test_that("minimal", {
 })
 
 test_that("orderly_data", {
-  path <- prepare_minimal()
+  path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
   d <- orderly_data("example", config = path)
@@ -158,7 +158,7 @@ test_that("orderly_data", {
 })
 
 test_that("fail to create artefact", {
-  path <- prepare_minimal()
+  path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
   config <- orderly_config(path)
   writeLines("1 + 1", file.path(path, "src/example/script.R"))
@@ -168,7 +168,7 @@ test_that("fail to create artefact", {
 })
 
 test_that("leave device open", {
-  path <- prepare_minimal()
+  path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
   config <- orderly_config(path)
   txt <- readLines(file.path(path, "src/example/script.R"))
@@ -180,7 +180,7 @@ test_that("leave device open", {
 })
 
 test_that("close too many devices", {
-  path <- prepare_minimal()
+  path <- prepare_orderly_example("minimal")
   png(tempfile())
   n <- length(dev.list())
   on.exit({
@@ -199,7 +199,7 @@ test_that("close too many devices", {
 })
 
 test_that("included example", {
-  path <- prepare_example()
+  path <- prepare_orderly_example("example")
   id <- orderly_run("example", list(cyl = 4), config = path, echo = FALSE)
   p <- orderly_commit(id, config = path)
   expect_true(is_directory(p))
@@ -210,7 +210,7 @@ test_that("included example", {
 })
 
 test_that("included other", {
-  path <- prepare_other()
+  path <- prepare_orderly_example("other")
   id <- orderly_run("other", list(nmin = 0), config = path, echo = FALSE)
   p <- orderly_commit(id, config = path)
   info <- recipe_read(file.path(path_src(path), "other"),
@@ -222,7 +222,7 @@ test_that("included other", {
 })
 
 test_that("connection", {
-  path <- prepare_minimal()
+  path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
   path_example <- file.path(path, "src", "example")
@@ -242,7 +242,7 @@ test_that("connection", {
 })
 
 test_that("no data", {
-  path <- prepare_minimal()
+  path <- prepare_orderly_example("minimal")
   yml <- c("data: ~",
            "script: script.R",
            "artefacts:",

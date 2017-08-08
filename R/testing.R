@@ -4,9 +4,18 @@ create_orderly_demo <- function(path = tempfile()) {
       stop(sprintf("path %s already exists - delete first", path))
     }
   }
-  suppressMessages(orderly_init(path, quiet = TRUE))
+  ## This is done a bit differently to the other cases because I also
+  ## inject some configuration options in for testing
+  prepare_orderly_example("minimal", path)
 
-  txt <- readLines(orderly_file("minimal_config.yml"))
+  ## Rename:
+  file.rename(file.path(path, "src/example"), file.path(path, "src/minimal"))
+
+  ## One more copy:
+  file.copy(orderly_file("examples/other/src/other"),
+            file.path(path, "src"),
+            recursive = TRUE)
+
   fields <- c("fields:",
               "  requester:",
               "    required: true",
@@ -17,8 +26,7 @@ create_orderly_demo <- function(path = tempfile()) {
               "  comment:",
               "    required: false",
               "    type: character")
-  writeLines(c(txt, fields), file.path(path, "orderly_config.yml"))
-
+  ## Some extras for the reports too
   extra1 <- c("author: Researcher McResearcherface",
              "requester: Funder McFunderface",
              "comment: This is a comment")
@@ -26,23 +34,12 @@ create_orderly_demo <- function(path = tempfile()) {
              "requester: ACME",
              "comment: This is another comment")
 
+  append_text(path_orderly_config_yml(path), fields)
+  append_text(file.path(path, "src", "minimal", "orderly.yml"), extra1)
+  append_text(file.path(path, "src", "other", "orderly.yml"), extra2)
+
   ## Here's a handle to the source database
   con <- orderly::orderly_db("source", path, FALSE)
-  fake_db(con)
-
-  path_minimal <- file.path(path, "src", "minimal")
-  dir.create(path_minimal)
-  writeLines(c(readLines(orderly_file("minimal_report.yml")), extra1),
-             file.path(path_minimal, "orderly.yml"))
-  file.copy(orderly_file("minimal_script.R"),
-            file.path(path_minimal, "script.R"))
-
-  path_other <- file.path(path, "src", "other")
-  dir.create(path_other)
-  writeLines(c(readLines(orderly_file("other_report.yml")), extra2),
-             file.path(path_other, "orderly.yml"))
-  file.copy(orderly_file("other_script.R"),
-            file.path(path_other, "script.R"))
 
   ids <- character()
 
@@ -61,9 +58,9 @@ create_orderly_demo <- function(path = tempfile()) {
   ids[[6]] <- orderly_run("other", list(nmin = 0.5), config = config,
                           echo = FALSE)
   ## Update the code
-  txt <- readLines(file.path(path_other, "script.R"))
+  txt <- readLines(file.path(path, "src/other/script.R"))
   writeLines(c("extract$number <- extract$number * 1.2", txt),
-             file.path(path_other, "script.R"))
+             file.path(path, "src/other/script.R"))
 
   ids[[7]] <- orderly_run("other", list(nmin = 0), config = config,
                           echo = FALSE)
@@ -115,4 +112,21 @@ fake_db <- function(con, seed = 1) {
                   value = rnorm(n),
                   stringsAsFactors = FALSE)
   DBI::dbWriteTable(con, "data", d, overwrite = TRUE)
+}
+
+prepare_orderly_example <- function(name, path = tempfile()) {
+  src <- orderly_file(file.path("examples", name))
+  orderly_init(path, quiet = TRUE)
+  src_files <- dir(src, full.names = TRUE)
+  file.copy(src_files, path, overwrite = TRUE, recursive = TRUE)
+
+  if (file.exists(file.path(path, "source.R"))) {
+    generator <- source(file.path(path, "source.R"), local = TRUE)$value
+  } else {
+    generator <- fake_db
+  }
+  con <- orderly_db("source", config = path)
+  on.exit(DBI::dbDisconnect(con))
+  generator(con)
+  path
 }
