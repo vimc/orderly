@@ -1,10 +1,15 @@
-orderly_cleanup <- function(name = NULL, config = NULL, locate = TRUE) {
+orderly_cleanup <- function(name = NULL, config = NULL, locate = TRUE,
+                            draft = TRUE, data = TRUE, failed_only = FALSE) {
   config <- orderly_config_get(config, locate)
-  orderly_cleanup_drafts(config, name)
-  orderly_cleanup_data(config)
+  if (draft) {
+    orderly_cleanup_drafts(config, name, failed_only)
+  }
+  if (data) {
+    orderly_cleanup_data(config)
+  }
 }
 
-orderly_cleanup_drafts <- function(config, name = NULL) {
+orderly_cleanup_drafts <- function(config, name = NULL, failed_only = FALSE) {
   assert_is(config, "orderly_config")
   d <- orderly_list_drafts(config, FALSE)
   if (!is.null(name)) {
@@ -12,8 +17,11 @@ orderly_cleanup_drafts <- function(config, name = NULL) {
     d <- d[d$name %in% name, , drop = FALSE]
   }
   p <- file.path(path_draft(config$path), d$name, d$id)
+  if (failed_only) {
+    p <- p[!file.exists(path_orderly_run_yml(p))]
+  }
   if (length(p) > 0L) {
-    orderly_log("clean", p)
+    orderly_log(if (failed_only) "prune" else "clean", p)
     unlink(p, recursive = TRUE)
   }
 }
