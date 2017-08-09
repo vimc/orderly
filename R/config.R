@@ -25,10 +25,6 @@ orderly_config_read_yaml <- function(filename, path) {
     driver <- check_symbol_from_str(info[[name]]$driver,
                                     sprintf("%s:%s:driver", filename, name))
     args <- info[[name]][setdiff(names(info[[name]]), "driver")]
-
-    resolve_env <- function(x) {
-      if (grepl("^[0-9A-Z_]+$", x)) Sys.getenv(x, x) else x
-    }
     args <- lapply(args, resolve_env)
 
     if (info[[name]]$driver == "RSQLite::SQLite") {

@@ -20,16 +20,17 @@ test_that("environment variables", {
                             port = "OURPORT",
                             user = "OURUSER",
                             dbname = "OURDBNAME",
-                            password = "OURPASSWORD"))
+                            password = "$OURPASSWORD"))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
 
-  cfg <- orderly_config(path)
-  expect_equal(cfg$source$args$password, "OURPASSWORD")
+  expect_error(orderly_config(path),
+               "Environment variable 'OURPASSWORD' is not set")
 
-  cfg2 <- withr::with_envvar(
+  cfg <- withr::with_envvar(
     c(OURPASSWORD = "foo"),
     orderly_config(path))
-  expect_equal(cfg2$source$args$password, "foo")
+  expect_equal(cfg$source$args$password, "foo")
+  expect_equal(cfg$source$args$host, "OURHOST")
 })
 
 test_that("not found", {

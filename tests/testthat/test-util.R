@@ -30,3 +30,14 @@ test_that("copy failure", {
   expect_error(file_copy(path1, path2), "Error copying files")
   expect_equal(readLines(path2), "b")
 })
+
+test_that("resolve_env", {
+  set.seed(1)
+  v <- paste(sample(c(LETTERS, 0:9, "_"), 20, replace = TRUE), collapse = "")
+  vv <- paste0("$", v)
+  expect_identical(resolve_env(v), v)
+  expect_error(resolve_env(vv),
+               sprintf("Environment variable '%s' is not set", v))
+  expect_identical(withr::with_envvar(setNames("value", v), resolve_env(vv)),
+                   "value")
+})

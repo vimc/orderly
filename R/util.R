@@ -232,3 +232,19 @@ append_text <- function(filename, txt) {
   orig <- readLines(filename)
   writeLines(c(orig, txt), filename)
 }
+
+resolve_env <- function(x) {
+  if (grepl("^\\$[0-9A-Z_]+$", x)) {
+    Sys_getenv(substr(x, 2, nchar(x)))
+  } else {
+    x
+  }
+}
+
+Sys_getenv <- function(x, default = NULL) {
+  v <- Sys.getenv(x, default %||% NA_character_)
+  if (is.na(v) && is.null(default)) {
+    stop(sprintf("Environment variable '%s' is not set", x))
+  }
+  v
+}
