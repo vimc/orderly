@@ -21,13 +21,6 @@ RUN install.r \
 RUN Rscript -e 'remotes::install_github("rstats-db/RPostgres");' && \
   Rscript -e 'remove.packages("BH")'
 
-# Packages that we might want to use; this list should *probably* be
-# in another docker image built on top of this one but leaving here
-# for now (it needs to come before the COPY or it will never be
-# cached)
-RUN install.r \
-  ggplot2
-
 COPY . /orderly
 RUN R CMD INSTALL /orderly && \
   Rscript -e 'orderly:::write_script("/usr/bin")' && \
