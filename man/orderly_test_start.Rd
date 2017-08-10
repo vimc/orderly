@@ -3,12 +3,15 @@
 \name{orderly_test_start}
 \alias{orderly_test_start}
 \alias{orderly_test_end}
+\alias{orderly_test_restart}
 \title{Prepare a directory for orderly to use}
 \usage{
 orderly_test_start(name, parameters = NULL, envir = .GlobalEnv,
-  config = NULL, locate = TRUE, echo = TRUE)
+  config = NULL, locate = TRUE)
 
 orderly_test_end(cleanup = FALSE)
+
+orderly_test_restart(cleanup = TRUE)
 }
 \arguments{
 \item{name}{Name of the report to run (see
@@ -29,8 +32,6 @@ an environment).}
 searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
-
-\item{echo}{Print the result of running the R code to the console}
 }
 \description{
 For interactive testing of orderly code

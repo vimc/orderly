@@ -50,8 +50,8 @@ orderly_data <- function(name, parameters = NULL, envir = NULL,
 ##' @inheritParams orderly_run
 ##' @export
 orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
-                               config = NULL, locate = TRUE, echo = TRUE) {
-  if (!is.null(cache$owd)) {
+                               config = NULL, locate = TRUE) {
+  if (!is.null(cache$test)) {
     stop("Already running in test mode")
   }
 
@@ -69,7 +69,13 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
                       new.env(parent = envir))
 
   workdir <- file.path(path_draft(config$path), info$name, id)
-  cache$owd <- recipe_prepare_workdir(info, workdir)
+  owd <- recipe_prepare_workdir(info, workdir)
+  cache$test <- list(owd = owd,
+                     name = name,
+                     id = id,
+                     parameters = parameters,
+                     config = config,
+                     prompt = getOption("prompt"))
   withCallingHandlers({
     for (p in info$packages) {
       library(p, character.only = TRUE)
@@ -79,8 +85,8 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
     }
   },
   error = function(e) {
-    setwd(cache$owd)
-    cache$owd <- NULL
+    setwd(cache$test)
+    cache$test <- NULL
   })
   options(prompt = "[orderly test] > ")
 }
@@ -88,16 +94,28 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
 ##' @export
 ##' @rdname orderly_test_start
 orderly_test_end <- function(cleanup = FALSE) {
-  if (is.null(cache$owd)) {
+  if (is.null(cache$test)) {
     stop("Not running in test mode")
   }
-  testdir <- setwd(cache$owd)
-  ## TODO: this should set things back to the actual default
-  options(prompt = "> ")
-  cache$owd <- NULL
+  testdir <- setwd(cache$test$owd)
+  options(prompt = cache$test$prompt)
+  cache$test <- NULL
   if (cleanup) {
     unlink(testdir, recursive = TRUE)
   }
+}
+
+##' @export
+##' @rdname orderly_test_start
+orderly_test_restart <- function(cleanup = TRUE) {
+  if (is.null(cache$test)) {
+    stop("Not running in test mode")
+  }
+  name <- cache$test$name
+  parameters <- cache$test$parameters
+  config <- cache$test$config
+  orderly_test_end(cleanup)
+  orderly_test_start(name, parameters, config = config)
 }
 
 recipe_run <- function(info, parameters, envir = .GlobalEnv,
