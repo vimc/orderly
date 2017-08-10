@@ -44,6 +44,62 @@ orderly_data <- function(name, parameters = NULL, envir = NULL,
   recipe_data(con, info, parameters, dest)
 }
 
+
+##' For interactive testing of orderly code
+##' @title Prepare a directory for orderly to use
+##' @inheritParams orderly_run
+##' @export
+orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
+                               config = NULL, locate = TRUE, echo = TRUE) {
+  if (!is.null(cache$owd)) {
+    stop("Already running in test mode")
+  }
+
+  ## TODO: this should be pulled together with recipe_run as
+  ## recipe_prepare but it requires some work to get all the error
+  ## handling to behave
+  config <- orderly_config_get(config, locate)
+  info <- recipe_read(file.path(path_src(config$path), name), config)
+  con <- orderly_db("source", config)
+  orderly_log("name", info$name)
+  id <- new_report_id()
+  orderly_log("id", id)
+
+  data <- recipe_data(con$source, info, parameters,
+                      new.env(parent = envir))
+
+  workdir <- file.path(path_draft(config$path), info$name, id)
+  cache$owd <- recipe_prepare_workdir(info, workdir)
+  withCallingHandlers({
+    for (p in info$packages) {
+      library(p, character.only = TRUE)
+    }
+    for (s in info$sources) {
+      source(s, envir)
+    }
+  },
+  error = function(e) {
+    setwd(cache$owd)
+    cache$owd <- NULL
+  })
+  options(prompt = "[orderly test] > ")
+}
+
+##' @export
+##' @rdname orderly_test_start
+orderly_test_end <- function(cleanup = FALSE) {
+  if (is.null(cache$owd)) {
+    stop("Not running in test mode")
+  }
+  testdir <- setwd(cache$owd)
+  ## TODO: this should set things back to the actual default
+  options(prompt = "> ")
+  cache$owd <- NULL
+  if (cleanup) {
+    unlink(testdir, recursive = TRUE)
+  }
+}
+
 recipe_run <- function(info, parameters, envir = .GlobalEnv,
                        config = NULL, locate = TRUE, echo = TRUE) {
   config <- orderly_config_get(config, locate)

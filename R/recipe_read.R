@@ -211,7 +211,7 @@ recipe_read_check_depends <- function(x, filename, config) {
 
   msg <- setdiff(names(x), orderly_list(config))
   if (length(msg) > 0L) {
-    stop("Declared upstream reports: ", paste(msg, collapse = ", "))
+    stop("Declared upstream reports missing: ", paste(msg, collapse = ", "))
   }
 
   check_use1 <- function(i) {
