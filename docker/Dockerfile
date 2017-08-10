@@ -18,7 +18,7 @@ RUN install.r \
   rmarkdown \
   yaml
 
-RUN Rscript -e 'remotes::install_github("rstats-db/RPostgres");' && \
+RUN Rscript -e 'remotes::install_github("rstats-db/RPostgres@v1.0-4");' && \
   Rscript -e 'remove.packages("BH")'
 
 COPY . /orderly
