@@ -1,3 +1,16 @@
+##' Publish a report
+##' @title Publish a report
+##'
+##' @param id The id of the report to publish
+##'
+##' @param value The value to set the published to; either \code{TRUE}
+##'   or \code{FALSE}.
+##'
+##' @param name Optional report name.  If not given, then the name
+##'   will be determined from the \code{id}
+##'
+##' @inheritParams orderly_list
+##' @export
 orderly_publish <- function(id, value = TRUE, name = NULL,
                             config = NULL, locate = TRUE) {
   config <- orderly_config_get(config, locate)
