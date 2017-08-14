@@ -15,6 +15,9 @@ create_orderly_demo <- function(path = tempfile()) {
   file.copy(orderly_file("examples/other/src/other"),
             file.path(path, "src"),
             recursive = TRUE)
+  file.copy(orderly_file("examples/resources/src/use_resource"),
+            file.path(path, "src"),
+            recursive = TRUE)
 
   fields <- c("fields:",
               "  requester:",
@@ -37,6 +40,7 @@ create_orderly_demo <- function(path = tempfile()) {
   append_text(path_orderly_config_yml(path), fields)
   append_text(file.path(path, "src", "minimal", "orderly.yml"), extra1)
   append_text(file.path(path, "src", "other", "orderly.yml"), extra2)
+  append_text(file.path(path, "src", "use_resource", "orderly.yml"), extra2)
 
   ## Here's a handle to the source database
   con <- orderly::orderly_db("source", path, FALSE)
@@ -64,6 +68,9 @@ create_orderly_demo <- function(path = tempfile()) {
 
   ids[[7]] <- orderly_run("other", list(nmin = 0), config = config,
                           echo = FALSE)
+
+  ids[[8]] <- orderly_run("use_resource", config = config, echo = FALSE)
+
   ## Then let's create a series of times and update things.  Push the
   ## times back through to ~1 week ago
   dt <- sort(stats::runif(length(ids), 0, 60 * 60 * 24 * 7), decreasing = TRUE)
@@ -89,7 +96,7 @@ create_orderly_demo <- function(path = tempfile()) {
 
   res <- vcapply(seq_along(ids), function(i) fixup(ids[[i]], time[[i]], path))
 
-  for (id in res[c(2, 6, 7)]) {
+  for (id in res[c(2, 6, 7, 8)]) {
     orderly_publish(id, config = config)
   }
 
