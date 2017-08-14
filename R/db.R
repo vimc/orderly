@@ -81,10 +81,16 @@ report_db_rebuild <- function(config) {
   root <- config$path
   con <- orderly_db("destination", config)
   on.exit(DBI::dbDisconnect(con))
-  tbl <- report_db_init(con, config, FALSE)
+  ## TODO: this assumes name known
+  tbl <- "orderly"
+  if (DBI::dbExistsTable(con, "orderly")) {
+    DBI::dbExecute(con, "DELETE FROM orderly")
+  } else {
+    tbl <- report_db_init(con, config, TRUE)
+  }
   reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
   if (length(reports) > 0L) {
-    dat <- rbind_df(lapply(reports, report_read_data))
+    dat <- rbind_df(lapply(reports, report_read_data, config))
     DBI::dbWriteTable(con, tbl, dat, append = TRUE)
   }
 }
@@ -122,4 +128,5 @@ report_db_cols <- function() {
 orderly_rebuild <- function(config = NULL, locate = TRUE) {
   config <- orderly_config_get(config, locate)
   report_db_rebuild(config)
+  invisible(NULL)
 }

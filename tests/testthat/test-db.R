@@ -43,7 +43,6 @@ test_that("custom fields", {
 })
 
 test_that("rebuild empty database", {
-  skip_if_not_installed("RSQLite")
   path <- tempfile()
   orderly_init(path)
   file.copy("example_config.yml", file.path(path, "orderly_config.yml"),
@@ -53,4 +52,15 @@ test_that("rebuild empty database", {
   con <- orderly_db("destination", path)
   on.exit(DBI::dbDisconnect(con))
   expect_equal(DBI::dbListTables(con), "orderly")
+})
+
+test_that("rebuild nonempty database", {
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("example", config = path, echo = FALSE)
+  orderly_commit(id, config = path)
+  file.remove(file.path(path, "orderly.sqlite"))
+  orderly_rebuild(path)
+  orderly_rebuild(path)
+  con <- orderly_db("destination", path)
+  expect_equal(nrow(DBI::dbReadTable(con, "orderly")), 1)
 })
