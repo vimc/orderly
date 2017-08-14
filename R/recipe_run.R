@@ -190,7 +190,7 @@ recipe_run <- function(info, parameters, envir = .GlobalEnv,
                hash_input = hash_files("orderly.yml", FALSE),
                ## Below here all seems sensible enough to track
                hash_script = hash_files(info$script, FALSE),
-               hash_resources = hash_resources,
+               hash_resources = as.list(hash_resources),
                hash_data = as.list(hash_data_rds),
                hash_artefacts = as.list(hash_artefacts),
                depends = depends)

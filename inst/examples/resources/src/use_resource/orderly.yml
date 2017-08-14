@@ -1,0 +1,9 @@
+data:
+  dat: SELECT name, number FROM thing
+script: script.R
+resources:
+  meta/data.csv
+artefacts:
+  staticgraph:
+    description: A graph of things
+    filename: mygraph.png

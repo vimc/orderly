@@ -132,28 +132,29 @@ report_read_data <- function(workdir, config) {
     }
   }
 
-  ret <- data.frame(id = info$id,
-                    name = info$name,
-                    displayname = info$displayname %||% NA_character_,
-                    description = info$description %||% NA_character_,
-                    ## Inputs
-                    views = to_json_string(info$views),
-                    data = to_json_string(info$data),
-                    script = info$script,
-                    artefacts = to_json_string(artefacts, FALSE),
-                    resources = to_json_string(info$resources),
-                    hash_script = info$hash_script,
-                    ## Outputs
-                    parameters = to_json_string(info$parameters),
-                    date = info$date,
-                    hash_orderly = info$hash_orderly,
-                    hash_input = info$hash_input,
-                    hash_resources = to_json_string(info$hash_resources),
-                    hash_data = to_json_string(info$hash_data),
-                    hash_artefacts = to_json_string(info$hash_artefacts),
-                    published = jsonlite::unbox(published),
-                    depends = to_json_string(info$depends %||% list()),
-                    stringsAsFactors = FALSE)
+  ret <- data.frame(
+    id = info$id,
+    name = info$name,
+    displayname = info$displayname %||% NA_character_,
+    description = info$description %||% NA_character_,
+    ## Inputs
+    views = to_json_string(info$views),
+    data = to_json_string(info$data),
+    script = info$script,
+    artefacts = to_json_string(artefacts, FALSE),
+    resources = to_json_string_charvec(info$resources),
+    hash_script = info$hash_script,
+    ## Outputs
+    parameters = to_json_string(info$parameters),
+    date = info$date,
+    hash_orderly = info$hash_orderly,
+    hash_input = info$hash_input,
+    hash_resources = to_json_string(info$hash_resources),
+    hash_data = to_json_string(info$hash_data),
+    hash_artefacts = to_json_string(info$hash_artefacts),
+    published = jsonlite::unbox(published),
+    depends = to_json_string(info$depends %||% list()),
+    stringsAsFactors = FALSE)
 
   ## If specified, add custom fields.
   if (nrow(config$fields) > 0L) {

@@ -312,3 +312,17 @@ test_that("use artefact", {
   p3 <- orderly_commit(id3, config = path)
   p4 <- orderly_commit(id4, config = path)
 })
+
+test_that("resources", {
+  path <- prepare_orderly_example("resources")
+  id <- orderly_run("use_resource", config = path, echo = FALSE)
+  p <- file.path(path, "draft", "use_resource", id)
+  expect_true(file.exists(file.path(p, "meta/data.csv")))
+  con <- orderly_db("destination", config = path)
+  p <- orderly_commit(id, config = path)
+  d <- DBI::dbReadTable(con, "orderly")
+  expect_identical(d$resources, '["meta/data.csv"]')
+  expect_identical(d$hash_resources,
+                   '{"meta/data.csv":"0bec5bf6f93c547bc9c6774acaf85e1a"}')
+  expect_true(file.exists(file.path(p, "meta/data.csv")))
+})

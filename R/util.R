@@ -151,6 +151,10 @@ to_json_string <- function(...) {
   as.character(to_json(...))
 }
 
+to_json_string_charvec <- function(x) {
+  to_json_string(x %||% character(0), auto_unbox = FALSE)
+}
+
 list_dirs <- function(path) {
   files <- dir(path, full.names = TRUE)
   files[file.info(files, extra_cols = FALSE)$isdir]
