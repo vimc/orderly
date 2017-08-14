@@ -76,9 +76,12 @@ report_db_init <- function(con, config, must_create = FALSE) {
   orderly_table
 }
 
-## Rebuild the database, given a connection
-report_db_rebuild <- function(root, config, con) {
-  tbl <- report_db_init(con, config, TRUE)
+report_db_rebuild <- function(config) {
+  assert_is(config, "orderly_config")
+  root <- config$path
+  con <- orderly_db("destination", config)
+  on.exit(DBI::dbDisconnect(con))
+  tbl <- report_db_init(con, config, FALSE)
   reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
   if (length(reports) > 0L) {
     dat <- rbind_df(lapply(reports, report_read_data))
@@ -110,4 +113,13 @@ report_db_cols <- function() {
     depends = "TEXT",        # should be json (array of dicts)
     ## PUBLISHING
     published = "BOOLEAN")
+}
+
+##' Rebuild the report database
+##' @title Rebuild the report database
+##' @inheritParams orderly_list
+##' @export
+orderly_rebuild <- function(config = NULL, locate = TRUE) {
+  config <- orderly_config_get(config, locate)
+  report_db_rebuild(config)
 }

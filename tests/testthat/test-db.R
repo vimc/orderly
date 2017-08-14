@@ -48,10 +48,9 @@ test_that("rebuild empty database", {
   orderly_init(path)
   file.copy("example_config.yml", file.path(path, "orderly_config.yml"),
             overwrite = TRUE)
-  con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-  config <- orderly_config_get(path)
-  report_db_rebuild(path, config, con)
+  orderly_rebuild(path)
+
+  con <- orderly_db("destination", path)
+  on.exit(DBI::dbDisconnect(con))
   expect_equal(DBI::dbListTables(con), "orderly")
-  expect_equal(DBI::dbReadTable(con, "orderly"),
-               DBI::dbReadTable(orderly_db("destination", config), "orderly"))
 })
