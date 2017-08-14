@@ -93,6 +93,11 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
 
 ##' @export
 ##' @rdname orderly_test_start
+##'
+##' @param cleanup Delete testing directory on exit?  If \code{FALSE}
+##'   then you will probably want to use \code{\link{orderly_cleanup}}
+##'   later to delete the test directory.  Note that it is not
+##'   possible to commit the results of an orderly test run
 orderly_test_end <- function(cleanup = FALSE) {
   if (is.null(cache$test)) {
     stop("Not running in test mode")

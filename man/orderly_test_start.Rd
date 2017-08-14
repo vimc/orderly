@@ -32,6 +32,11 @@ an environment).}
 searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
+
+\item{cleanup}{Delete testing directory on exit?  If \code{FALSE}
+then you will probably want to use \code{\link{orderly_cleanup}}
+later to delete the test directory.  Note that it is not
+possible to commit the results of an orderly test run}
 }
 \description{
 For interactive testing of orderly code
