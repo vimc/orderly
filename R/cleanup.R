@@ -1,3 +1,21 @@
+##' Clean up orderly draft and data directories.  Deletes all drafts
+##' (possibly just for a set of report names) and then deletes
+##' dangling data sets that are not pointed to by any draft or
+##' commited reports
+##'
+##' @title Orderly cleanup
+##' @param name Optional name; in this case only clean up drafts with this name
+##'
+##' @param draft Remove drafts?
+##'
+##' @param data Remove dangling data (data not used by any draft or
+##'   archived report).
+##'
+##' @param failed_only Delete only failed reports (those without the
+##'   end-of-run metadata).  This will also clean up drafts created by
+##'   \code{\link{orderly_test_start}}
+##' @inheritParams orderly_list
+##' @export
 orderly_cleanup <- function(name = NULL, config = NULL, locate = TRUE,
                             draft = TRUE, data = TRUE, failed_only = FALSE) {
   config <- orderly_config_get(config, locate)
@@ -30,7 +48,16 @@ orderly_cleanup_data <- function(config) {
   assert_is(config, "orderly_config")
   con <- orderly_db("destination", config, FALSE)
   data <- DBI::dbGetQuery(con, "SELECT hash_data FROM orderly")[[1]]
-  used <- unique(unlist(lapply(data, jsonlite::fromJSON)))
+
+  ## Determine all used data sets in *both* draft and published
+  ## reports
+  used_pub <- unique(unlist(lapply(data, jsonlite::fromJSON)))
+  dr <- orderly_list_drafts(config, FALSE)
+  yml <- path_orderly_run_yml(
+    file.path(path_draft(config$path), dr$name, dr$id))
+  used_draft <-
+    unlist(lapply(yml, function(x) yaml_read(x)$hash_data), use.names = FALSE)
+  used <- c(used_pub, used_draft)
 
   csv <- orderly_db("csv", config, FALSE)
   drop_csv <- setdiff(csv$list(), used)

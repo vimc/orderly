@@ -16,6 +16,15 @@ test_that("cleanup draft", {
   expect_equal(length(orderly_db("csv", path)$list()), 0)
 })
 
+test_that("cleanup keeps draft data", {
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("example", config = path, echo = FALSE)
+  rds <- orderly_db("rds", config = path)
+  h <- rds$list()
+  orderly_cleanup(config = path, draft = FALSE)
+  expect_identical(rds$list(), h)
+})
+
 test_that("cleanup with archive", {
   path <- prepare_orderly_example("minimal")
   id1 <- orderly_run("example", config = path, echo = FALSE)
