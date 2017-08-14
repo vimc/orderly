@@ -66,7 +66,7 @@ create_orderly_demo <- function(path = tempfile()) {
                           echo = FALSE)
   ## Then let's create a series of times and update things.  Push the
   ## times back through to ~1 week ago
-  dt <- sort(runif(length(ids), 0, 60 * 60 * 24 * 7), decreasing = TRUE)
+  dt <- sort(stats::runif(length(ids), 0, 60 * 60 * 24 * 7), decreasing = TRUE)
   time0 <- as.POSIXct("2017-07-12 08:28:23 BST")
   time <- time0 - dt
 
@@ -104,12 +104,12 @@ fake_db <- function(con, seed = 1) {
 
   d <- data.frame(id = seq_along(id),
                   name = id,
-                  number = runif(length(id)))
+                  number = stats::runif(length(id)))
   DBI::dbWriteTable(con, "thing", d, overwrite = TRUE)
 
   d <- data.frame(id = seq_len(n),
                   thing = sample(length(id), n, replace = TRUE),
-                  value = rnorm(n),
+                  value = stats::rnorm(n),
                   stringsAsFactors = FALSE)
   DBI::dbWriteTable(con, "data", d, overwrite = TRUE)
 }
