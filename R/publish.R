@@ -30,6 +30,7 @@ orderly_publish <- function(id, value = TRUE, name = NULL,
     data <- list()
   }
   data$published <- value
+  orderly_log(if (value) "publish" else "unpublish", id)
   yaml_write(data, yml)
 
   con <- orderly_db("destination", config, FALSE)

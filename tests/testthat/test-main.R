@@ -1,0 +1,47 @@
+context("main")
+
+test_that("run", {
+  path <- prepare_orderly_example("minimal")
+  args <- c("--root", path, "run", "example")
+  res <- main_args(args)
+  expect_equal(res$command, "run")
+  expect_equal(res$args, "example")
+  expect_null(res$options$parameters)
+  expect_false(res$options$no_commit)
+  expect_identical(res$target, main_do_run)
+
+  res$target(res)
+  expect_equal(orderly_list(path), "example")
+  expect_equal(nrow(orderly_list_archive(path)), 1)
+})
+
+test_that("commit", {
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("example", config = path, echo = FALSE)
+  args <- c("--root", path, "commit", id)
+  res <- main_args(args)
+  expect_equal(res$command, "commit")
+  expect_equal(res$args, id)
+  expect_identical(res$target, main_do_commit)
+
+  res$target(res)
+  expect_equal(nrow(orderly_list_archive(path)), 1)
+})
+
+test_that("publish", {
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("example", config = path, echo = FALSE)
+  p <-orderly_commit(id, config = path)
+
+  args <- c("--root", path, "publish", id)
+  res <- main_args(args)
+  expect_equal(res$command, "publish")
+  expect_equal(res$args, id)
+  expect_false(res$options$unpublish)
+  expect_identical(res$target, main_do_publish)
+
+  res$target(res)
+  file <- path_orderly_published_yml(p)
+  expect_true(file.exists(file))
+  expect_equal(yaml_read(file), list(published = TRUE))
+})
