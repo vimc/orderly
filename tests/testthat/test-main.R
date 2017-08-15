@@ -45,3 +45,16 @@ test_that("publish", {
   expect_true(file.exists(file))
   expect_equal(yaml_read(file), list(published = TRUE))
 })
+
+test_that("help", {
+  expect_error(capture.output(main_args("--help")),
+               "Aborting as help requested")
+  expect_output(try(main_args("--help"), silent = TRUE),
+                "The <command> argument must be one of", fixed = TRUE)
+
+  for (cmd in names(main_args_commands)) {
+    expect_output(try(main_args(c(cmd, "--help")), silent = TRUE),
+                  sprintf("[--root=ROOT] %s [options]", cmd),
+                  fixed = TRUE)
+  }
+})

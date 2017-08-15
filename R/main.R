@@ -18,19 +18,34 @@ main_args <- function(args) {
                                 help = "Path to the orderly root",
                                 type = "character",
                                 default = NULL)
-  parser <- optparse::OptionParser(option_list = list(root),
-                                   usage = "%prog [options] <name>")
-  res <- optparse::parse_args(parser, args, positional_arguments = TRUE)
+
+  desc <- c("",
+            "The <command> argument must be one of:",
+            "",
+            sprintf("  * %s: %s",
+                    names(main_args_commands),
+                    vcapply(main_args_commands, "[[", "name",
+                            USE.NAMES = FALSE)))
+
+  parser <- optparse::OptionParser(
+    option_list = list(root),
+    usage = "%prog [options] <command> <args>",
+    description = paste(desc, collapse = "\n"))
+  res <- optparse::parse_args(parser, args, positional_arguments = TRUE,
+                              print_help_and_exit = FALSE)
+  if (res$options$help) {
+    if(length(res$args) == 0) {
+      optparse_die_help(parser)
+    }
+  }
   res$command <- res$args[[1]]
   res$args <- res$args[-1L]
-  res <- switch(res$command,
-                run = main_args_run(res),
-                list = main_args_list(res),
-                cleanup = main_args_cleanup(res),
-                commit = main_args_commit(res),
-                publish = main_args_publish(res),
-                rebuild = main_args_rebuild(res),
-                stop(sprintf("unknown command '%s'", res$command)))
+
+  use <- main_args_commands[[res$command]]
+  if (is.null(use)) {
+    optparse_die(parser, sprintf("unknown command '%s'", res$command))
+  }
+  use$args(res)
 }
 
 ## 1. orderly [--root] run <name> [--no-commit] [--parameters=PARAMS]
@@ -46,8 +61,12 @@ main_args_run <- function(res) {
                           help = "Parameters (in json format)",
                           type = "character",
                           default = NULL))
-  parser <- optparse::OptionParser(option_list = opts,
-                                   usage = "%prog [options] <name>")
+  parser <- optparse::OptionParser(
+    option_list = opts,
+    usage = "%prog [--root=ROOT] run [options] <name>")
+  if (res$options$help) {
+    optparse_die_help(parser)
+  }
   opts <- optparse::parse_args(parser, res$args, positional_arguments = 1L)
   opts_combine(res, opts, main_do_run)
 }
@@ -101,8 +120,12 @@ main_args_cleanup <- function(res) {
                           default = FALSE,
                           action = "store_true",
                           dest = "failed_only"))
-  parser <- optparse::OptionParser(option_list = opts,
-                                   usage = "%prog [options] <name>")
+  parser <- optparse::OptionParser(
+    option_list = opts,
+    usage = "%prog [--root=ROOT] cleanup [options]")
+  if (res$options$help) {
+    optparse_die_help(parser)
+  }
   opts <- optparse::parse_args(parser, res$args, positional_arguments = 0L)
   opts_combine(res, opts, main_do_cleanup)
 }
@@ -119,8 +142,12 @@ main_do_cleanup <- function(x) {
 ## 3. commit
 main_args_commit <- function(res) {
   opts <- list()
-  parser <- optparse::OptionParser(option_list = opts,
-                                   usage = "%prog [options] <name>")
+  parser <- optparse::OptionParser(
+    option_list = opts,
+    usage = "%prog [--root=ROOT] commit [options] <id>")
+  if (res$options$help) {
+    optparse_die_help(parser)
+  }
   opts <- optparse::parse_args(parser, res$args, positional_arguments = 1L)
   opts_combine(res, opts, main_do_commit)
 }
@@ -140,8 +167,12 @@ main_args_publish <- function(res) {
                           default = FALSE,
                           action = "store_true",
                           dest = "unpublish"))
-  parser <- optparse::OptionParser(option_list = opts,
-                                   usage = "%prog [options] <name>")
+  parser <- optparse::OptionParser(
+    option_list = opts,
+    usage = "%prog [--root=ROOT] publish [options] <id>")
+  if (res$options$help) {
+    optparse_die_help(parser)
+  }
   opts <- optparse::parse_args(parser, res$args, positional_arguments = 1L)
   opts_combine(res, opts, main_do_publish)
 }
@@ -156,8 +187,12 @@ main_do_publish <- function(x) {
 ## 4. rebuild
 main_args_rebuild <- function(res) {
   opts <- list()
-  parser <- optparse::OptionParser(option_list = opts,
-                                   usage = "%prog [options] <name>")
+  parser <- optparse::OptionParser(
+    option_list = opts,
+    usage = "%prog [--root=ROOT] rebuild [options]")
+  if (res$options$help) {
+    optparse_die_help(parser)
+  }
   opts <- optparse::parse_args(parser, res$args, positional_arguments = 0L)
   opts_combine(res, opts, main_do_rebuild)
 }
@@ -169,9 +204,14 @@ main_do_rebuild <- function(x) {
 
 ## 5. list
 main_args_list <- function(res) {
+  ## TODO: this should optionally filter name I think
   opts <- list()
-  parser <- optparse::OptionParser(option_list = opts,
-                                   usage = "%prog [options] <name>")
+  parser <- optparse::OptionParser(
+    option_list = opts,
+    usage = "%prog [--root=ROOT] list [options] (names | drafts | archive)")
+  if (res$options$help) {
+    optparse_die_help(parser)
+  }
   opts <- optparse::parse_args(parser, res$args, positional_arguments = 1L)
   opts$args <- match.arg(res$args, c("names", "drafts", "archive"))
   opts_combine(res, opts, main_do_list)
@@ -204,3 +244,26 @@ opts_combine <- function(base, new, target) {
   base$target <- target
   base
 }
+
+optparse_die <- function(parser, message) {
+  optparse::print_help(parser)
+  stop(message, call. = FALSE)
+}
+
+optparse_die_help <- function(parser) {
+  optparse_die(parser, "(Aborting as help requested)")
+}
+
+main_args_commands <-
+  list(run = list(name = "run a report",
+                  args = main_args_run),
+       commit = list(name = "commit a report",
+                   args = main_args_commit),
+       publish = list(name = "publish a report",
+                      args = main_args_publish),
+       list = list(name = "list reports",
+                   args = main_args_list),
+       cleanup = list(name = "remove drafts and dangling data",
+                      args = main_args_cleanup),
+       rebuild = list(name = "rebuild the database",
+                      args = main_args_rebuild))
