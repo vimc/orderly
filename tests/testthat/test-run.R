@@ -65,7 +65,7 @@ test_that("run", {
   expect_equal(run$name, info$name)
   expect_identical(unname(unlist(run$hash_artefacts, use.names = FALSE)),
                    hash_files(file.path(p, "mygraph.png"), FALSE))
-  expect_null(run$hash_resources)
+  expect_identical(run$hash_resources, list())
   expect_identical(run$parameters, parameters)
   expect_is(run$date, "character")
   ## I feel hash_orderly and hash_input have the wrong names here
