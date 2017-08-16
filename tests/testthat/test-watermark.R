@@ -46,5 +46,12 @@ test_that("image", {
   watermark_write(path, id)
   expect_identical(watermark_read(path), id)
   cmp <- magick::image_read(path)
+
+  m1 <- as.raster(img)
+  m2 <- as.raster(cmp)
+  i <- c(m1 != m2)
+  for (j in which(i)) {
+    expect_equal(m1[[j]], m2[[j]])
+  }
   expect_identical(as.raster(img), as.raster(cmp))
 })
