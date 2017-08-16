@@ -17,6 +17,7 @@ Imports:
     yaml
 Suggests:
     knitr,
+    montagu,
     rmarkdown,
     testthat,
     withr
