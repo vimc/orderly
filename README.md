@@ -46,3 +46,7 @@ A research group with a potentially changing SQL database who want to create rep
              - orderly_run.yml
              - orderly_packages.yml
              - <bunchaartefacts>
+
+## Installation
+
+Depends on development version of the `magick` package for watermarking.
