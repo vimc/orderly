@@ -331,3 +331,10 @@ test_that("resources", {
                    '{"meta/data.csv":"0bec5bf6f93c547bc9c6774acaf85e1a"}')
   expect_true(file.exists(file.path(p, "meta/data.csv")))
 })
+
+test_that("watermarking", {
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("example", config = path, echo = FALSE)
+  file <- file.path(path, "draft", "example", id, "mygraph.png")
+  expect_equal(watermark_read(file), id)
+})

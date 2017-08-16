@@ -168,7 +168,7 @@ recipe_run <- function(info, parameters, envir,
   orderly_log("end", as.character(Sys.time()))
 
   recipe_check_device_stack(n_dev)
-  hash_artefacts <- recipe_check_artefacts(info)
+  hash_artefacts <- recipe_check_artefacts(info, id)
 
   hash_data_csv <- con$csv$mset(ldata)
   hash_data_rds <- con$rds$mset(ldata)
@@ -292,13 +292,16 @@ recipe_prepare_workdir <- function(info, workdir) {
   owd
 }
 
-recipe_check_artefacts <- function(info) {
+recipe_check_artefacts <- function(info, id) {
   ## Having run the script we should then be able
   expected <- unlist(info$artefacts[, "filename"], use.names = FALSE)
   msg <- !file.exists(expected)
   if (any(msg)) {
     stop("Script did not produce expected artefacts: ",
          paste(expected[msg], collapse = ", "))
+  }
+  for (filename in expected) {
+    watermark_write(filename, id)
   }
   h <- hash_files(expected)
   orderly_log("artefact", sprintf("%s: %s", expected, h))
