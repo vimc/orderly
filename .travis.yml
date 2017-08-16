@@ -8,8 +8,10 @@ after_success:
 r_github_packages:
   - vimc/montagu-r
   - ropensci/magick
-apt_packages:
-  - libmagick++-dev
-  - librsvg2-dev
-  - libwebp-dev
-  - libpoppler-cpp-dev
+addons:
+  apt:
+    packages:
+      - libmagick++-dev
+      - librsvg2-dev
+      - libwebp-dev
+      - libpoppler-cpp-dev
