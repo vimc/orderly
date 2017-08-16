@@ -32,7 +32,8 @@ test_that("rds", {
 
 test_that("image", {
   path <- tempfile(fileext = ".png")
-  png(path)
+  png(path, width = 100, height = 100)
+  par(mar = rep(0, 4))
   plot(1:10)
   dev.off()
 
