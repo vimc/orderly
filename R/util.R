@@ -252,3 +252,12 @@ Sys_getenv <- function(x, default = NULL) {
   }
   v
 }
+
+val_to_bytes <- function(x, nbytes) {
+  n <- round((x %% 1) * 256 ^ nbytes)
+  paste(packBits(intToBits(n))[nbytes:1], collapse = "")
+}
+
+sort_c <- function(x) {
+  withr::with_locale(c(LC_COLLATE = "C"), sort(x))
+}

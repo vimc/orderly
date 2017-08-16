@@ -41,3 +41,19 @@ test_that("resolve_env", {
   expect_identical(withr::with_envvar(setNames("value", v), resolve_env(vv)),
                    "value")
 })
+
+test_that("val_to_bytes", {
+  x <- sort(runif(10, 0.1, 0.15)) + 100
+  y <- vcapply(x, val_to_bytes, 2)
+  expect_equal(sort_c(y), y)
+  expect_true(all(nchar(y)), 4)
+})
+
+test_that("new_report_id", {
+  t <- Sys.time()
+  i1 <- new_report_id(t)
+  i2 <- new_report_id(t)
+  i3 <- t + (1 / 256^2)
+  expect_identical(substr(i1, 1, 20), substr(i2, 1, 20))
+  expect_false(substr(i1, 1, 20) == substr(i3, 1, 20))
+})

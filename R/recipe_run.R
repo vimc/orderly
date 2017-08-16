@@ -313,7 +313,10 @@ iso_time_str <- function(time = Sys.time()) {
 }
 
 new_report_id <- function(time = Sys.time()) {
-  sprintf("%s-%s", iso_time_str(time), ids::random_id(bytes = 4))
+  sprintf("%s-%s%s",
+          iso_time_str(time),
+          val_to_bytes(as.numeric(time), 2),
+          ids::random_id(bytes = 2))
 }
 
 temporary_view <- function(name, sql) {
