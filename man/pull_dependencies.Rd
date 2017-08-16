@@ -8,6 +8,14 @@ pull_dependencies(name, config = NULL, locate = TRUE)
 }
 \arguments{
 \item{name}{Name of the report to download dependencies for}
+
+\item{config}{An orderly configuration, or the path to one (or
+\code{NULL} to locate one if \code{locate} is \code{TRUE}).}
+
+\item{locate}{Logical, indicating if the configuration should be
+searched for.  If \code{TRUE} and \code{config} is not given,
+then orderly looks in the working directory and up through its
+parents until it finds an \code{orderly_config.yml} file.}
 }
 \description{
 Download dependent reports from Montagu.  This requires the

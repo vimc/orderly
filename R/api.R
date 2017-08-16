@@ -8,7 +8,7 @@
 ##' up.
 ##' @title Download dependent reports
 ##' @param name Name of the report to download dependencies for
-##' @inheritParams orderly_query
+##' @inheritParams orderly_list
 ##' @export
 pull_dependencies <- function(name, config = NULL, locate = TRUE) {
   config <- orderly_config_get(config, locate)
@@ -41,7 +41,7 @@ pull_report <- function(name, id, config) {
     ## Resolve id
     v <- montagu::montagu_reports_report_versions(name)
     ## TODO: more work needed here if we have two identical timestamps!
-    id <- tail(v, 1)
+    id <- last(v)
   }
   dest <- file.path(path_archive(config$path), name, id)
   if (file.exists(dest)) {
@@ -52,7 +52,7 @@ pull_report <- function(name, id, config) {
     cat("\n") # httr's progress bar is rubbish
     on.exit(file.remove(tmp))
     tmp2 <- tempfile()
-    code <- unzip(tmp, exdir = tmp2)
+    code <- utils::unzip(tmp, exdir = tmp2)
     on.exit(unlink(tmp2, recursive = TRUE), add = TRUE)
 
     ## R's file.copy is exceedingly rubbish
