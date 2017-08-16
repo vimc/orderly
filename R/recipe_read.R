@@ -207,7 +207,7 @@ recipe_read_check_depends <- function(x, filename, config) {
   if (is.null(x)) {
     return(NULL)
   }
-  assert_named(x, TRUE,sprintf("%s:%s", filename, "depends"))
+  assert_named(x, TRUE, sprintf("%s:%s", filename, "depends"))
 
   msg <- setdiff(names(x), orderly_list(config))
   if (length(msg) > 0L) {
