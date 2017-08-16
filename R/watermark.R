@@ -48,7 +48,7 @@ watermark_write_rds <- function(filename, watermark) {
 
 watermark_write_csv <- function(filename, watermark) {
   dat <- readLines(filename)
-  writeLines(c(watermark, dat), filename)
+  writeLines(c(paste("#", watermark), dat), filename)
 }
 
 watermark_write_image <- function(filename, watermark) {
@@ -62,7 +62,8 @@ watermark_read_rds <- function(filename, error) {
 }
 
 watermark_read_csv <- function(filename, error) {
-  watermark_check(readLines(filename, 1), error)
+  x <- readLines(filename, 1)
+  watermark_check(sub("# ", "", x), error)
 }
 
 watermark_read_image <- function(filename, error) {
