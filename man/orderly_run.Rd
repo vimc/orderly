@@ -5,10 +5,10 @@
 \alias{orderly_data}
 \title{Run a report}
 \usage{
-orderly_run(name, parameters = NULL, envir = .GlobalEnv, config = NULL,
+orderly_run(name, parameters = NULL, envir = NULL, config = NULL,
   locate = TRUE, echo = TRUE)
 
-orderly_data(name, parameters = NULL, envir = NULL, config = NULL,
+orderly_data(name, parameters = NULL, envir = list(), config = NULL,
   locate = TRUE)
 }
 \arguments{
@@ -20,7 +20,7 @@ orderly_data(name, parameters = NULL, envir = NULL, config = NULL,
 \item{envir}{The parent of environment to evalute the report in;
 by default a new environment will be made with the global
 environment as the parent.  For \code{orderly_data}, this may be
-\code{NULL} in which case a list will be returned (rather than
+\code{list()} in which case a list will be returned (rather than
 an environment).}
 
 \item{config}{An orderly configuration, or the path to one (or

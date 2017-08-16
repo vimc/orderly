@@ -11,14 +11,15 @@
 ##' @param envir The parent of environment to evalute the report in;
 ##'   by default a new environment will be made with the global
 ##'   environment as the parent.  For \code{orderly_data}, this may be
-##'   \code{NULL} in which case a list will be returned (rather than
+##'   \code{list()} in which case a list will be returned (rather than
 ##'   an environment).
 ##'
 ##' @inheritParams orderly_list
 ##' @param echo Print the result of running the R code to the console
 ##' @export
-orderly_run <- function(name, parameters = NULL, envir = .GlobalEnv,
+orderly_run <- function(name, parameters = NULL, envir = NULL,
                         config = NULL, locate = TRUE, echo = TRUE) {
+  envir <- orderly_environment(envir)
   config <- orderly_config_get(config, locate)
   info <- recipe_read(file.path(path_src(config$path), name), config)
   path <- recipe_run(info, parameters, envir,
@@ -32,7 +33,7 @@ orderly_run <- function(name, parameters = NULL, envir = .GlobalEnv,
 
 ##' @export
 ##' @rdname orderly_run
-orderly_data <- function(name, parameters = NULL, envir = NULL,
+orderly_data <- function(name, parameters = NULL, envir = list(),
                          config = NULL, locate = TRUE) {
   config <- orderly_config_get(config, locate)
   info <- recipe_read(file.path(path_src(config$path), name), config)
@@ -40,8 +41,8 @@ orderly_data <- function(name, parameters = NULL, envir = NULL,
   if (is.null(info$connection)) {
     on.exit(DBI::dbDisconnect(con))
   }
-  dest <- if (is.null(envir)) list() else new.env(parent = envir)
-  recipe_data(con, info, parameters, dest)
+  envir <- orderly_environment(envir, TRUE)
+  recipe_data(con, info, parameters, envir)
 }
 
 
@@ -65,8 +66,8 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
   id <- new_report_id()
   orderly_log("id", id)
 
-  data <- recipe_data(con$source, info, parameters,
-                      new.env(parent = envir))
+  envir <- orderly_envir(envir)
+  data <- recipe_data(con$source, info, parameters, envir)
 
   workdir <- file.path(path_draft(config$path), info$name, id)
   owd <- recipe_prepare_workdir(info, workdir)
@@ -123,7 +124,7 @@ orderly_test_restart <- function(cleanup = TRUE) {
   orderly_test_start(name, parameters, config = config)
 }
 
-recipe_run <- function(info, parameters, envir = .GlobalEnv,
+recipe_run <- function(info, parameters, envir,
                        config = NULL, locate = TRUE, echo = TRUE) {
   config <- orderly_config_get(config, locate)
   ## TODO: do this more tidily
@@ -137,8 +138,9 @@ recipe_run <- function(info, parameters, envir = .GlobalEnv,
   id <- new_report_id()
   orderly_log("id", id)
 
-  data <- recipe_data(con$source, info, parameters,
-                      new.env(parent = envir))
+  data <- recipe_data(con$source, info, parameters, envir)
+  ## Pull the data out here now in case the script modifies it at all
+  ldata <- as.list(data)[names(info$data)]
 
   workdir <- file.path(path_draft(config$path), info$name, id)
   owd <- recipe_prepare_workdir(info, workdir)
@@ -161,14 +163,13 @@ recipe_run <- function(info, parameters, envir = .GlobalEnv,
   orderly_log("start", as.character(Sys.time()))
   ## TODO: perhaps like context do the ok/fail logging here.  Perhaps
   ## *use* context because this looks an awful lot like the same thing.
-  source(info$script, local = new.env(parent = data),
+  source(info$script, local = envir,
          echo = echo, max.deparse.length = Inf)
   orderly_log("end", as.character(Sys.time()))
 
   recipe_check_device_stack(n_dev)
   hash_artefacts <- recipe_check_artefacts(info)
 
-  ldata <- as.list(data)[names(info$data)]
   hash_data_csv <- con$csv$mset(ldata)
   hash_data_rds <- con$rds$mset(ldata)
   stopifnot(identical(hash_data_csv, hash_data_rds))
@@ -329,5 +330,16 @@ recipe_check_device_stack <- function(expected) {
                   sprintf("Report left %d devices open", check)))
   } else {
     stop(sprintf("Report closed %d more devices than it opened!", abs(check)))
+  }
+}
+
+orderly_environment <- function(envir, list_ok = FALSE) {
+  if (is.null(envir)) {
+    new.env(parent = .GlobalEnv)
+  } else if (is.environment(envir) || (is.list(envir) && list_ok)) {
+    envir
+  } else {
+    stop("'envir' must be an ",
+         if (list_ok) "environment or list" else "environment")
   }
 }
