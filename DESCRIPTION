@@ -6,6 +6,7 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Author: Rich FitzJohn
 Maintainer: Rich FitzJohn <rich.fitzjohn@gmail.com>
+SystemRequirements: exiftool
 Imports:
     DBI,
     R6,
@@ -13,12 +14,12 @@ Imports:
     digest,
     ids,
     jsonlite,
-    magick (>= 1.1.9000),
     optparse,
     yaml
 Suggests:
     knitr,
     montagu,
+    png,
     rmarkdown,
     testthat,
     withr

@@ -1,8 +1,7 @@
 FROM r-base:3.4.0
 
 RUN apt-get update && apt-get -y install \
-  libcurl4-openssl-dev \
-  libmagick++-dev \
+  libimage-exiftool-perl \
   libssl-dev \
   libpq-dev
 
@@ -21,7 +20,6 @@ RUN install.r \
   yaml
 
 RUN Rscript -e 'remotes::install_github("rstats-db/RPostgres@v0.1-4")' && \
-  Rscript -e 'remotes::install_github("ropensci/magick")' && \
   Rscript -e 'remove.packages("BH")'
 
 COPY . /orderly

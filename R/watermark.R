@@ -6,31 +6,24 @@ watermark_write <- function(filename, id) {
   ext <- tolower(tools::file_ext(filename))
   watermark <- sprintf("orderly:%s", id)
 
-  if (ext == "rds") {
-    watermark_write_rds(filename, watermark)
-  } else if (ext == "csv") {
-    watermark_write_csv(filename, watermark)
-  } else if (ext %in% IMAGE_EXTS) {
-    watermark_write_image(filename, watermark)
-  } else {
-    message(sprintf("Can't watermark files of type '%s' (%s)",
-                    ext, filename))
-  }
+  switch(ext,
+         rds = watermark_write_rds(filename, watermark),
+         csv = watermark_write_csv(filename, watermark),
+         pdf = watermark_write_pdf(filename, watermark),
+         png = watermark_write_png(filename, watermark),
+         message(sprintf("Can't watermark files of type '%s' (%s)",
+                         ext, filename)))
 }
 
 watermark_read <- function(filename, error = TRUE) {
   ext <- tolower(tools::file_ext(filename))
-
-  if (ext == "rds") {
-    watermark_read_rds(filename, error)
-  } else if (ext == "csv") {
-    watermark_read_csv(filename, error)
-  } else if (ext %in% IMAGE_EXTS) {
-    watermark_read_image(filename, error)
-  } else {
-    stop(sprintf("Can't watermark files of type '%s' (%s)",
-                 ext, filename))
-  }
+  switch(ext,
+         rds = watermark_read_rds(filename, error),
+         csv = watermark_read_csv(filename, error),
+         pdf = watermark_read_pdf(filename, error),
+         png = watermark_read_png(filename, error),
+         stop(sprintf("Can't watermark files of type '%s' (%s)",
+                      ext, filename)))
 }
 
 watermark_exists <- function(filename) {
@@ -51,9 +44,12 @@ watermark_write_csv <- function(filename, watermark) {
   writeLines(c(paste("#", watermark), dat), filename)
 }
 
-watermark_write_image <- function(filename, watermark) {
-  img <- magick::image_read(filename)
-  magick::image_write(img, filename, comment = watermark)
+watermark_write_png <- function(filename, watermark) {
+  exiftool_write(filename, "comment", watermark)
+}
+
+watermark_write_pdf <- function(filename, watermark) {
+  exiftool_write(filename, "subject", watermark)
 }
 
 watermark_read_rds <- function(filename, error) {
@@ -66,9 +62,14 @@ watermark_read_csv <- function(filename, error) {
   watermark_check(sub("# ", "", x), error)
 }
 
-watermark_read_image <- function(filename, error) {
-  img <- magick::image_read(filename)
-  watermark_check(magick::image_comment(img), error)
+watermark_read_png <- function(filename, error) {
+  x <- exiftool_read(filename, "comment")
+  watermark_check(x, error)
+}
+
+watermark_read_pdf <- function(filename, error) {
+  x <- exiftool_read(filename, "subject")
+  watermark_check(x, error)
 }
 
 watermark_check <- function(x, error) {
@@ -88,4 +89,32 @@ watermark_check <- function(x, error) {
   } else {
     NA_character_
   }
+}
+
+exiftool_locate <- function() {
+  path <- Sys.which("exiftool")
+  if (!nzchar(path)) {
+    path <- NULL
+    message("exiftool is not found: will not be able to watermark images")
+  }
+  path
+}
+
+exiftool_write <- function(filename, field, string) {
+  if (!is.null(cache$exiftool)) {
+    args <- c(sprintf("-%s=%s", field, shQuote(string)), filename)
+    code <- system2(cache$exiftool, args, stderr = FALSE, stdout = FALSE)
+    if (code != 0) {
+      stop("Error watermarking file!")
+    }
+  }
+}
+
+exiftool_read <- function(filename, field) {
+  if (is.null(cache$exiftool)) {
+    stop("exiftool is not installed; can't read image watermark")
+  }
+  args <- c("-b", sprintf("-%s", field), filename)
+  str <- system2(cache$exiftool, args, stdout = TRUE)
+  if (length(str) == 0L) "" else str
 }

@@ -70,6 +70,8 @@ orderly_find_name <- function(id, config, locate = FALSE, draft = TRUE,
 orderly_find_report <- function(id, name, config, locate = FALSE,
                                 draft = TRUE, must_work = FALSE) {
   config <- orderly_config_get(config, locate)
+  ## TODO: I don't think that the treatment of draft is OK here - we
+  ## should allow reports to roll over into archive gracefully.
   path <-
     file.path((if (draft) path_draft else path_archive)(config$path), name)
   if (id == "latest") {
