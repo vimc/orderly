@@ -57,6 +57,12 @@ main_args_run <- function(res) {
                           default = FALSE,
                           action = "store_true",
                           dest = "no_commit"),
+    optparse::make_option("--print-log",
+                          help = "Print log (rather than storing it)",
+                          type = "logical",
+                          default = FALSE,
+                          action = "store_true",
+                          dest = "print_log"),
     optparse::make_option("--parameters",
                           help = "Parameters (in json format)",
                           type = "character",
@@ -79,6 +85,7 @@ main_do_run <- function(x) {
   if (!is.null(x$options$parameters)) {
     parameters <- jsonlite::fromJSON(parameters)
   }
+  print_log <- x$options$print_log
 
   main_run <- function(name, parameters, config, commit) {
     id <- orderly_run(name, parameters, config = config)
@@ -88,11 +95,15 @@ main_do_run <- function(x) {
     id
   }
 
-  log <- tempfile()
-  ## we should run this with try() so that we can capture logs there
-  id <- capture_log(main_run(name, parameters, config, commit), log, TRUE)
-  dest <- (if (commit) path_archive else path_draft)(config$path)
-  file.copy(log, file.path(dest, name, id, "orderly.log"))
+  if (print_log) {
+    log <- tempfile()
+    ## we should run this with try() so that we can capture logs there
+    id <- capture_log(main_run(name, parameters, config, commit), log, TRUE)
+    dest <- (if (commit) path_archive else path_draft)(config$path)
+    file.copy(log, file.path(dest, name, id, "orderly.log"))
+  } else {
+    id <- main_run(name, parameters, config, commit)
+  }
 
   ## TODO: is it useful to write this to some location (rather than
   ## stderr) to indicate what was done?

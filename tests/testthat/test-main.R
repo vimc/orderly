@@ -8,6 +8,7 @@ test_that("run", {
   expect_equal(res$args, "example")
   expect_null(res$options$parameters)
   expect_false(res$options$no_commit)
+  expect_false(res$options$print_log)
   expect_identical(res$target, main_do_run)
 
   res$target(res)
