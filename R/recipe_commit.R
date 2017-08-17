@@ -100,7 +100,9 @@ report_read_data <- function(workdir, config) {
   }
 
   artefacts <- info$artefacts
-  if (length(artefacts) == 1L) {
+  ## TODO: when dealing with VIMC-506, sort this out; this is due to
+  ## the ordered map thing that yaml does.
+  if (length(artefacts) == 1L && !is.null(names(artefacts))) {
     artefacts <- list(artefacts)
   }
   for (i in seq_along(artefacts)) {
