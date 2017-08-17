@@ -5,7 +5,7 @@
 ##'   be suppressed.
 ##' @inheritParams orderly_list
 ##' @export
-orderly_new <- function(name, config = NULL, locate = FALSE, quiet = FALSE) {
+orderly_new <- function(name, config = NULL, locate = TRUE, quiet = FALSE) {
   config <- orderly_config_get(config, locate)
   assert_scalar_character(name)
   if (grepl("[[:space:]]", name)) {
