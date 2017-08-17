@@ -1,0 +1,11 @@
+data: ~
+packages:
+  - rmarkdown
+script: script.R
+resources:
+  - report.Rmd
+  - support.R
+artefacts:
+  report:
+    description: An example report
+    filename: report.html

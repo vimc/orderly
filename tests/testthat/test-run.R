@@ -339,3 +339,14 @@ test_that("watermarking", {
   file <- file.path(path, "draft", "example", id, "mygraph.png")
   expect_equal(watermark_read(file), id)
 })
+
+test_that("markdown", {
+  skip_if_not_installed("rmarkdown")
+  path <- prepare_orderly_example("knitr")
+
+  id <- orderly_run("example", config = path)
+
+  report <- file.path(path, "draft", "example", id, "report.html")
+  expect_true(file.exists(report))
+  expect_true(any(grepl("ANSWER:2", readLines(report))))
+})
