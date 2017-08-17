@@ -45,11 +45,13 @@ watermark_write_csv <- function(filename, watermark) {
 }
 
 watermark_write_png <- function(filename, watermark) {
-  exiftool_write(filename, "comment", watermark)
+  exiftool_process_write_field(filename, "comment", watermark)
+  invisible()
 }
 
 watermark_write_pdf <- function(filename, watermark) {
-  exiftool_write(filename, "subject", watermark)
+  exiftool_process_write_field(filename, "subject", watermark)
+  invisible()
 }
 
 watermark_read_rds <- function(filename, error) {
@@ -63,12 +65,12 @@ watermark_read_csv <- function(filename, error) {
 }
 
 watermark_read_png <- function(filename, error) {
-  x <- exiftool_read(filename, "comment")
+  x <- exiftool_process_read_field(filename, "comment")
   watermark_check(x, error)
 }
 
 watermark_read_pdf <- function(filename, error) {
-  x <- exiftool_read(filename, "subject")
+  x <- exiftool_process_read_field(filename, "subject")
   watermark_check(x, error)
 }
 
@@ -89,32 +91,4 @@ watermark_check <- function(x, error) {
   } else {
     NA_character_
   }
-}
-
-exiftool_locate <- function() {
-  path <- Sys.which("exiftool")
-  if (!nzchar(path)) {
-    path <- NULL
-    message("exiftool is not found: will not be able to watermark images")
-  }
-  path
-}
-
-exiftool_write <- function(filename, field, string) {
-  if (!is.null(cache$exiftool)) {
-    args <- c(sprintf("-%s=%s", field, shQuote(string)), filename)
-    code <- system2(cache$exiftool, args, stderr = FALSE, stdout = FALSE)
-    if (code != 0) {
-      stop("Error watermarking file!")
-    }
-  }
-}
-
-exiftool_read <- function(filename, field) {
-  if (is.null(cache$exiftool)) {
-    stop("exiftool is not installed; can't read image watermark")
-  }
-  args <- c("-b", sprintf("-%s", field), filename)
-  str <- system2(cache$exiftool, args, stdout = TRUE)
-  if (length(str) == 0L) "" else str
 }

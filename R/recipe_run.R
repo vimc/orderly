@@ -300,9 +300,16 @@ recipe_check_artefacts <- function(info, id) {
     stop("Script did not produce expected artefacts: ",
          paste(expected[msg], collapse = ", "))
   }
-  for (filename in expected) {
-    watermark_write(filename, id)
-  }
+  ## TODO: we should watermark the images here but there are some
+  ## issues to resolve first:
+  ##
+  ## * installation on windows/mac is nontrivial
+  ## * deal with "_original" files that are being left behind *sometimes*
+  ## * general fragility of using system()
+  ##
+  ## for (filename in expected) {
+  ##   watermark_write(filename, id)
+  ## }
   h <- hash_files(expected)
   orderly_log("artefact", sprintf("%s: %s", expected, h))
   h

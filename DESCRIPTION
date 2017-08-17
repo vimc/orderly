@@ -20,6 +20,7 @@ Suggests:
     knitr,
     montagu,
     png,
+    processx,
     rmarkdown,
     testthat,
     withr

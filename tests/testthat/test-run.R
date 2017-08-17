@@ -333,6 +333,7 @@ test_that("resources", {
 })
 
 test_that("watermarking", {
+  skip("watermarking currenty disabled")
   path <- prepare_orderly_example("minimal")
   id <- orderly_run("example", config = path, echo = FALSE)
   file <- file.path(path, "draft", "example", id, "mygraph.png")

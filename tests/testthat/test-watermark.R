@@ -31,6 +31,10 @@ test_that("rds", {
 })
 
 test_that("png", {
+  if (is.null(cache$exiftool)) {
+    skip("no exiftool")
+  }
+  skip_if_not_installed("processx")
   path <- tempfile(fileext = ".png")
   png(path, width = 100, height = 100)
   par(mar = rep(0, 4))
@@ -56,6 +60,10 @@ test_that("png", {
 })
 
 test_that("pdf", {
+  if (is.null(cache$exiftool)) {
+    skip("no exiftool")
+  }
+  skip_if_not_installed("processx")
   path <- tempfile(fileext = ".pdf")
   pdf(path, width = 100, height = 100)
   par(mar = rep(0, 4))
