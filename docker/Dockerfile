@@ -17,6 +17,7 @@ RUN install.r \
   optparse \
   remotes \
   rmarkdown \
+  withr \
   yaml
 
 RUN Rscript -e 'remotes::install_github("rstats-db/RPostgres@v0.1-4")' && \
