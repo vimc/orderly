@@ -55,7 +55,7 @@ test_that("help", {
 
   for (cmd in names(main_args_commands)) {
     expect_output(try(main_args(c(cmd, "--help")), silent = TRUE),
-                  sprintf("[--root=ROOT] %s [options]", cmd),
+                  sprintf("[--root=ROOT] %s", cmd),
                   fixed = TRUE)
   }
 })

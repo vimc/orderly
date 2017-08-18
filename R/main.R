@@ -219,7 +219,7 @@ main_args_list <- function(res) {
   opts <- list()
   parser <- optparse::OptionParser(
     option_list = opts,
-    usage = "%prog [--root=ROOT] list [options] (names | drafts | archive)")
+    usage = "%prog [--root=ROOT] list (names | drafts | archive)")
   if (res$options$help) {
     optparse_die_help(parser)
   }
