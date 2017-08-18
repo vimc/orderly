@@ -96,13 +96,13 @@ main_do_run <- function(x) {
   }
 
   if (print_log) {
+    id <- main_run(name, parameters, config, commit)
+  } else {
     log <- tempfile()
     ## we should run this with try() so that we can capture logs there
     id <- capture_log(main_run(name, parameters, config, commit), log, TRUE)
     dest <- (if (commit) path_archive else path_draft)(config$path)
     file.copy(log, file.path(dest, name, id, "orderly.log"))
-  } else {
-    id <- main_run(name, parameters, config, commit)
   }
 
   ## TODO: is it useful to write this to some location (rather than
