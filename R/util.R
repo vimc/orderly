@@ -212,10 +212,16 @@ modify_list <- function(a, b) {
   a
 }
 
-session_info <- function() {
-  dat <- utils::sessionInfo()
-  dat$time <- Sys.time()
-  dat
+orderly_env <- function() {
+  env <- Sys.getenv()
+  as.list(env[grepl("^ORDERLY_", names(env))])
+}
+
+session_info <- function(path = ".") {
+  list(session_info = utils::sessionInfo(),
+       time = Sys.time(),
+       env = orderly_env(),
+       git = git_info(path))
 }
 
 ## Because time handling is a total faff:
@@ -261,3 +267,32 @@ val_to_bytes <- function(x, nbytes) {
 sort_c <- function(x) {
   withr::with_locale(c(LC_COLLATE = "C"), sort(x))
 }
+
+git_call <- function(root, args) {
+  git <- Sys.which("git")
+  if (nzchar(git)) {
+    res <- suppressWarnings(system2(git, c("-C", root, args),
+                                    stdout = TRUE, stderr = FALSE))
+    if (system_success(res)) {
+      return(res)
+    }
+  }
+  NULL
+}
+
+git_info <- function(root) {
+  sha <- git_call(root, c("rev-parse", "HEAD"))
+  if (is.null(sha)) {
+    return(NULL)
+  }
+  sha_short <- substr(sha, 1, 7)
+  branch <- git_call(root, c("symbolic-ref", "--short", "HEAD"))
+
+  status <- git_call(root, c("status", "-s"))
+  if (length(status) == 0L) {
+    status <- NULL
+  }
+  list(sha_short = sha_short, sha = sha, branch = branch, status = status)
+}
+
+system_success <- function(x) is.null(attr(x, "status", exact = TRUE))

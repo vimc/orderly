@@ -56,7 +56,10 @@ test_that("run", {
                hash_files(file.path(p, "script.R"), FALSE))
 
   ## This needs to look reasonable:
-  expect_is(readRDS(file.path(p, "orderly_run.rds")), "sessionInfo")
+  d <- readRDS(file.path(p, "orderly_run.rds"))
+  expect_is(d$session_info, "sessionInfo")
+  expect_is(d$time, "POSIXt")
+  expect_is(d$env, "list")
 
   expect_identical(readBin(file.path(p, "mygraph.png"), raw(), 8),
                    MAGIC_PNG)
