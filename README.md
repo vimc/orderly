@@ -18,35 +18,3 @@ A research group with a potentially changing SQL database who want to create rep
 * Run an R script against the exported tables, producing one or more report artefacts
 * Save a set of metadata
 * Archive the exported data set
-
-## Workflow
-
-1. **Prototyping**: use `data_db` to create a connection to the database and write queries ad hoc
-2. **Fine tuning analysis**: Use a wrapper (what one?) to pull data from the database
-3. **Automated**: use the full wrapper
-
-## Organisation
-
-     <root>
-       - orderly_config.yml
-       - src/
-         - project1/
-           - orderly.yml
-           - script.R
-         - project2/ (etc)
-       - data/
-         - csv/
-           - <bunchafiles>
-         - rds/
-           - <bunchafiles>
-       - archive/
-         - project1/
-           - <index>
-             - orderly.yml
-             - orderly_run.yml
-             - orderly_packages.yml
-             - <bunchaartefacts>
-
-## Installation
-
-Depends on development version of the `magick` package for watermarking.
