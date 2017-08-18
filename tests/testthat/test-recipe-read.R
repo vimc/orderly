@@ -91,3 +91,20 @@ test_that("other", {
   expect_is(info$displayname, "character")
   expect_is(info$description, "character")
 })
+
+test_that("ill formed artefacts", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path))
+  config <- orderly_config(path)
+  path_example <- file.path(path, "src", "example")
+  yml <- file.path(path_example, "orderly.yml")
+  dat <- yaml_read(yml)
+
+  expect_silent(recipe_read(path_example, config))
+
+  dat$artefacts <- c(dat$artefacts,
+                     list(data = list(filename = "foo", description = "bar")))
+  writeLines(yaml::as.yaml(dat), yml)
+  expect_error(suppressMessages(recipe_read(path_example, config)),
+               "Expected an ordered map")
+})

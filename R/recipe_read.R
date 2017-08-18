@@ -154,6 +154,29 @@ recipe_read_check_artefacts <- function(x, filename) {
   ##       ...
   ##
   ## This converts the latter into the former:
+  if (!is.null(names(x)) && length(x) != 1L) {
+    if (any(names(x) %in% valid_formats())) {
+      if (length(x) > 3) {
+        x <- x[1:3] # keep things reasonable
+      }
+      correct <- list(artefacts = lapply(seq_along(x), function(i) x[i]))
+      msg <- c("Your artefacts look incorrectly formatted; they must be",
+               "an _ordered map_.  Currently you have something like",
+               "",
+               indent(yaml::as.yaml(list(artefacts = x)), 4),
+               "",
+               "but you should reformat that as something like",
+               "",
+               indent(yaml::as.yaml(correct), 4),
+               "",
+               "otherwise with duplicate entries with the same report type",
+               "your yaml will be invalid (this format is permitted for",
+               "single artefacts only)")
+      message(paste(msg, collapse = "\n"))
+    }
+    stop("Expected an ordered map!")
+  }
+
   if (is.null(names(x)) && all(lengths(x) == 1L)) {
     x <- set_names(lapply(x, "[[", 1L), vcapply(x, names))
   }

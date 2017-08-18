@@ -296,3 +296,7 @@ git_info <- function(root) {
 }
 
 system_success <- function(x) is.null(attr(x, "status", exact = TRUE))
+
+indent <- function(x, n) {
+  paste0(strrep(" ", n), strsplit(x, "\n", fixed = TRUE)[[1]])
+}
