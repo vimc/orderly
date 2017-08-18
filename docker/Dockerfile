@@ -23,6 +23,11 @@ RUN install.r \
 RUN Rscript -e 'remotes::install_github("rstats-db/RPostgres@v0.1-4")' && \
   Rscript -e 'remove.packages("BH")'
 
+ARG GIT_ID='UNKNOWN'
+ARG GIT_BRANCH='UNKNOWN'
+ENV ORDERLY_GIT_HASH $GIT_ID
+ENV ORDERLY_GIT_BRANCH $GIT_BRANCH
+
 COPY . /orderly
 RUN R CMD INSTALL /orderly && \
   Rscript -e 'orderly:::write_script("/usr/bin")' && \
