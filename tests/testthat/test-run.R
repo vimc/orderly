@@ -344,7 +344,7 @@ test_that("markdown", {
   skip_if_not_installed("rmarkdown")
   path <- prepare_orderly_example("knitr")
 
-  id <- orderly_run("example", config = path)
+  id <- orderly_run("example", config = path, echo = FALSE)
 
   report <- file.path(path, "draft", "example", id, "report.html")
   expect_true(file.exists(report))
