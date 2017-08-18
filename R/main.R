@@ -238,6 +238,43 @@ main_do_list <- function(x) {
   invisible(NULL)
 }
 
+## 6. latest
+main_args_latest <- function(res) {
+  opts <- list(
+    optparse::make_option("--draft",
+                          help = "Look for latest draft report",
+                          type = "logical",
+                          default = FALSE,
+                          action = "store_true",
+                          dest = "draft"),
+    optparse::make_option("--value-if-missing",
+                          help = "Look for latest draft report",
+                          type = "character",
+                          default = NULL,
+                          dest = "value_if_missing"))
+  parser <- optparse::OptionParser(
+    option_list = opts,
+    usage = "%prog [--root=ROOT] latest [options] <name>...")
+  if (res$options$help) {
+    optparse_die_help(parser)
+  }
+  opts <- optparse::parse_args(parser, res$args, positional_arguments = TRUE)
+  opts_combine(res, opts, main_do_latest)
+}
+
+main_do_latest <- function(x) {
+  config <- orderly_config_get(x$options$root, TRUE)
+  names <- x$args
+  draft <- x$options$draft
+  value_if_missing <- x$options$value_if_missing
+  must_work <- is.null(value_if_missing)
+  ids <- vcapply(names, orderly_latest, config = config,
+                 draft = draft, must_work = must_work,
+                 USE.NAMES = FALSE)
+  ids[is.na(ids)] <- value_if_missing
+  cat(paste0(ids, "\n", collapse = ""))
+}
+
 write_script <- function(path) {
   if (!is_directory(path)) {
     stop("'path' must be a directory")
@@ -274,6 +311,8 @@ main_args_commands <-
                       args = main_args_publish),
        list = list(name = "list reports",
                    args = main_args_list),
+       latest = list(name = "find most recent report",
+                     args = main_args_latest),
        cleanup = list(name = "remove drafts and dangling data",
                       args = main_args_cleanup),
        rebuild = list(name = "rebuild the database",
