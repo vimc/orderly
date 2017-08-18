@@ -19,6 +19,9 @@ then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
 
 \item{draft}{Find most recent \emph{draft} report}
+
+\item{must_work}{Throw an error if no report is found.  If FALSE,
+returns \code{NA_character_}.}
 }
 \description{
 Find most recent version of an orderly report

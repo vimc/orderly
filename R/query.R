@@ -41,8 +41,14 @@ orderly_list_archive <- function(config = NULL, locate = TRUE) {
 
 ##' Find most recent version of an orderly report
 ##' @title Find most recent report
+##'
 ##' @param name Name of the report to find
+##'
 ##' @param draft Find most recent \emph{draft} report
+##'
+##' @param must_work Throw an error if no report is found.  If FALSE,
+##'   returns \code{NA_character_}.
+##'
 ##' @inheritParams orderly_list
 ##' @export
 orderly_latest <- function(name, config = NULL, locate = TRUE,
