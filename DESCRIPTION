@@ -15,6 +15,7 @@ Imports:
     ids,
     jsonlite,
     optparse,
+    withr,
     yaml
 Suggests:
     knitr,
@@ -22,7 +23,6 @@ Suggests:
     png,
     processx,
     rmarkdown,
-    testthat,
-    withr
+    testthat
 RoxygenNote: 6.0.1
 VignetteBuilder: knitr
