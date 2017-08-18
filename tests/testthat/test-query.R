@@ -19,7 +19,6 @@ test_that("non-empty", {
 })
 
 test_that("query through lifecycle", {
-  orderly_log_start()
   path <- prepare_orderly_example("minimal")
   expect_equal(orderly_list(config = path), "example")
 

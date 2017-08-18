@@ -11,7 +11,7 @@ test_that("run", {
   expect_false(res$options$print_log)
   expect_identical(res$target, main_do_run)
 
-  res$target(res)
+  capture.output(res$target(res))
   expect_equal(orderly_list(path), "example")
   expect_equal(nrow(orderly_list_archive(path)), 1)
 })
@@ -32,7 +32,7 @@ test_that("commit", {
 test_that("publish", {
   path <- prepare_orderly_example("minimal")
   id <- orderly_run("example", config = path, echo = FALSE)
-  p <-orderly_commit(id, config = path)
+  p <- orderly_commit(id, config = path)
 
   args <- c("--root", path, "publish", id)
   res <- main_args(args)
