@@ -51,3 +51,62 @@ test_that("query through lifecycle", {
   expect_equal(orderly_list_drafts(path), empty)
   expect_equal(orderly_list_archive(path), r)
 })
+
+test_that("latest_ids", {
+  expect_equal(latest_id(character(0)), NA_character_)
+
+  t <- Sys.time()
+  t <- structure(as.numeric(t) %/% 1, class = class(t))
+
+  id <- new_report_id(t)
+  expect_identical(latest_id(id), id)
+  expect_identical(latest_id(c(id, id)), id)
+
+  ## Differ at the second level
+  id_s <- vcapply(t - 5:0, new_report_id)
+  expect_identical(latest_id(id_s), last(id_s))
+  expect_identical(latest_id(sample(id_s)), last(id_s))
+
+  ## Differ at the subsecond level
+  id_ms <- vcapply(t + (1:9) / 10, new_report_id)
+  expect_identical(latest_id(id_ms), last(id_ms))
+  expect_identical(latest_id(sample(id_ms)), last(id_ms))
+
+  ## Differ below the subsecond level
+  id_same <- replicate(5, new_report_id(t + 1))
+  expect_identical(latest_id(id_same), sort_c(id_same))
+  expect_identical(latest_id(sample(id_same)), sort_c(id_same))
+
+  id_both <- c(id_s, id_ms)
+  expect_identical(latest_id(id_both), last(id_both))
+  expect_identical(latest_id(sample(id_both)), last(id_both))
+
+  id_all <- c(id_both, id_same)
+  expect_identical(latest_id(id_all), sort_c(id_same))
+  expect_identical(latest_id(sample(id_all)), sort_c(id_same))
+})
+
+test_that("latest", {
+  path <- prepare_orderly_example("minimal")
+
+  expect_equal(orderly_latest("example", config = path, must_work = FALSE),
+               NA_character_)
+  expect_equal(orderly_latest("example", config = path, must_work = FALSE,
+                              draft = TRUE),
+               NA_character_)
+  expect_error(orderly_latest("example", config = path),
+               "Did not find any archive reports for example")
+  expect_error(orderly_latest("example", config = path, draft = TRUE),
+               "Did not find any draft reports for example")
+
+  id1 <- orderly_run("example", config = path, echo = FALSE)
+  Sys.sleep(0.1)
+  id2 <- orderly_run("example", config = path, echo = FALSE)
+  expect_equal(orderly_latest("example", config = path, draft = TRUE), id2)
+
+  orderly_commit(id2, config = path)
+  expect_equal(orderly_latest("example", config = path, draft = TRUE), id1)
+  expect_equal(orderly_latest("example", config = path), id2)
+  orderly_commit(id1, config = path)
+  expect_equal(orderly_latest("example", config = path), id2)
+})

@@ -47,6 +47,26 @@ test_that("publish", {
   expect_equal(yaml_read(file), list(published = TRUE))
 })
 
+test_that("latest", {
+  path <- prepare_orderly_example("minimal")
+  id1 <- orderly_run("example", config = path, echo = FALSE)
+  Sys.sleep(0.1)
+  id2 <- orderly_run("example", config = path, echo = FALSE)
+
+  args <- c("--root", path, "latest", "--draft", "example")
+  res <- main_args(args)
+  expect_equal(res$command, "latest")
+  expect_equal(res$args, "example")
+  expect_true(res$options$draft)
+  expect_identical(res$target, main_do_latest)
+
+  expect_output(main_do_latest(res), id2)
+
+  args <- c("--root", path, "latest", "--value-if-missing", "NONE", "example")
+  res <- main_args(args)
+  expect_output(main_do_latest(res), "NONE")
+})
+
 test_that("help", {
   expect_error(capture.output(main_args("--help")),
                "Aborting as help requested")

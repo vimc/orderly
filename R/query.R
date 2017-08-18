@@ -39,6 +39,40 @@ orderly_list_archive <- function(config = NULL, locate = TRUE) {
   orderly_list2(FALSE, config, locate)
 }
 
+##' Find most recent version of an orderly report
+##' @title Find most recent report
+##' @param name Name of the report to find
+##' @param draft Find most recent \emph{draft} report
+##' @inheritParams orderly_list
+##' @export
+orderly_latest <- function(name, config = NULL, locate = TRUE,
+                           draft = FALSE, must_work = TRUE) {
+  config <- orderly_config_get(config, locate)
+  path <-
+    file.path((if (draft) path_draft else path_archive)(config$path), name)
+
+  ids <- dir(path)
+  if (length(ids) == 0L) {
+    if (must_work) {
+      stop(sprintf("Did not find any %s reports for %s",
+                   if (draft) "draft" else "archive", name))
+    } else {
+      return(NA_character_)
+    }
+  }
+
+  ids <- latest_id(ids)
+  if (length(ids) > 1L) {
+    ## We have no choice here but to look at the actual times to
+    ## determine which is the most recent report.
+    times <- lapply(path_orderly_run_rds(file.path(path, ids)),
+                    function(x) readRDS(x)$time)
+    ids <- ids[[which_max_time(times)]]
+  }
+
+  ids
+}
+
 orderly_list2 <- function(draft, config = NULL, locate = TRUE) {
   config <- orderly_config_get(config, locate)
   path <- if (draft) path_draft else path_archive
@@ -75,34 +109,38 @@ orderly_find_report <- function(id, name, config, locate = FALSE,
   path <-
     file.path((if (draft) path_draft else path_archive)(config$path), name)
   if (id == "latest") {
-    pos <- dir(path)
-    if (length(pos) > 0L) {
-      if (length(pos) > 1L) {
-        re <- "^([0-9]{8}-[0-9]{6})-[[:xdigit:]]{8}$"
-        stopifnot(grepl(re, pos))
-        isodate <- sub(re, "\\1", pos)
-        pos <- pos[isodate == last(isodate)]
-        if (length(pos) > 1L) {
-          ## We have no choice here but to look at the actual times to
-          ## determine which is the most recent report.
-          times <- lapply(path_orderly_run_rds(file.path(path, pos)),
-                          function(x) readRDS(x)$time)
-          pos <- pos[[which_max_time(times)]]
-        }
-      }
-      return(file.path(path, pos))
-    }
-  } else {
-    path_report <- file.path(path, id)
-    if (file.exists(path_report)) {
-      return(path_report)
-    }
+    id <- orderly_latest(name, config, FALSE,
+                         draft = draft, must_work = must_work)
   }
-
+  path_report <- file.path(path, id)
+  if (!is.na(id) && file.exists(path_report)) {
+    return(path_report)
+  }
   if (must_work) {
     stop(sprintf("Did not find %s report %s:%s",
                  if (draft) "draft" else "archived", name, id))
   } else {
     NULL
   }
+}
+
+latest_id <- function(ids) {
+  if (length(ids) == 0L) {
+    return(NA_character_)
+  }
+
+  ids <- sort_c(unique(ids))
+
+  re <- "^([0-9]{8}-[0-9]{6})-([[:xdigit:]]{4})([[:xdigit:]]{4})$"
+  stopifnot(all(grepl(re, ids)))
+
+  isodate <- sub(re, "\\1", ids)
+  ids <- ids[isodate == last(isodate)]
+
+  if (length(ids) > 1L) {
+    ms <- sub(re, "\\2", ids)
+    ids <- ids[ms == last(ms)]
+  }
+
+  ids
 }
