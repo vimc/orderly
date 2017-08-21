@@ -300,3 +300,23 @@ system_success <- function(x) is.null(attr(x, "status", exact = TRUE))
 indent <- function(x, n) {
   paste0(strrep(" ", n), strsplit(x, "\n", fixed = TRUE)[[1]])
 }
+
+resolve_secrets <- function(x) {
+  re <- "^VAULT:(.+):(.+)"
+  if (is.list(x)) {
+    i <- vlapply(x, function(el) is.character(el) && grepl(re, el))
+    if (any(i)) {
+      x[i] <- resolve_secrets(vcapply(x[i], identity))
+    }
+  } else {
+    i <- grepl(re, x)
+    if (any(i)) {
+      key <- unname(sub(re, "\\1", x[i]))
+      field <- unname(sub(re, "\\2", x[i]))
+      loadNamespace("vaultr")
+      vaultr::vault_auth()
+      x[i] <- unname(Map(vaultr::vault_read, key, field))
+    }
+  }
+  x
+}

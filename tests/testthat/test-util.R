@@ -57,3 +57,12 @@ test_that("new_report_id", {
   expect_identical(substr(i1, 1, 20), substr(i2, 1, 20))
   expect_false(substr(i1, 1, 20) == substr(i3, 1, 20))
 })
+
+## This can't be tested until I get things with vault working; I need
+## a test vault really.
+test_that("secrets", {
+  skip("This is not really testable, yet")
+  x <- list(name = "foo",
+            password = "VAULT:secret/database/users/readonly:password")
+  resolve_secrets(x)
+})

@@ -23,6 +23,7 @@ Suggests:
     png,
     processx,
     rmarkdown,
-    testthat
+    testthat,
+    vaultr
 RoxygenNote: 6.0.1
 VignetteBuilder: knitr
