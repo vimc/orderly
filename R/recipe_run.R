@@ -67,7 +67,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
   orderly_log("id", id)
 
   envir <- orderly_environment(envir)
-  data <- recipe_data(con$source, info, parameters, envir)
+  data <- recipe_data(con, info, parameters, envir)
 
   workdir <- file.path(path_draft(config$path), info$name, id)
   owd <- recipe_prepare_workdir(info, workdir)
