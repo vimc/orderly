@@ -314,8 +314,11 @@ resolve_secrets <- function(x) {
       key <- unname(sub(re, "\\1", x[i]))
       field <- unname(sub(re, "\\2", x[i]))
       loadNamespace("vaultr")
-      vaultr::vault_auth()
-      x[i] <- unname(Map(vaultr::vault_read, key, field))
+      if (is.null(cache$vault)) {
+        cache$vault <- vaultr::vault_client()
+      }
+      cache$vault$auth()
+      x[i] <- unname(Map(cache$vault$read, key, field))
     }
   }
   x
