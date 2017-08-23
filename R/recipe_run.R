@@ -71,6 +71,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
 
   workdir <- file.path(path_draft(config$path), info$name, id)
   owd <- recipe_prepare_workdir(info, workdir)
+  orderly_log("setwd", "now working in test directory")
   cache$test <- list(owd = owd,
                      name = name,
                      id = id,
