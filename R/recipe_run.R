@@ -88,6 +88,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
   },
   error = function(e) {
     setwd(cache$test)
+    orderly_log("setwd", "reverting to original directory")
     cache$test <- NULL
   })
   options(prompt = "[orderly test] > ")
@@ -105,6 +106,7 @@ orderly_test_end <- function(cleanup = FALSE) {
     stop("Not running in test mode")
   }
   testdir <- setwd(cache$test$owd)
+  orderly_log("setwd", "reverting to original directory")
   options(prompt = cache$test$prompt)
   cache$test <- NULL
   if (cleanup) {
