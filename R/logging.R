@@ -1,6 +1,6 @@
-##' Start and stop the orderly log.  Soon this might swap out for
-##' \code{loggr}, but for now this should do.  When active, some
-##' actions will print diagnostic information to the message stream.
+##' Start and stop the orderly log.  When active, some actions will
+##' print diagnostic information to the message stream.  This is set
+##' to be on by default.
 ##'
 ##' The interface here will change by adding arguments.  Future versions
 ##' may support logging to a file.
@@ -8,21 +8,22 @@
 ##' @export
 ##' @rdname orderly_log
 ##'
-##' @return \code{orderly_log_start} invisibly returns a logical
-##'   indicating if logging was previously enabled.  This allows
-##'   patterns like:
-##' \preformatted{if (!orderly::orderly_log_start()) {
-##'   orderly::orderly_log_stop()
+##' @return \code{orderly_log_on} and \code{orderly_log_off} invisibly
+##'   returns a logical indicating if logging was previously enabled.
+##'   This allows patterns like:
+##'
+##' \preformatted{if (!orderly::orderly_log_off()) {
+##'   orderly::orderly_log_on()
 ##' }
 ##' }
-##' to have a scoped log (i.e., log for the duration of a function).
-orderly_log_start <- function() {
-  invisible(isTRUE(options(orderly.log = TRUE)$orderly.log))
+##' to disable logging within a function
+orderly_log_on <- function() {
+  invisible(!isTRUE(options(orderly.nolog = NULL)$orderly.nolog))
 }
 ##' @export
 ##' @rdname orderly_log
-orderly_log_stop <- function() {
-  invisible(isTRUE(options(orderly.log = NULL)$orderly.log))
+orderly_log_off <- function() {
+  invisible(!isTRUE(options(orderly.nolog = TRUE)$orderly.nolog))
 }
 
 ##' Send an entry to the orderly log.  This is designed primarily for
@@ -33,7 +34,7 @@ orderly_log_stop <- function() {
 ##' @param value Character string with the log entry
 ##' @export
 orderly_log <- function(topic, value) {
-  if (isTRUE(getOption("orderly.log"))) {
+  if (!isTRUE(getOption("orderly.nolog"))) {
     n <- length(value) - 1L
     if (n > 0L) {
       topic <- c(topic, rep_len("...", n))

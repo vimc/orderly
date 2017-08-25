@@ -23,7 +23,6 @@ orderly_file <- function(...) {
 path <- orderly:::prepare_orderly_example("example")
 path_example <- file.path(path, "src", "example")
 orderly:::orderly_default_config_set(orderly:::orderly_config(path))
-orderly::orderly_log_start()
 
 tree <- function(path, header = path) {
   paste1 <- function(a, b) {

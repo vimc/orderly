@@ -1,8 +1,6 @@
 ## Try to make it easy to run things
 main <- function(args = commandArgs(TRUE)) {
   opts <- main_args(args)
-  orderly_log_start()
-  on.exit(orderly_log_stop())
   opts$target(opts)
 }
 
