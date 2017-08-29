@@ -6,3 +6,4 @@ inst/doc
 demo
 demo.tar.gz
 .vault
+.Renviron

@@ -5,4 +5,5 @@
 ^api\.md$
 ^docker$
 ^.dockerignore$
-^.vault$
+^\.vault$
+^\.Renviron$

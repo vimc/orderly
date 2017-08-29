@@ -18,9 +18,9 @@ skip_if_no_vault_server <- function() {
 }
 
 start_vault <- function() {
-  vaultr::vault_test_server_start()
-  cl <- vaultr::vault_test_client()
-  if (!is.null(cl)) {
+  with_vault <- !is.null(vaultr::vault_test_server_start())
+  if (with_vault) {
+    cl <- vaultr::vault_test_client()
     message("Writing test data")
     ## Some test data to use
     cl$write("/secret/users/alice", list(password = "ALICE"))
