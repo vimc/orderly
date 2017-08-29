@@ -4,7 +4,7 @@ cache: packages
 r_packages:
   - covr
 before_script:
-  - Rscript -e 'vaultr::vault_test_server_install("$HOME/bin")'
+  - Rscript -e 'vaultr::vault_test_server_install()'
 after_success:
   - Rscript -e 'covr::codecov()'
 r_github_packages:
@@ -14,6 +14,7 @@ env:
   global:
     - VAULTR_TEST_SERVER_INSTALL=true
     - VAULTR_TEST_SERVER_PORT=18200
+    - VAULTR_BIN_PATH=.vault
 addons:
   apt:
     packages:

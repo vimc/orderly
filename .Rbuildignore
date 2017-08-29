@@ -5,3 +5,4 @@
 ^api\.md$
 ^docker$
 ^.dockerignore$
+^.vault$
