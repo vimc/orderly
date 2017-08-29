@@ -4,7 +4,7 @@ cache: packages
 r_packages:
   - covr
 before_script:
-  - Rscript -e 'vaultr::vault_test_server_install("~/bin")'
+  - Rscript -e 'vaultr::vault_test_server_install("$HOME/bin")'
 after_success:
   - Rscript -e 'covr::codecov()'
 r_github_packages:
