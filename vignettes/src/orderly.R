@@ -266,3 +266,72 @@ plain_output(tree(path, "<root>"))
 ## should not contain spaces (nor should it change as this will change
 ## the key report id and you'll lose a chain of history).
 dir.create(file.path(path, "src", "new"))
+
+## ## Customising the configuration
+
+## The contents of orderly_config.yml may contain things like secrets
+## (passwords) or hostnames that vary depending on deployment (e.g.,
+## testing locally vs running on a remote system).  To customise this,
+## you can use environment variables within the configuration.  So
+## rather than writing
+
+## ```yaml
+## source:
+##   driver: RPostgres::Postgres
+##   host: localhost
+##   port: 5432
+##   user: myuser
+##   dbname: databasename
+##   password: p4ssw0rd
+## ```
+
+## you might write
+
+## ```yaml
+## source:
+##   driver: RPostgres::Postgres
+##   host: $MY_DBHOST
+##   port: $MY_DBPORT
+##   user: $MY_DBUSER
+##   dbname: $MY_DBNAME
+##   password: $MY_PASSWORD
+## ```
+
+## environment varaibles, as used this way **must** begin with a
+## dollar sign and consist only of uppercase letters, numbers and the
+## underscore character.  You can then set the environment variables
+## in an .Renviron file or your .profile file.  Alternatively, you can
+## create a file `orderly_envir.yml` in the same directory as
+## `orderly_config.yml` with key-value pairs, such as
+
+## ```yaml
+## MY_DBHOST: localhost
+## MY_DBPORT: 5432
+## MY_DBUSER: myuser
+## MY_DBNAME: databasename
+## MY_PASSWORD: p4ssw0rd
+## ```
+
+## This will be read every time that `orderly_config.yml` is read (in
+## contrast with .Renviron which is read only at the start of a
+## session).
+
+## The advantage of using environment variables is that you can add
+## the `orderly_envir.yml` file to your `.gitignore` and avoid
+## committing system-dependent data to the central repository.
+
+## To avoid leaving passwords in plain text, you can use `vault` to
+## retrieve them.  To do this, set the value of the field to
+## `VAULT:<path>:<field>`, where `<path>` is the name of a vault
+## secret path (probably beginning with `/secret/` and `field` is the
+## name of the field at that path.  So, for example:
+
+## ```
+## password: VAULT:/secret/users/database_user:password
+## ```
+
+## would look up the field `password` at the path
+## `/secret/users/database_user`.  This can be stored in
+## `orderly_config.yml`, in the contents of an environment varaible or
+## in `orderly_envir.yml`.  Vault secrets are read only when used -
+## that is, when reading from the database connection.

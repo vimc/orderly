@@ -33,3 +33,7 @@ path_orderly_run_rds <- function(path) {
 path_orderly_published_yml <- function(path) {
   file.path(path, "orderly_published.yml")
 }
+
+path_orderly_envir_yml <- function(path) {
+  file.path(path, "orderly_envir.yml")
+}

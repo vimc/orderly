@@ -3,7 +3,9 @@ orderly_config <- function(path) {
   if (!file.exists(filename)) {
     stop("Did not find file 'orderly_config.yml' at path ", path)
   }
-  orderly_config_read_yaml(filename, path)
+  withr::with_envvar(
+    orderly_envir_read(path),
+    orderly_config_read_yaml(filename, path))
 }
 
 orderly_config_read_yaml <- function(filename, path) {
