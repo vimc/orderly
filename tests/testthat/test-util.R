@@ -61,8 +61,11 @@ test_that("new_report_id", {
 ## This can't be tested until I get things with vault working; I need
 ## a test vault really.
 test_that("secrets", {
-  skip("This is not really testable, yet")
-  x <- list(name = "foo",
-            password = "VAULT:secret/database/users/readonly:password")
-  resolve_secrets(x)
+  skip_if_no_vault_server()
+  x <- list(name = "alice",
+            password = "VAULT:/secret/users/alice:password")
+  expect_equal(resolve_secrets(x),
+               list(name = "alice", password = "ALICE"))
+  expect_equal(resolve_secrets(unlist(x)),
+               list(name = "alice", password = "ALICE"))
 })

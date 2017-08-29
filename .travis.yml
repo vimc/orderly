@@ -3,11 +3,17 @@ sudo: false
 cache: packages
 r_packages:
   - covr
+before_script:
+  - Rscript -e 'vaultr::vault_test_server_install("~/bin")'
 after_success:
   - Rscript -e 'covr::codecov()'
 r_github_packages:
   - vimc/montagu-r
   - vimc/vaultr
+env:
+  global:
+    - VAULTR_TEST_SERVER_INSTALL=true
+    - VAULTR_TEST_SERVER_PORT=18200
 addons:
   apt:
     packages:

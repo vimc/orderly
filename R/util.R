@@ -313,13 +313,21 @@ resolve_secrets <- function(x) {
     if (any(i)) {
       key <- unname(sub(re, "\\1", x[i]))
       field <- unname(sub(re, "\\2", x[i]))
-      loadNamespace("vaultr")
-      if (is.null(cache$vault)) {
-        cache$vault <- vaultr::vault_client()
-      }
-      cache$vault$auth()
-      x[i] <- unname(Map(cache$vault$read, key, field))
+
+      x[i] <- unname(Map(vault_read, key, field))
     }
   }
   x
+}
+
+vault_connect <- function() {
+  loadNamespace("vaultr")
+  if (is.null(cache$vault)) {
+    cache$vault <- vaultr::vault_client()
+  }
+}
+
+vault_read <- function(key, field) {
+  vault_connect()
+  cache$vault$read(key, field)
 }
