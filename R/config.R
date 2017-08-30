@@ -27,7 +27,7 @@ orderly_config_read_yaml <- function(filename, path) {
     driver <- check_symbol_from_str(info[[name]]$driver,
                                     sprintf("%s:%s:driver", filename, name))
     args <- info[[name]][setdiff(names(info[[name]]), "driver")]
-    args <- lapply(args, resolve_env)
+    args <- resolve_driver_config(args)
 
     if (info[[name]]$driver == "RSQLite::SQLite") {
       dbname <- args$dbname
@@ -37,6 +37,7 @@ orderly_config_read_yaml <- function(filename, path) {
       if (is_relative_path(args$dbname)) {
         args$dbname <- file.path(normalizePath(path, mustWork = TRUE),
                                  args$dbname)
+        ## TODO: otherwise throw?
       }
     }
     list(driver = driver, args = args)

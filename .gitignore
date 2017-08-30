@@ -7,3 +7,4 @@ demo
 demo.tar.gz
 .vault
 .Renviron
+vignettes/*.html

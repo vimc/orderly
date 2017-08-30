@@ -333,5 +333,4 @@ dir.create(file.path(path, "src", "new"))
 ## would look up the field `password` at the path
 ## `/secret/users/database_user`.  This can be stored in
 ## `orderly_config.yml`, in the contents of an environment varaible or
-## in `orderly_envir.yml`.  Vault secrets are read only when used -
-## that is, when reading from the database connection.
+## in `orderly_envir.yml`.

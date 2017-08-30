@@ -35,11 +35,11 @@ test_that("resolve_env", {
   set.seed(1)
   v <- paste(sample(c(LETTERS, 0:9, "_"), 20, replace = TRUE), collapse = "")
   vv <- paste0("$", v)
-  expect_identical(resolve_env(v), v)
+  expect_identical(resolve_env(v), list(v))
   expect_error(resolve_env(vv),
                sprintf("Environment variable '%s' is not set", v))
   expect_identical(withr::with_envvar(setNames("value", v), resolve_env(vv)),
-                   "value")
+                   list("value"))
 })
 
 test_that("val_to_bytes", {
@@ -58,14 +58,41 @@ test_that("new_report_id", {
   expect_false(substr(i1, 1, 20) == substr(i3, 1, 20))
 })
 
-## This can't be tested until I get things with vault working; I need
-## a test vault really.
 test_that("secrets", {
   skip_if_no_vault_server()
   x <- list(name = "alice",
             password = "VAULT:/secret/users/alice:password")
+  cache$vault <- NULL
+  withr::with_envvar(c(VAULTR_AUTH_METHOD = NA_character_), {
+    expect_error(resolve_secrets(x), "Have not authenticated against vault")
+  })
+  withr::with_envvar(c(VAULTR_AUTH_METHOD = "token", VAULT_TOKEN = NA), {
+    expect_error(resolve_secrets(x), "token not found")
+  })
+  withr::with_envvar(c(VAULTR_AUTH_METHOD = "token", VAULT_TOKEN = "fake"), {
+    expect_error(resolve_secrets(x), "Token verification failed with code")
+  })
+  expect_false(cache$vault$is_authorized())
   expect_equal(resolve_secrets(x),
                list(name = "alice", password = "ALICE"))
+  expect_true(cache$vault$is_authorized())
   expect_equal(resolve_secrets(unlist(x)),
                list(name = "alice", password = "ALICE"))
+})
+
+test_that("resolve secret env", {
+  ## This the pattern that we have during startup
+  skip_if_no_vault_server()
+  cache$vault <- NULL
+
+  x <- list(user = "$ORDERLY_USER",
+            password = "$ORDERLY_PASSWORD",
+            other = "string")
+
+  vars <- c("ORDERLY_PASSWORD"="VAULT:/secret/users/alice:password",
+            "ORDERLY_USER"="alice")
+
+  res <- withr::with_envvar(vars, resolve_driver_config(x))
+  expect_equal(res,
+               list(user = "alice", password = "ALICE", other = "string"))
 })

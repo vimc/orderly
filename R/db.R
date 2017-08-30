@@ -27,7 +27,6 @@ orderly_db <- function(type, config = NULL, locate = TRUE) {
   } else if (type %in% c("source", "destination")) {
     x <- config[[type]]
     driver <- getExportedValue(x$driver[[1L]], x$driver[[2L]])
-    x$args <- resolve_secrets(x$args)
     con <- do.call(DBI::dbConnect, c(list(driver()), x$args))
     if (type == "destination") {
       report_db_init(con, config)

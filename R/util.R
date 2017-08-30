@@ -243,14 +243,6 @@ append_text <- function(filename, txt) {
   writeLines(c(orig, txt), filename)
 }
 
-resolve_env <- function(x) {
-  if (grepl("^\\$[0-9A-Z_]+$", x)) {
-    Sys_getenv(substr(x, 2, nchar(x)))
-  } else {
-    x
-  }
-}
-
 Sys_getenv <- function(x, default = NULL) {
   v <- Sys.getenv(x, default %||% NA_character_)
   if (is.na(v) && is.null(default)) {
@@ -301,6 +293,21 @@ indent <- function(x, n) {
   paste0(strrep(" ", n), strsplit(x, "\n", fixed = TRUE)[[1]])
 }
 
+resolve_driver_config <- function(args) {
+  resolve_secrets(resolve_env(args))
+}
+
+resolve_env <- function(x) {
+  f <- function(x) {
+    if (grepl("^\\$[0-9A-Z_]+$", x)) {
+      Sys_getenv(substr(x, 2, nchar(x)))
+    } else {
+      x
+    }
+  }
+  lapply(x, f)
+}
+
 resolve_secrets <- function(x) {
   re <- "^VAULT:(.+):(.+)"
   if (is.list(x)) {
@@ -324,6 +331,8 @@ vault_connect <- function() {
   loadNamespace("vaultr")
   if (is.null(cache$vault)) {
     cache$vault <- vaultr::vault_client()
+  } else if (is.null(cache$vault$token)) {
+    cache$vault$auth(NULL)
   }
 }
 
