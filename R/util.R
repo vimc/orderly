@@ -14,7 +14,7 @@ yaml_read <- function(filename) {
     stop(sprintf("while reading '%s'\n%s", filename, e$message),
          call. = FALSE)
   }
-  tryCatch(yaml_load(read_lines(filename)),
+  tryCatch(yaml_load(read_lines(filename, warn = FALSE)),
            error = catch_yaml)
 }
 
