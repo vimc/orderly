@@ -38,3 +38,12 @@ test_that("read env", {
     "Expected all elements of orderly_envir.yml to be scalar (check 'bar')",
     fixed = TRUE)
 })
+
+test_that("non-character data is OK", {
+  path <- tempfile()
+  dir.create(path)
+  filename <- path_orderly_envir_yml(path)
+  writeLines(c("foo: 1", "bar: 2"), filename)
+  dat <- orderly_envir_read(path)
+  expect_equal(dat, c(foo = "1", bar = "2"))
+})

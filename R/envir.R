@@ -9,7 +9,7 @@ orderly_envir_read <- function(path) {
                    basename(filename),
                    paste(squote(names(dat)[nok]), collapse = ", ")))
     }
-    vcapply(dat, identity)
+    vcapply(dat, as.character)
   } else {
     NULL
   }
