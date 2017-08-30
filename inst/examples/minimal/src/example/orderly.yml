@@ -4,4 +4,4 @@ script: script.R
 artefacts:
   staticgraph:
     description: A graph of things
-    filename: mygraph.png
+    filenames: mygraph.png

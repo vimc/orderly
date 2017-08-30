@@ -4,4 +4,4 @@ script: script.R
 artefacts:
   data:
     description: some data
-    filename: data.rds
+    filenames: data.rds

@@ -255,7 +255,7 @@ test_that("no data", {
            "script: script.R",
            "artefacts:",
            "  data:",
-           "    filename: data.rds",
+           "    filenames: data.rds",
            "    description: the data")
   script <- "saveRDS(mtcars, 'data.rds')"
   path_example <- file.path(path, "src", "example")

@@ -5,8 +5,8 @@ parameters:
 script: script.R
 artefacts:
   - staticgraph:
-      filename: disp_vs_wt.png
+      filenames: disp_vs_wt.png
       description: plot of displacement vs weight
   - staticgraph:
-      filename: distribution.png
+      filenames: distribution.png
       description: overall distribution of displacement

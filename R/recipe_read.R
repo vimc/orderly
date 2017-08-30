@@ -128,7 +128,7 @@ recipe_read_check_artefacts <- function(x, filename) {
   check_artefact <- function(i) {
     format <- names(x)[[i]]
     el <- x[[i]]
-    v <- c("filename", "description")
+    v <- c("filenames", "description")
     check_fields(el, sprintf("%s:artefacts[%d]", filename, i), v, NULL)
     for (j in v) {
       assert_character(el[[j]], sprintf("artefacts:%s:%s", i, j))
@@ -190,7 +190,7 @@ recipe_read_check_artefacts <- function(x, filename) {
 
   res <- t(vapply(seq_along(x), check_artefact, vector("list", 3L)))
 
-  filenames <- unlist(res[, "filename"])
+  filenames <- unlist(res[, "filenames"])
   dups <- unique(filenames[duplicated(filenames)])
   if (length(dups) > 0L) {
     stop("Duplicate artefact filenames are not allowed: ",

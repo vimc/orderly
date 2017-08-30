@@ -41,10 +41,10 @@ script: ~
 #     artefacts:
 #       staticgraph:
 #         description: A graph of things
-#         filename: mygraph.png
+#         filenames: mygraph.png
 #       report:
 #         description: A complex report
-#         filename:
+#         filenames:
 #           - report.html
 #           - figures/fig1.png
 #           - figures/fig2.png

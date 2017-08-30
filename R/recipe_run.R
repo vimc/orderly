@@ -297,7 +297,7 @@ recipe_prepare_workdir <- function(info, workdir) {
 
 recipe_check_artefacts <- function(info, id) {
   ## Having run the script we should then be able
-  expected <- unlist(info$artefacts[, "filename"], use.names = FALSE)
+  expected <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
   msg <- !file.exists(expected)
   if (any(msg)) {
     stop("Script did not produce expected artefacts: ",

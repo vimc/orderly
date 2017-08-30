@@ -8,4 +8,4 @@ resources:
 artefacts:
   report:
     description: An example report
-    filename: report.html
+    filenames: report.html

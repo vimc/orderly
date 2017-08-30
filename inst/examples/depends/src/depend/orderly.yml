@@ -9,4 +9,4 @@ script: script.R
 artefacts:
   staticgraph:
     description: a plot
-    filename: mygraph.png
+    filenames: mygraph.png
