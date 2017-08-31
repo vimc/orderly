@@ -1,0 +1,21 @@
+data:
+  dat: SELECT name, number FROM thing
+script: script.R
+artefacts:
+  - data:
+      filenames: all.csv
+      description: raw export
+  - data:
+      filenames: subset.csv
+      description: the subset we care most about
+  - staticgraph:
+      filenames: all.png
+      description: plot of all data
+  - staticgraph:
+      filenames: subset.png
+      description: plot of a subset of the data
+author: Researcher McResearcherface
+requester: Funder McFunderface
+comment: >-
+  This report exists to give an example of more than one export of the
+  same type (see VIMC-608)

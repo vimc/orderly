@@ -1,0 +1,19 @@
+data:
+  extract: SELECT name, number FROM thing WHERE number > ?nmin
+parameters:
+  nmin
+script: script.R
+artefacts:
+  - data:
+      description: A summary table
+      filenames: summary.csv
+  - staticgraph:
+      description: A summary graph
+      filenames: graph.png
+displayname: another report
+description: >-
+  An extended comment field.  This can be quite long.  This is not so
+  long though, but long enough I'm sure.
+author: Dr Serious
+requester: ACME
+comment: This is another comment

@@ -1,104 +1,89 @@
-create_orderly_demo <- function(path = tempfile()) {
-  if (file.exists(path)) {
-    if (!is_directory(path) || length(dir(path)) > 0) {
-      stop(sprintf("path %s already exists - delete first", path))
-    }
+## WARNING: This whole bit of code is a bit of a hot mess.  The idea
+## is to generate a set of data for use with the automated testing for
+## the API.  For that we want to simulate a set of orderly runs in
+## different states.  I want some changes to code and some examples of
+## different types of reports that *could* be generated.  This means
+## that it's something that will grow over time.
+##
+## To be particularly complicated, I also want this to match the data
+## format that we use in montagu, so have to set some additional
+## fields through which requires tweaking some of the examples.  It's
+## all a bit nasty really.
+
+read_demo_yml <- function(path) {
+  e <- new.env(parent = parent.env(.GlobalEnv))
+  before <- file.path(path, "before.R")
+  if (file.exists(before)) {
+    sys.source(before, e)
   }
-  ## This is done a bit differently to the other cases because I also
-  ## inject some configuration options in for testing
-  prepare_orderly_example("minimal", path)
 
-  ## Rename:
-  file.rename(file.path(path, "src/example"), file.path(path, "src/minimal"))
+  dat <- yaml_read(file.path(path, "demo.yml"))
+  ## Push time back so that we don't end up with time in the future
+  day <- 60 * 60 * 24
+  t <- Sys.time() - 365 * day
+  for (i in seq_along(dat)) {
+    name <- sprintf("demo.yml[%d]", i)
+    check_fields(dat[[i]], name, "name", c("publish", "before", "parameters"))
+    dat[[i]]$time <- t
 
-  ## One more copy:
-  file.copy(orderly_file("examples/other/src/other"),
-            file.path(path, "src"),
-            recursive = TRUE)
-  file.copy(orderly_file("examples/resources/src/use_resource"),
-            file.path(path, "src"),
-            recursive = TRUE)
+    b <- dat[[i]]$before
+    if (!is.null(b)) {
+      if (exists(b, e, mode = "function", inherits = FALSE)) {
+        dat[[i]]$before <- get(b, e, mode = "function", inherits = FALSE)
+      } else {
+        stop(sprintf("function %s not found in before.R (for %s)", b, name))
+      }
+    }
+    dat[[i]]$i <- i
 
-  fields <- c("fields:",
-              "  requester:",
-              "    required: true",
-              "    type: character",
-              "  author:",
-              "    required: true",
-              "    type: character",
-              "  comment:",
-              "    required: false",
-              "    type: character")
-  ## Some extras for the reports too
-  extra1 <- c("author: Researcher McResearcherface",
-             "requester: Funder McFunderface",
-             "comment: This is a comment")
-  extra2 <- c("author: Dr Serious",
-             "requester: ACME",
-             "comment: This is another comment")
+    t <- t + runif(1, 0.1 * day, 5 * day)
+  }
+  dat
+}
 
-  append_text(path_orderly_config_yml(path), fields)
-  append_text(file.path(path, "src", "minimal", "orderly.yml"), extra1)
-  append_text(file.path(path, "src", "other", "orderly.yml"), extra2)
-  append_text(file.path(path, "src", "use_resource", "orderly.yml"), extra2)
+demo_change_time <- function(id, time, path) {
+  id_new <- new_report_id(time)
+  name <- orderly_find_name(id, path)
+  date <- sprintf("date: %s", as.character(time))
+  p <- file.path(path_draft(path), name, id_new)
+  stopifnot(file.rename(file.path(path_draft(path), name, id), p))
 
-  ## Here's a handle to the source database
-  con <- orderly::orderly_db("source", path, FALSE)
+  yml <- path_orderly_run_yml(p)
+  dat <- yaml_read(yml)
+  dat$date <- as.character(time)
+  dat$id <- id_new
+  writeLines(yaml::as.yaml(dat), yml)
 
-  ids <- character()
+  orderly_commit(id_new, name)
 
+  id_new
+}
+
+create_orderly_demo <- function(path = tempfile()) {
+  prepare_orderly_example("demo", path)
+
+  dat <- read_demo_yml(path)
   config <- orderly_config(path)
-  ids[[1]] <- orderly_run("minimal", config = config, echo = FALSE)
-  ids[[2]] <- orderly_run("minimal", config = config, echo = FALSE)
-  ids[[3]] <- orderly_run("other", list(nmin = 0), config = config,
-                          echo = FALSE)
+  orderly_default_config_set(config)
+  on.exit(orderly_default_config_set(NULL))
 
-  ## Update the db
-  fake_db(con, 2)
-  DBI::dbDisconnect(con)
-  ids[[4]] <- orderly_run("minimal", config = config, echo = FALSE)
-  ids[[5]] <- orderly_run("other", list(nmin = 0), config = config,
-                          echo = FALSE)
-  ids[[6]] <- orderly_run("other", list(nmin = 0.5), config = config,
-                          echo = FALSE)
-  ## Update the code
-  txt <- readLines(file.path(path, "src/other/script.R"))
-  writeLines(c("extract$number <- extract$number * 1.2", txt),
-             file.path(path, "src/other/script.R"))
-
-  ids[[7]] <- orderly_run("other", list(nmin = 0), config = config,
-                          echo = FALSE)
-
-  ids[[8]] <- orderly_run("use_resource", config = config, echo = FALSE)
-
-  ## Then let's create a series of times and update things.  Push the
-  ## times back through to ~1 week ago
-  dt <- sort(stats::runif(length(ids), 0, 60 * 60 * 24 * 7), decreasing = TRUE)
-  time0 <- as.POSIXct("2017-07-12 08:28:23 BST")
-  time <- time0 - dt
-
-  fixup <- function(id, time, root) {
-    id_new <- new_report_id(time)
-    name <- orderly_find_name(id, root)
-    date <- sprintf("date: %s", as.character(time))
-    p <- file.path(path_draft(root), name, id_new)
-    stopifnot(file.rename(file.path(path_draft(root), name, id), p))
-
-    yml <- path_orderly_run_yml(p)
-    dat <- yaml_read(yml)
-    dat$date <- as.character(time)
-    dat$id <- id_new
-    writeLines(yaml::as.yaml(dat), yml)
-
-    orderly_commit(id_new, name, path)
+  f <- function(x) {
+    if (x$i > 1) {
+      orderly_log_break()
+    }
+    orderly_log("demo", sprintf("%d / %d", x$i, length(dat)))
+    if (!is.null(x$before)) {
+      withr::with_dir(path, x$before())
+    }
+    id <- orderly_run(x$name, x$parameters, echo = FALSE)
+    id_new <- demo_change_time(id, x$time, path)
+    if (isTRUE(x$publish)) {
+      orderly_publish(id_new)
+    }
     id_new
   }
 
-  res <- vcapply(seq_along(ids), function(i) fixup(ids[[i]], time[[i]], path))
-
-  for (id in res[c(2, 6, 7, 8)]) {
-    orderly_publish(id, config = config)
-  }
+  res <- vcapply(dat, f)
 
   path
 }

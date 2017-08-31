@@ -1,0 +1,13 @@
+source:
+  driver: RSQLite::SQLite
+  dbname: source.sqlite
+fields:
+  requester:
+    required: true
+    type: character
+  author:
+    required: true
+    type: character
+  comment:
+    required: false
+    type: character

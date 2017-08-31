@@ -1,0 +1,44 @@
+# The format here: an array.  Each element gets elements:
+#
+# - name: <report name>
+#   parameters: <parameters if needed>
+#   publish: <true|false> (false if omitted)
+#   before: <name of function to run before hand>
+
+# The 'before' field is optional and is used to modify the contents of
+# the source directory before running a script.  The function will be
+# called with no arguments.  The functions must be present in the file
+# 'before.R'
+
+- name: minimal
+
+- name: minimal
+  publish: true
+
+- name: other
+  parameters:
+    nmin: 0
+
+- name: minimal
+  before: update_db
+
+- name: other
+  parameters:
+    nmin: 0
+
+- name: other
+  publish: true
+  parameters:
+    nmin: 0.5
+
+- name: other
+  publish: true
+  before: other_change_script
+  parameters:
+    nmin: 0
+
+- name: use_resource
+  publish: true
+
+- name: multi-artefact
+  publish: true
