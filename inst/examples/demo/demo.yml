@@ -1,4 +1,10 @@
-# The format here: an array.  Each element gets elements:
+# The idea here is to generate a set of data for use with the
+# automated testing for the API.  For that we want to simulate a set
+# of orderly runs in different states.  I want some changes to code
+# and some examples of different types of reports that *could* be
+# generated.  This means that it's something that will grow over time.
+
+# The format here: an array, with each element having elements as:
 #
 # - name: <report name>
 #   parameters: <parameters if needed>
@@ -9,6 +15,10 @@
 # the source directory before running a script.  The function will be
 # called with no arguments.  The functions must be present in the file
 # 'before.R'
+
+# Minimal validation of this file is done!
+
+# See the README.md file for more information
 
 - name: minimal
 
