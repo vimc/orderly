@@ -7,3 +7,4 @@
 ^.dockerignore$
 ^\.vault$
 ^\.Renviron$
+^scripts$
