@@ -1,0 +1,3 @@
+source:
+  driver: RSQLite::SQLite
+  dbname: $SOME_ENVVAR
