@@ -27,19 +27,6 @@ orderly_config_read_yaml <- function(filename, path) {
     driver <- check_symbol_from_str(info[[name]]$driver,
                                     sprintf("%s:%s:driver", filename, name))
     args <- info[[name]][setdiff(names(info[[name]]), "driver")]
-    args <- resolve_driver_config(args)
-
-    if (info[[name]]$driver == "RSQLite::SQLite") {
-      dbname <- args$dbname
-      if (!nzchar(dbname) || tolower(dbname) == ":memory:") {
-        stop("Cannot use a transient SQLite database with orderly")
-      }
-      if (is_relative_path(args$dbname)) {
-        args$dbname <- file.path(normalizePath(path, mustWork = TRUE),
-                                 args$dbname)
-        ## TODO: otherwise throw?
-      }
-    }
     list(driver = driver, args = args)
   }
 
@@ -47,7 +34,7 @@ orderly_config_read_yaml <- function(filename, path) {
   info$source <- driver_config("source")
   info$destination <- driver_config("destination")
 
-  info$path <- path
+  info$path <- normalizePath(path, mustWork = TRUE)
   class(info) <- "orderly_config"
   info
 }

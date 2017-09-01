@@ -7,16 +7,19 @@ test_that("set env", {
            "  dbname: source.sqlite",
            "  user: $MY_USER")
   writeLines(cfg, file.path(path, "orderly_config.yml"))
-  expect_error(orderly_config(path),
+
+  config <- orderly_config(path)
+
+  expect_error(orderly_db_args("source", config),
                "Environment variable 'MY_USER' is not set")
 
   writeLines(c("MY_USER: foo"), path_orderly_envir_yml(path))
-  cfg <- orderly_config(path)
-  expect_equal(cfg$source$args$user, "foo")
+  x <- orderly_db_args("source", config)
+  expect_equal(x$args$user, "foo")
 
   writeLines(c("MY_USER: bar"), path_orderly_envir_yml(path))
-  cfg <- orderly_config(path)
-  expect_equal(cfg$source$args$user, "bar")
+  x <- orderly_db_args("source", config)
+  expect_equal(x$args$user, "bar")
 })
 
 test_that("read env", {

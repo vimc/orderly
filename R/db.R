@@ -25,9 +25,8 @@ orderly_db <- function(type, config = NULL, locate = TRUE) {
   } else if (type == "csv") {
     file_store_csv(path_csv(config$path))
   } else if (type %in% c("source", "destination")) {
-    x <- config[[type]]
-    driver <- getExportedValue(x$driver[[1L]], x$driver[[2L]])
-    con <- do.call(DBI::dbConnect, c(list(driver()), x$args))
+    x <- orderly_db_args(type, config)
+    con <- do.call(DBI::dbConnect, c(list(x$driver()), x$args))
     if (type == "destination") {
       report_db_init(con, config)
     }
@@ -35,6 +34,27 @@ orderly_db <- function(type, config = NULL, locate = TRUE) {
   } else {
     stop(sprintf("Invalid db type '%s'", type))
   }
+}
+
+orderly_db_args <- function(type, config) {
+  x <- config[[type]]
+  driver <- getExportedValue(x$driver[[1L]], x$driver[[2L]])
+
+  args <- withr::with_envvar(
+    orderly_envir_read(config$path),
+    args <- resolve_driver_config(x$args))
+
+  if (x$driver[[2]] == "SQLite") {
+    dbname <- args$dbname
+    if (!nzchar(dbname) || tolower(dbname) == ":memory:") {
+      stop("Cannot use a transient SQLite database with orderly")
+    }
+    if (is_relative_path(args$dbname)) {
+      args$dbname <- file.path(config$path, args$dbname)
+    }
+  }
+
+  list(driver = driver, args = args)
 }
 
 ## Reports database needs special initialisation:

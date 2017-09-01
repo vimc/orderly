@@ -6,9 +6,11 @@ test_that("read", {
 
   ## default destination database:
   expect_equal(cfg$destination$driver, c("RSQLite", "SQLite"))
-  expect_equal(cfg$destination$args,
-               list(dbname =
-                      file.path(normalizePath(cfg$path), "orderly.sqlite")))
+  expect_equal(cfg$destination$args, list(dbname = "orderly.sqlite"))
+
+  dat <- orderly_db_args("destination", cfg)
+  expect_identical(dat$driver, RSQLite::SQLite)
+  expect_identical(dat$args$dbname, file.path(cfg$path, "orderly.sqlite"))
 })
 
 test_that("environment variables", {
@@ -23,14 +25,16 @@ test_that("environment variables", {
                             password = "$OURPASSWORD"))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
 
-  expect_error(orderly_config(path),
+  cfg <- orderly_config(path)
+
+  expect_error(orderly_db_args("source", cfg),
                "Environment variable 'OURPASSWORD' is not set")
 
-  cfg <- withr::with_envvar(
+  dat <- withr::with_envvar(
     c(OURPASSWORD = "foo"),
-    orderly_config(path))
-  expect_equal(cfg$source$args$password, "foo")
-  expect_equal(cfg$source$args$host, "OURHOST")
+    orderly_db_args("source", cfg))
+  expect_equal(dat$args$password, "foo")
+  expect_equal(dat$args$host, "OURHOST")
 })
 
 test_that("not found", {
