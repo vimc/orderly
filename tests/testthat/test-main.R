@@ -79,3 +79,18 @@ test_that("help", {
                   fixed = TRUE)
   }
 })
+
+test_that("list", {
+  path <- prepare_orderly_example("minimal")
+
+  args <- c("--root", path, "list")
+  res <- main_args(args)
+
+  expect_output(res$target(res), "^example$")
+
+  expect_equal(main_args(c("--root", path, "list", "names"))$args, "names")
+  expect_equal(main_args(c("--root", path, "list", "drafts"))$args, "drafts")
+  expect_equal(main_args(c("--root", path, "list", "archive"))$args, "archive")
+  expect_error(main_args(c("--root", path, "list", "foo")),
+               "argument to list must be one of")
+})

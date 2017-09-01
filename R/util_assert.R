@@ -70,7 +70,7 @@ match_value <- function(arg, choices, name = deparse(substitute(arg))) {
   assert_scalar_character(arg)
   if (!(arg %in% choices)) {
     stop(sprintf("%s must be one of %s",
-                 name, paste(dQuote(choices), collapse = ", ")))
+                 name, paste(squote(choices), collapse = ", ")))
   }
   arg
 }

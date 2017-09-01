@@ -221,8 +221,12 @@ main_args_list <- function(res) {
   if (res$options$help) {
     optparse_die_help(parser)
   }
-  opts <- optparse::parse_args(parser, res$args, positional_arguments = 1L)
-  opts$args <- match.arg(res$args, c("names", "drafts", "archive"))
+  opts <- optparse::parse_args(parser, res$args, positional_arguments = 0:1)
+  if (length(opts$args) == 0L) {
+    opts$args <- "names"
+  }
+  opts$args <- match_value(opts$args, c("names", "drafts", "archive"),
+                           "argument to list")
   opts_combine(res, opts, main_do_list)
 }
 
