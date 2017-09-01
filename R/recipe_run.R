@@ -37,12 +37,8 @@ orderly_data <- function(name, parameters = NULL, envir = list(),
                          config = NULL, locate = TRUE) {
   config <- orderly_config_get(config, locate)
   info <- recipe_read(file.path(path_src(config$path), name), config)
-  con <- orderly_db("source", config)
-  if (is.null(info$connection)) {
-    on.exit(DBI::dbDisconnect(con))
-  }
   envir <- orderly_environment(envir, TRUE)
-  recipe_data(con, info, parameters, envir)
+  recipe_data(config, info, parameters, envir)
 }
 
 
@@ -61,13 +57,12 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
   ## handling to behave
   config <- orderly_config_get(config, locate)
   info <- recipe_read(file.path(path_src(config$path), name), config)
-  con <- orderly_db("source", config)
   orderly_log("name", info$name)
   id <- new_report_id()
   orderly_log("id", id)
 
   envir <- orderly_environment(envir)
-  data <- recipe_data(con, info, parameters, envir)
+  data <- recipe_data(config, info, parameters, envir)
 
   workdir <- file.path(path_draft(config$path), info$name, id)
   owd <- recipe_prepare_workdir(info, workdir)
@@ -130,18 +125,15 @@ orderly_test_restart <- function(cleanup = TRUE) {
 recipe_run <- function(info, parameters, envir,
                        config = NULL, locate = TRUE, echo = TRUE) {
   config <- orderly_config_get(config, locate)
-  ## TODO: do this more tidily
-  con <- orderly_connect(config)
-  on.exit({
-    DBI::dbDisconnect(con$source)
-    DBI::dbDisconnect(con$destination)
-  })
+
+  con_rds <- orderly_db("rds", config, FALSE)
+  con_csv <- orderly_db("csv", config, FALSE)
 
   orderly_log("name", info$name)
   id <- new_report_id()
   orderly_log("id", id)
 
-  data <- recipe_data(con$source, info, parameters, envir)
+  data <- recipe_data(config, info, parameters, envir)
   ## Pull the data out here now in case the script modifies it at all
   ldata <- as.list(data)[names(info$data)]
 
@@ -173,8 +165,8 @@ recipe_run <- function(info, parameters, envir,
   recipe_check_device_stack(n_dev)
   hash_artefacts <- recipe_check_artefacts(info, id)
 
-  hash_data_csv <- con$csv$mset(ldata)
-  hash_data_rds <- con$rds$mset(ldata)
+  hash_data_csv <- con_csv$mset(ldata)
+  hash_data_rds <- con_rds$mset(ldata)
   stopifnot(identical(hash_data_csv, hash_data_rds))
 
   if (is.null(info$depends)) {
@@ -226,7 +218,8 @@ recipe_substitute <- function(info, parameters) {
   info
 }
 
-recipe_data <- function(con, info, parameters, dest) {
+recipe_data <- function(config, info, parameters, dest) {
+  assert_is(config, "orderly_config")
   if (!(is.environment(dest) || is.list(dest))) {
     stop("Invalid input for 'dest'")
   }
@@ -239,6 +232,13 @@ recipe_data <- function(con, info, parameters, dest) {
       dest <- modify_list(dest, parameters)
     }
   }
+
+  if (length(info$data) == 0 && is.null(info$connection)) {
+    return(dest)
+  }
+
+  con <- orderly_db("source", config)
+  on.exit(DBI::dbDisconnect(con))
 
   views <- info$views
   for (v in names(views)) {
@@ -254,6 +254,7 @@ recipe_data <- function(con, info, parameters, dest) {
 
   if (!is.null(info$connection)) {
     dest[[info$connection]] <- con
+    on.exit()
   }
 
   dest

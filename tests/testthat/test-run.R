@@ -117,16 +117,15 @@ test_that("minimal", {
   on.exit(unlink(path, recursive = TRUE))
 
   config <- orderly_config(path)
-  src <- orderly_db("source", config)
   info <- recipe_read(file.path(path, "src/example"), config)
-  data <- recipe_data(src, info, NULL, new.env(parent = .GlobalEnv))
+  data <- recipe_data(config, info, NULL, new.env(parent = .GlobalEnv))
   expect_is(data$dat, "data.frame")
 
   expect_error(
-    recipe_data(src, info, list(a = 1), new.env(parent = .GlobalEnv)),
+    recipe_data(config, info, list(a = 1), new.env(parent = .GlobalEnv)),
     "Extra parameters: 'a'")
   expect_error(
-    recipe_data(src, info, NULL, NULL),
+    recipe_data(config, info, NULL, NULL),
     "Invalid input for 'dest'")
 
   workdir <- tempfile()
@@ -352,4 +351,15 @@ test_that("markdown", {
   report <- file.path(path, "draft", "example", id, "report.html")
   expect_true(file.exists(report))
   expect_true(any(grepl("ANSWER:2", readLines(report))))
+})
+
+test_that("database is not loaded unless needed", {
+  vars <- c(SOME_ENVVAR = "source.sqlite")
+  path <- withr::with_envvar(vars, prepare_orderly_example("nodb"))
+
+  expect_identical(orderly_data("example", config = path), list())
+  id <- orderly_run("example", config = path, echo = FALSE)
+  expect_true(
+    file.exists(file.path(path, "draft", "example", id, "mygraph.png")))
+  expect_error(orderly_db("source", path), "SOME_ENVVAR")
 })
