@@ -2,9 +2,12 @@
 % Please edit documentation in R/api.R
 \name{pull_dependencies}
 \alias{pull_dependencies}
+\alias{pull_archive}
 \title{Download dependent reports}
 \usage{
 pull_dependencies(name, config = NULL, locate = TRUE)
+
+pull_archive(name, id = "latest", config = NULL, locate = TRUE)
 }
 \arguments{
 \item{name}{Name of the report to download dependencies for}
@@ -16,9 +19,30 @@ pull_dependencies(name, config = NULL, locate = TRUE)
 searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
+
+\item{id}{The identifier (for \code{pull_archive}.  The default is
+to pull the latest report.}
 }
 \description{
 Download dependent reports from Montagu.  This requires the
 montagu package and for montagu's credentials to be correctly set
-up.
+up.  The \code{pull_archive} function pulls report directly
+(without it being a dependent report).
+}
+\details{
+To use this functionality you will need to have \code{montagu}
+installed, and be part of the VIMC team.  To set it up run
+
+\preformatted{
+options(montagu.username = "your.email@imperial.ac.uk")
+}
+
+You can add that line to your \code{~/.Rprofile} file perhaps -
+see \code{path.expand("~/.Rprofile")} for where this file lives on
+your computer.  After setting your username up you can run
+\code{pull_dependencies("reportname")} to pull the
+\emph{dependencies} of \code{"reportname"} down so that
+\code{"reportname"} can be run, or you can run
+\code{pull_archive("reportname")} to pull a copy of
+\code{"reportname"} that has been run on the production server.
 }

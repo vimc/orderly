@@ -5,7 +5,25 @@
 
 ##' Download dependent reports from Montagu.  This requires the
 ##' montagu package and for montagu's credentials to be correctly set
-##' up.
+##' up.  The \code{pull_archive} function pulls report directly
+##' (without it being a dependent report).
+##'
+##' To use this functionality you will need to have \code{montagu}
+##' installed, and be part of the VIMC team.  To set it up run
+##'
+##' \preformatted{
+##' options(montagu.username = "your.email@imperial.ac.uk")
+##' }
+##'
+##' You can add that line to your \code{~/.Rprofile} file perhaps -
+##' see \code{path.expand("~/.Rprofile")} for where this file lives on
+##' your computer.  After setting your username up you can run
+##' \code{pull_dependencies("reportname")} to pull the
+##' \emph{dependencies} of \code{"reportname"} down so that
+##' \code{"reportname"} can be run, or you can run
+##' \code{pull_archive("reportname")} to pull a copy of
+##' \code{"reportname"} that has been run on the production server.
+##'
 ##' @title Download dependent reports
 ##' @param name Name of the report to download dependencies for
 ##' @inheritParams orderly_list
@@ -33,6 +51,16 @@ pull_dependencies <- function(name, config = NULL, locate = TRUE) {
       pull_report(names(depends)[[i]], depends[[i]]$id, config)
     }
   }
+}
+
+##' @export
+##' @rdname pull_dependencies
+##'
+##' @param id The identifier (for \code{pull_archive}.  The default is
+##'   to pull the latest report.
+pull_archive <- function(name, id = "latest", config = NULL, locate = TRUE) {
+  config <- orderly_config_get(config, locate)
+  pull_report(name, id, config)
 }
 
 pull_report <- function(name, id, config) {
