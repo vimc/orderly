@@ -17,7 +17,7 @@ test_that("environment variables", {
   path <- tempfile()
   dir.create(path)
 
-  dat <- list(source = list(driver = "RPostgres::Postgres",
+  dat <- list(source = list(driver = "RSQLite::SQLite",
                             host = "OURHOST",
                             port = "OURPORT",
                             user = "OURUSER",
