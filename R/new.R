@@ -18,6 +18,20 @@ orderly_new <- function(name, config = NULL, locate = TRUE, quiet = FALSE) {
   dir.create(dest)
   yml <- file.path(dest, "orderly.yml")
   file.copy(orderly_file("orderly_example.yml"), yml)
+
+  if (nrow(config$fields) > 0L) {
+    txt <- readLines(yml)
+    fields <- config$fields
+    desc <- ifelse(is.na(fields$description), fields$name, fields$description)
+    req <- ifelse(fields$required, "required", "optional")
+    str <- sprintf("%s -- %s (%s)", desc, fields$type, req)
+    str <- vcapply(strwrap(str, prefix = "# ", simplify = FALSE),
+                   paste, collapse = "\n")
+    ex <- sprintf(ifelse(fields$required, "%s: ~", "# %s:"), fields$name)
+    orig <- readLines(yml)
+    writeLines(c(orig, paste("", str, "#", ex, sep = "\n")), yml)
+  }
+
   if (!quiet) {
     message(sprintf("Created report at '%s'", dest))
     message("Edit the file 'orderly.yml' within this directory")

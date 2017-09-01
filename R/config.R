@@ -50,11 +50,17 @@ config_check_fields <- function(x, filename) {
   check1 <- function(nm) {
     d <- x[[nm]]
     check_fields(d, sprintf("%s:fields:%s", filename, nm),
-                 c("required", "type"), NULL)
+                 c("required", "type"), "description")
     assert_scalar_logical(d$required,
                           sprintf("%s:fields:%s:required", filename, nm))
     assert_scalar_character(d$type,
                             sprintf("%s:fields:%s:type", filename, nm))
+    if (is.null(d$description)) {
+      d$description <- NA_character_
+    } else {
+      assert_scalar_character(d$description,
+                              sprintf("%s:fields:%s:description", filename, nm))
+    }
     d$type_sql <- sql_type(d$type, sprintf("%s:fields:%s:type", filename, nm))
     d
   }
@@ -63,6 +69,7 @@ config_check_fields <- function(x, filename) {
              required = vlapply(dat, "[[", "required"),
              type = vcapply(dat, "[[", "type"),
              type_sql = vcapply(dat, "[[", "type_sql"),
+             description = vcapply(dat, "[[", "description"),
              stringsAsFactors = FALSE)
 }
 
