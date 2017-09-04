@@ -2,7 +2,6 @@ exiftool_locate <- function() {
   path <- Sys.which("exiftool")
   if (!nzchar(path)) {
     path <- NULL
-    message("exiftool is not found: will not be able to watermark images")
   }
   path
 }
