@@ -52,3 +52,6 @@
 
 - name: multi-artefact
   publish: true
+
+- name: multifile-artefact
+  publish: true
