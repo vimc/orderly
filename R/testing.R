@@ -97,7 +97,7 @@ read_demo_yml <- function(path) {
     }
     dat[[i]]$i <- i
 
-    t <- t + runif(1, 0.1 * day, 5 * day)
+    t <- t + stats::runif(1, 0.1 * day, 5 * day)
   }
   dat
 }
