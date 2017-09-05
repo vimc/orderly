@@ -2,7 +2,7 @@
 % Please edit documentation in R/query.R
 \name{orderly_open}
 \alias{orderly_open}
-\title{}
+\title{Open directory of completed report}
 \usage{
 orderly_open(id, name = NULL, config = NULL, locate = TRUE,
   draft = NULL)

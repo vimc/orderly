@@ -81,7 +81,7 @@ orderly_latest <- function(name, config = NULL, locate = TRUE,
 
 ##' Open the directory for a completed orderly report
 ##'
-##' @title
+##' @title Open directory of completed report
 ##'
 ##' @param id The identifier of the report - can be \code{latest}, in
 ##'   which case \code{name} and \code{draft} must be specified
