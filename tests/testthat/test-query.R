@@ -29,6 +29,11 @@ test_that("query through lifecycle", {
 
   id <- orderly_run("example", config = path, echo = FALSE)
 
+  p <- orderly_locate(id, config = path)
+  expect_true(file.exists(p))
+  expect_equal(basename(dirname(p)), "example")
+  expect_equal(basename(dirname(dirname(p))), "draft")
+
   r <- orderly_list_drafts(path)
   expect_equal(r$name, "example")
   expect_equal(names(r), c("name", "id"))
@@ -47,6 +52,11 @@ test_that("query through lifecycle", {
   expect_null(orderly_find_name("id", path, FALSE, TRUE, FALSE))
 
   orderly_commit(id, config = path)
+
+  p <- orderly_locate(id, config = path)
+  expect_true(file.exists(p))
+  expect_equal(basename(dirname(p)), "example")
+  expect_equal(basename(dirname(dirname(p))), "archive")
 
   expect_equal(orderly_list_drafts(path), empty)
   expect_equal(orderly_list_archive(path), r)

@@ -79,6 +79,31 @@ orderly_latest <- function(name, config = NULL, locate = TRUE,
   ids
 }
 
+##' Open the directory for a completed orderly report
+##'
+##' @title
+##'
+##' @param id The identifier of the report - can be \code{latest}, in
+##'   which case \code{name} and \code{draft} must be specified
+##'
+##' @param name The name of the report.  Can be omitted if \code{id}
+##'   is not \code{latest}
+##'
+##' @param draft Logical, indicating if a draft report should be
+##'   found.  Practically only useful when \code{id = "latest"} but
+##'   might be useful to ensure presence of a particular type of
+##'   report.
+##'
+##' @inheritParams orderly_list
+##'
+##' @export
+##' @author Rich FitzJohn
+orderly_open <- function(id, name = NULL, config = NULL, locate = TRUE,
+                         draft = NULL) {
+  path <- orderly_locate(id, name, config, locate, draft, TRUE)
+  open_directory(path)
+}
+
 orderly_list2 <- function(draft, config = NULL, locate = TRUE) {
   config <- orderly_config_get(config, locate)
   path <- if (draft) path_draft else path_archive
@@ -149,4 +174,39 @@ latest_id <- function(ids) {
   }
 
   ids
+}
+
+## This is annoyingly similar to the above:
+orderly_locate <- function(id, name, config = NULL, locate = TRUE,
+                           draft = NULL, must_work = TRUE) {
+  config <- orderly_config_get(config, locate)
+  if (id == "latest") {
+    if (is.null(name)) {
+      stop("name must be given for id = 'latest'")
+    }
+    if (is.null(draft)) {
+      stop("draft must be given for id = 'latest'")
+    }
+    id <- orderly_latest(name, config, locate, draft, must_work)
+  } else {
+    if (is.null(draft)) {
+      for (draft in c(FALSE, TRUE)) {
+        name <- orderly_find_name(id, config, locate, draft, FALSE)
+        if (!is.null(name)) {
+          break
+        }
+      }
+      if (is.null(id) && must_work) {
+        stop(sprintf("Did not find report %s (draft or archive)", id))
+      }
+    } else {
+      id <- orderly_find_name(id, config, locate, draft, must_work)
+    }
+  }
+  if (is.null(id)) {
+    NULL
+  } else {
+    path <- (if (draft) path_draft else path_archive)(config$path)
+    file.path(path, name, id)
+  }
 }

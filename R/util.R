@@ -340,3 +340,23 @@ vault_read <- function(key, field) {
   vault_connect()
   cache$vault$read(key, field)
 }
+
+is_windows <- function() {
+  Sys.info()[["sysname"]] == "Windows"
+}
+is_linux <- function() {
+  Sys.info()[["sysname"]] == "Linux"
+}
+
+open_directory <- function(path) {
+  if (!isTRUE(is_directory(path))) {
+    stop("Expected a directory")
+  }
+  sysname <- Sys.info()[["sysname"]]
+  cmd <- switch(sysname,
+                "Windows" = "explorer",
+                "Darwin" = "open",
+                "Linux" = "xdg-open",
+                stop("Unsupported system ", sysname))
+  system2(cmd, path)
+}
