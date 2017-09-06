@@ -353,10 +353,13 @@ open_directory <- function(path) {
     stop("Expected a directory")
   }
   sysname <- Sys.info()[["sysname"]]
-  cmd <- switch(sysname,
-                "Windows" = "explorer",
-                "Darwin" = "open",
-                "Linux" = "xdg-open",
-                stop("Unsupported system ", sysname))
-  system2(cmd, path)
+  if (sysname == "Windows") {
+    system2("cmd", c("/c", "start", "explorer", "."))
+  } else {
+    cmd <- switch(sysname,
+                  "Darwin" = "open",
+                  "Linux" = "xdg-open",
+                  stop("Unsupported system ", sysname))
+    system2(cmd, path)
+  }
 }
