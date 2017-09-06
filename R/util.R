@@ -354,7 +354,7 @@ open_directory <- function(path) {
   }
   sysname <- Sys.info()[["sysname"]]
   if (sysname == "Windows") {
-    system2("cmd", c("/c", "start", "explorer", "."))
+    system2("cmd", c("/c", "start", "explorer", path))
   } else {
     cmd <- switch(sysname,
                   "Darwin" = "open",
