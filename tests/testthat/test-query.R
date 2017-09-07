@@ -109,10 +109,21 @@ test_that("latest", {
   expect_error(orderly_latest("example", config = path, draft = TRUE),
                "Did not find any draft reports for example")
 
+  expect_equal(orderly_latest(NULL, config = path, must_work = FALSE),
+               NA_character_)
+
   id1 <- orderly_run("example", config = path, echo = FALSE)
+  expect_equal(orderly_latest(NULL, config = path, draft = TRUE),
+               id1)
+  expect_equal(orderly_latest(NULL, config = path, draft = FALSE,
+                              must_work = FALSE), NA_character_)
   Sys.sleep(0.1)
   id2 <- orderly_run("example", config = path, echo = FALSE)
   expect_equal(orderly_latest("example", config = path, draft = TRUE), id2)
+  expect_equal(orderly_latest(NULL, config = path, draft = TRUE),
+               id2)
+  expect_equal(orderly_latest(NULL, config = path, draft = FALSE,
+                              must_work = FALSE), NA_character_)
 
   orderly_commit(id2, config = path)
   expect_equal(orderly_latest("example", config = path, draft = TRUE), id1)

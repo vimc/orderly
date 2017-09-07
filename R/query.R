@@ -42,7 +42,8 @@ orderly_list_archive <- function(config = NULL, locate = TRUE) {
 ##' Find most recent version of an orderly report
 ##' @title Find most recent report
 ##'
-##' @param name Name of the report to find
+##' @param name Name of the report to find; if \code{NULL} returns the
+##'   most recent report across all names
 ##'
 ##' @param draft Find most recent \emph{draft} report
 ##'
@@ -51,32 +52,45 @@ orderly_list_archive <- function(config = NULL, locate = TRUE) {
 ##'
 ##' @inheritParams orderly_list
 ##' @export
-orderly_latest <- function(name, config = NULL, locate = TRUE,
+orderly_latest <- function(name = NULL, config = NULL, locate = TRUE,
                            draft = FALSE, must_work = TRUE) {
   config <- orderly_config_get(config, locate)
-  path <-
-    file.path((if (draft) path_draft else path_archive)(config$path), name)
 
-  ids <- dir(path)
+  if (is.null(name)) {
+    d <- orderly_list2(draft, config, FALSE)
+    ids <- d$id
+    path <-
+      file.path((if (draft) path_draft else path_archive)(config$path), d$name)
+  } else {
+    path <-
+      file.path((if (draft) path_draft else path_archive)(config$path), name)
+    ids <- dir(path)
+  }
+
   if (length(ids) == 0L) {
     if (must_work) {
-      stop(sprintf("Did not find any %s reports for %s",
-                   if (draft) "draft" else "archive", name))
+      type <- if (draft) "draft" else "archive"
+      name <- name %||% "any report"
+      stop(sprintf("Did not find any %s reports for %s", type, name))
     } else {
       return(NA_character_)
     }
   }
 
-  ids <- latest_id(ids)
-  if (length(ids) > 1L) {
+  id <- latest_id(ids)
+  if (length(id) > 1L) {
     ## We have no choice here but to look at the actual times to
     ## determine which is the most recent report.
-    times <- lapply(path_orderly_run_rds(file.path(path, ids)),
-                    function(x) readRDS(x)$time)
-    ids <- ids[[which_max_time(times)]]
+    if (is.null(name)) {
+      p <- file.path(path[ids == id], id)
+    } else {
+      p <- file.path(path, id)
+    }
+    times <- lapply(path_orderly_run_rds(p), function(x) readRDS(x)$time)
+    id <- id[[which_max_time(times)]]
   }
 
-  ids
+  id
 }
 
 ##' Open the directory for a completed orderly report
@@ -102,6 +116,31 @@ orderly_open <- function(id, name = NULL, config = NULL, locate = TRUE,
                          draft = NULL) {
   path <- orderly_locate(id, name, config, locate, draft, TRUE)
   open_directory(path)
+}
+
+##' @export
+##' @rdname orderly_open
+orderly_open_latest <- function(name = NULL, config = NULL, locate = TRUE,
+                                draft = FALSE) {
+  id <- orderly_latest(name, config, locate, draft, TRUE)
+  orderly_open(id, name, config, locate, draft)
+}
+
+##' Find the last id that was run
+##' @title Get id of last run report
+##' @inheritParams orderly_list
+##' @param draft Find draft reports?
+##' @export
+orderly_last_id <- function(config = NULL, locate = TRUE, draft = TRUE) {
+  config <- orderly_config_get(config, locate)
+  path <- if (draft) path_draft else path_archive
+  check <- list_dirs(path(config$path))
+
+  d <- orderly_list2(draft, config, FALSE)
+  id <- latest_id(d$id)
+  if (length(id) > 1L) {
+    stop("tie break not implemented")
+  }
 }
 
 orderly_list2 <- function(draft, config = NULL, locate = TRUE) {
@@ -200,7 +239,7 @@ orderly_locate <- function(id, name, config = NULL, locate = TRUE,
         stop(sprintf("Did not find report %s (draft or archive)", id))
       }
     } else {
-      id <- orderly_find_name(id, config, locate, draft, must_work)
+      name <- orderly_find_name(id, config, locate, draft, must_work)
     }
   }
   if (is.null(id)) {

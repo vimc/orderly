@@ -2,10 +2,14 @@
 % Please edit documentation in R/query.R
 \name{orderly_open}
 \alias{orderly_open}
+\alias{orderly_open_latest}
 \title{Open directory of completed report}
 \usage{
 orderly_open(id, name = NULL, config = NULL, locate = TRUE,
   draft = NULL)
+
+orderly_open_latest(name = NULL, config = NULL, locate = TRUE,
+  draft = FALSE)
 }
 \arguments{
 \item{id}{The identifier of the report - can be \code{latest}, in
