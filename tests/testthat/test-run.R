@@ -363,3 +363,11 @@ test_that("database is not loaded unless needed", {
     file.exists(file.path(path, "draft", "example", id, "mygraph.png")))
   expect_error(orderly_db("source", path), "SOME_ENVVAR")
 })
+
+test_that("id file", {
+  path <- prepare_orderly_example("minimal")
+  tmp <- tempfile()
+  id <- orderly_run("example", config = path, id_file = tmp, echo = FALSE)
+  expect_true(file.exists(tmp))
+  expect_equal(readLines(tmp), id)
+})

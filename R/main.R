@@ -61,6 +61,11 @@ main_args_run <- function(res) {
                           default = FALSE,
                           action = "store_true",
                           dest = "print_log"),
+    optparse::make_option("--id-file",
+                          help = "File to write id into",
+                          type = "character",
+                          default = NULL,
+                          dest = "id_file"),
     optparse::make_option("--parameters",
                           help = "Parameters (in json format)",
                           type = "character",
@@ -76,17 +81,26 @@ main_args_run <- function(res) {
 }
 
 main_do_run <- function(x) {
+  ## TODO: Get some classed errors though here and then write out
+  ## information about whether or not things worked and why they
+  ## didn't.  Possible issues (in order)
+  ##
+  ## * orderly report not found
+  ## * error while preparing (e.g., package not found)
+  ## * error while running report
+  ## * error checking artefacts
   config <- orderly_config_get(x$options$root, TRUE)
   name <- x$args
   commit <- !x$options$no_commit
   parameters <- x$options$parameters
+  id_file <- x$options$id_file
   if (!is.null(x$options$parameters)) {
     parameters <- jsonlite::fromJSON(parameters)
   }
   print_log <- x$options$print_log
 
-  main_run <- function(name, parameters, config, commit) {
-    id <- orderly_run(name, parameters, config = config)
+  main_run <- function() {
+    id <- orderly_run(name, parameters, config = config, id_file = id_file)
     if (commit) {
       orderly_commit(id, name, config)
     }
@@ -94,11 +108,11 @@ main_do_run <- function(x) {
   }
 
   if (print_log) {
-    id <- main_run(name, parameters, config, commit)
+    id <- main_run()
   } else {
     log <- tempfile()
     ## we should run this with try() so that we can capture logs there
-    id <- capture_log(main_run(name, parameters, config, commit), log, TRUE)
+    id <- capture_log(main_run(), log, TRUE)
     dest <- (if (commit) path_archive else path_draft)(config$path)
     file.copy(log, file.path(dest, name, id, "orderly.log"))
   }

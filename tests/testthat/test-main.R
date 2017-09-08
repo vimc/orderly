@@ -16,6 +16,28 @@ test_that("run", {
   expect_equal(nrow(orderly_list_archive(path)), 1)
 })
 
+test_that("run: id-file", {
+  path <- prepare_orderly_example("minimal")
+  id_file <- tempfile()
+  args <- c("--root", path, "run", "--id-file", id_file, "example")
+  res <- main_args(args)
+
+  expect_equal(res$command, "run")
+  expect_equal(res$args, "example")
+  expect_null(res$options$parameters)
+  expect_false(res$options$no_commit)
+  expect_false(res$options$print_log)
+  expect_equal(res$options$id_file, id_file)
+  expect_identical(res$target, main_do_run)
+
+  capture.output(res$target(res))
+  expect_equal(orderly_list(path), "example")
+
+  expect_true(file.exists(id_file))
+  id <- readLines(id_file)
+  expect_equal(id, orderly_list_archive(path)$id)
+})
+
 test_that("commit", {
   path <- prepare_orderly_example("minimal")
   id <- orderly_run("example", config = path, echo = FALSE)

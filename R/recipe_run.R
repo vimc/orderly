@@ -16,14 +16,17 @@
 ##'
 ##' @inheritParams orderly_list
 ##' @param echo Print the result of running the R code to the console
+##' @param id_file Write the identifier into a file
 ##' @export
 orderly_run <- function(name, parameters = NULL, envir = NULL,
-                        config = NULL, locate = TRUE, echo = TRUE) {
+                        config = NULL, locate = TRUE, echo = TRUE,
+                        id_file = NULL) {
   envir <- orderly_environment(envir)
   config <- orderly_config_get(config, locate)
   info <- recipe_read(file.path(path_src(config$path), name), config)
   path <- recipe_run(info, parameters, envir,
-                     config = config, locate = FALSE, echo = echo)
+                     config = config, locate = FALSE, echo = echo,
+                     id_file = id_file)
   ## TODO: I might want to give this as <name>/<id> - not sure?
   ##
   ## The disadvantage of this is that we need to parse these, check
@@ -123,15 +126,21 @@ orderly_test_restart <- function(cleanup = TRUE) {
 }
 
 recipe_run <- function(info, parameters, envir,
-                       config = NULL, locate = TRUE, echo = TRUE) {
+                       config = NULL, locate = TRUE, echo = TRUE,
+                       id_file = NULL) {
   config <- orderly_config_get(config, locate)
 
+  ## should these go later?
   con_rds <- orderly_db("rds", config, FALSE)
   con_csv <- orderly_db("csv", config, FALSE)
 
   orderly_log("name", info$name)
   id <- new_report_id()
   orderly_log("id", id)
+  if (!is.null(id_file)) {
+    orderly_log("id_file", id_file)
+    writeLines(id, id_file)
+  }
 
   data <- recipe_data(config, info, parameters, envir)
   ## Pull the data out here now in case the script modifies it at all
