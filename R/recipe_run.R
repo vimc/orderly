@@ -139,7 +139,7 @@ recipe_run <- function(info, parameters, envir,
   orderly_log("id", id)
   if (!is.null(id_file)) {
     orderly_log("id_file", id_file)
-    writeLines(id, id_file)
+    writelines_atomic(id, id_file)
   }
 
   data <- recipe_data(config, info, parameters, envir)

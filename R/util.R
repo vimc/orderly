@@ -363,3 +363,10 @@ open_directory <- function(path) {
     system2(cmd, path)
   }
 }
+
+## rename is atomic
+writelines_atomic <- function(txt, path) {
+  tmp <- paste0(path, ".orderly")
+  writeLines(txt, tmp)
+  file.rename(tmp, path)
+}
