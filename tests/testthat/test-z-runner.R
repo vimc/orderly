@@ -7,7 +7,7 @@ test_that("run: basic", {
   name <- "interactive"
   id <- runner$run(name)
 
-  expect_equal(runner$status(name, id), list(status = "running", out = NULL))
+  expect_equal(runner$status(name, id), list(status = "running", output = NULL))
 
   wait_for_path(file.path(path, "draft", name, id, "started"))
   dat <- runner$status(name, id, TRUE)
@@ -25,8 +25,8 @@ test_that("run: basic", {
 
   res <- runner$status(name, id)
 
-  expect_equal(runner$status(name, id), list(status = "archive", out = NULL))
-  expect_equal(runner$status(name, id), list(status = "archive", out = NULL))
+  expect_equal(runner$status(name, id), list(status = "archive", output = NULL))
+  expect_equal(runner$status(name, id), list(status = "archive", output = NULL))
   dat2 <- runner$status(name, id, TRUE)
 
   expect_equal(dat2$out$stdout[seq_along(dat$out$stdout)],

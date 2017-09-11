@@ -1,3 +1,13 @@
+##' An orderly runner
+##' @title Orderly runner
+##' @param path Path to use
+##'
+##' @param timeout Timeout to use while waiting for R subprocess to
+##'   start on run
+##'
+##' @param max_processes The maximum number of concurrent R processes to run.
+##'
+##' @export
 orderly_runner <- function(path, timeout = 2.0, max_processes = 4L) {
   R6_orderly_runner$new(path, timeout, max_processes)
 }
@@ -27,10 +37,19 @@ R6_orderly_runner <- R6::R6Class(
       orderly_rebuild(self$config, FALSE)
     },
 
-    cleanup = function() {
-      orderly_cleanup(config = self$config)
+    cleanup = function(name = NULL, draft = TRUE, data = TRUE,
+                       failed_only = FALSE) {
+      orderly_cleanup(name = name, config = self$config, draft = draft,
+                      data = data, failed_only = failed_only)
     },
 
+    ## It would be nicer to keep a pool of processes handy and cycle
+    ## them through.  So on startup, create a pool of processes that
+    ## will wait for a task (perhaps reading a pipe).  On exit we'd
+    ## replenish the process pool.
+    ##
+    ## TODO: max_processes > 1 will interact poorly with anything that
+    ## checks out a different branch before use.
     run = function(name, parameters = NULL, commit = TRUE) {
       if (self$n_active() > self$max_processes) {
         stop("too many active processes")
@@ -93,7 +112,7 @@ R6_orderly_runner <- R6::R6Class(
         }
       }
 
-      list(status = status, out = out)
+      list(status = status, output = out)
     },
 
     commit = function(name, id) {
