@@ -1,4 +1,5 @@
-##' An orderly runner
+##' An orderly runner.
+##'
 ##' @title Orderly runner
 ##' @param path Path to use
 ##'
@@ -78,8 +79,8 @@ R6_orderly_runner <- R6::R6Class(
 
     ## TODO: all the key bits become name / id and we return id not
     ## key above
-    status = function(name, version, output = FALSE) {
-      key <- sprintf("%s/%s", name, version)
+    status = function(name, id, output = FALSE) {
+      key <- sprintf("%s/%s", name, id)
       obj <- self$running[[key]]
       out <- NULL
 
@@ -108,7 +109,7 @@ R6_orderly_runner <- R6::R6Class(
           }
         } else {
           self$.cleanup_key(key)
-          return(self$status(name, version, output))
+          return(self$status(name, id, output))
         }
       }
 
@@ -117,10 +118,12 @@ R6_orderly_runner <- R6::R6Class(
 
     commit = function(name, id) {
       orderly_commit(id, name, config = self$config)
+      TRUE
     },
 
     publish = function(name, id, value = TRUE) {
       orderly_publish(id, value, name, config = self$config)
+      value
     },
 
     n_active = function() {

@@ -15,5 +15,5 @@ start on run}
 \item{max_processes}{The maximum number of concurrent R processes to run.}
 }
 \description{
-An orderly runner
+An orderly runner.
 }
