@@ -77,8 +77,6 @@ R6_orderly_runner <- R6::R6Class(
       id
     },
 
-    ## TODO: all the key bits become name / id and we return id not
-    ## key above
     status = function(name, id, output = FALSE) {
       key <- sprintf("%s/%s", name, id)
       obj <- self$running[[key]]
