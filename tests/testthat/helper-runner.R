@@ -13,3 +13,5 @@ wait_for_path <- function(path, ...) {
 wait_for_process_termination <- function(process, ...) {
   wait_while(function() process$is_alive(), ...)
 }
+
+Sys.setenv(R_TESTS = "")
