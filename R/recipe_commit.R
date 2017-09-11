@@ -12,6 +12,10 @@ orderly_commit <- function(id, name = NULL, config = NULL, locate = TRUE) {
   config <- orderly_config_get(config, locate)
   if (is.null(name)) {
     name <- orderly_find_name(id, config, draft = TRUE, must_work = TRUE)
+  } else {
+    if (!file.exists(file.path(path_draft(config$path), name, id))) {
+      stop(sprintf("Did not find draft report %s/%s", name, id))
+    }
   }
   workdir <- file.path(path_draft(config$path), name, id)
   recipe_commit(workdir, config$path)
