@@ -2,7 +2,6 @@
 
 export(orderly_cleanup)
 export(orderly_commit)
-export(orderly_connect)
 export(orderly_data)
 export(orderly_db)
 export(orderly_init)
