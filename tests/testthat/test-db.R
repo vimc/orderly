@@ -59,3 +59,12 @@ test_that("rebuild nonempty database", {
   on.exit(DBI::dbDisconnect(con))
   expect_equal(nrow(DBI::dbReadTable(con, "orderly")), 1)
 })
+
+test_that("no transient db", {
+  config <- list(destination = list(
+                   driver = c("RSQLite", "SQLite"),
+                   args = list(dbname = ":memory:")),
+                 path = ".")
+  expect_error(orderly_db_args("destination", config = config),
+               "Cannot use a transient SQLite database with orderly")
+})
