@@ -94,3 +94,13 @@ test_that("list", {
   expect_error(main_args(c("--root", path, "list", "foo")),
                "argument to list must be one of")
 })
+
+test_that("write_script", {
+  expect_error(write_script(tempfile()),
+               "'path' must be a directory")
+  path <- tempfile()
+  dir.create(path, FALSE, TRUE)
+  bin <- write_script(path)
+  expect_equal(basename(bin), "orderly")
+  expect_true(file.exists(bin))
+})

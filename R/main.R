@@ -278,7 +278,7 @@ main_do_latest <- function(x) {
 }
 
 write_script <- function(path) {
-  if (!is_directory(path)) {
+  if (!isTRUE(is_directory(path))) {
     stop("'path' must be a directory")
   }
   code <- c("#!/usr/bin/env Rscript", "orderly:::main()")
