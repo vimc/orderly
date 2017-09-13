@@ -91,11 +91,7 @@ report_db_rebuild <- function(config) {
   on.exit(DBI::dbDisconnect(con))
   ## TODO: this assumes name known
   tbl <- "orderly"
-  if (DBI::dbExistsTable(con, "orderly")) {
-    DBI::dbExecute(con, "DELETE FROM orderly")
-  } else {
-    tbl <- report_db_init(con, config, TRUE)
-  }
+  DBI::dbExecute(con, "DELETE FROM orderly")
   reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
   if (length(reports) > 0L) {
     dat <- rbind_df(lapply(reports, report_read_data, config))
