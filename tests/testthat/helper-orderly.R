@@ -10,6 +10,13 @@ read_orderly_db <- function(path) {
   DBI::dbReadTable(con, "orderly")
 }
 
+skip_if_no_git <- function() {
+  if (nzchar(Sys.which("git"))) {
+    return()
+  }
+  testthat::skip("git was not found on the path")
+}
+
 skip_if_no_vault_server <- function() {
   testthat::skip_if_not_installed("vaultr")
   if (is.null(vaultr::vault_test_server())) {

@@ -280,7 +280,7 @@ git_info <- function(root) {
   sha_short <- substr(sha, 1, 7)
   branch <- git_call(root, c("symbolic-ref", "--short", "HEAD"))
 
-  status <- git_call(root, c("status", "-s"))
+  status <- git_call(root, c("status", "--porcelain"))
   if (length(status) == 0L) {
     status <- NULL
   }

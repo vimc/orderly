@@ -102,3 +102,33 @@ test_that("which_max_time", {
   expect_equal(which_max_time(times), 3)
   expect_equal(which_max_time(times[c(1, 3, 2)]), 2)
 })
+
+test_that("git", {
+  skip_if_no_git()
+
+  path <- tempfile()
+  code <- system2("git", c("init", path), stdout = FALSE, stderr = FALSE)
+  if (code != 0) {
+    skip("git not working nicely")
+  }
+
+  txt <- file.path(path, "txt")
+  writeLines("orderly", txt)
+  git_call(path, c("add", txt))
+  git_call(path, c("commit", "-m", "initial"))
+
+  info <- git_info(path)
+  expect_true(setequal(names(info),
+                       c("sha_short", "sha", "branch", "status")))
+
+  expect_equal(info$branch, "master")
+  expect_null(info$status)
+  expect_match(info$sha_short, "^[[:xdigit:]]{7}$")
+  expect_match(info$sha, "^[[:xdigit:]]{40}$")
+
+  writeLines("orderly2", txt)
+  info2 <- git_info(path)
+  expect_equal(info2$status, " M txt")
+  expect_equal(info2[c("sha_short", "sha", "branch")],
+               info[c("sha_short", "sha", "branch")])
+})
