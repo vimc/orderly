@@ -17,12 +17,14 @@ main_args <- function(args) {
                                 type = "character",
                                 default = NULL)
 
+  cmds <- main_args_commands()
+
   desc <- c("",
             "The <command> argument must be one of:",
             "",
             sprintf("  * %s: %s",
-                    names(main_args_commands),
-                    vcapply(main_args_commands, "[[", "name",
+                    names(cmds),
+                    vcapply(cmds, "[[", "name",
                             USE.NAMES = FALSE)))
 
   parser <- optparse::OptionParser(
@@ -39,7 +41,7 @@ main_args <- function(args) {
   res$command <- res$args[[1]]
   res$args <- res$args[-1L]
 
-  use <- main_args_commands[[res$command]]
+  use <- cmds[[res$command]]
   if (is.null(use)) {
     optparse_die(parser, sprintf("unknown command '%s'", res$command))
   }
@@ -304,7 +306,7 @@ optparse_die_help <- function(parser) {
   optparse_die(parser, "(Aborting as help requested)")
 }
 
-main_args_commands <-
+main_args_commands <- function() {
   list(run = list(name = "run a report",
                   args = main_args_run),
        commit = list(name = "commit a report",
@@ -319,3 +321,4 @@ main_args_commands <-
                       args = main_args_cleanup),
        rebuild = list(name = "rebuild the database",
                       args = main_args_rebuild))
+}
