@@ -52,3 +52,10 @@ test_that("assert_type", {
   expect_error(assert_type("one", "numeric"), "must be numeric")
   expect_error(assert_type(1, "character"), "must be character")
 })
+
+test_that("assert_file_exists", {
+  path <- tempfile()
+  expect_error(assert_file_exists(path), "File does not exist")
+  writeLines(character(0), path)
+  expect_silent(assert_file_exists(path))
+})

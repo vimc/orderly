@@ -96,3 +96,9 @@ test_that("resolve secret env", {
   expect_equal(res,
                list(user = "alice", password = "ALICE", other = "string"))
 })
+
+test_that("which_max_time", {
+  times <- as.list(Sys.time() + sort(rnorm(3, 0, 20)))
+  expect_equal(which_max_time(times), 3)
+  expect_equal(which_max_time(times[c(1, 3, 2)]), 2)
+})
