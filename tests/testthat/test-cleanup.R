@@ -59,3 +59,12 @@ test_that("cleanup failed", {
   expect_equal(nrow(d), 2)
   expect_true(all(c(id1, id2) %in% d$id))
 })
+
+test_that("cleanup by name", {
+  path <- prepare_orderly_example("demo")
+  id1 <- orderly_run("minimal", config = path, echo = FALSE)
+  id2 <- orderly_run("other", list(nmin = 0), config = path, echo = FALSE)
+  orderly_cleanup("minimal", path)
+  expect_equal(orderly_list_drafts(path),
+               data.frame(name = "other", id = id2, stringsAsFactors = FALSE))
+})
