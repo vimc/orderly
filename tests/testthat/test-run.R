@@ -359,3 +359,31 @@ test_that("database is not loaded unless needed", {
     file.exists(file.path(path, "draft", "example", id, "mygraph.png")))
   expect_error(orderly_db("source", path), "SOME_ENVVAR")
 })
+
+test_that("test_start, test_restart", {
+  owd <- getwd()
+  on.exit(setwd(owd))
+
+  path <- prepare_orderly_example("minimal")
+  orderly_test_start("example", config = path)
+
+  expect_equal(normalizePath(dirname(getwd())),
+               normalizePath(file.path(path, "draft/example")))
+  id <- basename(getwd())
+  expect_equal(orderly_list_drafts(path)$id, id)
+
+  expect_error(orderly_test_start("example", config = path),
+               "Already running in test mode")
+
+  orderly_test_restart()
+  id2 <- basename(getwd())
+  expect_false(id2 == id)
+  expect_equal(orderly_list_drafts(path)$id, id2)
+
+  orderly_test_end()
+  expect_equal(getwd(), owd)
+  expect_error(orderly_test_end(), "Not running in test mode")
+  withr::with_options(
+    list(orderly.config = orderly_config(path)),
+    expect_error(orderly_test_restart(), "Not running in test mode"))
+})
