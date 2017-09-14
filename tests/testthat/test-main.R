@@ -95,7 +95,7 @@ test_that("help", {
   expect_output(try(main_args("--help"), silent = TRUE),
                 "The <command> argument must be one of", fixed = TRUE)
 
-  for (cmd in names(main_args_commands)) {
+  for (cmd in names(main_args_commands())) {
     expect_output(try(main_args(c(cmd, "--help")), silent = TRUE),
                   sprintf("[--root=ROOT] %s", cmd),
                   fixed = TRUE)
@@ -115,4 +115,21 @@ test_that("list", {
   expect_equal(main_args(c("--root", path, "list", "archive"))$args, "archive")
   expect_error(main_args(c("--root", path, "list", "foo")),
                "argument to list must be one of")
+})
+
+test_that("unknown", {
+  path <- tempfile()
+  args <- c("--root", path, "foo")
+  expect_error(capture.output(main_args(args)),
+               "unknown command 'foo'")
+})
+
+test_that("write_script", {
+  expect_error(write_script(tempfile()),
+               "'path' must be a directory")
+  path <- tempfile()
+  dir.create(path, FALSE, TRUE)
+  bin <- write_script(path)
+  expect_equal(basename(bin), "orderly")
+  expect_true(file.exists(bin))
 })

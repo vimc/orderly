@@ -10,6 +10,13 @@ read_orderly_db <- function(path) {
   DBI::dbReadTable(con, "orderly")
 }
 
+skip_if_no_git <- function() {
+  if (nzchar(Sys.which("git"))) {
+    return()
+  }
+  testthat::skip("git was not found on the path")
+}
+
 skip_if_no_vault_server <- function() {
   testthat::skip_if_not_installed("vaultr")
   if (is.null(vaultr::vault_test_server())) {
@@ -30,3 +37,9 @@ start_vault <- function() {
 
 ## Via wikimedia:
 MAGIC_PNG <- as.raw(c(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a))
+
+with_sqlite <- function(path, fun) {
+  con <- DBI::dbConnect(RSQLite::SQLite(), path)
+  on.exit(DBI::dbDisconnect(con))
+  fun(con)
+}

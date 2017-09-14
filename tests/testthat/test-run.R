@@ -5,17 +5,10 @@ context("run")
 ## right track and if I'm breaking things!
 test_that("run", {
   path <- tempfile()
-  on.exit({
-    if (exists("con")) {
-      ## flush any SQLite connections:
-      rm(con)
-      gc()
-    }
-    unlink(path, recursive = TRUE)
-  })
-
   orderly_init(path)
-  fake_db(DBI::dbConnect(RSQLite::SQLite(), file.path(path, "source.sqlite")))
+
+  with_sqlite(file.path(path, "source.sqlite"), fake_db)
+
   file.copy("example_config.yml", file.path(path, "orderly_config.yml"),
             overwrite = TRUE)
 
@@ -80,19 +73,21 @@ test_that("run", {
   expect_is(run$hash_data, "list")
   expect_equal(length(run$hash_data), 1)
 
-  con <- orderly_connect(config)
-  expect_identical(con$rds$list(), unlist(run$hash_data, use.names = FALSE))
-  expect_identical(con$csv$list(), unlist(run$hash_data, use.names = FALSE))
+  con_rds <- orderly_db("rds", config)
+  con_csv <- orderly_db("csv", config)
+
+  expect_identical(con_rds$list(), unlist(run$hash_data, use.names = FALSE))
+  expect_identical(con_csv$list(), unlist(run$hash_data, use.names = FALSE))
 
   ## Confirm that things are OK:
-  expect_equal(con$rds$get(run$hash_data),
-               con$csv$get(run$hash_data))
+  expect_equal(con_rds$get(run$hash_data),
+               con_csv$get(run$hash_data))
 
   ## Confirm that the *format* is OK too by reading the files manually:
-  expect_identical(con$rds$get(run$hash_data),
-                   readRDS(con$rds$filename(run$hash_data)))
-  expect_identical(con$csv$get(run$hash_data),
-                   read_csv(con$csv$filename(run$hash_data)))
+  expect_identical(con_rds$get(run$hash_data),
+                   readRDS(con_rds$filename(run$hash_data)))
+  expect_identical(con_csv$get(run$hash_data),
+                   read_csv(con_csv$filename(run$hash_data)))
 
   ## Then we commit the results:
   q <- recipe_commit(p, path)
@@ -103,8 +98,10 @@ test_that("run", {
   expect_equal(set_names(hash_files(dir(q, full.names = TRUE), FALSE), files),
                cmp)
 
-  expect_equal(DBI::dbListTables(con$destination), "orderly")
-  d <- DBI::dbReadTable(con$destination, "orderly")
+  con_destination <- orderly_db("destination", config)
+  on.exit(DBI::dbDisconnect(con_destination))
+  expect_equal(DBI::dbListTables(con_destination), "orderly")
+  d <- DBI::dbReadTable(con_destination, "orderly")
   expect_true(all(vlapply(d[names(d) != "published"], is.character)))
   expect_true(is.numeric(d$published))
 
@@ -210,8 +207,7 @@ test_that("included example", {
   id <- orderly_run("example", list(cyl = 4), config = path, echo = FALSE)
   p <- orderly_commit(id, config = path)
   expect_true(is_directory(p))
-  db <- orderly_db("destination", path)
-  dat <- DBI::dbReadTable(db, "orderly")
+  dat <- read_orderly_db(path)
   expect_equal(dat$description, NA_character_)
   expect_equal(dat$displayname, NA_character_)
 })
@@ -222,8 +218,7 @@ test_that("included other", {
   p <- orderly_commit(id, config = path)
   info <- recipe_read(file.path(path_src(path), "other"),
                       orderly_config(path))
-  db <- orderly_db("destination", path)
-  dat <- DBI::dbReadTable(db, "orderly")
+  dat <- read_orderly_db(path)
   expect_equal(dat$description, info$description)
   expect_equal(dat$displayname, info$displayname)
 })
@@ -246,6 +241,7 @@ test_that("connection", {
                        config = path)
   expect_is(data$con, "SQLiteConnection")
   expect_is(DBI::dbReadTable(data$con, "data"), "data.frame")
+  DBI::dbDisconnect(data$con)
 })
 
 test_that("no data", {
@@ -325,9 +321,9 @@ test_that("resources", {
   id <- orderly_run("use_resource", config = path, echo = FALSE)
   p <- file.path(path, "draft", "use_resource", id)
   expect_true(file.exists(file.path(p, "meta/data.csv")))
-  con <- orderly_db("destination", config = path)
   p <- orderly_commit(id, config = path)
-  d <- DBI::dbReadTable(con, "orderly")
+
+  d <- read_orderly_db(path)
   expect_identical(d$resources, '["meta/data.csv"]')
   expect_identical(d$hash_resources,
                    '{"meta/data.csv":"0bec5bf6f93c547bc9c6774acaf85e1a"}')
@@ -370,4 +366,32 @@ test_that("id file", {
   id <- orderly_run("example", config = path, id_file = tmp, echo = FALSE)
   expect_true(file.exists(tmp))
   expect_equal(readLines(tmp), id)
+})
+
+test_that("test_start, test_restart", {
+  owd <- getwd()
+  on.exit(setwd(owd))
+
+  path <- prepare_orderly_example("minimal")
+  orderly_test_start("example", config = path)
+
+  expect_equal(normalizePath(dirname(getwd())),
+               normalizePath(file.path(path, "draft/example")))
+  id <- basename(getwd())
+  expect_equal(orderly_list_drafts(path)$id, id)
+
+  expect_error(orderly_test_start("example", config = path),
+               "Already running in test mode")
+
+  orderly_test_restart()
+  id2 <- basename(getwd())
+  expect_false(id2 == id)
+  expect_equal(orderly_list_drafts(path)$id, id2)
+
+  orderly_test_end()
+  expect_equal(getwd(), owd)
+  expect_error(orderly_test_end(), "Not running in test mode")
+  withr::with_options(
+    list(orderly.config = orderly_config(path)),
+    expect_error(orderly_test_restart(), "Not running in test mode"))
 })

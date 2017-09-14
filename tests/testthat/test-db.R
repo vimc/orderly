@@ -7,19 +7,13 @@ test_that("invalid db type", {
 
 test_that("custom fields", {
   path <- tempfile()
-  on.exit({
-    if (exists("con")) {
-      ## flush any SQLite connections:
-      rm(con)
-      gc()
-    }
-    unlink(path, recursive = TRUE)
-  })
 
   orderly_init(path)
   file.copy("example_config.yml", file.path(path, "orderly_config.yml"),
             overwrite = TRUE)
   con <- orderly_db("destination", path)
+  on.exit(DBI::dbDisconnect(con))
+
   expect_equal(DBI::dbListTables(con), "orderly")
   expect_true(DBI::dbExistsTable(con, "orderly"))
 
@@ -62,5 +56,15 @@ test_that("rebuild nonempty database", {
   orderly_rebuild(path)
   orderly_rebuild(path)
   con <- orderly_db("destination", path)
+  on.exit(DBI::dbDisconnect(con))
   expect_equal(nrow(DBI::dbReadTable(con, "orderly")), 1)
+})
+
+test_that("no transient db", {
+  config <- list(destination = list(
+                   driver = c("RSQLite", "SQLite"),
+                   args = list(dbname = ":memory:")),
+                 path = ".")
+  expect_error(orderly_db_args("destination", config = config),
+               "Cannot use a transient SQLite database with orderly")
 })
