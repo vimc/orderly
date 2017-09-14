@@ -14,13 +14,16 @@
 ##'   \code{list()} in which case a list will be returned (rather than
 ##'   an environment).
 ##'
+##' @param open Open the directory after running?
+##'
 ##' @inheritParams orderly_list
 ##' @param echo Print the result of running the R code to the console
 ##' @param id_file Write the identifier into a file
 ##' @export
 orderly_run <- function(name, parameters = NULL, envir = NULL,
                         config = NULL, locate = TRUE, echo = TRUE,
-                        id_file = NULL) {
+                        id_file = NULL, open = FALSE) {
+  assert_scalar_logical(open)
   envir <- orderly_environment(envir)
   config <- orderly_config_get(config, locate)
   info <- recipe_read(file.path(path_src(config$path), name), config)
@@ -31,6 +34,9 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   ##
   ## The disadvantage of this is that we need to parse these, check
   ## them, etc, and they don't deal well with renames.
+  if (open) {
+    open_directory(path)
+  }
   basename(path)
 }
 

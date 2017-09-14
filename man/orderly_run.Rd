@@ -6,7 +6,7 @@
 \title{Run a report}
 \usage{
 orderly_run(name, parameters = NULL, envir = NULL, config = NULL,
-  locate = TRUE, echo = TRUE, id_file = NULL)
+  locate = TRUE, echo = TRUE, id_file = NULL, open = FALSE)
 
 orderly_data(name, parameters = NULL, envir = list(), config = NULL,
   locate = TRUE)
@@ -34,6 +34,8 @@ parents until it finds an \code{orderly_config.yml} file.}
 \item{echo}{Print the result of running the R code to the console}
 
 \item{id_file}{Write the identifier into a file}
+
+\item{open}{Open the directory after running?}
 }
 \description{
 Run a report.  The \code{orderly_data} function is for testing the
