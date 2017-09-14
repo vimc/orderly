@@ -52,41 +52,18 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
     stop("Already running in test mode")
   }
 
-  ## TODO: this should be pulled together with recipe_run as
-  ## recipe_prepare but it requires some work to get all the error
-  ## handling to behave
   config <- orderly_config_get(config, locate)
   info <- recipe_read(file.path(path_src(config$path), name), config)
-  orderly_log("name", info$name)
-  id <- new_report_id()
-  orderly_log("id", id)
+  prep <- orderly_prepare(config, info, parameters, envir)
 
-  envir <- orderly_environment(envir)
-  data <- recipe_data(config, info, parameters, envir)
-
-  workdir <- file.path(path_draft(config$path), info$name, id)
-  owd <- recipe_prepare_workdir(info, workdir)
-  orderly_log("setwd", "now working in test directory")
-  cache$test <- list(owd = owd,
+  cache$test <- list(owd = prep$owd,
                      name = name,
-                     id = id,
+                     id = prep$id,
                      parameters = parameters,
                      config = config,
                      prompt = getOption("prompt"))
-  withCallingHandlers({
-    for (p in info$packages) {
-      library(p, character.only = TRUE)
-    }
-    for (s in info$sources) {
-      source(s, envir)
-    }
-  },
-  error = function(e) {
-    setwd(cache$test)
-    orderly_log("setwd", "reverting to original directory")
-    cache$test <- NULL
-  })
   options(prompt = "[orderly test] > ")
+  orderly_log("setwd", "running in test draft directory")
 }
 
 ##' @export
@@ -129,44 +106,22 @@ recipe_run <- function(info, parameters, envir,
   con_rds <- orderly_db("rds", config, FALSE)
   con_csv <- orderly_db("csv", config, FALSE)
 
-  orderly_log("name", info$name)
-  id <- new_report_id()
-  orderly_log("id", id)
+  prep <- orderly_prepare(config, info, parameters, envir)
+  ## NOTE: using on.exit here because some of the checking code
+  ## depends on hashing files that are relative to the draft working
+  ## directory.
+  on.exit(setwd(prep$owd))
 
-  data <- recipe_data(config, info, parameters, envir)
-  ## Pull the data out here now in case the script modifies it at all
-  ldata <- as.list(data)[names(info$data)]
-
-  workdir <- file.path(path_draft(config$path), info$name, id)
-  owd <- recipe_prepare_workdir(info, workdir)
-  on.exit(setwd(owd), add = TRUE)
-
-  hash_resources <- hash_files(info$resources)
-  if (length(info$resources) > 0L) {
-    orderly_log("resources", sprintf("%s: %s", info$resources, hash_resources))
-  } else {
-    hash_resources <- NULL
-  }
-
-  for (p in info$packages) {
-    library(p, character.only = TRUE)
-  }
-  for (s in info$sources) {
-    source(s, envir)
-  }
-  n_dev <- length(grDevices::dev.list())
   orderly_log("start", as.character(Sys.time()))
-  ## TODO: perhaps like context do the ok/fail logging here.  Perhaps
-  ## *use* context because this looks an awful lot like the same thing.
   source(info$script, local = envir,
          echo = echo, max.deparse.length = Inf)
   orderly_log("end", as.character(Sys.time()))
 
-  recipe_check_device_stack(n_dev)
-  hash_artefacts <- recipe_check_artefacts(info, id)
+  recipe_check_device_stack(prep$n_dev)
+  hash_artefacts <- recipe_check_artefacts(info, prep$id)
 
-  hash_data_csv <- con_csv$mset(ldata)
-  hash_data_rds <- con_rds$mset(ldata)
+  hash_data_csv <- con_csv$mset(prep$data)
+  hash_data_rds <- con_rds$mset(prep$data)
   stopifnot(identical(hash_data_csv, hash_data_rds))
 
   if (is.null(info$depends)) {
@@ -177,7 +132,7 @@ recipe_run <- function(info, parameters, envir,
     depends <- depends[c("name", "id", "filename", "as", "hash")]
   }
 
-  meta <- list(id = id,
+  meta <- list(id = prep$id,
                name = info$name,
                parameters = parameters,
                date = as.character(Sys.time()),
@@ -186,7 +141,7 @@ recipe_run <- function(info, parameters, envir,
                hash_input = hash_files("orderly.yml", FALSE),
                ## Below here all seems sensible enough to track
                hash_script = hash_files(info$script, FALSE),
-               hash_resources = as.list(hash_resources),
+               hash_resources = as.list(prep$hash_resources),
                hash_data = as.list(hash_data_rds),
                hash_artefacts = as.list(hash_artefacts),
                depends = depends)
@@ -194,7 +149,7 @@ recipe_run <- function(info, parameters, envir,
   saveRDS(session_info(), path_orderly_run_rds("."))
   writeLines(yaml::as.yaml(meta, column.major = FALSE),
              path_orderly_run_yml("."))
-  workdir
+  prep$workdir
 }
 
 recipe_substitute <- function(info, parameters) {
@@ -359,4 +314,41 @@ orderly_environment <- function(envir, list_ok = FALSE) {
     stop("'envir' must be an ",
          if (list_ok) "environment or list" else "environment")
   }
+}
+
+orderly_prepare <- function(config, info, parameters, envir) {
+  orderly_log("name", info$name)
+  id <- new_report_id()
+  orderly_log("id", id)
+
+  ## Because the script (including the files in sources) might modify
+  ## the data we need to make sure that we grab a copy of it now (as a
+  ## list 'ldata') to pass back
+  data <- recipe_data(config, info, parameters, envir)
+  ldata <- as.list(data)[names(info$data)]
+
+  ## Compute the device stack size before starting work too
+  n_dev <- length(grDevices::dev.list())
+
+  workdir <- file.path(path_draft(config$path), info$name, id)
+
+  owd <- recipe_prepare_workdir(info, workdir)
+  withCallingHandlers({
+    hash_resources <- hash_files(info$resources)
+    if (length(info$resources) > 0L) {
+      orderly_log("resources",
+                  sprintf("%s: %s", info$resources, hash_resources))
+    } else {
+      hash_resources <- NULL
+    }
+    for (p in info$packages) {
+      library(p, character.only = TRUE)
+    }
+    for (s in info$sources) {
+      source(s, envir)
+    }
+  }, error = function(e) setwd(owd))
+
+  list(data = ldata, hash_resources = hash_resources,
+       id = id, n_dev = n_dev, owd = owd, workdir = workdir)
 }
