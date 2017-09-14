@@ -70,11 +70,7 @@ main_args_run <- function(res) {
   parser <- optparse::OptionParser(
     option_list = opts,
     usage = "%prog [--root=ROOT] run [options] <name>")
-  if (res$options$help) {
-    optparse_die_help(parser)
-  }
-  opts <- optparse::parse_args(parser, res$args, positional_arguments = 1L)
-  opts_combine(res, opts, main_do_run)
+  opts_subcommand(res, parser, main_do_run, 1L)
 }
 
 main_do_run <- function(x) {
@@ -134,11 +130,7 @@ main_args_cleanup <- function(res) {
   parser <- optparse::OptionParser(
     option_list = opts,
     usage = "%prog [--root=ROOT] cleanup [options]")
-  if (res$options$help) {
-    optparse_die_help(parser)
-  }
-  opts <- optparse::parse_args(parser, res$args, positional_arguments = 0L)
-  opts_combine(res, opts, main_do_cleanup)
+  opts_subcommand(res, parser, main_do_cleanup, 0L)
 }
 
 main_do_cleanup <- function(x) {
@@ -156,11 +148,7 @@ main_args_commit <- function(res) {
   parser <- optparse::OptionParser(
     option_list = opts,
     usage = "%prog [--root=ROOT] commit [options] <id>")
-  if (res$options$help) {
-    optparse_die_help(parser)
-  }
-  opts <- optparse::parse_args(parser, res$args, positional_arguments = 1L)
-  opts_combine(res, opts, main_do_commit)
+  opts_subcommand(res, parser, main_do_commit, 1L)
 }
 
 main_do_commit <- function(x) {
@@ -181,11 +169,7 @@ main_args_publish <- function(res) {
   parser <- optparse::OptionParser(
     option_list = opts,
     usage = "%prog [--root=ROOT] publish [options] <id>")
-  if (res$options$help) {
-    optparse_die_help(parser)
-  }
-  opts <- optparse::parse_args(parser, res$args, positional_arguments = 1L)
-  opts_combine(res, opts, main_do_publish)
+  opts_subcommand(res, parser, main_do_publish, 1L)
 }
 
 main_do_publish <- function(x) {
@@ -201,11 +185,7 @@ main_args_rebuild <- function(res) {
   parser <- optparse::OptionParser(
     option_list = opts,
     usage = "%prog [--root=ROOT] rebuild [options]")
-  if (res$options$help) {
-    optparse_die_help(parser)
-  }
-  opts <- optparse::parse_args(parser, res$args, positional_arguments = 0L)
-  opts_combine(res, opts, main_do_rebuild)
+  opts_subcommand(res, parser, main_do_rebuild, 0L)
 }
 
 main_do_rebuild <- function(x) {
@@ -223,13 +203,11 @@ main_args_list <- function(res) {
   if (res$options$help) {
     optparse_die_help(parser)
   }
-  opts <- optparse::parse_args(parser, res$args, positional_arguments = 0:1)
-  if (length(opts$args) == 0L) {
-    opts$args <- "names"
-  }
-  opts$args <- match_value(opts$args, c("names", "drafts", "archive"),
-                           "argument to list")
-  opts_combine(res, opts, main_do_list)
+  ret <- opts_subcommand(res, parser, main_do_list, 0:1)
+  type <- if (length(ret$args) == 0L) "names" else ret$args
+  ret$args <- match_value(type, c("names", "drafts", "archive"),
+                          "argument to list")
+  ret
 }
 
 main_do_list <- function(x) {
@@ -259,11 +237,7 @@ main_args_latest <- function(res) {
   parser <- optparse::OptionParser(
     option_list = opts,
     usage = "%prog [--root=ROOT] latest [options] <name>...")
-  if (res$options$help) {
-    optparse_die_help(parser)
-  }
-  opts <- optparse::parse_args(parser, res$args, positional_arguments = TRUE)
-  opts_combine(res, opts, main_do_latest)
+  opts_subcommand(res, parser, main_do_latest, TRUE)
 }
 
 main_do_latest <- function(x) {
@@ -290,7 +264,13 @@ write_script <- function(path) {
   invisible(path_bin)
 }
 
-opts_combine <- function(base, new, target) {
+opts_subcommand <- function(base, parser, target, positional_arguments) {
+  if (base$options$help) {
+    optparse_die_help(parser)
+  }
+  new <- optparse::parse_args(parser, base$args,
+                              positional_arguments = positional_arguments)
+
   base$options <- modify_list(base$options, new$options)
   base$args <- new$args
   base$target <- target
