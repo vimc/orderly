@@ -1,83 +1,59 @@
 context("orderly_runner")
 
-test_that("run: basic", {
+test_that("run: success", {
   path <- prepare_orderly_example("interactive")
 
   runner <- orderly_runner(path)
   name <- "interactive"
-  id <- runner$run(name)
+  key <- runner$queue(name)
 
-  expect_equal(runner$status(name, id), list(status = "running", output = NULL))
+  expect_equal(runner$status(key),
+               list(key = key,
+                    status = "queued",
+                    id = NA_character_,
+                    output = NULL))
+
+  tmp <- runner$poll()
+  expect_equal(tmp, "create")
+  id <- wait_for_id(runner, key)
+
+  st <- runner$status(key)
+  expect_is(st$id, "character")
+  expect_equal(st$status, "running")
+
+  dat <- runner$status(key, TRUE)
+  expect_equal(names(dat$output), c("stderr", "stdout"))
+  expect_match(dat$output$stderr, paste0("\\[ id +\\]  ", id),
+               all = FALSE)
 
   wait_for_path(file.path(path, "draft", name, id, "started"))
-  dat <- runner$status(name, id, TRUE)
+  writeLines("continue", file.path(path, "draft", name, id, "resume"))
+  wait_while_running(runner)
 
-  ## We have sensible output
-  expect_equal(names(dat$out), c("stderr", "stdout"))
-  expect_match(dat$out$stderr, paste0("\\[ id +\\]  ", id),
-               all = FALSE)
-  expect_match(dat$out$stdout, "Sys.sleep", fixed = TRUE, all = FALSE)
+  dat2 <- runner$status(key, TRUE)
+  expect_equal(dat2$status, "success")
 
-  p <- file.path(path, "draft", name, id, "resume")
-  writeLines("continue", p)
-  key <- sprintf("%s/%s", name, id)
-  wait_for_process_termination(runner$running[[key]]$process)
-
-  res <- runner$status(name, id)
-
-  expect_equal(runner$status(name, id), list(status = "archive", output = NULL))
-  expect_equal(runner$status(name, id), list(status = "archive", output = NULL))
-  dat2 <- runner$status(name, id, TRUE)
-
-  expect_equal(dat2$out$stdout[seq_along(dat$out$stdout)],
-               dat$out$stdout)
-  expect_equal(dat2$out$stderr[seq_along(dat$out$stderr)],
-               dat$out$stderr)
-  expect_true(all(lengths(dat2$out) > lengths(dat$out)))
+  expect_equal(dat2$output$stdout[seq_along(dat$output$stdout)],
+               dat$output$stdout)
+  expect_equal(dat2$output$stderr[seq_along(dat$output$stderr)],
+               dat$output$stderr)
+  expect_true(all(lengths(dat2$output) > lengths(dat$output)))
 })
 
 test_that("run: error", {
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
-  name <- "interactive"
-  id <- runner$run(name)
+  dat <- runner_start_interactive(runner)
 
-  p <- file.path(path, "draft", name, id, "resume")
-  wait_for_path(dirname(p))
+  writeLines("error", file.path(path, "draft", dat$name, dat$id, "resume"))
+  wait_for_process_termination(runner$process$px)
 
-  writeLines("error", p)
-  key <- sprintf("%s/%s", name, id)
-  wait_for_process_termination(runner$running[[key]]$process)
+  res <- runner$status(dat$key, TRUE)
+  expect_equal(res$status, "running")
 
-  dat <- runner$status(name, id, TRUE)
-  expect_equal(dat$status, "error")
-})
-
-test_that("run: draft", {
-  path <- prepare_orderly_example("interactive")
-  runner <- orderly_runner(path)
-  name <- "interactive"
-  id <- runner$run(name, commit = FALSE)
-
-  p <- file.path(path, "draft", name, id, "resume")
-  wait_for_path(dirname(p))
-
-  writeLines("continue", p)
-  key <- sprintf("%s/%s", name, id)
-  wait_for_process_termination(runner$running[[key]]$process)
-
-  dat <- runner$status(name, id, TRUE)
-  expect_equal(dat$status, "draft")
-})
-
-test_that("commit", {
-  path <- prepare_orderly_example("minimal")
-  runner <- orderly_runner(path)
-
-  name <- "example"
-  id <- orderly_run(name, config = path, echo = FALSE)
-  res <- runner$commit(name, id)
-  expect_error(runner$commit(name, id), "Did not find draft report")
+  expect_equal(runner$poll(), "finish")
+  res <- runner$status(dat$key, TRUE)
+  expect_equal(res$status, "failure")
 })
 
 test_that("publish", {
@@ -86,7 +62,8 @@ test_that("publish", {
 
   name <- "example"
   id <- orderly_run(name, config = path, echo = FALSE)
-  res <- runner$commit(name, id)
+  orderly_commit(id, name, config = path)
+
   res <- runner$publish(name, id)
 
   path_yml <- path_orderly_published_yml(file.path(path, "archive", name, id))
@@ -103,7 +80,7 @@ test_that("rebuild", {
 
   name <- "example"
   id <- orderly_run(name, config = path, echo = FALSE)
-  res <- runner$commit(name, id)
+  orderly_commit(id, name, config = path)
 
   path_db <- file.path(path, "orderly.sqlite")
   file.remove(path_db)

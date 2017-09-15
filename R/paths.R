@@ -37,3 +37,10 @@ path_orderly_published_yml <- function(path) {
 path_orderly_envir_yml <- function(path) {
   file.path(path, "orderly_envir.yml")
 }
+
+path_runner_log <- function(path) {
+  file.path(path, "runner", "log")
+}
+path_runner_id <- function(path) {
+  file.path(path, "runner", "id")
+}

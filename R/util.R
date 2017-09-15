@@ -370,3 +370,15 @@ writelines_atomic <- function(txt, path) {
   writeLines(txt, tmp)
   file.rename(tmp, path)
 }
+
+data_frame <- function(...) {
+  data.frame(..., stringsAsFactors = FALSE)
+}
+
+readlines_if_exists <- function(path, missing = NULL) {
+  if (file.exists(path)) {
+    readLines(path)
+  } else {
+    missing
+  }
+}

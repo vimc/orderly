@@ -1,37 +1,100 @@
-##' An orderly runner.
+##' An orderly runner.  This is used to run reports remotely.  It's
+##' designed to be used in conjunction with montagu-reporting-api, so
+##' there is no "draft" stage.
 ##'
 ##' @title Orderly runner
 ##' @param path Path to use
-##'
-##' @param timeout Timeout to use while waiting for R subprocess to
-##'   start on run
-##'
-##' @param max_processes The maximum number of concurrent R processes to run.
-##'
+##' @param allow_branch_change Allow git to change branches
 ##' @export
-orderly_runner <- function(path, timeout = 2.0, max_processes = 4L) {
-  R6_orderly_runner$new(path, timeout, max_processes)
+orderly_runner <- function(path, allow_branch_change = FALSE) {
+  R6_orderly_runner$new(path, allow_branch_change)
 }
 
+orderly_runner_tbl <- "orderly_runner"
+
+## TODO: through here we need to wrap some calls up in success/fail so
+## that I can get that pushed back through the API.
 R6_orderly_runner <- R6::R6Class(
   "orderly_runner",
   public = list(
-    orderly = NULL,
     path = NULL,
-    timeout = NULL,
-    running = NULL,
     config = NULL,
-    max_processes = NULL,
+    allow_branch_change = FALSE,
 
-    initialize = function(path, timeout, max_processes) {
+    orderly_bin = NULL,
+    process = NULL,
+
+    path_log = NULL,
+    path_id = NULL,
+
+    con = NULL,
+
+    initialize = function(path, allow_branch_change) {
       self$path <- path
       self$config <- orderly_config_get(path)
+      self$allow_branch_change <- allow_branch_change
+
       bin <- tempfile()
       dir.create(bin)
-      self$orderly <- write_script(bin)
-      self$timeout <- timeout
-      self$running <- new.env(parent = emptyenv())
-      self$max_processes <- max_processes
+      self$orderly_bin <- write_script(bin)
+
+      self$con <- orderly_db("destination", self$config)
+      sqlite_init_table(self$con, orderly_runner_tbl, orderly_runner_db_cols())
+
+      self$path_log <- path_runner_log(path)
+      self$path_id <- path_runner_id(path)
+      dir.create(self$path_log, FALSE, TRUE)
+      dir.create(self$path_id, FALSE, TRUE)
+    },
+
+    finalize = function() {
+      DBI::dbDisconnect(self$con)
+    },
+
+    queue = function(name, parameters = NULL, ref = NULL) {
+      key <- ids::adjective_animal()
+      d <- data_frame(key = key,
+                      state = "queued",
+                      name = name,
+                      parameters = parameters %||% NA_character_,
+                      ref = ref %||% NA_character_)
+      DBI::dbWriteTable(self$con, orderly_runner_tbl, d, append = TRUE)
+      key
+    },
+
+    status = function(key, output = FALSE) {
+      out <- NULL
+      if (identical(key, self$process$key)) {
+        state <- "running"
+        id <- readlines_if_exists(self$process$id_file, NA_character_)
+        if (output) {
+          out <- list(stderr = self$process$stderr(),
+                      stdout = self$process$stdout())
+        }
+      } else {
+        sql <- sprintf("SELECT state, name, orderly_id from %s WHERE key = $1",
+                       orderly_runner_tbl)
+        dat <- DBI::dbGetQuery(self$con, sql, key)
+        if (nrow(dat) == 0L) {
+          state <- "unknown"
+          id <- NA_character_
+        } else {
+          state <- dat$state
+          id <- dat$orderly_id
+        }
+        if (output && !is.na(id)) {
+          out <- self$.read_logs(key)
+        }
+      }
+      list(key = key, status = state, id = id, output = out)
+    },
+
+    ## This one could quite easily move into the montagu api; it
+    ## doesn't take too much to do (write one file and write to the
+    ## SQL database)
+    publish = function(name, id, value = TRUE) {
+      orderly_publish(id, value, name, config = self$config)
+      value
     },
 
     rebuild = function() {
@@ -44,129 +107,82 @@ R6_orderly_runner <- R6::R6Class(
                       data = data, failed_only = failed_only)
     },
 
-    ## It would be nicer to keep a pool of processes handy and cycle
-    ## them through.  So on startup, create a pool of processes that
-    ## will wait for a task (perhaps reading a pipe).  On exit we'd
-    ## replenish the process pool.
-    ##
-    ## TODO: max_processes > 1 will interact poorly with anything that
-    ## checks out a different branch before use.
-    run = function(name, parameters = NULL, commit = TRUE) {
-      if (self$n_active() > self$max_processes) {
-        stop("too many active processes")
+    poll = function() {
+      if (!is.null(self$process)) {
+        if (self$process$px$is_alive()) {
+          "running"
+        } else {
+          self$.cleanup()
+          "finish"
+        }
+      } else if (self$.run_next()) {
+        "create"
+      } else {
+        "idle"
       }
-
-      if (!is.null(parameters)) {
-        assert_scalar_character(parameters) # really must be json
-        parameters <- c("--parameters", parameters)
-      }
-      id_file <- tempfile()
-      args <- c("--root", self$path, "run", "--print-log", parameters,
-                if (commit) NULL else "--no-commit",
-                "--id-file", id_file, name)
-
-      px <- processx::process$new(self$orderly, args,
-                                  stdout = "|", stderr = "|")
-
-      id <- process_wait(px, id_file, timeout = 1, poll = 0.02)
-      key <- sprintf("%s/%s", name, id)
-      dat <- list(name = name, id = id, key = key, process = px,
-                  stdout = process_stream(px, TRUE),
-                  stderr = process_stream(px, FALSE))
-      self$running[[key]] <- dat
-      id
     },
 
-    status = function(name, id, output = FALSE) {
-      key <- sprintf("%s/%s", name, id)
-      obj <- self$running[[key]]
-      out <- NULL
+    .cleanup = function() {
+      ok <- self$process$px$get_exit_status() == 0L
+      key <- self$process$key
+      state <- if (ok) "success" else "failure"
+      ## First, ensure that things are going to be sensibly set
+      ## even if we fail:
+      process <- self$process
+      self$process <- NULL
 
-      if (is.null(obj)) {
-        path <- self$.find(key)
-        if (is.null(path)) {
-          status <- "unknown"
-        } else {
-          status <- basename(dirname(dirname(path)))
-          if (status == "draft") {
-            if (!file.exists(path_orderly_run_yml(path))) {
-              status <- "error"
-            }
-          }
-          if (output) {
-            out <- list(stderr = readlines_if_exists(path_stderr(path)),
-                        stdout = readlines_if_exists(path_stdout(path)))
-          }
+      ## Then process logs
+      path_log <- file.path(self$path_log, key)
+      dir.create(path_log, FALSE, TRUE)
+      writeLines(process$stdout(), path_stdout(path_log))
+      writeLines(process$stderr(), path_stderr(path_log))
+
+      if (file.exists(process$id_file)) {
+        id <- readLines(process$id_file)
+        base <- if (state == "success") path_archive else path_draft
+        p <- file.path(base(self$path), process$name, id)
+        if (file.exists(p)) {
+          file.copy(c(path_stdout(path_log), path_stderr(path_log)), p)
         }
       } else {
-        if (obj$process$is_alive()) {
-          status <- "running"
-          if (output) {
-            out <- list(stderr = obj$stderr(),
-                        stdout = obj$stdout())
-          }
-        } else {
-          self$.cleanup_key(key)
-          return(self$status(name, id, output))
-        }
+        id <- NA_character_
       }
 
-      list(status = status, output = out)
+      orderly_runner_set_state(self$con, key, state, id)
     },
 
-    commit = function(name, id) {
-      orderly_commit(id, name, config = self$config)
+    .read_logs = function(key) {
+      path_log <- file.path(self$path_log, key)
+      list(stderr = readlines_if_exists(path_stderr(path_log)),
+           stdout = readlines_if_exists(path_stdout(path_log)))
+    },
+
+    .run_next = function() {
+      sql <- sprintf(
+        "SELECT * FROM %s WHERE state = 'queued' ORDER BY id LIMIT 1",
+        orderly_runner_tbl)
+      dat <- DBI::dbGetQuery(self$con, sql)
+      if (nrow(dat) == 0L) {
+        return(FALSE)
+      }
+
+      orderly_runner_set_state(self$con, dat$key, "running", NA_character_)
+      id_file <- file.path(self$path_id, dat$key)
+      args <- c("--root", self$path,
+                "run", dat$name, "--print-log", "--id-file", id_file,
+                if (!is.na(dat$parameters)) c("--parameters", dat$parameters),
+                if (!is.na(dat$ref)) c("--ref", dat$ref))
+      px <- processx::process$new(self$orderly_bin, args,
+                                  stdout = "|", stderr = "|")
+      self$process <- list(px = px,
+                           key = dat$key,
+                           name = dat$name,
+                           id_file = id_file,
+                           stdout = process_stream(px, TRUE),
+                           stderr = process_stream(px, FALSE))
       TRUE
-    },
-
-    publish = function(name, id, value = TRUE) {
-      orderly_publish(id, value, name, config = self$config)
-      value
-    },
-
-    n_active = function() {
-      keys <- ls(self$running)
-      sum(vlapply(keys, function(k) self$running[[k]]$process$is_alive()))
-    },
-
-    ## More stuff that could work it's way into the querying...
-    .find = function(key) {
-      path <- file.path(path_archive(self$path), key)
-      if (!file.exists(path)) {
-        path <- file.path(path_draft(self$path), key)
-        if (!file.exists(path)) {
-          path <- NULL
-        }
-      }
-      path
-    },
-
-    .cleanup_key = function(key) {
-      obj <- self$running[[key]]
-      exists <- !is.null(obj)
-      if (exists) {
-        id <- basename(key)
-        name <- dirname(key)
-
-        dest <- self$.find(key)
-        if (!is.null(dest)) {
-          writeLines(obj$stdout(), path_stdout(dest))
-          writeLines(obj$stderr(), path_stderr(dest))
-        }
-
-        rm(list = key, envir = self$running)
-      }
-      exists
     }
   ))
-
-readlines_if_exists <- function(path, misisng = NULL) {
-  if (file.exists(path)) {
-    readLines(path)
-  } else {
-    missing
-  }
-}
 
 path_stderr <- function(path) {
   file.path(path, "orderly.stderr")
@@ -198,4 +214,70 @@ process_wait <- function(px, filename, timeout = 1, poll = 0.02) {
   }
   message("started")
   id <- readLines(filename)
+}
+
+orderly_runner_db_cols <- function() {
+  c("id" = "INTEGER PRIMARY KEY AUTOINCREMENT",
+    "key" = "TEXT",
+    "state" = "TEXT", # queued, running, success, failure
+    "name" = "TEXT",
+    "parameters" = "TEXT", # json
+    "ref" = "TEXT", # nullable
+    "orderly_id" = "TEXT") # nullable
+}
+
+orderly_runner_process <- function(root) {
+  config <- orderly_config(root)
+
+  con <- orderly_db("destination", config)
+  on.exit(DBI::dbDisconnect(con))
+
+  DBI::dbBegin(con)
+  sql <- sprintf("SELECT * FROM %s WHERE state = 'queued' ORDER BY id LIMIT 1",
+                 orderly_runner_tbl)
+  dat <- DBI::dbGetQuery(con, sql)
+  if (nrow(dat) > 0L) {
+    orderly_runner_set_state(con, dat$key, "running", NA_character_)
+    DBI::dbCommit(con)
+  } else {
+    DBI::dbRollback(con)
+    return(NULL)
+  }
+
+  ref <- if (is.na(dat$ref)) NULL else jsonlite::fromJSON(dat$ref)
+  parameters <- if (is.na(dat$parameters))
+                  NULL else jsonlite::fromJSON(dat$parameters)
+
+  id <- NULL
+  tryCatch({
+    id_file <- tempfile() # to help with failures
+    id <- orderly_run(name, parameters, config = config, id_file = id_file)
+    orderly_commit(id, config = config)
+    sql <- sprintf("UPDATE %s SET state = $1, id = $2 WHERE key = $3",
+                   orderly_runner_tbl)
+    orderly_runner_set_state(con, dat$key, "success", id)
+  }, error = function(e) {
+    if (file.exists(id_file)) {
+      id <- tryCatch(readLines(id_file), function(e) NA_character_)
+    } else {
+      id <- NA_character_
+    }
+    orderly_runner_set_state(con, dat$key, "error", id)
+  })
+
+  dat$key
+}
+
+orderly_runner_set_state <- function(con, key, state, id) {
+  sql <- sprintf("UPDATE %s SET state = $1, orderly_id = $2 WHERE key = $3",
+                 orderly_runner_tbl)
+  DBI::dbExecute(con, sql, list(state, id, key))
+}
+
+process <- function(command, args) {
+  px <- processx::process$new(command, args, stdout = "|", stderr = "|")
+  list(px = px,
+       key = key,
+       stdout = process_stream(px, TRUE),
+       stderr = process_stream(px, FALSE))
 }

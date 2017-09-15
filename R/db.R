@@ -134,3 +134,38 @@ orderly_rebuild <- function(config = NULL, locate = TRUE) {
   report_db_rebuild(config)
   invisible(NULL)
 }
+
+## Need to merge this in with the above bits; need to merge the custom
+## type bits in though
+sqlite_init_table <- function(con, table, cols, must_create = FALSE) {
+  if (!DBI::dbExistsTable(con, table)) {
+    col_types <- sprintf("  %s %s", names(cols), unname(cols))
+    sql <- sprintf("CREATE TABLE %s (\n%s\n)",
+                   table,
+                   paste(col_types, collapse = ",\n"))
+    DBI::dbExecute(con, sql)
+  } else if (must_create) {
+    stop(sprintf("Table '%s' already exists", table))
+  } else {
+    sql <- sprintf("SELECT * FROM %s LIMIT 0", table)
+    d <- DBI::dbGetQuery(con, sql)
+    browser()
+    custom_name <- config$fields$name
+    msg <- setdiff(custom_name, names(d))
+    if (length(msg) > 0L) {
+      stop(sprintf("custom fields %s not present in existing database",
+                   paste(squote(msg), collapse = ", ")))
+    }
+    extra <- setdiff(setdiff(names(d), names(cols)), custom_name)
+    if (length(extra) > 0L) {
+      stop(sprintf("custom fields %s in database not present in config",
+                   paste(squote(extra), collapse = ", ")))
+    }
+  }
+  table
+}
+
+with_connection <- function(con, f, ...) {
+  withCallingHandlers(f(con, ...),
+                      finally = function() DBI::dbDisconnect(con))
+}
