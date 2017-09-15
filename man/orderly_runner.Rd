@@ -4,16 +4,15 @@
 \alias{orderly_runner}
 \title{Orderly runner}
 \usage{
-orderly_runner(path, timeout = 2, max_processes = 4L)
+orderly_runner(path, allow_branch_change = FALSE)
 }
 \arguments{
 \item{path}{Path to use}
 
-\item{timeout}{Timeout to use while waiting for R subprocess to
-start on run}
-
-\item{max_processes}{The maximum number of concurrent R processes to run.}
+\item{allow_branch_change}{Allow git to change branches}
 }
 \description{
-An orderly runner.
+An orderly runner.  This is used to run reports remotely.  It's
+designed to be used in conjunction with montagu-reporting-api, so
+there is no "draft" stage.
 }
