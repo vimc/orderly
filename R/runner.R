@@ -20,6 +20,7 @@ RUNNER_UNKNOWN <- "unknown"
 ## that I can get that pushed back through the API.
 R6_orderly_runner <- R6::R6Class(
   "orderly_runner",
+  cloneable = FALSE,
   public = list(
     path = NULL,
     config = NULL,
@@ -52,7 +53,9 @@ R6_orderly_runner <- R6::R6Class(
     },
 
     queue = function(name, parameters = NULL, ref = NULL) {
-      self$data$insert(name, parameters, ref)
+      key <- self$data$insert(name, parameters, ref)
+      orderly_log("queue", sprintf("%s (%s)", key, name))
+      key
     },
 
     status = function(key, output = FALSE) {
@@ -116,6 +119,7 @@ R6_orderly_runner <- R6::R6Class(
       ## even if we fail:
       process <- self$process
       self$process <- NULL
+      orderly_log(state, sprintf("%s (%s)", process$key, process$name))
 
       ## Then process logs
       path_log <- file.path(self$path_log, key)
@@ -148,7 +152,7 @@ R6_orderly_runner <- R6::R6Class(
       if (is.null(dat)) {
         return(FALSE)
       }
-
+      orderly_log("run", sprintf("%s (%s)", dat$key, dat$name))
       self$data$set_state(dat$key, RUNNER_RUNNING)
       id_file <- file.path(self$path_id, dat$key)
       args <- c("--root", self$path,
@@ -205,6 +209,14 @@ runner_queue <- function() {
   colnames(data) <- cols
 
   list(
+    get = function() {
+      data
+    },
+
+    length = function() {
+      sum(data[, "state"] == RUNNER_QUEUED)
+    },
+
     insert = function(name, parameters = NULL, ref = NULL) {
       existing <- data[, "key"]
       repeat {
