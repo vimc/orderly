@@ -48,7 +48,9 @@ R6_orderly_runner <- R6::R6Class(
     },
 
     finalize = function() {
-      DBI::dbDisconnect(self$con)
+      ## I'm seeing an "unused result set" warning here that I believe
+      ## is a consequence of interrupting while in SQLite code
+      suppressWarnings(DBI::dbDisconnect(self$con))
     },
 
     queue = function(name, parameters = NULL, ref = NULL) {
@@ -226,24 +228,31 @@ orderly_runner_db_cols <- function() {
     "orderly_id" = "TEXT") # nullable
 }
 
+## Throughout thi function I'll try and leave things in a fairly
+## consistent state.  Because the work queue is a table, things are
+## not ever lost from it (unlike the classic Redis work queue) so it's
+## a bit simpler to deal with.
 orderly_runner_process <- function(root) {
   config <- orderly_config(root)
 
   con <- orderly_db("destination", config)
   on.exit(DBI::dbDisconnect(con))
 
+  sql <- "SELECT * FROM %s WHERE state = 'queued' ORDER BY id LIMIT 1"
   DBI::dbBegin(con)
-  sql <- sprintf("SELECT * FROM %s WHERE state = 'queued' ORDER BY id LIMIT 1",
-                 orderly_runner_tbl)
-  dat <- DBI::dbGetQuery(con, sql)
-  if (nrow(dat) > 0L) {
-    orderly_runner_set_state(con, dat$key, "running", NA_character_)
-    DBI::dbCommit(con)
-  } else {
-    DBI::dbRollback(con)
-    return(NULL)
-  }
+  withCallingHandlers({
+    sql <- sprintf(sql, orderly_runner_tbl)
+    dat <- DBI::dbGetQuery(con, sql)
+    if (nrow(dat) > 0L) {
+      orderly_runner_set_state(con, dat$key, "running", NA_character_)
+      DBI::dbCommit(con)
+    } else {
+      DBI::dbRollback(con)
+      return(NULL)
+    }
+  }, error = function(e) DBI::dbRollback(con))
 
+  ## TODO: I don't think that ref comes through here in json format
   ref <- if (is.na(dat$ref)) NULL else jsonlite::fromJSON(dat$ref)
   parameters <- if (is.na(dat$parameters))
                   NULL else jsonlite::fromJSON(dat$parameters)

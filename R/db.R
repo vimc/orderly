@@ -149,16 +149,14 @@ sqlite_init_table <- function(con, table, cols, must_create = FALSE) {
   } else {
     sql <- sprintf("SELECT * FROM %s LIMIT 0", table)
     d <- DBI::dbGetQuery(con, sql)
-    browser()
-    custom_name <- config$fields$name
-    msg <- setdiff(custom_name, names(d))
+    msg <- setdiff(names(cols), names(d))
     if (length(msg) > 0L) {
-      stop(sprintf("custom fields %s not present in existing database",
+      stop(sprintf("fields %s not present in existing database",
                    paste(squote(msg), collapse = ", ")))
     }
-    extra <- setdiff(setdiff(names(d), names(cols)), custom_name)
+    extra <- setdiff(names(d), names(cols))
     if (length(extra) > 0L) {
-      stop(sprintf("custom fields %s in database not present in config",
+      stop(sprintf("fields %s in database not present in config",
                    paste(squote(extra), collapse = ", ")))
     }
   }

@@ -1,4 +1,4 @@
-wait_while <- function(continue, timeout = 1, poll = 0.02) {
+wait_while <- function(continue, timeout = 2, poll = 0.02) {
   t_quit <- Sys.time() + timeout
   while (continue()) {
     Sys.sleep(poll)
