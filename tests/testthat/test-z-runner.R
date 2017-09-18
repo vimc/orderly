@@ -1,5 +1,40 @@
 context("orderly_runner")
 
+test_that("runner queue", {
+  queue <- runner_queue()
+  expect_equal(queue$status(""), list(state = "unknown", id = NA_character_))
+  expect_null(queue$next_queued())
+
+  key1 <- queue$insert("a")
+  expect_equal(queue$status(key1), list(state = "queued", id = NA_character_))
+  key2 <- queue$insert("b", "parameters")
+  key3 <- queue$insert("c", ref = "ref")
+
+  d <- queue$next_queued()
+  expect_equal(d, list(key = key1, state = "queued", name = "a",
+                       parameters = NA_character_, ref = NA_character_,
+                       id = NA_character_))
+
+  expect_true(queue$set_state(key1, "running"))
+  expect_equal(queue$status(key1), list(state = "running", id = NA_character_))
+
+  d <- queue$next_queued()
+  expect_equal(d, list(key = key2, state = "queued", name = "b",
+                       parameters = "parameters", ref = NA_character_,
+                       id = NA_character_))
+
+  expect_true(queue$set_state(key2, "running", new_report_id()))
+
+  d <- queue$next_queued()
+  expect_equal(d, list(key = key3, state = "queued", name = "c",
+                       parameters = NA_character_, ref = "ref",
+                       id = NA_character_))
+
+  expect_true(queue$set_state(key3, "running", new_report_id()))
+
+  expect_null(queue$next_queued())
+})
+
 test_that("run: success", {
   path <- prepare_orderly_example("interactive")
 
@@ -53,7 +88,7 @@ test_that("run: error", {
 
   expect_equal(runner$poll(), "finish")
   res <- runner$status(dat$key, TRUE)
-  expect_equal(res$status, "failure")
+  expect_equal(res$status, "error")
 })
 
 test_that("publish", {

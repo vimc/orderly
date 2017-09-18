@@ -10,7 +10,11 @@ orderly_runner <- function(path, allow_branch_change = FALSE) {
   R6_orderly_runner$new(path, allow_branch_change)
 }
 
-orderly_runner_tbl <- "orderly_runner"
+RUNNER_QUEUED  <- "queued"
+RUNNER_RUNNING <- "running"
+RUNNER_SUCCESS <- "success"
+RUNNER_ERROR   <- "error"
+RUNNER_UNKNOWN <- "unknown"
 
 ## TODO: through here we need to wrap some calls up in success/fail so
 ## that I can get that pushed back through the API.
@@ -28,6 +32,7 @@ R6_orderly_runner <- R6::R6Class(
     path_id = NULL,
 
     con = NULL,
+    data = NULL,
 
     initialize = function(path, allow_branch_change) {
       self$path <- path
@@ -38,8 +43,7 @@ R6_orderly_runner <- R6::R6Class(
       dir.create(bin)
       self$orderly_bin <- write_script(bin)
 
-      self$con <- orderly_db("destination", self$config)
-      sqlite_init_table(self$con, orderly_runner_tbl, orderly_runner_db_cols())
+      self$data <- runner_queue()
 
       self$path_log <- path_runner_log(path)
       self$path_id <- path_runner_id(path)
@@ -47,43 +51,23 @@ R6_orderly_runner <- R6::R6Class(
       dir.create(self$path_id, FALSE, TRUE)
     },
 
-    finalize = function() {
-      ## I'm seeing an "unused result set" warning here that I believe
-      ## is a consequence of interrupting while in SQLite code
-      suppressWarnings(DBI::dbDisconnect(self$con))
-    },
-
     queue = function(name, parameters = NULL, ref = NULL) {
-      key <- ids::adjective_animal()
-      d <- data_frame(key = key,
-                      state = "queued",
-                      name = name,
-                      parameters = parameters %||% NA_character_,
-                      ref = ref %||% NA_character_)
-      DBI::dbWriteTable(self$con, orderly_runner_tbl, d, append = TRUE)
-      key
+      self$data$insert(name, parameters, ref)
     },
 
     status = function(key, output = FALSE) {
       out <- NULL
       if (identical(key, self$process$key)) {
-        state <- "running"
+        state <- RUNNER_RUNNING
         id <- readlines_if_exists(self$process$id_file, NA_character_)
         if (output) {
           out <- list(stderr = self$process$stderr(),
                       stdout = self$process$stdout())
         }
       } else {
-        sql <- sprintf("SELECT state, name, orderly_id from %s WHERE key = $1",
-                       orderly_runner_tbl)
-        dat <- DBI::dbGetQuery(self$con, sql, key)
-        if (nrow(dat) == 0L) {
-          state <- "unknown"
-          id <- NA_character_
-        } else {
-          state <- dat$state
-          id <- dat$orderly_id
-        }
+        d <- self$data$status(key)
+        state <- d$state
+        id <- d$id
         if (output && !is.na(id)) {
           out <- self$.read_logs(key)
         }
@@ -127,7 +111,7 @@ R6_orderly_runner <- R6::R6Class(
     .cleanup = function() {
       ok <- self$process$px$get_exit_status() == 0L
       key <- self$process$key
-      state <- if (ok) "success" else "failure"
+      state <- if (ok) RUNNER_SUCCESS else RUNNER_ERROR
       ## First, ensure that things are going to be sensibly set
       ## even if we fail:
       process <- self$process
@@ -141,7 +125,7 @@ R6_orderly_runner <- R6::R6Class(
 
       if (file.exists(process$id_file)) {
         id <- readLines(process$id_file)
-        base <- if (state == "success") path_archive else path_draft
+        base <- if (state == RUNNER_SUCCESS) path_archive else path_draft
         p <- file.path(base(self$path), process$name, id)
         if (file.exists(p)) {
           file.copy(c(path_stdout(path_log), path_stderr(path_log)), p)
@@ -150,7 +134,7 @@ R6_orderly_runner <- R6::R6Class(
         id <- NA_character_
       }
 
-      orderly_runner_set_state(self$con, key, state, id)
+      self$data$set_state(key, state, id)
     },
 
     .read_logs = function(key) {
@@ -160,15 +144,12 @@ R6_orderly_runner <- R6::R6Class(
     },
 
     .run_next = function() {
-      sql <- sprintf(
-        "SELECT * FROM %s WHERE state = 'queued' ORDER BY id LIMIT 1",
-        orderly_runner_tbl)
-      dat <- DBI::dbGetQuery(self$con, sql)
-      if (nrow(dat) == 0L) {
+      dat <- self$data$next_queued()
+      if (is.null(dat)) {
         return(FALSE)
       }
 
-      orderly_runner_set_state(self$con, dat$key, "running", NA_character_)
+      self$data$set_state(dat$key, RUNNER_RUNNING)
       id_file <- file.path(self$path_id, dat$key)
       args <- c("--root", self$path,
                 "run", dat$name, "--print-log", "--id-file", id_file,
@@ -218,75 +199,60 @@ process_wait <- function(px, filename, timeout = 1, poll = 0.02) {
   id <- readLines(filename)
 }
 
-orderly_runner_db_cols <- function() {
-  c("id" = "INTEGER PRIMARY KEY AUTOINCREMENT",
-    "key" = "TEXT",
-    "state" = "TEXT", # queued, running, success, failure
-    "name" = "TEXT",
-    "parameters" = "TEXT", # json
-    "ref" = "TEXT", # nullable
-    "orderly_id" = "TEXT") # nullable
-}
+runner_queue <- function() {
+  cols <- c("key", "state", "name", "parameters", "ref", "id")
+  data <- matrix(character(0), 0, length(cols))
+  colnames(data) <- cols
 
-## Throughout thi function I'll try and leave things in a fairly
-## consistent state.  Because the work queue is a table, things are
-## not ever lost from it (unlike the classic Redis work queue) so it's
-## a bit simpler to deal with.
-orderly_runner_process <- function(root) {
-  config <- orderly_config(root)
+  list(
+    insert = function(name, parameters = NULL, ref = NULL) {
+      existing <- data[, "key"]
+      repeat {
+        key <- ids::adjective_animal()
+        if (!(key %in% existing)) {
+          break
+        }
+      }
+      new <- data[NA_integer_, , drop = TRUE]
+      new[["key"]] <- key
+      new[["name"]] <- name
+      new[["state"]] <- RUNNER_QUEUED
+      new[["parameters"]] <- parameters %||% NA_character_
+      new[["ref"]] <- ref %||% NA_character_
+      data <<- rbind(data, new, deparse.level = 0)
+      key
+    },
 
-  con <- orderly_db("destination", config)
-  on.exit(DBI::dbDisconnect(con))
+    next_queued = function() {
+      i <- data[, "state"] == RUNNER_QUEUED
+      if (any(i)) {
+        i <- which(i)[[1L]]
+        as.list(data[i, ])
+      } else {
+        NULL
+      }
+    },
 
-  sql <- "SELECT * FROM %s WHERE state = 'queued' ORDER BY id LIMIT 1"
-  DBI::dbBegin(con)
-  withCallingHandlers({
-    sql <- sprintf(sql, orderly_runner_tbl)
-    dat <- DBI::dbGetQuery(con, sql)
-    if (nrow(dat) > 0L) {
-      orderly_runner_set_state(con, dat$key, "running", NA_character_)
-      DBI::dbCommit(con)
-    } else {
-      DBI::dbRollback(con)
-      return(NULL)
-    }
-  }, error = function(e) DBI::dbRollback(con))
+    status = function(key) {
+      d <- data[data[, "key"] == key, , drop = FALSE]
+      if (nrow(d) == 0L) {
+        list(state = RUNNER_UNKNOWN, id = NA_character_)
+      } else {
+        d <- d[1L, ]
+        list(state = d[["state"]], id = d[["id"]])
+      }
+    },
 
-  ## TODO: I don't think that ref comes through here in json format
-  ref <- if (is.na(dat$ref)) NULL else jsonlite::fromJSON(dat$ref)
-  parameters <- if (is.na(dat$parameters))
-                  NULL else jsonlite::fromJSON(dat$parameters)
-
-  id <- NULL
-  tryCatch({
-    id_file <- tempfile() # to help with failures
-    id <- orderly_run(name, parameters, config = config, id_file = id_file)
-    orderly_commit(id, config = config)
-    sql <- sprintf("UPDATE %s SET state = $1, id = $2 WHERE key = $3",
-                   orderly_runner_tbl)
-    orderly_runner_set_state(con, dat$key, "success", id)
-  }, error = function(e) {
-    if (file.exists(id_file)) {
-      id <- tryCatch(readLines(id_file), function(e) NA_character_)
-    } else {
-      id <- NA_character_
-    }
-    orderly_runner_set_state(con, dat$key, "error", id)
-  })
-
-  dat$key
-}
-
-orderly_runner_set_state <- function(con, key, state, id) {
-  sql <- sprintf("UPDATE %s SET state = $1, orderly_id = $2 WHERE key = $3",
-                 orderly_runner_tbl)
-  DBI::dbExecute(con, sql, list(state, id, key))
-}
-
-process <- function(command, args) {
-  px <- processx::process$new(command, args, stdout = "|", stderr = "|")
-  list(px = px,
-       key = key,
-       stdout = process_stream(px, TRUE),
-       stderr = process_stream(px, FALSE))
+    set_state = function(key, state, id = NULL) {
+      i <- data[, "key"] == key
+      if (any(i)) {
+        data[i, "state"] <<- state
+        if (!is.null(id)) {
+          data[i, "id"] <<- id
+        }
+        TRUE
+      } else {
+        FALSE
+      }
+    })
 }
