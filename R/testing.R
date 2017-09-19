@@ -159,6 +159,6 @@ unzip_git_demo <- function() {
   path <- tempfile()
   dir.create(path, FALSE, TRUE)
   demo <- getOption("orderly.server.demo", build_git_demo())
-  unzip(demo, exdir = path)
+  utils::unzip(demo, exdir = path)
   file.path(path, "demo")
 }
