@@ -7,6 +7,7 @@ test_that("run", {
   expect_equal(res$command, "run")
   expect_equal(res$args, "example")
   expect_null(res$options$parameters)
+  expect_null(res$options$ref)
   expect_false(res$options$no_commit)
   expect_false(res$options$print_log)
   expect_identical(res$target, main_do_run)
@@ -36,6 +37,24 @@ test_that("run: id-file", {
   expect_true(file.exists(id_file))
   id <- readLines(id_file)
   expect_equal(id, orderly_list_archive(path)$id)
+})
+
+test_that("run: ref", {
+  path <- unzip_git_demo()
+
+  pars <- as.character(jsonlite::toJSON(list(nmin = 0), auto_unbox = TRUE))
+  args <- c("--root", path, "run", "--ref", "other", "--parameters", pars,
+            "other")
+
+  res <- main_args(args)
+  expect_equal(res$command, "run")
+  expect_equal(res$options$ref, "other")
+
+  ans <- capture.output(res$target(res))
+
+  d <- orderly_list_archive(path)
+  expect_equal(nrow(d), 1L)
+  expect_equal(d$name, "other")
 })
 
 test_that("commit", {

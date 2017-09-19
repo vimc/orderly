@@ -122,3 +122,19 @@ test_that("rebuild", {
   expect_silent(runner$rebuild())
   expect_true(file.exists(path_db))
 })
+
+test_that("run in branch (local)", {
+  path <- unzip_git_demo()
+  runner <- orderly_runner(path)
+
+  pars <- as.character(jsonlite::toJSON(list(nmin = 0), auto_unbox = TRUE))
+  key <- runner$queue("other", parameters = pars, ref = "other")
+  runner$poll()
+  id <- wait_for_id(runner, key)
+  wait_while_running(runner)
+
+  d <- orderly_list_archive(path)
+  expect_equal(nrow(d), 1L)
+  expect_equal(d$name, "other")
+  expect_equal(d$id, id)
+})

@@ -119,3 +119,46 @@ demo_change_time <- function(id, time, path) {
 
   id_new
 }
+
+## This version will eventually go into a yml thing but it's a bit
+## nasty to deal with at the moment.  This means it's not easily
+## extendable...
+##
+## After building this we have two branches 'master' with
+build_git_demo <- function() {
+  path <- prepare_orderly_example("demo", file.path(tempfile(), "demo"))
+
+  dir.create(file.path(path, "extra"))
+  move <- setdiff(dir(file.path(path, "src"), pattern = "^[^.]+$"), "minimal")
+  file.rename(file.path(path, "src", move),
+              file.path(path, "extra", move))
+
+  git_run("init", root = path)
+  writeLines(c("source.sqlite", "archive", "data", "draft", "extra"),
+             file.path(path, ".gitignore"))
+  git_run(c("add", "."), root = path)
+  git_run(c("add", "-f", "archive", "data", "draft"), root = path)
+  git_run(c("commit", "-m", "'initial import'"), root = path)
+  stopifnot(git_is_clean(path))
+
+  prev <- git_checkout_branch("other", root = path, create = TRUE)
+
+  file.rename(file.path(path, "extra", "other"),
+              file.path(path, "src", "other"))
+  git_run(c("add", "."), root = path)
+  git_run(c("commit", "-m", "'add other'"), root = path)
+
+  git_checkout_branch("master", root = path)
+
+  archive <- zip_dir(path)
+  options(orderly.server.demo = archive)
+  archive
+}
+
+unzip_git_demo <- function() {
+  path <- tempfile()
+  dir.create(path, FALSE, TRUE)
+  demo <- getOption("orderly.server.demo", build_git_demo())
+  unzip(demo, exdir = path)
+  file.path(path, "demo")
+}

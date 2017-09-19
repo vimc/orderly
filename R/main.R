@@ -71,6 +71,10 @@ main_args_run <- function(res) {
     optparse::make_option("--parameters",
                           help = "Parameters (in json format)",
                           type = "character",
+                          default = NULL),
+    optparse::make_option("--ref",
+                          help = "Git reference (branch or sha) to use",
+                          type = "character",
                           default = NULL))
   parser <- optparse::OptionParser(
     option_list = opts,
@@ -96,9 +100,11 @@ main_do_run <- function(x) {
     parameters <- jsonlite::fromJSON(parameters)
   }
   print_log <- x$options$print_log
+  ref <- x$options$ref
 
   main_run <- function() {
-    id <- orderly_run(name, parameters, config = config, id_file = id_file)
+    id <- orderly_run(name, parameters, config = config, id_file = id_file,
+                      ref = ref)
     if (commit) {
       orderly_commit(id, name, config)
     }

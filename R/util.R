@@ -260,7 +260,7 @@ sort_c <- function(x) {
   withr::with_locale(c(LC_COLLATE = "C"), sort(x))
 }
 
-git_call <- function(root, args) {
+git_info_call <- function(root, args) {
   git <- Sys.which("git")
   if (nzchar(git)) {
     res <- suppressWarnings(system2(git, c("-C", root, args),
@@ -273,14 +273,14 @@ git_call <- function(root, args) {
 }
 
 git_info <- function(root) {
-  sha <- git_call(root, c("rev-parse", "HEAD"))
+  sha <- git_info_call(root, c("rev-parse", "HEAD"))
   if (is.null(sha)) {
     return(NULL)
   }
   sha_short <- substr(sha, 1, 7)
-  branch <- git_call(root, c("symbolic-ref", "--short", "HEAD"))
+  branch <- git_info_call(root, c("symbolic-ref", "--short", "HEAD"))
 
-  status <- git_call(root, c("status", "--porcelain"))
+  status <- git_info_call(root, c("status", "--porcelain"))
   if (length(status) == 0L) {
     status <- NULL
   }
@@ -381,4 +381,31 @@ readlines_if_exists <- function(path, missing = NULL) {
   } else {
     missing
   }
+}
+
+system3 <- function(command, args) {
+  res <- suppressWarnings(system2(command, args, stdout = TRUE, stderr = TRUE))
+  code <- attr(res, "status") %||% 0
+  attr(res, "status") <- NULL
+  list(success = code == 0,
+       code = code,
+       output = res)
+}
+
+sys_which <- function(name) {
+  path <- Sys.which(name)
+  if (!nzchar(path)) {
+    stop(sprintf("Did not find '%s'", name))
+  }
+  unname(path)
+}
+
+zip_dir <- function(path, dest = paste0(basename(path), ".zip")) {
+  owd <- setwd(dirname(path))
+  on.exit(setwd(owd))
+  code <- zip(dest, basename(path), extras = "-q")
+  if (code != 0) {
+    stop("error running zip")
+  }
+  normalizePath(dest)
 }

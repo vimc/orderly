@@ -22,10 +22,14 @@
 ##' @export
 orderly_run <- function(name, parameters = NULL, envir = NULL,
                         config = NULL, locate = TRUE, echo = TRUE,
-                        id_file = NULL, open = FALSE) {
+                        id_file = NULL, ref = NULL, open = FALSE) {
   assert_scalar_logical(open)
   envir <- orderly_environment(envir)
   config <- orderly_config_get(config, locate)
+  if (!is.null(ref)) {
+    prev <- git_detach_head_at_ref(ref, config$path)
+    on.exit(git_checkout_branch(prev, TRUE, config$path))
+  }
   info <- recipe_read(file.path(path_src(config$path), name), config)
   path <- recipe_run(info, parameters, envir,
                      config = config, locate = FALSE, echo = echo,

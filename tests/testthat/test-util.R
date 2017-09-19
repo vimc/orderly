@@ -114,8 +114,8 @@ test_that("git", {
 
   txt <- file.path(path, "txt")
   writeLines("orderly", txt)
-  git_call(path, c("add", txt))
-  git_call(path, c("commit", "-m", "initial"))
+  git_info_call(path, c("add", txt))
+  git_info_call(path, c("commit", "-m", "initial"))
 
   info <- git_info(path)
   expect_true(setequal(names(info),

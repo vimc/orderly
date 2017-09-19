@@ -90,6 +90,14 @@ R6_orderly_runner <- R6::R6Class(
       orderly_rebuild(self$config, FALSE)
     },
 
+    fetch = function() {
+      git_fetch(self$path)
+    },
+
+    pull = function() {
+      git_pull(self$path)
+    },
+
     cleanup = function(name = NULL, draft = TRUE, data = TRUE,
                        failed_only = FALSE) {
       orderly_cleanup(name = name, config = self$config, draft = draft,
