@@ -138,3 +138,37 @@ test_that("run in branch (local)", {
   expect_equal(d$name, "other")
   expect_equal(d$id, id)
 })
+
+test_that("fetch / detach / pull", {
+  path1 <- unzip_git_demo()
+  path2 <- tempfile()
+  git_run(c("clone", "--", path1, path2), check = TRUE)
+  writeLines("new", file.path(path1, "new"))
+  git_run(c("add", "."), path1)
+  git_run(c("commit", "-m", "orderly"), path1)
+
+  sha <- git_ref_to_sha("master", path2)
+  expect_equal(git_ref_to_sha("origin/master", path2), sha)
+
+  runner <- orderly_runner(path2)
+  res <- runner$git_fetch()
+  expect_equal(res$code, 0)
+  expect_is(res$output, "character")
+
+  sha2 <- git_ref_to_sha("HEAD", path1)
+  expect_true(sha != sha2)
+  expect_equal(git_ref_to_sha("origin/master", path2), sha2)
+  expect_equal(git_ref_to_sha("HEAD", path2), sha)
+
+  res <- runner$git_pull()
+  expect_equal(res$code, 0)
+  expect_is(res$output, "character")
+
+  expect_equal(git_ref_to_sha("origin/master", path2), sha2)
+  expect_equal(git_ref_to_sha("HEAD", path2), sha2)
+
+  res <- runner$git_status()
+  expect_equal(res$output, character(0))
+  expect_equal(res$clean, TRUE)
+  expect_equal(res$branch, "master")
+})
