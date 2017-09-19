@@ -6,7 +6,8 @@
 \title{Run a report}
 \usage{
 orderly_run(name, parameters = NULL, envir = NULL, config = NULL,
-  locate = TRUE, echo = TRUE, id_file = NULL, open = FALSE)
+  locate = TRUE, echo = TRUE, id_file = NULL, ref = NULL,
+  open = FALSE)
 
 orderly_data(name, parameters = NULL, envir = list(), config = NULL,
   locate = TRUE)
