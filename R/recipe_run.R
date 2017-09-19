@@ -1,6 +1,16 @@
 ##' Run a report.  The \code{orderly_data} function is for testing the
 ##' queries (and developing the report).
 ##'
+##' If \code{ref} is provided then before running a report orderly
+##' will try to check out (as a detached \code{HEAD}) \code{ref},
+##' interpreted as a git reference.  This can be a commit, tag, or a
+##' branch name (including remote).  The working directory must be
+##' clean according to \code{git status} and this \emph{will} require
+##' some careful use of \code{.gitignore} to exclude \code{draft},
+##' \code{archive}, \code{data} and \code{orderly.sqlite}.  The git
+##' tree will revert back to the original branch at completion (or
+##' failure to complete) the report.
+##'
 ##' @title Run a report
 ##'
 ##' @param name Name of the report to run (see
@@ -13,7 +23,7 @@
 ##'   environment as the parent.  For \code{orderly_data}, this may be
 ##'   \code{list()} in which case a list will be returned (rather than
 ##'   an environment).
-##'
+##' @param ref A git reference to use for this run (see Details)
 ##' @param open Open the directory after running?
 ##'
 ##' @inheritParams orderly_list
