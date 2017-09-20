@@ -4,12 +4,12 @@
 \alias{orderly_runner}
 \title{Orderly runner}
 \usage{
-orderly_runner(path, allow_branch_change = FALSE)
+orderly_runner(path, allow_ref = TRUE)
 }
 \arguments{
 \item{path}{Path to use}
 
-\item{allow_branch_change}{Allow git to change branches}
+\item{allow_ref}{Allow git to change branches/ref for run}
 }
 \description{
 An orderly runner.  This is used to run reports remotely.  It's

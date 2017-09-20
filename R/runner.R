@@ -4,10 +4,10 @@
 ##'
 ##' @title Orderly runner
 ##' @param path Path to use
-##' @param allow_branch_change Allow git to change branches
+##' @param allow_ref Allow git to change branches/ref for run
 ##' @export
-orderly_runner <- function(path, allow_branch_change = FALSE) {
-  R6_orderly_runner$new(path, allow_branch_change)
+orderly_runner <- function(path, allow_ref = TRUE) {
+  R6_orderly_runner$new(path, allow_ref)
 }
 
 RUNNER_QUEUED  <- "queued"
@@ -24,7 +24,7 @@ R6_orderly_runner <- R6::R6Class(
   public = list(
     path = NULL,
     config = NULL,
-    allow_branch_change = FALSE,
+    allow_ref = FALSE,
 
     orderly_bin = NULL,
     process = NULL,
@@ -35,10 +35,11 @@ R6_orderly_runner <- R6::R6Class(
     con = NULL,
     data = NULL,
 
-    initialize = function(path, allow_branch_change) {
+    initialize = function(path, allow_ref) {
       self$path <- path
       self$config <- orderly_config_get(path)
-      self$allow_branch_change <- allow_branch_change
+      self$allow_ref <- allow_ref &&
+        git_run(c("rev-parse", "HEAD"), root = path, check = FALSE)$success
 
       bin <- tempfile()
       dir.create(bin)
@@ -53,6 +54,9 @@ R6_orderly_runner <- R6::R6Class(
     },
 
     queue = function(name, parameters = NULL, ref = NULL) {
+      if (!self$allow_ref && !is.null(ref)) {
+        stop("Reference switching is disabled in this runner")
+      }
       key <- self$data$insert(name, parameters, ref)
       orderly_log("queue", sprintf("%s (%s)", key, name))
       key

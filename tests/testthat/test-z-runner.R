@@ -173,3 +173,17 @@ test_that("fetch / detach / pull", {
   expect_equal(res$branch, "master")
   expect_equal(res$hash, sha2)
 })
+
+test_that("prevent git change", {
+  path <- unzip_git_demo()
+  runner <- orderly_runner(path, FALSE)
+  expect_error(runner$queue("other", ref = "other"),
+               "Reference switching is disabled in this runner")
+})
+
+test_that("Can't git change", {
+  path <- prepare_orderly_example("interactive")
+  runner <- orderly_runner(path)
+  expect_error(runner$queue("other", ref = "other"),
+               "Reference switching is disabled in this runner")
+})
