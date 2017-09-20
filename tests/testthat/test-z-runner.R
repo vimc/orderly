@@ -171,4 +171,5 @@ test_that("fetch / detach / pull", {
   expect_equal(res$output, character(0))
   expect_equal(res$clean, TRUE)
   expect_equal(res$branch, "master")
+  expect_equal(res$hash, sha2)
 })

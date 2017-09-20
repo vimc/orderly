@@ -93,6 +93,7 @@ R6_orderly_runner <- R6::R6Class(
     git_status = function() {
       ret <- git_status(self$path)
       ret$branch <- git_branch_name(self$path)
+      ret$hash <- git_ref_to_sha("HEAD", self$path)
       ret
     },
 
