@@ -232,11 +232,6 @@ recipe_read_check_depends <- function(x, filename, config) {
   }
   assert_named(x, TRUE, sprintf("%s:%s", filename, "depends"))
 
-  msg <- setdiff(names(x), orderly_list(config))
-  if (length(msg) > 0L) {
-    stop("Declared upstream reports missing: ", paste(msg, collapse = ", "))
-  }
-
   check_use1 <- function(i) {
     name <- names(x)[[i]]
     el <- x[[i]]
