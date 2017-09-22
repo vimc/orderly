@@ -134,7 +134,8 @@ build_git_demo <- function() {
               file.path(path, "extra", move))
 
   git_run("init", root = path)
-  writeLines(c("source.sqlite", "archive", "data", "draft", "extra"),
+  writeLines(c("source.sqlite", "orderly.sqlite",
+               "archive", "data", "draft", "extra", "runner"),
              file.path(path, ".gitignore"))
   git_run(c("add", "."), root = path)
   git_run(c("add", "-f", "archive", "data", "draft"), root = path)
