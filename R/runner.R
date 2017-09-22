@@ -75,7 +75,7 @@ R6_orderly_runner <- R6::R6Class(
         d <- self$data$status(key)
         state <- d$state
         id <- d$id
-        if (output && !is.na(id)) {
+        if (output) {
           out <- self$.read_logs(key)
         }
       }
