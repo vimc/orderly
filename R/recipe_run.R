@@ -86,6 +86,10 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
                      config = config,
                      prompt = getOption("prompt"))
   options(prompt = "[orderly test] > ")
+  makeActiveBinding(quote("Q"), function() {
+    rm(list = "Q", envir = .GlobalEnv)
+    orderly_test_end()
+  }, .GlobalEnv)
   orderly_log("setwd", "running in test draft directory")
 }
 
