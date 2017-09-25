@@ -34,11 +34,16 @@ R6_orderly_runner <- R6::R6Class(
 
     con = NULL,
     data = NULL,
+    has_git = NULL,
 
     initialize = function(path, allow_ref) {
       self$path <- path
       self$config <- orderly_config_get(path)
-      self$allow_ref <- allow_ref &&
+      self$has_git <- file.exists(file.path(path, ".git"))
+      if (!self$has_git) {
+        message("Not enabling git features as this is not version controlled")
+      }
+      self$allow_ref <- allow_ref && self$has_git &&
         git_run(c("rev-parse", "HEAD"), root = path, check = FALSE)$success
 
       bin <- tempfile()
@@ -57,7 +62,7 @@ R6_orderly_runner <- R6::R6Class(
       if (!self$allow_ref && !is.null(ref)) {
         stop("Reference switching is disabled in this runner")
       }
-      if (update) {
+      if (update && self$has_git) {
         if (is.null(ref)) {
           self$git_pull()
         } else {
