@@ -30,7 +30,7 @@ git_detach_head_at_ref <- function(ref, root = NULL) {
   if (prev == "HEAD") {
     stop("HEAD is already detached")
   }
-  orderly::orderly_log("head ->", sprintf("%s; was %s", ref, prev))
+  orderly_log("head ->", sprintf("%s; was %s", ref, prev))
   git_run(c("checkout", "--detach", ref), root = root, check = TRUE)
   prev
 }
@@ -69,8 +69,8 @@ git_checkout_remote_branch <- function(name, remote = "origin", root = NULL) {
   }
   prev <- git_branch_name(root)
   args <- c("checkout", "-B", name, sprintf("%s/%s", remote, name))
-  orderly::orderly_log("checkout",
-                       sprintf("%s (%s/%s); was %s", name, remote, name, prev))
+  orderly_log("checkout",
+              sprintf("%s (%s/%s); was %s", name, remote, name, prev))
   git_run(args, root = root, check = TRUE)
   prev
 }
@@ -85,8 +85,7 @@ git_checkout_branch <- function(name, force = FALSE, root = NULL,
   ##      ^ this does not return anything sensible when we were in
   ##        detached head state; detect HEAD and get the hash perhaps?
   args <- c("checkout", if (create) "-b", name)
-  orderly::orderly_log("checkout",
-                       sprintf("%s; was %s", name, prev))
+  orderly_log("checkout", sprintf("%s; was %s", name, prev))
   git_run(args, root = root, check = TRUE)
   prev
 }
