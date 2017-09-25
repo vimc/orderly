@@ -45,6 +45,11 @@ git_ref_to_sha <- function(ref, root = NULL) {
   }
 }
 
+git_ref_exists <- function(ref, root = NULL) {
+  assert_scalar_character(ref)
+  git_run(c("merge-base", ref, "HEAD"), root = root, check = FALSE)$success
+}
+
 git_status <- function(root = NULL, ignore_untracked = FALSE) {
   args <- c("status", "--porcelain=v1",
             if (ignore_untracked) "--untracked-files=no")
@@ -96,4 +101,8 @@ git_fetch <- function(root = NULL) {
 
 git_pull <- function(root = NULL) {
   git_run("pull", root = root, check = TRUE)
+}
+
+is_sha <- function(x) {
+  grepl("^[[:xdigit:]]{40}", x)
 }

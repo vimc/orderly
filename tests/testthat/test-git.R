@@ -67,6 +67,39 @@ test_that("fetch / detach / pull", {
   expect_true(file.exists(file.path(path2, "new")))
 })
 
+test_that("detect missing ref", {
+  path1 <- unzip_git_demo()
+  path2 <- tempfile()
+  git_run(c("clone", "--", path1, path2), check = TRUE)
+  writeLines("new", file.path(path1, "new"))
+  git_run(c("add", "."), path1)
+  git_run(c("commit", "-m", "orderly"), path1)
+
+  sha1 <- git_ref_to_sha("HEAD", path1)
+  sha2 <- git_ref_to_sha("HEAD", path2)
+
+  expect_true(git_ref_exists(sha1, path1))
+  expect_true(git_ref_exists(sha2, path2))
+
+  expect_true(git_ref_exists(sha2, path1))
+  expect_false(git_ref_exists(sha1, path2))
+
+  expect_true(git_ref_exists("master", path1))
+  expect_true(git_ref_exists("master", path2))
+
+  expect_false(git_ref_exists("origin/master", path1))
+  expect_true(git_ref_exists("origin/master", path2))
+
+  expect_false(git_ref_exists("origin/other", path1))
+  expect_true(git_ref_exists("origin/other", path2))
+
+  expect_true(git_ref_exists("other", path1))
+  expect_false(git_ref_exists("other", path2))
+
+  expect_false(git_ref_exists("foo", path1))
+  expect_false(git_ref_exists("foo", path2))
+})
+
 test_that("run in detached head", {
   path <- unzip_git_demo()
   orderly_run("other", list(nmin = 0), config = path, ref = "other",
