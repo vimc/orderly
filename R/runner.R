@@ -53,9 +53,19 @@ R6_orderly_runner <- R6::R6Class(
       dir.create(self$path_id, FALSE, TRUE)
     },
 
-    queue = function(name, parameters = NULL, ref = NULL) {
+    queue = function(name, parameters = NULL, ref = NULL, update = FALSE) {
       if (!self$allow_ref && !is.null(ref)) {
         stop("Reference switching is disabled in this runner")
+      }
+      if (update) {
+        if (is.null(ref)) {
+          self$git_pull()
+        } else {
+          self$git_fetch()
+        }
+      }
+      if (!is.null(ref) && !git_ref_exists(ref, self$path)) {
+        stop(sprintf("Did not find git reference '%s'", ref))
       }
       key <- self$data$insert(name, parameters, ref)
       orderly_log("queue", sprintf("%s (%s)", key, name))
@@ -102,11 +112,19 @@ R6_orderly_runner <- R6::R6Class(
     },
 
     git_fetch = function() {
-      git_fetch(self$path)
+      orderly_log("git", "fetch")
+      res <- git_fetch(self$path)
+      if (length(res$output) > 0L) {
+        orderly_log("fetch", res$output)
+      }
     },
 
     git_pull = function() {
-      git_pull(self$path)
+      orderly_log("git", "pull")
+      res <- git_pull(self$path)
+      if (length(res$output) > 0L) {
+        orderly_log("pull", res$output)
+      }
     },
 
     cleanup = function(name = NULL, draft = TRUE, data = TRUE,

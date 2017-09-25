@@ -115,3 +115,36 @@ test_that("run in detached head", {
   expect_null(rds$git$branch)
   expect_null(rds$git$status)
 })
+
+test_that("run missing ref", {
+  path1 <- unzip_git_demo()
+  path2 <- tempfile()
+  git_run(c("clone", "--", path1, path2), check = TRUE)
+  writeLines("new", file.path(path1, "new"))
+  git_run(c("add", "."), path1)
+  git_run(c("commit", "-m", "orderly"), path1)
+
+  sha1 <- git_ref_to_sha("HEAD", path1)
+  sha2 <- git_ref_to_sha("HEAD", path2)
+
+  runner <- orderly_runner(path2)
+
+  expect_false(git_ref_exists(sha1, path2))
+
+  expect_error(runner$queue("minimal", ref = sha1),
+               "Did not find git reference")
+  expect_equal(runner$data$length(), 0)
+
+  id <- runner$queue("minimal", ref = sha1, update = TRUE)
+  expect_is(id, "character")
+  expect_equal(runner$data$length(), 1)
+
+  expect_true(git_ref_exists(sha1, path2))
+  expect_equal(git_ref_to_sha("HEAD", path2), sha2)
+
+  id <- runner$queue("minimal", ref = NULL)
+  expect_equal(git_ref_to_sha("HEAD", path2), sha2)
+
+  id <- runner$queue("minimal", ref = NULL, update = TRUE)
+  expect_equal(git_ref_to_sha("HEAD", path2), sha1)
+})
