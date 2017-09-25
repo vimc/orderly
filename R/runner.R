@@ -117,6 +117,7 @@ R6_orderly_runner <- R6::R6Class(
       if (length(res$output) > 0L) {
         orderly_log("fetch", res$output)
       }
+      invisible(res)
     },
 
     git_pull = function() {
@@ -125,6 +126,7 @@ R6_orderly_runner <- R6::R6Class(
       if (length(res$output) > 0L) {
         orderly_log("pull", res$output)
       }
+      invisible(res)
     },
 
     cleanup = function(name = NULL, draft = TRUE, data = TRUE,
