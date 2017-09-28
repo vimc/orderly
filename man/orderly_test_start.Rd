@@ -4,6 +4,7 @@
 \alias{orderly_test_start}
 \alias{orderly_test_end}
 \alias{orderly_test_restart}
+\alias{orderly_test_check}
 \title{Prepare a directory for orderly to use}
 \usage{
 orderly_test_start(name, parameters = NULL, envir = .GlobalEnv,
@@ -12,6 +13,8 @@ orderly_test_start(name, parameters = NULL, envir = .GlobalEnv,
 orderly_test_end(cleanup = FALSE)
 
 orderly_test_restart(cleanup = TRUE)
+
+orderly_test_check()
 }
 \arguments{
 \item{name}{Name of the report to run (see
@@ -39,5 +42,16 @@ later to delete the test directory.  Note that it is not
 possible to commit the results of an orderly test run}
 }
 \description{
-For interactive testing of orderly code
+For interactive testing of orderly code.  This runs through and
+sets everything up as orderly would (creates a new working
+directory and changes into it, pulls data from the database,
+copies over any dependent reports) but then rather than running
+the report hands back to the user.  The prompt \emph{looks} like
+\code{\link{browser}} but it is just a plain old R prompt and the
+code runs in the global environment.
+}
+\details{
+To quit run \code{orderly_test_end()} (or enter \code{Q}, like
+\code{browser}).  To test if all artefacts have been created run
+\code{orderly_test_check()}.
 }

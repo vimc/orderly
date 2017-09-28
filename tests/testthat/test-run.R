@@ -395,3 +395,16 @@ test_that("test_start, test_restart", {
     list(orderly.config = orderly_config(path)),
     expect_error(orderly_test_restart(), "Not running in test mode"))
 })
+
+test_that("test mode artefacts", {
+  owd <- getwd()
+  on.exit(setwd(owd))
+
+  path <- prepare_orderly_example("minimal")
+  orderly_test_start("example", config = path)
+
+  expect_false(orderly_test_check())
+
+  writeLines(character(0), "mygraph.png")
+  expect_true(orderly_test_check())
+})

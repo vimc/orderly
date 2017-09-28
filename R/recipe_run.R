@@ -65,7 +65,18 @@ orderly_data <- function(name, parameters = NULL, envir = list(),
 }
 
 
-##' For interactive testing of orderly code
+##' For interactive testing of orderly code.  This runs through and
+##' sets everything up as orderly would (creates a new working
+##' directory and changes into it, pulls data from the database,
+##' copies over any dependent reports) but then rather than running
+##' the report hands back to the user.  The prompt \emph{looks} like
+##' \code{\link{browser}} but it is just a plain old R prompt and the
+##' code runs in the global environment.
+##'
+##' To quit run \code{orderly_test_end()} (or enter \code{Q}, like
+##' \code{browser}).  To test if all artefacts have been created run
+##' \code{orderly_test_check()}.
+##'
 ##' @title Prepare a directory for orderly to use
 ##' @inheritParams orderly_run
 ##' @export
@@ -84,6 +95,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
                      id = prep$id,
                      parameters = parameters,
                      config = config,
+                     info = info,
                      prompt = getOption("prompt"))
   options(prompt = "[orderly test] > ")
   makeActiveBinding(quote("Q"), function() {
@@ -124,6 +136,21 @@ orderly_test_restart <- function(cleanup = TRUE) {
   config <- cache$test$config
   orderly_test_end(cleanup)
   orderly_test_start(name, parameters, config = config)
+}
+
+##' @export
+##' @rdname orderly_test_start
+orderly_test_check <- function() {
+  if (is.null(cache$test)) {
+    stop("Not running in test mode")
+  }
+  found <- recipe_exists_artefacts(cache$test$info)
+  msg <- sprintf("%7s: %s", ifelse(found, "found", "missing"), names(found))
+  artefacts <- names(found)
+  h <- hash_files(artefacts)
+  h[is.na(h)] <- "<missing>"
+  orderly_log("artefact", sprintf("%s: %s", artefacts, h))
+  invisible(all(found))
 }
 
 recipe_run <- function(info, parameters, envir,
@@ -281,12 +308,11 @@ recipe_prepare_workdir <- function(info, workdir) {
 }
 
 recipe_check_artefacts <- function(info, id) {
-  ## Having run the script we should then be able
-  expected <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
-  msg <- !file.exists(expected)
-  if (any(msg)) {
+  found <- recipe_exists_artefacts(info)
+  artefacts <- names(found)
+  if (!all(found)) {
     stop("Script did not produce expected artefacts: ",
-         paste(expected[msg], collapse = ", "))
+         paste(artefacts[!found], collapse = ", "))
   }
   ## TODO: we should watermark the images here but there are some
   ## issues to resolve first:
@@ -295,12 +321,19 @@ recipe_check_artefacts <- function(info, id) {
   ## * deal with "_original" files that are being left behind *sometimes*
   ## * general fragility of using system()
   ##
-  ## for (filename in expected) {
+  ## for (filename in artefacts) {
   ##   watermark_write(filename, id)
   ## }
-  h <- hash_files(expected)
-  orderly_log("artefact", sprintf("%s: %s", expected, h))
+  h <- hash_files(artefacts)
+  orderly_log("artefact", sprintf("%s: %s", artefacts, h))
   h
+}
+
+recipe_exists_artefacts <- function(info, id) {
+  expected <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
+  exists <- file.exists(expected)
+  names(exists) <- expected
+  exists
 }
 
 iso_time_str <- function(time = Sys.time()) {
