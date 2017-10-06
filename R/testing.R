@@ -173,10 +173,6 @@ unzip_git_demo <- function(path = tempfile()) {
 }
 
 prepare_orderly_git_example <- function(path = tempfile()) {
-  if (file.exists(path)) {
-    stop("'path' must not exist")
-  }
-
   path_upstream <- file.path(path, "upstream")
   unzip_git_demo(path)
   unzip_git_demo(path_upstream)
