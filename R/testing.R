@@ -149,6 +149,7 @@ build_git_demo <- function() {
 
   file.rename(file.path(path, "extra", "other"),
               file.path(path, "src", "other"))
+  unlink(file.path(path, "extra"), recursive = TRUE)
   git_run(c("add", "."), root = path)
   git_run(c("commit", "-m", "'add other'"), root = path)
 
@@ -172,7 +173,7 @@ unzip_git_demo <- function(path = tempfile()) {
   path
 }
 
-prepare_orderly_git_example <- function(path = tempfile()) {
+prepare_orderly_git_example <- function(path = tempfile(), run_report = FALSE) {
   path_upstream <- file.path(path, "upstream")
   unzip_git_demo(path)
   unzip_git_demo(path_upstream)
@@ -184,6 +185,11 @@ prepare_orderly_git_example <- function(path = tempfile()) {
   writeLines("new", file.path(path_upstream, "new"))
   git_run(c("add", "."), path_upstream)
   git_run(c("commit", "-m", "orderly"), path_upstream)
+
+  if (run_report) {
+    id <- orderly_run("minimal", config = path)
+    orderly_commit(id, config = path)
+  }
 
   c(origin = path_upstream, local = path)
 }
