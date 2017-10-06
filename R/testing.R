@@ -174,7 +174,7 @@ prepare_orderly_git_example <- function(path = tempfile()) {
   unzip_git_demo(path)
   unzip_git_demo(path_upstream)
 
-  git_run(c("remote", "add", "origin", path_upstream), path)
+  git_run(c("remote", "add", "origin", basename(path_upstream)), path)
   git_fetch(path)
   git_run(c("branch", "--set-upstream-to", "origin/master", "master"), path)
 
