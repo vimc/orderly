@@ -11,6 +11,7 @@ RUN install.r \
   R6 \
   RSQLite \
   digest \
+  git \
   ids \
   jsonlite \
   knitr \
