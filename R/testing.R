@@ -157,9 +157,6 @@ build_git_demo <- function() {
 }
 
 unzip_git_demo <- function(path = tempfile()) {
-  if (file.exists(path)) {
-    stop("'path' must not exist")
-  }
   tmp <- tempfile()
   dir.create(tmp, FALSE, TRUE)
   demo <- getOption("orderly.server.demo", build_git_demo())
