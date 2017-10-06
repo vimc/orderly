@@ -135,7 +135,7 @@ build_git_demo <- function() {
 
   git_run("init", root = path)
   writeLines(c("source.sqlite", "orderly.sqlite",
-               "archive", "data", "draft", "extra", "runner"),
+               "archive", "data", "draft", "extra", "runner", "upstream"),
              file.path(path, ".gitignore"))
   git_run(c("add", "."), root = path)
   git_run(c("add", "-f", "archive", "data", "draft"), root = path)
@@ -156,10 +156,38 @@ build_git_demo <- function() {
   archive
 }
 
-unzip_git_demo <- function() {
-  path <- tempfile()
-  dir.create(path, FALSE, TRUE)
+unzip_git_demo <- function(path = tempfile()) {
+  if (file.exists(path)) {
+    stop("'path' must not exist")
+  }
+  tmp <- tempfile()
+  dir.create(tmp, FALSE, TRUE)
   demo <- getOption("orderly.server.demo", build_git_demo())
-  utils::unzip(demo, exdir = path)
-  file.path(path, "demo")
+  utils::unzip(demo, exdir = tmp)
+  dir.create(path, FALSE, TRUE)
+  src <- dir(file.path(tmp, "demo"), full.names = TRUE, all.files = TRUE,
+             no.. = TRUE)
+  file.copy(src, path, recursive = TRUE)
+  unlink(tmp, recursive = TRUE)
+  path
+}
+
+prepare_orderly_git_example <- function(path = tempfile()) {
+  if (file.exists(path)) {
+    stop("'path' must not exist")
+  }
+
+  path_upstream <- file.path(path, "upstream")
+  unzip_git_demo(path)
+  unzip_git_demo(path_upstream)
+
+  git_run(c("remote", "add", "origin", path_upstream), path)
+  git_fetch(path)
+  git_run(c("branch", "--set-upstream-to", "origin/master", "master"), path)
+
+  writeLines("new", file.path(path_upstream, "new"))
+  git_run(c("add", "."), path_upstream)
+  git_run(c("commit", "-m", "orderly"), path_upstream)
+
+  c(origin = path_upstream, local = path)
 }

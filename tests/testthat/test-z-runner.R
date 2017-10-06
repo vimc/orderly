@@ -140,12 +140,9 @@ test_that("run in branch (local)", {
 })
 
 test_that("fetch / detach / pull", {
-  path1 <- unzip_git_demo()
-  path2 <- tempfile()
-  git_run(c("clone", "--", path1, path2), check = TRUE)
-  writeLines("new", file.path(path1, "new"))
-  git_run(c("add", "."), path1)
-  git_run(c("commit", "-m", "orderly"), path1)
+  path <- prepare_orderly_git_example()
+  path1 <- path[["origin"]]
+  path2 <- path[["local"]]
 
   sha <- git_ref_to_sha("master", path2)
   expect_equal(git_ref_to_sha("origin/master", path2), sha)

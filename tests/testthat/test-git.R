@@ -41,12 +41,9 @@ test_that("detch head & restore", {
 })
 
 test_that("fetch / detach / pull", {
-  path1 <- unzip_git_demo()
-  path2 <- tempfile()
-  git_run(c("clone", "--", path1, path2), check = TRUE)
-  writeLines("new", file.path(path1, "new"))
-  git_run(c("add", "."), path1)
-  git_run(c("commit", "-m", "orderly"), path1)
+  path <- prepare_orderly_git_example()
+  path1 <- path[["origin"]]
+  path2 <- path[["local"]]
 
   git_fetch(path2)
 
@@ -68,12 +65,9 @@ test_that("fetch / detach / pull", {
 })
 
 test_that("detect missing ref", {
-  path1 <- unzip_git_demo()
-  path2 <- tempfile()
-  git_run(c("clone", "--", path1, path2), check = TRUE)
-  writeLines("new", file.path(path1, "new"))
-  git_run(c("add", "."), path1)
-  git_run(c("commit", "-m", "orderly"), path1)
+  path <- prepare_orderly_git_example()
+  path1 <- path[["origin"]]
+  path2 <- path[["local"]]
 
   sha1 <- git_ref_to_sha("HEAD", path1)
   sha2 <- git_ref_to_sha("HEAD", path2)
@@ -94,7 +88,7 @@ test_that("detect missing ref", {
   expect_true(git_ref_exists("origin/other", path2))
 
   expect_true(git_ref_exists("other", path1))
-  expect_false(git_ref_exists("other", path2))
+  expect_true(git_ref_exists("other", path2))
 
   expect_false(git_ref_exists("foo", path1))
   expect_false(git_ref_exists("foo", path2))
@@ -117,12 +111,9 @@ test_that("run in detached head", {
 })
 
 test_that("run missing ref", {
-  path1 <- unzip_git_demo()
-  path2 <- tempfile()
-  git_run(c("clone", "--", path1, path2), check = TRUE)
-  writeLines("new", file.path(path1, "new"))
-  git_run(c("add", "."), path1)
-  git_run(c("commit", "-m", "orderly"), path1)
+  path <- prepare_orderly_git_example()
+  path1 <- path[["origin"]]
+  path2 <- path[["local"]]
 
   sha1 <- git_ref_to_sha("HEAD", path1)
   sha2 <- git_ref_to_sha("HEAD", path2)
