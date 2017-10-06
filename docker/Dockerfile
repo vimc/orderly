@@ -1,6 +1,7 @@
 FROM r-base:3.4.0
 
 RUN apt-get update && apt-get -y install \
+  git \
   libimage-exiftool-perl \
   libssl-dev \
   libpq-dev
@@ -11,7 +12,6 @@ RUN install.r \
   R6 \
   RSQLite \
   digest \
-  git \
   ids \
   jsonlite \
   knitr \
