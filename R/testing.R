@@ -134,12 +134,15 @@ build_git_demo <- function() {
               file.path(path, "extra", move))
 
   git_run("init", root = path)
+  git_run(c("config", "user.email", "email@example.com"), root = path,
+          check = TRUE)
+  git_run(c("config", "user.name", "orderly"), root = path, check = TRUE)
   writeLines(c("source.sqlite", "orderly.sqlite",
                "archive", "data", "draft", "extra", "runner", "upstream"),
              file.path(path, ".gitignore"))
-  git_run(c("add", "."), root = path)
-  git_run(c("add", "-f", "archive", "data", "draft"), root = path)
-  git_run(c("commit", "-m", "'initial import'"), root = path)
+  git_run(c("add", "."), root = path, check = TRUE)
+  git_run(c("add", "-f", "archive", "data", "draft"), root = path, check = TRUE)
+  git_run(c("commit", "-m", "'initial import'"), root = path, check = TRUE)
   stopifnot(git_is_clean(path))
 
   prev <- git_checkout_branch("other", root = path, create = TRUE)
