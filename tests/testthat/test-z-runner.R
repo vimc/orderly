@@ -38,7 +38,9 @@ test_that("runner queue", {
 test_that("run: success", {
   path <- prepare_orderly_example("interactive")
 
+  expect_false(file.exists(file.path(path, "orderly.sqlite")))
   runner <- orderly_runner(path)
+  expect_true(file.exists(file.path(path, "orderly.sqlite")))
   name <- "interactive"
   key <- runner$queue(name)
 

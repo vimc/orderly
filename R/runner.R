@@ -50,6 +50,10 @@ R6_orderly_runner <- R6::R6Class(
       dir.create(bin)
       self$orderly_bin <- write_script(bin)
 
+      ## This ensures that the index will be present, which will be
+      ## useful if something else wants to access the database!
+      DBI::dbDisconnect(orderly_db("destination", self$config, FALSE))
+
       self$data <- runner_queue()
 
       self$path_log <- path_runner_log(path)
