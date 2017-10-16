@@ -30,7 +30,7 @@ git_detach_head_at_ref <- function(ref, root = NULL) {
   if (prev == "HEAD") {
     stop("HEAD is already detached")
   }
-  orderly_log("head ->", sprintf("%s; was %s", ref, prev))
+  orderly_log("checkout", sprintf("%s; was %s", ref, prev))
   git_run(c("checkout", "--detach", ref), root = root, check = TRUE)
   prev
 }
