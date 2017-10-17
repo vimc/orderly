@@ -6,7 +6,7 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Author: Rich FitzJohn
 Maintainer: Rich FitzJohn <rich.fitzjohn@gmail.com>
-SystemRequirements: exiftool
+SystemRequirements: exiftool, git
 Imports:
     DBI,
     R6,
@@ -27,4 +27,3 @@ Suggests:
     vaultr (>= 0.0.2)
 RoxygenNote: 6.0.1
 VignetteBuilder: knitr
-SystemRequirements: git
