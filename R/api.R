@@ -89,3 +89,49 @@ pull_report <- function(name, id, config) {
               dirname(dest), recursive = TRUE)
   }
 }
+
+##' Run a report on a remote server (for now this means montagu).  Be
+##' careful doing this because once a report is run to completion on
+##' production it cannot be deleted.  So get things working locally,
+##' test on science and then run on production.
+##'
+##' @title Run a report on montagu
+##'
+##' @param name Name of the report
+##'
+##' @param parameters Parameters for the reprt
+##'
+##' @param timeout Time to wait for the report to be returned (in seconds)
+##'
+##' @param poll Period to poll the server for results (in seconds)
+##'
+##' @param open Logical, indicating if the report should be opened in
+##'   a browser on completion
+##'
+##' @param stop_on_error Logical, indicating if we should throw an
+##'   error if the report fails.  If you set this to \code{FALSE} it
+##'   will be much easier to debug, but more annoying in scripts.
+##'
+##' @param progress Logical, indicating if a progress spinner should
+##'   be included.
+##'
+##' @param ref Optional reference, indicating which branch should be
+##'   used.  This cannot be used on production.
+##'
+##' @param server Name of the montagu server to use.  Optionas are
+##'   \code{production}, \code{science} and \code{uat}.
+##'
+##' @export
+orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
+                               timeout = 3600, poll = 1,
+                               open = TRUE, stop_on_error = TRUE,
+                               progress = TRUE, server = NULL) {
+  loadNamespace("montagu")
+  if (server == "production" && !is.null(ref)) {
+    stop("Can't specify 'ref' on production")
+  }
+  montagu::montagu_reports_run(name, parameters = parameters, ref = ref,
+                               timeout = timeout, poll = poll,
+                               open = open, stop_on_error = stop_on_error,
+                               progress = progress, location = server)
+}
