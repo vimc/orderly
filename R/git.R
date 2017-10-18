@@ -17,7 +17,8 @@ git_run <- function(args, root = NULL, check = FALSE) {
   }
   res <- system3(git, args)
   if (check && !res$success) {
-    stop(sprintf("Error code %d running command", res$code))
+    stop(sprintf("Error code %d running command:\n%s",
+                 res$code, paste0("  > ", res$output, collapse = "\n")))
   }
   res
 }
