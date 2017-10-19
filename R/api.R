@@ -26,9 +26,12 @@
 ##'
 ##' @title Download dependent reports
 ##' @param name Name of the report to download dependencies for
+##' @param server Name of the server to use (\code{production},
+##'   \code{science}, \code{uat}).
 ##' @inheritParams orderly_list
 ##' @export
-pull_dependencies <- function(name, config = NULL, locate = TRUE) {
+pull_dependencies <- function(name, config = NULL, locate = TRUE,
+                              server = NULL) {
   config <- orderly_config_get(config, locate)
 
   ## This is going to require use of montagu's API.  Later this will
@@ -48,7 +51,7 @@ pull_dependencies <- function(name, config = NULL, locate = TRUE) {
   depends <- info$depends
   for (i in seq_along(depends)) {
     if (!isTRUE(depends[[i]]$draft)) {
-      pull_report(names(depends)[[i]], depends[[i]]$id, config)
+      pull_report(names(depends)[[i]], depends[[i]]$id, config, server)
     }
   }
 }
@@ -58,16 +61,17 @@ pull_dependencies <- function(name, config = NULL, locate = TRUE) {
 ##'
 ##' @param id The identifier (for \code{pull_archive}.  The default is
 ##'   to pull the latest report.
-pull_archive <- function(name, id = "latest", config = NULL, locate = TRUE) {
+pull_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
+                         server = NULL) {
   config <- orderly_config_get(config, locate)
-  pull_report(name, id, config)
+  pull_report(name, id, config, server)
 }
 
-pull_report <- function(name, id, config) {
+pull_report <- function(name, id, config, server) {
   assert_is(config, "orderly_config")
   if (id == "latest") {
     ## Resolve id
-    v <- montagu::montagu_reports_report_versions(name)
+    v <- montagu::montagu_reports_report_versions(name, server)
     ## TODO: more work needed here if we have two identical timestamps!
     id <- last(v)
   }
@@ -76,7 +80,8 @@ pull_report <- function(name, id, config) {
     orderly_log("pull", sprintf("%s:%s already exists, skipping", name, id))
   } else {
     orderly_log("pull", sprintf("%s:%s", name, id))
-    tmp <- montagu::montagu_reports_report_download(name, id)
+    tmp <- montagu::montagu_reports_report_download(name, id,
+                                                    location = server)
     cat("\n") # httr's progress bar is rubbish
     on.exit(file.remove(tmp))
     tmp2 <- tempfile()

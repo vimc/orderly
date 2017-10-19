@@ -5,9 +5,10 @@
 \alias{pull_archive}
 \title{Download dependent reports}
 \usage{
-pull_dependencies(name, config = NULL, locate = TRUE)
+pull_dependencies(name, config = NULL, locate = TRUE, server = NULL)
 
-pull_archive(name, id = "latest", config = NULL, locate = TRUE)
+pull_archive(name, id = "latest", config = NULL, locate = TRUE,
+  server = NULL)
 }
 \arguments{
 \item{name}{Name of the report to download dependencies for}
@@ -19,6 +20,9 @@ pull_archive(name, id = "latest", config = NULL, locate = TRUE)
 searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
+
+\item{server}{Name of the server to use (\code{production},
+\code{science}, \code{uat}).}
 
 \item{id}{The identifier (for \code{pull_archive}.  The default is
 to pull the latest report.}
