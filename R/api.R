@@ -135,3 +135,25 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
                                open = open, stop_on_error = stop_on_error,
                                progress = progress, location = server)
 }
+
+##' Publish a report on a remote server
+##'
+##' @title Publish orderly report on remote server
+##'
+##' @param name Name of the report (unlike
+##'   \code{\link{orderly_publish}} this must be provided sorry)
+##'
+##' @param id The report id
+##'
+##' @param value As \code{\link{orderly_publish}}, \code{TRUE} or
+##'   \code{FALSE} to publish or unpublish a report (respectively)
+##'
+##' @inheritParams orderly_run_remote
+##' @export
+orderly_publish_remote <- function(name, id, value = TRUE, server = NULL) {
+  loadNamespace("montagu")
+  assert_scalar_character(name)
+  assert_scalar_character(id)
+  assert_scalar_logical(value)
+  montagu::montagu_reports_publish(name, id, value, server)
+}
