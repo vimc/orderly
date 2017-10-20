@@ -284,9 +284,7 @@ git_info <- function(root) {
   if (length(status) == 0L) {
     status <- NULL
   }
-  refs <- git_show_ref(sha, root)
-  list(sha_short = sha_short, sha = sha, branch = branch, status = status,
-       refs = refs)
+  list(sha_short = sha_short, sha = sha, branch = branch, status = status)
 }
 
 system_success <- function(x) is.null(attr(x, "status", exact = TRUE))
