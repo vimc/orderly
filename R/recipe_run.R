@@ -188,6 +188,8 @@ recipe_run <- function(info, parameters, envir,
     depends <- depends[c("name", "id", "filename", "as", "hash")]
   }
 
+  session <- session_info()
+
   meta <- list(id = prep$id,
                name = info$name,
                parameters = parameters,
@@ -200,9 +202,11 @@ recipe_run <- function(info, parameters, envir,
                hash_resources = as.list(prep$hash_resources),
                hash_data = as.list(hash_data_rds),
                hash_artefacts = as.list(hash_artefacts),
-               depends = depends)
+               depends = depends,
+               git = session$git)
 
-  saveRDS(session_info(), path_orderly_run_rds("."))
+  session$meta <- meta
+  saveRDS(session, path_orderly_run_rds("."))
   writeLines(yaml::as.yaml(meta, column.major = FALSE),
              path_orderly_run_yml("."))
   prep$workdir

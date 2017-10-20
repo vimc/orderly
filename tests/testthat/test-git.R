@@ -104,10 +104,14 @@ test_that("run in detached head", {
   expect_equal(nrow(d), 1L)
   expect_equal(d$name, "other")
 
-  rds <- readRDS(path_orderly_run_rds(file.path(path, "draft", d$name, d$id)))
+  p <- file.path(path, "draft", d$name, d$id)
+  rds <- readRDS(path_orderly_run_rds(p))
   expect_equal(rds$git$sha, git_ref_to_sha("other", path))
   expect_null(rds$git$branch)
   expect_null(rds$git$status)
+
+  yml <- yaml_read(path_orderly_run_yml(p))
+  expect_equal(yml$git, rds$git)
 })
 
 test_that("run missing ref", {
