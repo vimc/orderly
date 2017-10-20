@@ -104,6 +104,14 @@ git_pull <- function(root = NULL) {
   git_run("pull", root = root, check = TRUE)
 }
 
+git_show_ref <- function(sha, root = NULL) {
+  dat <- git_run("show-ref", root = root, check = TRUE)
+  re <- "^([[:xdigit:]]+) (.+)$"
+  stopifnot(all(grepl(re, dat$output)))
+  i <- sub(re, "\\1", dat$output) == sha
+  sub(re, "\\2", dat$output[i])
+}
+
 is_sha <- function(x) {
   grepl("^[[:xdigit:]]{40}", x)
 }
