@@ -109,6 +109,17 @@ R6_orderly_runner <- R6::R6Class(
       orderly_rebuild(self$config, FALSE)
     },
 
+    kill = function(key) {
+      current <- self$process$key
+      if (identical(key, current)) {
+        self$process$px$kill()
+      } else if (is.null(current)) {
+        stop(sprintf("Can't kill '%s' - not currently running a report", key))
+      } else {
+        stop(sprintf("Can't kill '%s' - currently running '%s'", key, current))
+      }
+    },
+
     git_status = function() {
       ret <- git_status(self$path)
       ret$branch <- git_branch_name(self$path)
@@ -141,18 +152,22 @@ R6_orderly_runner <- R6::R6Class(
     },
 
     poll = function() {
+      key <- self$process$key
       if (!is.null(self$process)) {
         if (self$process$px$is_alive()) {
-          "running"
+          ret <- "running"
         } else {
           self$.cleanup()
-          "finish"
+          ret <- "finish"
         }
       } else if (self$.run_next()) {
-        "create"
+        ret <- "create"
+        key <- self$process$key
       } else {
-        "idle"
+        ret <-"idle"
       }
+      attr(ret, "key") <- key
+      ret
     },
 
     .cleanup = function() {
