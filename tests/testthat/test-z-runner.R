@@ -52,7 +52,7 @@ test_that("run: success", {
                     output = NULL))
 
   tmp <- runner$poll()
-  expect_equal(tmp, "create")
+  expect_equal(tmp, structure("create", key = key))
   id <- wait_for_id(runner, key)
 
   st <- runner$status(key)
@@ -90,7 +90,7 @@ test_that("run: error", {
   res <- runner$status(dat$key, TRUE)
   expect_equal(res$status, "running")
 
-  expect_equal(runner$poll(), "finish")
+  expect_equal(runner$poll(), structure("finish", key = dat$key))
   res <- runner$status(dat$key, TRUE)
   expect_equal(res$status, "error")
 })
@@ -188,4 +188,43 @@ test_that("Can't git change", {
   runner <- orderly_runner(path)
   expect_error(runner$queue("other", ref = "other"),
                "Reference switching is disabled in this runner")
+})
+
+test_that("kill", {
+  path <- prepare_orderly_example("interactive")
+  runner <- orderly_runner(path)
+  name <- "interactive"
+  key <- runner$queue(name)
+  runner$poll()
+  id <- wait_for_id(runner, key)
+  expect_true(runner$kill(key))
+  expect_false(runner$kill(key))
+  expect_false(runner$process$px$is_alive())
+  res <- runner$poll()
+  expect_equal(res, structure("finish", key = key))
+  expect_equal(runner$status(key),
+               list(key = key, status = "error", id = id, output = NULL))
+
+})
+
+test_that("kill - wrong process", {
+  path <- prepare_orderly_example("interactive")
+  runner <- orderly_runner(path)
+  name <- "interactive"
+  key <- runner$queue(name)
+  runner$poll()
+  id <- wait_for_id(runner, key)
+
+  key2 <- "virtual_plant"
+  expect_error(runner$kill(key2),
+               sprintf("Can't kill '%s' - currently running '%s'", key2, key))
+  runner$kill(key)
+})
+
+test_that("kill - no process", {
+  path <- prepare_orderly_example("interactive")
+  runner <- orderly_runner(path)
+  key <- "virtual_plant"
+  expect_error(runner$kill(key),
+               "Can't kill 'virtual_plant' - not currently running a report")
 })
