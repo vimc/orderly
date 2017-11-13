@@ -1,6 +1,6 @@
 #!/bin/sh
 set -ex
-TAG=$(git rev-parse --short HEAD)
+TAG=$(git rev-parse --short=7 HEAD)
 DEST=build
 rm -rf $DEST
 docker run --rm --entrypoint create_orderly_demo.sh \
