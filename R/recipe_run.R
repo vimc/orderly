@@ -192,10 +192,13 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
 
   prep <- orderly_prepare_data(config, info, parameters, envir)
 
-  orderly_log("start", as.character(Sys.time()))
+  t0 <- Sys.time()
+  orderly_log("start", as.character(t0))
   source(info$script, local = envir,
          echo = echo, max.deparse.length = Inf)
-  orderly_log("end", as.character(Sys.time()))
+  t1 <- Sys.time()
+  orderly_log("end", as.character(t1))
+  orderly_log("elapsed", sprintf("Ran report in %s", format(t1 - t0)))
 
   recipe_check_device_stack(prep$n_dev)
   hash_artefacts <- recipe_check_artefacts(info)
