@@ -3,10 +3,8 @@
 recipe_read <- function(path, config) {
   assert_is(config, "orderly_config")
   filename <- file.path(path, "orderly.yml")
-  assert_file_exists(path)
-  if (!file_exists(filename)) {
-    stop("Did not find file 'orderly.yml' at path ", path)
-  }
+  assert_file_exists(path, name = "Report working directory")
+  assert_file_exists(filename, name = "Orderly configuration")
   info <- yaml_read(filename)
 
   required <- c("script", # filename
@@ -72,7 +70,7 @@ recipe_read <- function(path, config) {
   }
 
   assert_scalar_character(info$script, fieldname("script"))
-  assert_file_exists(info$script, workdir = info$path, name = "Script file")
+  assert_file_exists(info$script, workdir = path, name = "Script file")
 
   for (i in seq_len(nrow(config$fields))) {
     el <- config$fields[i, ]
@@ -112,11 +110,7 @@ string_or_filename <- function(x, path, name) {
   i <- grepl("\\.sql$", x)
   if (any(i)) {
     files <- x[i]
-    msg <- !file.exists(file.path(path, files))
-    if (any(msg)) {
-      stop(sprintf("File for %s does not exist: %s",
-                   name, paste(files[msg], collapse = ", ")))
-    }
+    assert_file_exists(files, workdir = path, name = "SQL file")
     x[i] <- vcapply(file.path(path, files), read_lines, USE.NAMES = FALSE)
     attr(x, "files") <- unname(files)
   }
@@ -204,10 +198,7 @@ recipe_read_check_resources <- function(x, filename, path) {
     return(NULL)
   }
   assert_character(x, sprintf("%s:%s", filename, "resouces"))
-  msg <- x[!file.exists(file.path(path, x))]
-  if (length(msg) > 0L) {
-    stop("Declared resources missing: ", paste(msg, collapse = ", "))
-  }
+  assert_file_exists(x, workdir = path, name = "Resource file")
   ## TODO: this is not quite right because the files need to be
   ## tested (as done here) with names within that directory.
   err <- x[!is_within_dir(file.path(path, x), path)]
@@ -261,6 +252,7 @@ recipe_read_check_depends <- function(x, filename, config) {
 
     filename_full <- file.path(el$path, el$filename)
 
+    ## TODO: VIMC-889
     msg <- !file.exists(filename_full)
     if (any(msg)) {
       stop(sprintf("Did not find file %s at %s",
