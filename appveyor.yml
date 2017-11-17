@@ -18,7 +18,7 @@ cache:
 build_script:
   - travis-tool.sh install_deps
   - travis-tool.sh install_github vimc/vaultr
-  - travis-tool.sh install_github vimc/montagu
+  - travis-tool.sh install_github vimc/montagu-r
 
 test_script:
   - travis-tool.sh run_tests
