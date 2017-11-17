@@ -3,7 +3,8 @@
 recipe_read <- function(path, config) {
   assert_is(config, "orderly_config")
   filename <- file.path(path, "orderly.yml")
-  if (!file.exists(filename)) {
+  assert_file_exists(path)
+  if (!file_exists(filename)) {
     stop("Did not find file 'orderly.yml' at path ", path)
   }
   info <- yaml_read(filename)
@@ -49,7 +50,7 @@ recipe_read <- function(path, config) {
   }
   if (!is.null(info$sources)) {
     assert_character(info$sources, fieldname("sources"))
-    assert_file_exists(file.path(path,info$sources))
+    assert_file_exists(file.path(path, info$sources))
     ## TODO: check relative path
     info$resources <- c(info$resources, info$sources)
   }

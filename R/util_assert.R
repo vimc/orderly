@@ -59,10 +59,24 @@ assert_is <- function(x, what, name = deparse(substitute(x))) {
   }
 }
 
-assert_file_exists <- function(x, name = deparse(substitute(x))) {
-  err <- !file.exists(x)
+assert_file_exists <- function(x, check_case = TRUE,
+                               name = deparse(substitute(x))) {
+  err <- !file_exists(x, check_case = check_case)
   if (any(err)) {
-    stop("File does not exist: ", paste(x[err], collapse = "\n"))
+    if (check_case) {
+      i <- attr(err, "incorrect_case")
+      msg_case <- x[i]
+      msg_totally <- x[err & !i]
+
+      if (length(msg_case) > 0L) {
+        msg_case_correct <- vcapply(msg_case, file_canonical_case)
+        msg_case <- sprintf("'%s' (should be '%s')", msg_case, msg_case_correct)
+      }
+      msg <- c(msg_case, squote(msg_totally))
+    } else {
+      msg <- squote(x[err])
+    }
+    stop("File does not exist: ", paste(msg, collapse = ", "))
   }
 }
 
