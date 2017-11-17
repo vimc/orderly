@@ -410,8 +410,13 @@ zip_dir <- function(path, dest = paste0(basename(path), ".zip")) {
   normalizePath(dest)
 }
 
-file_exists <- function(..., check_case = FALSE) {
+file_exists <- function(..., check_case = FALSE, workdir = NULL) {
   files <- c(...)
+  if (!is.null(workdir)) {
+    assert_scalar_character(workdir)
+    owd <- setwd(workdir)
+    on.exit(setwd(owd))
+  }
   exists <- file.exists(files)
 
   if (check_case) {

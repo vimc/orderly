@@ -72,9 +72,7 @@ recipe_read <- function(path, config) {
   }
 
   assert_scalar_character(info$script, fieldname("script"))
-  if (!file.exists(file.path(path, info$script))) {
-    stop(sprintf("script file %s does not exist", info$script))
-  }
+  assert_file_exists(info$script, workdir = info$path, name = "Script file")
 
   for (i in seq_len(nrow(config$fields))) {
     el <- config$fields[i, ]

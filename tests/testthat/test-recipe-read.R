@@ -108,3 +108,11 @@ test_that("ill formed artefacts", {
   expect_error(suppressMessages(recipe_read(path_example, config)),
                "Expected an ordered map")
 })
+
+test_that("resource case matters", {
+  path <- prepare_orderly_example("minimal")
+  file.rename(file.path(path, "src", "example", "script.R"),
+              file.path(path, "src", "example", "script.r"))
+  expect_error(orderly_run("example", config = path),
+               "Script file does not exist: 'script.R'")
+})

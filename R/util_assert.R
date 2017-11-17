@@ -59,9 +59,9 @@ assert_is <- function(x, what, name = deparse(substitute(x))) {
   }
 }
 
-assert_file_exists <- function(x, check_case = TRUE,
-                               name = deparse(substitute(x))) {
-  err <- !file_exists(x, check_case = check_case)
+assert_file_exists <- function(x, check_case = TRUE, workdir = NULL,
+                               name = "File") {
+  err <- !file_exists(x, check_case = check_case, workdir = workdir)
   if (any(err)) {
     if (check_case) {
       i <- attr(err, "incorrect_case")
@@ -76,7 +76,8 @@ assert_file_exists <- function(x, check_case = TRUE,
     } else {
       msg <- squote(x[err])
     }
-    stop("File does not exist: ", paste(msg, collapse = ", "))
+    stop(sprintf("%s does not exist: %s", name, paste(msg, collapse = ", ")),
+         call. = FALSE)
   }
 }
 
