@@ -2,7 +2,7 @@
 
 [![Project Status: Concept – Minimal or no implementation has been done yet, or the repository is only intended to be a limited example, demo, or proof-of-concept.](http://www.repostatus.org/badges/latest/concept.svg)](http://www.repostatus.org/#concept)
 [![Build Status](https://travis-ci.org/vimc/orderly.svg?branch=master)](https://travis-ci.org/vimc/orderly)
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/richfitz/orderly?branch=master&svg=true)](https://ci.appveyor.com/project/richfitz/orderly)
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/vimc/orderly?branch=master&svg=true)](https://ci.appveyor.com/project/richfitz/orderly)
 [![codecov.io](https://codecov.io/github/vimc/orderly/coverage.svg?branch=master)](https://codecov.io/github/vimc/orderly?branch=master)
 
 > 1. an attendant in a hospital responsible for the non-medical care of patients and the maintenance of order and cleanliness.
