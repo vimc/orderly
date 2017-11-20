@@ -446,7 +446,7 @@ file_has_canonical_case <- function(filename) {
   }
 
   for (p in path[nzchar(path)]) {
-    if (p %in% dir(base)) {
+    if (p %in% dir(base, all.files = TRUE)) {
       base <- paste(base, p, sep = "/")
     } else {
       return(FALSE)
