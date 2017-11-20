@@ -449,7 +449,7 @@ file_has_canonical_case <- function(filename) {
     if (p %in% dir(base)) {
       base <- paste(base, p, sep = "/")
     } else {
-      ## return(FALSE)
+      return(FALSE)
     }
   }
   TRUE

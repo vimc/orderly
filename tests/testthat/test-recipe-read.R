@@ -113,6 +113,8 @@ test_that("resource case matters", {
   path <- prepare_orderly_example("minimal")
   file.rename(file.path(path, "src", "example", "script.R"),
               file.path(path, "src", "example", "script.r"))
-  expect_error(orderly_run("example", config = path),
+
+  config <- orderly_config_get(path, FALSE)
+  expect_error(recipe_read(file.path(path, "src", "example"), config),
                "Script file does not exist: 'script.R'")
 })
