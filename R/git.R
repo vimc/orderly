@@ -52,7 +52,7 @@ git_ref_exists <- function(ref, root = NULL) {
 }
 
 git_status <- function(root = NULL, ignore_untracked = FALSE) {
-  args <- c("status", "--porcelain=v1",
+  args <- c("status", "--porcelain",
             if (ignore_untracked) "--untracked-files=no")
   res <- git_run(args, root = root, check = TRUE)
   res$clean <- length(res$output) == 0L
