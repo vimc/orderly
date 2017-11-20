@@ -79,6 +79,7 @@ test_that("run: success", {
 })
 
 test_that("run: error", {
+  skip_on_appveyor()
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
   dat <- runner_start_interactive(runner)
