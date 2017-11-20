@@ -142,7 +142,7 @@ build_git_demo <- function() {
              file.path(path, ".gitignore"))
   git_run(c("add", "."), root = path, check = TRUE)
   git_run(c("add", "-f", "archive", "data", "draft"), root = path, check = TRUE)
-  git_run(c("commit", "-m", "'initial import'"), root = path, check = TRUE)
+  git_run(c("commit", "-m", "'initial-import'"), root = path, check = TRUE)
   stopifnot(git_is_clean(path))
 
   prev <- git_checkout_branch("other", root = path, create = TRUE)
@@ -151,7 +151,7 @@ build_git_demo <- function() {
               file.path(path, "src", "other"))
   unlink(file.path(path, "extra"), recursive = TRUE)
   git_run(c("add", "."), root = path)
-  git_run(c("commit", "-m", "'add other'"), root = path)
+  git_run(c("commit", "-m", "'add-other'"), root = path)
 
   git_checkout_branch("master", root = path)
 

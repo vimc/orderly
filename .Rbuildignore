@@ -9,3 +9,4 @@
 ^\.Renviron$
 ^scripts$
 ^build$
+^appveyor\.yml$
