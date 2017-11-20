@@ -20,6 +20,8 @@ before_test:
   - cinst pandoc
   - ps: $env:Path += ";C:\Program Files (x86)\Pandoc\"
   - pandoc -v
+  - git config --global user.name "John Doe"
+  - git config --global user.email johndoe@example.com
 
 build_script:
   - travis-tool.sh install_deps
