@@ -438,7 +438,7 @@ file_has_canonical_case <- function(filename) {
   if (!nzchar(path[[1]])) {
     base <- "/"
     path <- path[-1L]
-  } else if (grepl(path[[1]], "^[A-Za-z]:")) {
+  } else if (grepl("^[A-Za-z]:", path[[1]])) {
     base <- path[[1L]]
     path <- path[-1L]
   } else {
@@ -460,7 +460,7 @@ file_canonical_case <- function(filename) {
  if (!nzchar(path[[1]])) {
    base <- "/"
    path <- path[-1]
- } else if (grepl(path[[1]], "^[A-Za-z]:")) {
+ } else if (grepl("^[A-Za-z]:", path[[1]])) {
    base <- path[[1]]
    path <- path[-1]
  } else {
