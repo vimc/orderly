@@ -4,9 +4,9 @@ test_that("nonexistant file", {
   ## TODO: I think that we should be normalising the path here?
   config <- orderly_config_read_yaml("example_config.yml", ".")
   expect_error(recipe_read(tempfile(), config),
-               "Did not find file 'orderly.yml' at path")
+               "Report working directory does not exist")
   expect_error(recipe_read(tempdir(), config),
-               "Did not find file 'orderly.yml' at path")
+               "Orderly configuration does not exist")
 })
 
 test_that("minimal", {
@@ -48,7 +48,7 @@ test_that("minimal", {
 
   write(modifyList(dat, list(data = list(dat = "foo.sql"))))
   expect_error(recipe_read(path_example, config),
-               "data does not exist: foo.sql")
+               "SQL file does not exist: 'foo.sql'")
 
   ## TODO: The formatting of these error messages could be improved
   write(modifyList(dat, list("unknown" = "foo")))
@@ -61,11 +61,11 @@ test_that("minimal", {
 
   write(modifyList(dat, list(script = "missing.R")))
   expect_error(recipe_read(path_example, config),
-               "script file missing.R does not exist")
+               "Script file does not exist: 'missing.R'")
 
   write(modifyList(dat, list(resources = "missing-file")))
   expect_error(recipe_read(path_example, config),
-               "Declared resources missing: missing-file")
+               "Resource file does not exist: 'missing-file'")
 
   write(modifyList(dat, list(resources = "..")))
   expect_error(recipe_read(path_example, config),
@@ -107,4 +107,12 @@ test_that("ill formed artefacts", {
   writeLines(yaml::as.yaml(dat), yml)
   expect_error(suppressMessages(recipe_read(path_example, config)),
                "Expected an ordered map")
+})
+
+test_that("resource case matters", {
+  path <- prepare_orderly_example("minimal")
+  file.rename(file.path(path, "src", "example", "script.R"),
+              file.path(path, "src", "example", "script.r"))
+  expect_error(orderly_run("example", config = path),
+               "Script file does not exist: 'script.R'")
 })

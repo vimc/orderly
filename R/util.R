@@ -409,3 +409,76 @@ zip_dir <- function(path, dest = paste0(basename(path), ".zip")) {
   }
   normalizePath(dest)
 }
+
+file_exists <- function(..., check_case = FALSE, workdir = NULL) {
+  files <- c(...)
+  if (!is.null(workdir)) {
+    assert_scalar_character(workdir)
+    owd <- setwd(workdir)
+    on.exit(setwd(owd))
+  }
+  exists <- file.exists(files)
+
+  if (check_case) {
+    incorrect_case <- logical(length(files))
+    if (!is_linux()) {
+      incorrect_case[exists] <-
+        !vlapply(files[exists], file_has_canonical_case)
+    }
+    attr(exists, "incorrect_case") <- incorrect_case
+    exists[incorrect_case] <- FALSE
+  }
+
+  exists
+}
+
+## These two have quite similar patterns
+file_has_canonical_case <- function(filename) {
+ path <- strsplit(filename, "[/\\\\]")[[1]]
+ if (!nzchar(path[[1]])) {
+   base <- "/"
+   path <- path[-1]
+ } else if (grepl(path[[1]], "^[A-Za-z]:")) {
+   base <- path[[1]]
+   path <- path[-1]
+ } else {
+   base <- "."
+ }
+
+ for (p in path) {
+   if (p %in% dir(base)) {
+     base <- paste(base, p, sep = "/")
+   } else {
+     return(FALSE)
+   }
+ }
+ TRUE
+}
+
+file_canonical_case <- function(filename) {
+ path <- strsplit(tolower(filename), "[/\\\\]")[[1]]
+ if (!nzchar(path[[1]])) {
+   base <- "/"
+   path <- path[-1]
+ } else if (grepl(path[[1]], "^[A-Za-z]:")) {
+   base <- path[[1]]
+   path <- path[-1]
+ } else {
+   base <- "."
+ }
+
+ for (p in path) {
+   pos <- dir(base, all.files = TRUE)
+   i <- match(p, tolower(pos))
+   if (is.na(i)) {
+     return(NA_character_)
+   } else {
+     base <- paste(base, pos[[i]], sep = "/")
+   }
+ }
+
+ if (grepl("^\\./", base) && !grepl("^\\./", filename)) {
+   base <- sub("^\\./", "", base)
+ }
+ base
+}
