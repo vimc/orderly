@@ -15,6 +15,12 @@ cache:
 
 # Adapt as necessary starting from here
 
+# From krlmlr/r-appveyor/issues/82
+before_test:
+  - cinst pandoc
+  - ps: $env:Path += ";C:\Program Files (x86)\Pandoc\"
+  - pandoc -v
+
 build_script:
   - travis-tool.sh install_deps
   - travis-tool.sh install_github vimc/vaultr
