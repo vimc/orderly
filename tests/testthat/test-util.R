@@ -133,3 +133,9 @@ test_that("git", {
   expect_equal(info2[c("sha_short", "sha", "branch")],
                info[c("sha_short", "sha", "branch")])
 })
+
+test_that("canonical face - redundant paths", {
+  expect_true(file_has_canonical_case("../../README.md"))
+  expect_true(file_has_canonical_case("../..//README.md"))
+  expect_true(file_has_canonical_case("../..///README.md"))
+})

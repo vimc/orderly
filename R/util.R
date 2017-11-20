@@ -434,25 +434,25 @@ file_exists <- function(..., check_case = FALSE, workdir = NULL) {
 
 ## These two have quite similar patterns
 file_has_canonical_case <- function(filename) {
- path <- strsplit(filename, "[/\\\\]")[[1]]
- if (!nzchar(path[[1]])) {
-   base <- "/"
-   path <- path[-1]
- } else if (grepl(path[[1]], "^[A-Za-z]:")) {
-   base <- path[[1]]
-   path <- path[-1]
- } else {
-   base <- "."
- }
+  path <- strsplit(filename, "[/\\\\]")[[1]]
+  if (!nzchar(path[[1]])) {
+    base <- "/"
+    path <- path[-1L]
+  } else if (grepl(path[[1]], "^[A-Za-z]:")) {
+    base <- path[[1L]]
+    path <- path[-1L]
+  } else {
+    base <- "."
+  }
 
- for (p in path) {
-   if (p %in% dir(base)) {
-     base <- paste(base, p, sep = "/")
-   } else {
-     return(FALSE)
-   }
- }
- TRUE
+  for (p in path[nzchar(path)]) {
+    if (p %in% dir(base)) {
+      base <- paste(base, p, sep = "/")
+    } else {
+      ## return(FALSE)
+    }
+  }
+  TRUE
 }
 
 file_canonical_case <- function(filename) {
@@ -467,7 +467,7 @@ file_canonical_case <- function(filename) {
    base <- "."
  }
 
- for (p in path) {
+ for (p in path[nzchar(path)]) {
    pos <- dir(base, all.files = TRUE)
    i <- match(p, tolower(pos))
    if (is.na(i)) {
