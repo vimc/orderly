@@ -9,6 +9,7 @@ before_script:
 after_success:
   - Rscript -e 'covr::codecov()'
 r_github_packages:
+  - ropensci/cyphr
   - vimc/montagu-r
   - vimc/vaultr
 env:
@@ -18,5 +19,9 @@ env:
     - VAULT_BIN_PATH=$PWD/.vault
 addons:
   apt:
+    sources:
+      - sourceline: 'ppa:chris-lea/libsodium'
     packages:
       - libimage-exiftool-perl
+      - libsodium-dev
+      - libssl-dev
