@@ -4,7 +4,7 @@
 \alias{orderly_deploy_shiny}
 \title{Deploy shiny apps onto server}
 \usage{
-orderly_deploy_shiny(dest, info = "shiny.yaml", config = NULL,
+orderly_deploy_shiny(dest, info = "shiny.yml", config = NULL,
   locate = TRUE)
 }
 \arguments{

@@ -4,7 +4,7 @@
 ##' @param info Name of the shiny metadata file (relative to orderly root)
 ##' @inheritParams orderly_list
 ##' @export
-orderly_deploy_shiny <- function(dest, info = "shiny.yaml",
+orderly_deploy_shiny <- function(dest, info = "shiny.yml",
                                  config = NULL, locate = TRUE) {
   assert_scalar_character(dest)
   config <- orderly_config_get(config, locate)
