@@ -482,3 +482,12 @@ file_canonical_case <- function(filename) {
  }
  base
 }
+
+copy_directory <- function(src, as) {
+  files <- dir(src, all.files = TRUE, no.. = TRUE, full.names = TRUE)
+  dir.create(as, FALSE, TRUE)
+  res <- file.copy(files, as, recursive = TRUE)
+  if (!all(res)) {
+    stop("Error copying files")
+  }
+}
