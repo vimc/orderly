@@ -19,7 +19,7 @@ orderly_deploy_shiny <- function(dest, info = "shiny.yml",
   apps <- lapply(unname(apps), orderly_deploy_shiny_check, dest, config)
   did <- vlapply(apps, orderly_deploy_1)
   if (any(did)) {
-    message("writing index")
+    orderly_log("shiny", "writing index")
     ## TODO: can't link back to the report server until we have shiny
     ## behind a proxy.
     fmt <- '  <li><a href="%s">%s</a> (%s)</li>'
@@ -42,7 +42,7 @@ orderly_deploy_shiny_check <- function(x, dest, config) {
   if (x$id == "latest") {
     x$id <- orderly_latest(x$name, config)
   }
-  x$path <- file.path("archive", x$name, x$id)
+  x$path <- file.path(config$path, "archive", x$name, x$id)
   if (!file.exists(x$path)) {
     stop(sprintf("archived orderly report does not exist: %s %s",
                  x$name, x$id))
@@ -72,7 +72,7 @@ orderly_deploy_shiny_check <- function(x, dest, config) {
 
 orderly_deploy_1 <- function(x) {
   if (x$deploy) {
-    message(sprintf("Copying %s:%s as %s", x$name, x$id, x$dest))
+    orderly_log("shiny", sprintf("Copying %s:%s as %s", x$name, x$id, x$dest))
     if (file.exists(x$path_dest)) {
       unlink(x$path_dest, recursive = TRUE)
     }

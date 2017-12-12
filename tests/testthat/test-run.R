@@ -408,3 +408,30 @@ test_that("test mode artefacts", {
   writeLines(character(0), "mygraph.png")
   expect_true(orderly_test_check())
 })
+
+test_that("shiny app", {
+  path <- prepare_orderly_example("shiny")
+  id <- orderly_run("example", config = path, echo = FALSE)
+  p_shiny <- file.path(path, "draft", "example", id, "shiny")
+  expect_true(file.exists(p_shiny))
+  expect_true(file.exists(file.path(p_shiny, "app.R")))
+  expect_true(file.exists(file.path(p_shiny, "data.RData")))
+
+  dest <- file.path(path, "shiny")
+  expect_error(orderly_deploy_shiny(dest, config = path),
+               "Did not find any archive reports for example")
+  orderly_commit(id, config = path)
+  orderly_deploy_shiny(dest, config = path)
+
+  expect_true(file.exists(file.path(dest, "index.html")))
+  expect_true(file.exists(file.path(dest, "example-shiny-app")))
+
+  p <- file.path(dest, "example-shiny-app")
+  q <- file.path(path, "archive", "example", id, "shiny")
+  expect_true(file.exists(file.path(p, "orderly_id")))
+  expect_equal(readLines(file.path(p, "orderly_id")), id)
+
+  expect_true(all(dir(q) %in% dir(p)))
+  expect_equal(hash_files(file.path(p, dir(q)), FALSE),
+               hash_files(file.path(q, dir(q)), FALSE))
+})

@@ -1,0 +1,7 @@
+data:
+  dat: SELECT * FROM mtcars
+script: script.R
+artefacts:
+  shinyapp:
+    description: An example shiny app
+    filenames: shiny
