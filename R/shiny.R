@@ -8,23 +8,37 @@ orderly_deploy_shiny <- function(dest, info = "shiny.yml",
                                  config = NULL, locate = TRUE) {
   assert_scalar_character(dest)
   config <- orderly_config_get(config, locate)
-  info <- yaml::yaml.load_file(file.path(config$path, info))
-  assert_named(info, TRUE, "shiny.yaml")
-  for (i in seq_along(info)) {
-    info[[i]]$dest <- names(info)[[i]]
+  dat <- yaml_read(file.path(config$path, info))
+  apps <- dat$apps
+  check_fields(dat, info, c("apps", "title"), NULL)
+  assert_named(apps, TRUE, "shiny.yaml")
+
+  for (i in seq_along(apps)) {
+    apps[[i]]$dest <- names(apps)[[i]]
   }
-  info <- lapply(unname(info), orderly_deploy_shiny_check, dest, config)
-  for (x in info) {
-    orderly_deploy_1(x)
+  apps <- lapply(unname(apps), orderly_deploy_shiny_check, dest, config)
+  did <- vlapply(apps, orderly_deploy_1)
+  if (any(did)) {
+    message("writing index")
+    ## TODO: can't link back to the report server until we have shiny
+    ## behind a proxy.
+    fmt <- '  <li><a href="%s">%s</a> (%s)</li>'
+    app_dest <- vcapply(apps, "[[", "dest")
+    app_displayname <- vcapply(apps, "[[", "displayname")
+    app_id <- vcapply(apps, "[[", "id")
+    app_list <- sprintf(fmt, app_dest, app_displayname, app_id)
+    app_ul <- paste0(strrep(" ", 8L), c("<ul>", app_list, "</ul>"), "\n",
+                     collapse = "")
+
+    index <- readLines(orderly_file("shiny_index.html"))
+    index <- gsub("{{TITLE}}", dat$title, index, fixed = TRUE)
+    index <- sub("{{APPS}}", app_ul, index, fixed = TRUE)
+    writeLines(index, file.path(dest, "index.html"))
   }
 }
 
 orderly_deploy_shiny_check <- function(x, dest, config) {
-  if (!all(c("name", "id") %in% names(x))) {
-    stop(sprintf(
-      "Invalid orderly.yml entry '%s' - expected properties 'name' and 'id'",
-      x$dest))
-  }
+  check_fields(x, paste0("shiny.yml:", x$dest), c("name", "id", "dest"), NULL)
   if (x$id == "latest") {
     x$id <- orderly_latest(x$name, config)
   }
@@ -40,6 +54,10 @@ orderly_deploy_shiny_check <- function(x, dest, config) {
   }
   x$path_dest <- file.path(dest, x$dest)
   x$path_id <- file.path(x$path_dest, "orderly_id")
+
+  dat <- yaml_read(file.path(x$path, "orderly.yml"))
+  x$displayname <- dat$displayname %||% x$name
+
   if (file.exists(x$path_dest)) {
     if (!file.exists(x$path_id)) {
       stop("did not find id file - not continuing")
@@ -61,4 +79,5 @@ orderly_deploy_1 <- function(x) {
     copy_directory(x$path_shiny, x$path_dest)
     writeLines(x$id, x$path_id)
   }
+  x$deploy
 }
