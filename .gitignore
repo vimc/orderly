@@ -8,3 +8,4 @@ demo.tar.gz
 .Renviron
 vignettes/*.html
 build
+docs
