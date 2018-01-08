@@ -86,17 +86,13 @@ R6_orderly_runner <- R6::R6Class(
       if (identical(key, self$process$key)) {
         state <- RUNNER_RUNNING
         id <- readlines_if_exists(self$process$id_file, NA_character_)
-        if (output) {
-          out <- list(stderr = self$process$stderr(),
-                      stdout = self$process$stdout())
-        }
       } else {
         d <- self$data$status(key)
         state <- d$state
         id <- d$id
-        if (output) {
-          out <- self$.read_logs(key)
-        }
+      }
+      if (output) {
+        out <- self$.read_logs(key)
       }
       list(key = key, status = state, id = id, output = out)
     },
@@ -169,18 +165,12 @@ R6_orderly_runner <- R6::R6Class(
       self$process <- NULL
       orderly_log(state, sprintf("%s (%s)", process$key, process$name))
 
-      ## Then process logs
-      path_log <- file.path(self$path_log, key)
-      dir.create(path_log, FALSE, TRUE)
-      writeLines(process$stdout(), path_stdout(path_log))
-      writeLines(process$stderr(), path_stderr(path_log))
-
       if (file.exists(process$id_file)) {
         id <- readLines(process$id_file)
         base <- if (state == RUNNER_SUCCESS) path_archive else path_draft
         p <- file.path(base(self$path), process$name, id)
         if (file.exists(p)) {
-          file.copy(c(path_stdout(path_log), path_stderr(path_log)), p)
+          file.copy(c(process$stdout, process$stderr), p)
         }
       } else {
         id <- NA_character_
@@ -190,9 +180,8 @@ R6_orderly_runner <- R6::R6Class(
     },
 
     .read_logs = function(key) {
-      path_log <- file.path(self$path_log, key)
-      list(stderr = readlines_if_exists(path_stderr(path_log)),
-           stdout = readlines_if_exists(path_stdout(path_log)))
+      list(stderr = readlines_if_exists(path_stderr(self$path_log, key)),
+           stdout = readlines_if_exists(path_stdout(self$path_log, key)))
     },
 
     .run_next = function() {
@@ -200,39 +189,49 @@ R6_orderly_runner <- R6::R6Class(
       if (is.null(dat)) {
         return(FALSE)
       }
-      orderly_log("run", sprintf("%s (%s)", dat$key, dat$name))
-      self$data$set_state(dat$key, RUNNER_RUNNING)
-      id_file <- file.path(self$path_id, dat$key)
+      key <- dat$key
+      orderly_log("run", sprintf("%s (%s)", key, dat$name))
+      self$data$set_state(key, RUNNER_RUNNING)
+      id_file <- file.path(self$path_id, key)
       args <- c("--root", self$path,
                 "run", dat$name, "--print-log", "--id-file", id_file,
                 if (!is.na(dat$parameters)) c("--parameters", dat$parameters),
                 if (!is.na(dat$ref)) c("--ref", dat$ref))
+
+      ## NOTE: sending stdout/stderr to "|" causes a big slowdown (as
+      ## in 5-10x longer to run than not going through processx). File
+      ## output seems not to have the same problem but if it does this
+      ## can be swapped in very easily for
+      ##
+      ##   px <- sys::exec_background(self$orderly_bin, args,
+      ##                              std_out = log_out, std_err = log_err)
+      ##
+      ## which just returns a PID (rather than an R6 object).
+      ##
+      ## The only other (non-test) place that needs updating is
+      ## px$is_alive() and px$get_exit_status() become
+      ## sys::exec_status(px, FALSE)
+      ##
+      ## There is also one test case that needs tweaking.
+      log_out <- path_stdout(self$path_log, key)
+      log_err <- path_stderr(self$path_log, key)
       px <- processx::process$new(self$orderly_bin, args,
-                                  stdout = "|", stderr = "|")
+                                  stdout = log_out, stderr = log_err)
       self$process <- list(px = px,
-                           key = dat$key,
+                           key = key,
                            name = dat$name,
                            id_file = id_file,
-                           stdout = process_stream(px, TRUE),
-                           stderr = process_stream(px, FALSE))
+                           stdout = log_out,
+                           stderr = log_err)
       TRUE
     }
   ))
 
-path_stderr <- function(path) {
-  file.path(path, "orderly.stderr")
+path_stderr <- function(path, key) {
+  file.path(path, paste0(key, ".stderr"))
 }
-path_stdout <- function(path) {
-  file.path(path, "orderly.stdout")
-}
-
-process_stream <- function(px, output = TRUE) {
-  dat <- character(0)
-  callback <- if (output) px$read_output_lines else px$read_error_lines
-  function() {
-    dat <<- c(dat, callback())
-    dat
-  }
+path_stdout <- function(path, key) {
+  file.path(path, paste0(key, ".stdout"))
 }
 
 process_wait <- function(px, filename, timeout = 1, poll = 0.02) {
