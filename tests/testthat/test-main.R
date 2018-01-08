@@ -136,6 +136,20 @@ test_that("list", {
                "argument to list must be one of")
 })
 
+test_that("deploy-shiny", {
+  path <- prepare_orderly_example("minimal")
+
+  args <- c("--root", path, "deploy-shiny", "shiny")
+  res <- main_args(args)
+  expect_equal(res$args, "shiny")
+  expect_equal(res$options$info, "shiny.yml")
+
+  args <- c("--root", path, "deploy-shiny", "shiny-path", "--info", "foo.yml")
+  res <- main_args(args)
+  expect_equal(res$args, "shiny-path")
+  expect_equal(res$options$info, "foo.yml")
+})
+
 test_that("unknown", {
   path <- tempfile()
   args <- c("--root", path, "foo")

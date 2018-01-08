@@ -139,6 +139,15 @@ hash_files <- function(filenames, named = TRUE) {
   }
 }
 
+hash_directory <- function(filenames, named = TRUE) {
+  f <- function(p) {
+    hash_object(hash_files(list_all_files(p), FALSE))
+  }
+  res <- vcapply(filenames, f)
+  names(res) <- if (named) filenames else NULL
+  res
+}
+
 hash_object <- function(object) {
   digest::digest(object)
 }
@@ -481,4 +490,27 @@ file_canonical_case <- function(filename) {
    base <- sub("^\\./", "", base)
  }
  base
+}
+
+copy_directory <- function(src, as) {
+  files <- dir(src, all.files = TRUE, no.. = TRUE, full.names = TRUE)
+  dir.create(as, FALSE, TRUE)
+  res <- file.copy(files, as, recursive = TRUE)
+  if (!all(res)) {
+    stop("Error copying files")
+  }
+}
+
+expand_directory_list <- function(files) {
+  if (is.null(files)) {
+    return(NULL)
+  }
+  i <- is_directory(files)
+  extra <- unlist(lapply(files[i], list_all_files), use.names = FALSE)
+  union(files[!i], extra)
+}
+
+list_all_files <- function(path) {
+  sort_c(dir(path, recursive = TRUE, full.names = TRUE, all.files = TRUE,
+             no.. = TRUE))
 }

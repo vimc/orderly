@@ -147,7 +147,7 @@ orderly_test_check <- function() {
   found <- recipe_exists_artefacts(cache$test$info)
   msg <- sprintf("%7s: %s", ifelse(found, "found", "missing"), names(found))
   artefacts <- names(found)
-  h <- hash_files(artefacts)
+  h <- hash_artefacts(artefacts)
   h[is.na(h)] <- "<missing>"
   orderly_log("artefact", sprintf("%s: %s", artefacts, h))
   invisible(all(found))
@@ -290,7 +290,14 @@ recipe_prepare_workdir <- function(info, workdir) {
 
   if (!is.null(info$resources)) {
     dir_create(dirname(info$resources))
-    file.copy(file.path(src, info$resources), info$resources)
+    ## There's a bit of awfulness in R's path handling to deal with here.
+    path_resources_src <- file.path(src, info$resources)
+    i <- is_directory(path_resources_src)
+    file_copy(path_resources_src[!i], info$resources[!i])
+    for (j in which(i)) {
+      file_copy(path_resources_src[j], dirname(info$resources[j]),
+                recursive = TRUE)
+    }
   }
 
   if (!is.null(info$depends)) {
@@ -328,8 +335,17 @@ recipe_check_artefacts <- function(info, id) {
   ## for (filename in artefacts) {
   ##   watermark_write(filename, id)
   ## }
-  h <- hash_files(artefacts)
+  h <- hash_artefacts(artefacts)
   orderly_log("artefact", sprintf("%s: %s", artefacts, h))
+  h
+}
+
+hash_artefacts <- function(artefacts) {
+  i <- is_directory(artefacts)
+  i[is.na(i)] <- FALSE
+  h <- set_names(character(length(artefacts)), artefacts)
+  h[i] <- hash_directory(artefacts[i])
+  h[!i] <- hash_files(artefacts[!i])
   h
 }
 
@@ -404,10 +420,10 @@ orderly_prepare <- function(config, info, parameters, envir, id_file) {
 
   owd <- recipe_prepare_workdir(info, workdir)
   withCallingHandlers({
-    hash_resources <- hash_files(info$resources)
-    if (length(info$resources) > 0L) {
+    hash_resources <- hash_files(expand_directory_list(info$resources))
+    if (length(hash_resources) > 0L) {
       orderly_log("resources",
-                  sprintf("%s: %s", info$resources, hash_resources))
+                  sprintf("%s: %s", names(hash_resources), hash_resources))
     } else {
       hash_resources <- NULL
     }
