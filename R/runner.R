@@ -115,7 +115,10 @@ R6_orderly_runner <- R6::R6Class(
     kill = function(key) {
       current <- self$process$key
       if (identical(key, current)) {
-        self$process$px$kill()
+        orderly_log("kill", key)
+        ret <- self$process$px$kill()
+        self$process$state <- RUNNER_KILLED
+        ret
       } else if (is.null(current)) {
         stop(sprintf("Can't kill '%s' - not currently running a report", key))
       } else {
@@ -176,9 +179,10 @@ R6_orderly_runner <- R6::R6Class(
     .cleanup = function() {
       ok <- self$process$px$get_exit_status() == 0L
       key <- self$process$key
-      state <- if (ok) RUNNER_SUCCESS else RUNNER_ERROR
-      ## First, ensure that things are going to be sensibly set
-      ## even if we fail:
+      state <- self$process$state %||%
+        if (ok) RUNNER_SUCCESS else RUNNER_ERROR
+      ## First, ensure that things are going to be sensibly set even
+      ## if we fail:
       process <- self$process
       self$process <- NULL
       orderly_log(state, sprintf("%s (%s)", process$key, process$name))

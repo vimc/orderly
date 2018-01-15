@@ -210,8 +210,7 @@ test_that("kill", {
   res <- runner$poll()
   expect_equal(res, structure("finish", key = key))
   expect_equal(runner$status(key),
-               list(key = key, status = "error", id = id, output = NULL))
-
+               list(key = key, status = "killed", id = id, output = NULL))
 })
 
 test_that("kill - wrong process", {
