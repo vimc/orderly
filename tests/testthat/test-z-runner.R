@@ -205,7 +205,7 @@ test_that("kill", {
   runner$poll()
   id <- wait_for_id(runner, key)
   expect_true(runner$kill(key))
-  expect_false(runner$kill(key))
+  expect_error(runner$kill(key), "Can't kill")
   expect_false(runner$process$px$is_alive())
   res <- runner$poll()
   expect_equal(res, structure("finish", key = key))
@@ -233,4 +233,15 @@ test_that("kill - no process", {
   key <- "virtual_plant"
   expect_error(runner$kill(key),
                "Can't kill 'virtual_plant' - not currently running a report")
+})
+
+test_that("timeout", {
+  path <- prepare_orderly_example("interactive")
+  runner <- orderly_runner(path)
+  name <- "interactive"
+  key <- runner$queue(name, timeout = 0)
+  runner$poll()
+  id <- wait_for_id(runner, key)
+  expect_equal(runner$poll(), structure("timeout", key = key))
+  expect_equal(runner$poll(), "idle")
 })

@@ -115,10 +115,7 @@ R6_orderly_runner <- R6::R6Class(
     kill = function(key) {
       current <- self$process$key
       if (identical(key, current)) {
-        orderly_log("kill", key)
-        ret <- self$process$px$kill()
-        self$process$state <- RUNNER_KILLED
-        ret
+        self$.kill_current()
       } else if (is.null(current)) {
         stop(sprintf("Can't kill '%s' - not currently running a report", key))
       } else {
@@ -161,7 +158,12 @@ R6_orderly_runner <- R6::R6Class(
       key <- self$process$key
       if (!is.null(self$process)) {
         if (self$process$px$is_alive()) {
-          ret <- "running"
+          if (Sys.time() > self$process$kill_at) {
+            self$.kill_current()
+            ret <- "timeout"
+          } else {
+            ret <- "running"
+          }
         } else {
           self$.cleanup()
           ret <- "finish"
@@ -176,11 +178,12 @@ R6_orderly_runner <- R6::R6Class(
       ret
     },
 
-    .cleanup = function() {
+    .cleanup = function(state = NULL) {
       ok <- self$process$px$get_exit_status() == 0L
       key <- self$process$key
-      state <- self$process$state %||%
-        if (ok) RUNNER_SUCCESS else RUNNER_ERROR
+      if (is.null(state)) {
+        state <- if (ok) RUNNER_SUCCESS else RUNNER_ERROR
+      }
       ## First, ensure that things are going to be sensibly set even
       ## if we fail:
       process <- self$process
@@ -199,6 +202,14 @@ R6_orderly_runner <- R6::R6Class(
       }
 
       self$data$set_state(key, state, id)
+    },
+
+    .kill_current = function() {
+      p <- self$process
+      orderly_log("kill", p$key)
+      ret <- p$px$kill()
+      self$.cleanup(RUNNER_KILLED)
+      ret
     },
 
     .read_logs = function(key) {
@@ -242,7 +253,7 @@ R6_orderly_runner <- R6::R6Class(
       self$process <- list(px = px,
                            key = key,
                            name = dat$name,
-                           kill_at = Sys.time() + as.numeric(dat$timeout),
+                           kill_at = Sys.time() + dat$timeout,
                            id_file = id_file,
                            stdout = log_out,
                            stderr = log_err)
