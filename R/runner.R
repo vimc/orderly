@@ -14,6 +14,7 @@ RUNNER_QUEUED  <- "queued"
 RUNNER_RUNNING <- "running"
 RUNNER_SUCCESS <- "success"
 RUNNER_ERROR   <- "error"
+RUNNER_KILLED  <- "killed"
 RUNNER_UNKNOWN <- "unknown"
 
 ## TODO: through here we need to wrap some calls up in success/fail so
@@ -62,7 +63,8 @@ R6_orderly_runner <- R6::R6Class(
       dir.create(self$path_id, FALSE, TRUE)
     },
 
-    queue = function(name, parameters = NULL, ref = NULL, update = FALSE) {
+    queue = function(name, parameters = NULL, ref = NULL, update = FALSE,
+                     timeout = 600) {
       if (!self$allow_ref && !is.null(ref)) {
         stop("Reference switching is disabled in this runner")
       }
@@ -76,7 +78,8 @@ R6_orderly_runner <- R6::R6Class(
       if (!is.null(ref) && !git_ref_exists(ref, self$path)) {
         stop(sprintf("Did not find git reference '%s'", ref))
       }
-      key <- self$data$insert(name, parameters, ref)
+      assert_scalar_numeric(timeout)
+      key <- self$data$insert(name, parameters, ref, timeout)
       orderly_log("queue", sprintf("%s (%s)", key, name))
       key
     },
@@ -235,6 +238,7 @@ R6_orderly_runner <- R6::R6Class(
       self$process <- list(px = px,
                            key = key,
                            name = dat$name,
+                           kill_at = Sys.time() + as.numeric(dat$timeout),
                            id_file = id_file,
                            stdout = log_out,
                            stderr = log_err)
@@ -266,7 +270,7 @@ process_wait <- function(px, filename, timeout = 1, poll = 0.02) {
 }
 
 runner_queue <- function() {
-  cols <- c("key", "state", "name", "parameters", "ref", "id")
+  cols <- c("key", "state", "name", "parameters", "ref", "id", "timeout")
   data <- matrix(character(0), 0, length(cols))
   colnames(data) <- cols
 
@@ -279,7 +283,7 @@ runner_queue <- function() {
       sum(data[, "state"] == RUNNER_QUEUED)
     },
 
-    insert = function(name, parameters = NULL, ref = NULL) {
+    insert = function(name, parameters = NULL, ref = NULL, timeout = 600) {
       existing <- data[, "key"]
       repeat {
         key <- ids::adjective_animal()
@@ -293,6 +297,7 @@ runner_queue <- function() {
       new[["state"]] <- RUNNER_QUEUED
       new[["parameters"]] <- parameters %||% NA_character_
       new[["ref"]] <- ref %||% NA_character_
+      new[["timeout"]] <- timeout
       data <<- rbind(data, new, deparse.level = 0)
       key
     },
@@ -301,7 +306,9 @@ runner_queue <- function() {
       i <- data[, "state"] == RUNNER_QUEUED
       if (any(i)) {
         i <- which(i)[[1L]]
-        as.list(data[i, ])
+        ret <- as.list(data[i, ])
+        ret$timeout <- as.numeric(ret$timeout)
+        ret
       } else {
         NULL
       }

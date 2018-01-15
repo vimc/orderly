@@ -9,11 +9,12 @@ test_that("runner queue", {
   expect_equal(queue$status(key1), list(state = "queued", id = NA_character_))
   key2 <- queue$insert("b", "parameters")
   key3 <- queue$insert("c", ref = "ref")
+  key4 <- queue$insert("d", timeout = 200)
 
   d <- queue$next_queued()
   expect_equal(d, list(key = key1, state = "queued", name = "a",
                        parameters = NA_character_, ref = NA_character_,
-                       id = NA_character_))
+                       id = NA_character_, timeout = 600))
 
   expect_true(queue$set_state(key1, "running"))
   expect_equal(queue$status(key1), list(state = "running", id = NA_character_))
@@ -21,16 +22,22 @@ test_that("runner queue", {
   d <- queue$next_queued()
   expect_equal(d, list(key = key2, state = "queued", name = "b",
                        parameters = "parameters", ref = NA_character_,
-                       id = NA_character_))
+                       id = NA_character_, timeout = 600))
 
   expect_true(queue$set_state(key2, "running", new_report_id()))
 
   d <- queue$next_queued()
   expect_equal(d, list(key = key3, state = "queued", name = "c",
                        parameters = NA_character_, ref = "ref",
-                       id = NA_character_))
+                       id = NA_character_, timeout = 600))
 
   expect_true(queue$set_state(key3, "running", new_report_id()))
+
+  d <- queue$next_queued()
+  expect_equal(d, list(key = key4, state = "queued", name = "d",
+                       parameters = NA_character_, ref = NA_character_,
+                       id = NA_character_, timeout = 200))
+  expect_true(queue$set_state(key4, "running", new_report_id()))
 
   expect_null(queue$next_queued())
 })
