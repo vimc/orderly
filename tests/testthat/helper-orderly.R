@@ -25,6 +25,8 @@ skip_if_no_vault_server <- function() {
 }
 
 start_vault <- function() {
+  Sys.unsetenv("VAULTR_CACHE_DIR")
+  Sys.unsetenv("VAULT_ADDR")
   with_vault <- !is.null(vaultr::vault_test_server_start())
   if (with_vault) {
     cl <- vaultr::vault_test_client()

@@ -10,3 +10,4 @@
 ^scripts$
 ^build$
 ^appveyor\.yml$
+^docs$

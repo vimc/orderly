@@ -62,7 +62,7 @@ test_that("secrets", {
   skip_if_no_vault_server()
   x <- list(name = "alice",
             password = "VAULT:/secret/users/alice:password")
-  cache$vault <- NULL
+  vaultr::vault_clear_token_cache()
   withr::with_envvar(c(VAULTR_AUTH_METHOD = NA_character_), {
     expect_error(resolve_secrets(x), "Have not authenticated against vault")
   })
@@ -72,10 +72,8 @@ test_that("secrets", {
   withr::with_envvar(c(VAULTR_AUTH_METHOD = "token", VAULT_TOKEN = "fake"), {
     expect_error(resolve_secrets(x), "Token verification failed with code")
   })
-  expect_false(cache$vault$is_authorized())
   expect_equal(resolve_secrets(x),
                list(name = "alice", password = "ALICE"))
-  expect_true(cache$vault$is_authorized())
   expect_equal(resolve_secrets(unlist(x)),
                list(name = "alice", password = "ALICE"))
 })
@@ -83,7 +81,7 @@ test_that("secrets", {
 test_that("resolve secret env", {
   ## This the pattern that we have during startup
   skip_if_no_vault_server()
-  cache$vault <- NULL
+  vaultr::vault_clear_token_cache()
 
   x <- list(user = "$ORDERLY_USER",
             password = "$ORDERLY_PASSWORD",

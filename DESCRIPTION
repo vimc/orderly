@@ -4,8 +4,8 @@ Version: 0.3.4
 Description: Order, create and store reports from R.
 License: MIT + file LICENSE
 Encoding: UTF-8
-Author: Rich FitzJohn
-Maintainer: Rich FitzJohn <rich.fitzjohn@gmail.com>
+Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
+    email = "rich.fitzjohn@gmail.com"))
 SystemRequirements: exiftool, git
 Imports:
     DBI,
@@ -24,6 +24,6 @@ Suggests:
     processx,
     rmarkdown,
     testthat,
-    vaultr (>= 0.0.2)
+    vaultr (>= 0.0.3)
 RoxygenNote: 6.0.1
 VignetteBuilder: knitr

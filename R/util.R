@@ -317,39 +317,6 @@ resolve_env <- function(x) {
   lapply(x, f)
 }
 
-resolve_secrets <- function(x) {
-  re <- "^VAULT:(.+):(.+)"
-  if (is.list(x)) {
-    i <- vlapply(x, function(el) is.character(el) && grepl(re, el))
-    if (any(i)) {
-      x[i] <- resolve_secrets(vcapply(x[i], identity))
-    }
-  } else {
-    i <- grepl(re, x)
-    if (any(i)) {
-      key <- unname(sub(re, "\\1", x[i]))
-      field <- unname(sub(re, "\\2", x[i]))
-
-      x[i] <- unname(Map(vault_read, key, field))
-    }
-  }
-  x
-}
-
-vault_connect <- function() {
-  loadNamespace("vaultr")
-  if (is.null(cache$vault)) {
-    cache$vault <- vaultr::vault_client()
-  } else if (is.null(cache$vault$token)) {
-    cache$vault$auth(NULL)
-  }
-}
-
-vault_read <- function(key, field) {
-  vault_connect()
-  cache$vault$read(key, field)
-}
-
 is_windows <- function() {
   Sys.info()[["sysname"]] == "Windows"
 }
