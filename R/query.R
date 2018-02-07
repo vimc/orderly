@@ -157,7 +157,11 @@ orderly_find_name <- function(id, config, locate = FALSE, draft = TRUE,
                               must_work = FALSE) {
   config <- orderly_config_get(config, locate)
   path <- (if (draft) path_draft else path_archive)(config$path)
-  for (name in orderly_list(config)) {
+  ## NOTE: listing draft/archive rather than using orderly_list here
+  ## because it allows for the existance of an archived report that we
+  ## don't have the source for (VIMC-1013 and a related bug when
+  ## pulling dependencies).
+  for (name in basename(list_dirs(path))) {
     if (file.exists(file.path(path, name, id))) {
       return(name)
     }
