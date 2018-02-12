@@ -100,6 +100,25 @@ R6_orderly_runner <- R6::R6Class(
       list(key = key, status = state, id = id, output = out)
     },
 
+    queue_status = function(output = FALSE, limit = 50) {
+      queue <- tail(self$data$get_df(), limit)
+      if (is.null(self$process)) {
+        status <- "idle"
+        current <- NULL
+      } else {
+        status <- "running"
+
+        current <- self$process[c("key", "name", "start_at", "kill_at")]
+        now <- Sys.time()
+        current$elapsed <- as.numeric(now - current$start_at, "secs")
+        current$remaining <- as.numeric(current$kill_at - now, "secs")
+        if (output) {
+          current$output <- self$.read_logs(current$key)
+        }
+      }
+      list(status = status, queue = queue, current = current)
+    },
+
     ## This one could quite easily move into the montagu api; it
     ## doesn't take too much to do (write one file and write to the
     ## SQL database)
@@ -250,10 +269,12 @@ R6_orderly_runner <- R6::R6Class(
       log_err <- path_stderr(self$path_log, key)
       px <- processx::process$new(self$orderly_bin, args,
                                   stdout = log_out, stderr = log_err)
+      start_at <- Sys.time()
       self$process <- list(px = px,
                            key = key,
                            name = dat$name,
-                           kill_at = Sys.time() + dat$timeout,
+                           start_at = start_at,
+                           kill_at = start_at + dat$timeout,
                            id_file = id_file,
                            stdout = log_out,
                            stderr = log_err)
@@ -292,6 +313,12 @@ runner_queue <- function() {
   list(
     get = function() {
       data
+    },
+
+    get_df = function() {
+      ret <- as.data.frame(data, stringsAsFactors = FALSE)
+      ret$timeout <- as.numeric(ret$timeout)
+      ret
     },
 
     length = function() {

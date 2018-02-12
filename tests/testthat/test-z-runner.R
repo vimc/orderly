@@ -245,3 +245,40 @@ test_that("timeout", {
   expect_equal(runner$poll(), structure("timeout", key = key))
   expect_equal(runner$poll(), "idle")
 })
+
+test_that("queue_status", {
+  path <- prepare_orderly_example("interactive")
+  runner <- orderly_runner(path)
+
+  expect_equal(
+    runner$queue_status(NULL),
+    list(status = "idle", queue = runner_queue()$get_df(), current = NULL))
+
+  name <- "interactive"
+  key1 <- runner$queue(name)
+  key2 <- runner$queue(name)
+
+  expect_equal(
+    runner$queue_status(NULL),
+    list(status = "idle", queue = runner$data$get_df(), current = NULL))
+
+  runner$poll()
+  res <- runner$queue_status()
+  expect_equal(res$status, "running")
+  expect_equal(res$queue, runner$data$get_df())
+  expect_equal(nrow(res$queue), 2)
+  expect_equal(res$current$key, key1)
+  expect_equal(res$current$name, "interactive")
+  expect_is(res$current$start_at, "POSIXt")
+  expect_is(res$current$kill_at, "POSIXt")
+
+  expect_equal(res$current$elapsed + res$current$remaining, 600)
+  expect_null(res$current$output)
+
+  res <- runner$queue_status(TRUE)
+  expect_is(res$current$output$stderr, "character")
+  expect_is(res$current$output$stdout, "character")
+
+  res <- runner$queue_status(limit = 1)
+  expect_equal(nrow(res$queue), 1L)
+})
