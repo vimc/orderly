@@ -206,11 +206,8 @@ test_that("kill", {
   id <- wait_for_id(runner, key)
   expect_true(runner$kill(key))
   expect_error(runner$kill(key), "Can't kill")
-  expect_false(runner$process$px$is_alive())
-  res <- runner$poll()
-  expect_equal(res, structure("finish", key = key))
-  expect_equal(runner$status(key),
-               list(key = key, status = "killed", id = id, output = NULL))
+  expect_null(runner$process)
+  expect_equal(runner$poll(), "idle")
 })
 
 test_that("kill - wrong process", {
