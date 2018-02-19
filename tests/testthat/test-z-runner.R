@@ -212,6 +212,7 @@ test_that("kill", {
 })
 
 test_that("kill - wrong process", {
+  skip_on_windows()
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
   name <- "interactive"
