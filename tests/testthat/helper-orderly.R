@@ -17,6 +17,10 @@ skip_if_no_git <- function() {
   testthat::skip("git was not found on the path")
 }
 
+skip_on_windows <- function() {
+  skip_on_os("windows")
+}
+
 skip_if_no_vault_server <- function() {
   testthat::skip_if_not_installed("vaultr")
   if (is.null(vaultr::vault_test_server())) {

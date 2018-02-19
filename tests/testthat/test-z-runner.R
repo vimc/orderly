@@ -198,6 +198,7 @@ test_that("Can't git change", {
 })
 
 test_that("kill", {
+  skip_on_windows()
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
   name <- "interactive"
@@ -233,6 +234,7 @@ test_that("kill - no process", {
 })
 
 test_that("timeout", {
+  skip_on_windows()
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
   name <- "interactive"
@@ -244,6 +246,7 @@ test_that("timeout", {
 })
 
 test_that("queue_status", {
+  skip_on_windows()
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
 
