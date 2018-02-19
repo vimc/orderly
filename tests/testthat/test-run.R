@@ -28,7 +28,8 @@ test_that("run", {
   expect_equal(info$name, basename(path_example))
 
   envir <- orderly_environment(NULL)
-  p <- recipe_run(info, parameters, envir, config = path, echo = FALSE)
+  info <- recipe_prepare(config, "example")
+  p <- recipe_run(info, parameters, envir, config, echo = FALSE)
   expect_true(is_directory(p))
   expect_equal(normalizePath(dirname(dirname(p))),
                normalizePath(path_draft(path)))
@@ -125,14 +126,15 @@ test_that("minimal", {
     recipe_data(config, info, NULL, NULL),
     "Invalid input for 'dest'")
 
-  workdir <- tempfile()
-  dir.create(workdir)
-  expect_error(recipe_prepare_workdir(info, workdir),
+  info$workdir <- tempfile()
+  dir.create(info$workdir)
+  expect_error(recipe_prepare_workdir(info),
                "'workdir' must not exist")
-  unlink(workdir, recursive = TRUE)
+  unlink(info$workdir, recursive = TRUE)
 
   envir <- orderly_environment(NULL)
-  res <- recipe_run(info, NULL, envir, config = config, echo = FALSE)
+  info <- recipe_prepare(config, "example")
+  res <- recipe_run(info, NULL, envir, config, echo = FALSE)
   files <- dir(res)
   expect_true(file.exists(file.path(res, "orderly.yml")))
   expect_true(file.exists(file.path(res, "orderly_run.yml")))
@@ -165,6 +167,7 @@ test_that("fail to create artefact", {
   writeLines("1 + 1", file.path(path, "src/example/script.R"))
   info <- recipe_read(file.path(path, "src/example"), config)
   envir <- orderly_environment(NULL)
+  info <- recipe_prepare(config, "example")
   expect_error(recipe_run(info, NULL, envir, config = config, echo = FALSE),
                "Script did not produce expected artefacts: mygraph.png")
 })
@@ -178,6 +181,7 @@ test_that("leave device open", {
              file.path(path, "src/example/script.R"))
   info <- recipe_read(file.path(path, "src/example"), config)
   envir <- orderly_environment(NULL)
+  info <- recipe_prepare(config, "example")
   expect_error(recipe_run(info, NULL, envir, config = config, echo = FALSE),
                "Report left 1 device open")
 })
@@ -198,6 +202,7 @@ test_that("close too many devices", {
   writeLines(c(txt, "dev.off()"), file.path(path, "src/example/script.R"))
   info <- recipe_read(file.path(path, "src/example"), config)
   envir <- orderly_environment(NULL)
+  info <- recipe_prepare(config, "example")
   expect_error(recipe_run(info, NULL, envir, config = config, echo = FALSE),
                "Report closed 1 more devices than it opened")
 })
@@ -402,6 +407,7 @@ test_that("test mode artefacts", {
 
   path <- prepare_orderly_example("minimal")
   orderly_test_start("example", config = path)
+  on.exit(orderly_test_end(), add = FALSE)
 
   expect_false(orderly_test_check())
 

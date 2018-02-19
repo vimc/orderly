@@ -36,14 +36,10 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   assert_scalar_logical(open)
   envir <- orderly_environment(envir)
   config <- orderly_config_get(config, locate)
-  if (!is.null(ref)) {
-    prev <- git_detach_head_at_ref(ref, config$path)
-    on.exit(git_checkout_branch(prev, TRUE, config$path))
-  }
-  info <- recipe_read(file.path(path_src(config$path), name), config)
-  path <- recipe_run(info, parameters, envir,
-                     config = config, locate = FALSE, echo = echo,
-                     id_file = id_file)
+
+  info <- recipe_prepare(config, name, id_file, ref)
+  path <- recipe_run(info, parameters, envir, config, echo = echo)
+
   ## TODO: I might want to give this as <name>/<id> - not sure?
   ##
   ## The disadvantage of this is that we need to parse these, check
@@ -87,12 +83,14 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
   }
 
   config <- orderly_config_get(config, locate)
-  info <- recipe_read(file.path(path_src(config$path), name), config)
-  prep <- orderly_prepare(config, info, parameters, envir, NULL)
+  ## TODO: support ref here
+  info <- recipe_prepare(config, name, id_file = NULL, ref = NULL)
+  owd <- setwd(info$workdir)
+  prep <- orderly_prepare_data(config, info, parameters, envir)
 
-  cache$test <- list(owd = prep$owd,
+  cache$test <- list(owd = owd,
                      name = name,
-                     id = prep$id,
+                     id = info$id,
                      parameters = parameters,
                      config = config,
                      info = info,
@@ -153,20 +151,46 @@ orderly_test_check <- function() {
   invisible(all(found))
 }
 
-recipe_run <- function(info, parameters, envir,
-                       config = NULL, locate = TRUE, echo = TRUE,
-                       id_file = NULL) {
-  config <- orderly_config_get(config, locate)
+
+recipe_prepare <- function(config, name, id_file = NULL, ref = NULL) {
+  assert_is(config, "orderly_config")
+  config <- orderly_config_get(config, FALSE)
+
+  orderly_log("name", name)
+  if (!is.null(ref)) {
+    prev <- git_detach_head_at_ref(ref, config$path)
+    on.exit(git_checkout_branch(prev, TRUE, config$path))
+  }
+
+  info <- recipe_read(file.path(path_src(config$path), name), config)
+
+  id <- new_report_id()
+  orderly_log("id", id)
+  if (!is.null(id_file)) {
+    orderly_log("id_file", id_file)
+    writelines_atomic(id, id_file)
+  }
+
+  info$id <- id
+  info$workdir <- file.path(path_draft(config$path), info$name, id)
+  info$owd <- recipe_prepare_workdir(info)
+  info$git <- git_info(info$path)
+
+  info
+}
+
+
+recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
+  assert_is(config, "orderly_config")
+
+  owd <- setwd(info$workdir)
+  on.exit(setwd(owd))
 
   ## should these go later?
   con_rds <- orderly_db("rds", config, FALSE)
   con_csv <- orderly_db("csv", config, FALSE)
 
-  prep <- orderly_prepare(config, info, parameters, envir, id_file)
-  ## NOTE: using on.exit here because some of the checking code
-  ## depends on hashing files that are relative to the draft working
-  ## directory.
-  on.exit(setwd(prep$owd))
+  prep <- orderly_prepare_data(config, info, parameters, envir)
 
   orderly_log("start", as.character(Sys.time()))
   source(info$script, local = envir,
@@ -174,7 +198,7 @@ recipe_run <- function(info, parameters, envir,
   orderly_log("end", as.character(Sys.time()))
 
   recipe_check_device_stack(prep$n_dev)
-  hash_artefacts <- recipe_check_artefacts(info, prep$id)
+  hash_artefacts <- recipe_check_artefacts(info)
 
   hash_data_csv <- con_csv$mset(prep$data)
   hash_data_rds <- con_rds$mset(prep$data)
@@ -189,8 +213,9 @@ recipe_run <- function(info, parameters, envir,
   }
 
   session <- session_info()
+  session$git <- info$git
 
-  meta <- list(id = prep$id,
+  meta <- list(id = info$id,
                name = info$name,
                parameters = parameters,
                date = as.character(Sys.time()),
@@ -203,14 +228,15 @@ recipe_run <- function(info, parameters, envir,
                hash_data = as.list(hash_data_rds),
                hash_artefacts = as.list(hash_artefacts),
                depends = depends,
-               git = session$git)
+               git = info$git)
 
   session$meta <- meta
-  saveRDS(session, path_orderly_run_rds("."))
+  saveRDS(session, path_orderly_run_rds(info$workdir))
   writeLines(yaml::as.yaml(meta, column.major = FALSE),
-             path_orderly_run_yml("."))
-  prep$workdir
+             path_orderly_run_yml(info$workdir))
+  info$workdir
 }
+
 
 recipe_substitute <- function(info, parameters) {
   if (!is.null(parameters)) {
@@ -275,14 +301,14 @@ recipe_data <- function(config, info, parameters, dest) {
   dest
 }
 
-recipe_prepare_workdir <- function(info, workdir) {
-  if (file.exists(workdir)) {
+recipe_prepare_workdir <- function(info) {
+  if (file.exists(info$workdir)) {
     stop("'workdir' must not exist")
   }
   src <- normalizePath(info$path, mustWork = TRUE)
-  dir_create(workdir)
-  owd <- setwd(workdir)
-  on.exit(setwd(owd)) # (or use withCallingHandlers to do this on error)
+  dir_create(info$workdir)
+  owd <- setwd(info$workdir)
+  on.exit(setwd(owd))
 
   dir.create(dirname(info$script), FALSE, TRUE)
   file_copy(file.path(src, info$script), info$script)
@@ -302,7 +328,7 @@ recipe_prepare_workdir <- function(info, workdir) {
 
   if (!is.null(info$depends)) {
     src <- file.path(info$depends$path, info$depends$filename)
-    dst <- file.path(workdir, info$depends$as)
+    dst <- file.path(info$workdir, info$depends$as)
     dir_create(dirname(dst))
     str <- sprintf("%s@%s:%s -> %s",
                    info$depends$name,
@@ -313,12 +339,10 @@ recipe_prepare_workdir <- function(info, workdir) {
     file.copy(src, dst)
   }
 
-  on.exit() # did not fail
-
   owd
 }
 
-recipe_check_artefacts <- function(info, id) {
+recipe_check_artefacts <- function(info) {
   found <- recipe_exists_artefacts(info)
   artefacts <- names(found)
   if (!all(found)) {
@@ -398,15 +422,10 @@ orderly_environment <- function(envir, list_ok = FALSE) {
   }
 }
 
-orderly_prepare <- function(config, info, parameters, envir, id_file) {
-  orderly_log("name", info$name)
-  id <- new_report_id()
-  orderly_log("id", id)
-  if (!is.null(id_file)) {
-    orderly_log("id_file", id_file)
-    writelines_atomic(id, id_file)
-  }
 
+## TODO: some big renaming work would be useful here - this one
+## becomes orderly_prepare_data I think
+orderly_prepare_data <- function(config, info, parameters, envir) {
   ## Because the script (including the files in sources) might modify
   ## the data we need to make sure that we grab a copy of it now (as a
   ## list 'ldata') to pass back
@@ -416,25 +435,19 @@ orderly_prepare <- function(config, info, parameters, envir, id_file) {
   ## Compute the device stack size before starting work too
   n_dev <- length(grDevices::dev.list())
 
-  workdir <- file.path(path_draft(config$path), info$name, id)
+  hash_resources <- hash_files(expand_directory_list(info$resources))
+  if (length(hash_resources) > 0L) {
+    orderly_log("resources",
+                sprintf("%s: %s", names(hash_resources), hash_resources))
+  } else {
+    hash_resources <- NULL
+  }
+  for (p in info$packages) {
+    library(p, character.only = TRUE)
+  }
+  for (s in info$sources) {
+    source(s, envir)
+  }
 
-  owd <- recipe_prepare_workdir(info, workdir)
-  withCallingHandlers({
-    hash_resources <- hash_files(expand_directory_list(info$resources))
-    if (length(hash_resources) > 0L) {
-      orderly_log("resources",
-                  sprintf("%s: %s", names(hash_resources), hash_resources))
-    } else {
-      hash_resources <- NULL
-    }
-    for (p in info$packages) {
-      library(p, character.only = TRUE)
-    }
-    for (s in info$sources) {
-      source(s, envir)
-    }
-  }, error = function(e) setwd(owd))
-
-  list(data = ldata, hash_resources = hash_resources,
-       id = id, n_dev = n_dev, owd = owd, workdir = workdir)
+  list(data = ldata, hash_resources = hash_resources, n_dev = n_dev)
 }
