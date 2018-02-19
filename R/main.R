@@ -294,7 +294,7 @@ main_do_deploy_shiny <- function(x) {
   config <- orderly_config_get(x$options$root, TRUE)
   dest <- x$args
   info <- x$options$info %||% formals(orderly_deploy_shiny)$info
-  orderly_deploy_shiny(dest, info, config = config, locate = locate)
+  orderly_deploy_shiny(dest, info, config = config, locate = TRUE)
   invisible(NULL)
 }
 
