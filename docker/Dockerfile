@@ -24,6 +24,12 @@ RUN install.r \
 RUN Rscript -e 'remotes::install_github("rstats-db/RPostgres@v0.1-4")' && \
   Rscript -e 'remove.packages("BH")'
 
+# Install Pandoc
+ENV PANDOC_VERSION "1.19.2.1"
+RUN wget https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-1-amd64.deb \
+  && dpkg --install pandoc-${PANDOC_VERSION}-1-amd64.deb \
+  && rm pandoc-${PANDOC_VERSION}-1-amd64.deb
+
 ARG GIT_ID='UNKNOWN'
 ARG GIT_BRANCH='UNKNOWN'
 ENV ORDERLY_GIT_HASH $GIT_ID
