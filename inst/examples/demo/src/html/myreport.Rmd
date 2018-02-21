@@ -1,0 +1,25 @@
+---
+title: "An example report"
+author: "orderly"
+date: "20 February 2018"
+output: html_document
+---
+
+## Introduction
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+## A graph to demonstrate
+
+```{r}
+par(mar = c(15, 4, .5, .5))
+barplot(setNames(dat$number, dat$name), las = 2)
+```
+
+## Conclusion
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. A cras semper auctor neque vitae tempus quam pellentesque. Sed enim ut sem viverra aliquet eget sit. Et netus et malesuada fames. Tortor at risus viverra adipiscing. Ipsum dolor sit amet consectetur adipiscing elit. Vel orci porta non pulvinar neque laoreet suspendisse. Egestas diam in arcu cursus. Nisi vitae suscipit tellus mauris a. Massa placerat duis ultricies lacus sed turpis tincidunt. Convallis convallis tellus id interdum velit laoreet id donec ultrices. Fusce id velit ut tortor pretium viverra suspendisse potenti nullam. Mi ipsum faucibus vitae aliquet. Lorem ipsum dolor sit amet consectetur adipiscing elit pellentesque. Fusce id velit ut tortor pretium viverra suspendisse. Nec feugiat in fermentum posuere urna nec. Porttitor lacus luctus accumsan tortor posuere ac ut. Ut tortor pretium viverra suspendisse potenti. Orci ac auctor augue mauris augue neque gravida in fermentum. Ac placerat vestibulum lectus mauris ultrices eros in cursus.
+
+Aliquet porttitor lacus luctus accumsan tortor posuere. Quis eleifend quam adipiscing vitae proin sagittis. Dui faucibus in ornare quam viverra. Egestas congue quisque egestas diam in arcu cursus. Malesuada proin libero nunc consequat interdum varius. A iaculis at erat pellentesque adipiscing commodo elit at imperdiet. Nunc faucibus a pellentesque sit. Aliquet porttitor lacus luctus accumsan tortor posuere ac ut consequat. Sit amet dictum sit amet justo donec enim. Molestie a iaculis at erat pellentesque adipiscing commodo elit at. Amet nisl purus in mollis nunc sed id semper risus.
+
+Adipiscing tristique risus nec feugiat in fermentum posuere urna nec. Mollis aliquam ut porttitor leo a diam sollicitudin. Aliquam malesuada bibendum arcu vitae. Arcu ac tortor dignissim convallis aenean et tortor. Semper feugiat nibh sed pulvinar. Pellentesque sit amet porttitor eget dolor morbi non arcu. Neque volutpat ac tincidunt vitae semper quis lectus. Mauris pellentesque pulvinar pellentesque habitant morbi. Tincidunt ornare massa eget egestas purus viverra. Amet venenatis urna cursus eget nunc scelerisque. In fermentum et sollicitudin ac. Laoreet sit amet cursus sit amet dictum sit amet. Mauris rhoncus aenean vel elit scelerisque mauris pellentesque. Velit ut tortor pretium viverra suspendisse. Urna neque viverra justo nec ultrices dui. Ac auctor augue mauris augue neque gravida in fermentum et. Scelerisque purus semper eget duis at tellus at urna.

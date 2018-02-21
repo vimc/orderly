@@ -57,3 +57,5 @@
   publish: true
 
 - name: shiny
+
+- name: html
