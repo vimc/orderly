@@ -59,3 +59,4 @@
 - name: shiny
 
 - name: html
+  publish: true
