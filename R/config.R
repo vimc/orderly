@@ -36,10 +36,10 @@ orderly_config_read_yaml <- function(filename, path) {
   info$destination <- driver_config("destination")
 
   v <- info$minimum_orderly_version
-  if (!is.null(v) && packageVersion("orderly") < v) {
+  if (!is.null(v) && utils::packageVersion("orderly") < v) {
     stop(sprintf(
       "Orderly version '%s' is required, but only '%s' installed",
-      v, packageVersion("orderly")))
+      v, utils::packageVersion("orderly")))
   }
 
   info$path <- normalizePath(path, mustWork = TRUE)
