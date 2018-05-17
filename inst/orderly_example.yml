@@ -39,15 +39,15 @@ script: ~
 # filename as either a single file or an array of files
 #
 #     artefacts:
-#       staticgraph:
-#         description: A graph of things
-#         filenames: mygraph.png
-#       report:
-#         description: A complex report
-#         filenames:
-#           - report.html
-#           - figures/fig1.png
-#           - figures/fig2.png
+#       - staticgraph:
+#           description: A graph of things
+#           filenames: mygraph.png
+#       - report:
+#           description: A complex report
+#           filenames:
+#             - report.html
+#             - figures/fig1.png
+#             - figures/fig2.png
 artefacts: ~
 
 # An optional name to describe the report in more detail than its
@@ -114,7 +114,17 @@ artefacts: ~
 #     depends:
 #       other_report_name:
 #         id: (identifier, possibly "latest")
-#         use: (character vector of filenames in the report)
+#         use: (mapping of filenames in the format dest: from)
 #         draft: (true, if you want to use a draft report)
+
+# For example, to depend on the latest version of report
+# 'other-report', pulling in 'data.csv' as 'other-data.csv' you might
+# use:
+#
+#     depends:
+#       other-report:
+#         id: latest
+#         use:
+#           other-data.csv: data.csv
 #
 # depends:
