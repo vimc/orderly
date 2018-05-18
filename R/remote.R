@@ -1,12 +1,10 @@
-## Communication with the API.  This is almost impossible to test
-## without a working copy of the montagu reporting api.  I guess the
-## simplest solution will be to have a copy running on support that we
-## can point this at.
-
-##' Download dependent reports from Montagu.  This requires the
-##' montagu package and for montagu's credentials to be correctly set
-##' up.  The \code{pull_archive} function pulls report directly
-##' (without it being a dependent report).
+##' Download dependent reports (WARNING: this is still in transition
+##' and the docs may not be entirely accurate)
+##'
+##' If \code{remote} is a \code{montagu_server} object then this
+##' requires the montagu package and for montagu's credentials to be
+##' correctly set up.  The \code{pull_archive} function pulls report
+##' directly (without it being a dependent report).
 ##'
 ##' To use this functionality you will need to have \code{montagu}
 ##' installed, and be part of the VIMC team.  To set it up run
@@ -26,17 +24,15 @@
 ##'
 ##' @title Download dependent reports
 ##' @param name Name of the report to download dependencies for
-##' @param server Name of the server to use (\code{production},
-##'   \code{science}, \code{uat}).
+##'
+##' @param remote Description of the location.  This must be an
+##'   \code{orderly_remote} object.
+##'
 ##' @inheritParams orderly_list
 ##' @export
 pull_dependencies <- function(name, config = NULL, locate = TRUE,
-                              server = NULL) {
+                              remote = NULL) {
   config <- orderly_config_get(config, locate)
-
-  ## This is going to require use of montagu's API.  Later this will
-  ## get split into bits that are more orderly specific.
-  loadNamespace("montagu")
 
   ## For now, we need to assume that this is valid formatted orderly
   ## yaml, until I resolve VIMC-506 I have to read everything
@@ -51,10 +47,11 @@ pull_dependencies <- function(name, config = NULL, locate = TRUE,
   depends <- info$depends
   for (i in seq_along(depends)) {
     if (!isTRUE(depends[[i]]$draft)) {
-      pull_report(names(depends)[[i]], depends[[i]]$id, config, server)
+      pull_report(names(depends)[[i]], depends[[i]]$id, config, remote)
     }
   }
 }
+
 
 ##' @export
 ##' @rdname pull_dependencies
@@ -62,38 +59,19 @@ pull_dependencies <- function(name, config = NULL, locate = TRUE,
 ##' @param id The identifier (for \code{pull_archive}.  The default is
 ##'   to pull the latest report.
 pull_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
-                         server = NULL) {
+                         remote = NULL) {
   config <- orderly_config_get(config, locate)
-  pull_report(name, id, config, server)
-}
 
-pull_report <- function(name, id, config, server) {
-  assert_is(config, "orderly_config")
-  if (id == "latest") {
-    ## Resolve id
-    v <- montagu::montagu_reports_report_versions(name, server)
-    ## TODO: more work needed here if we have two identical timestamps!
-    id <- last(v)
-  }
-  dest <- file.path(path_archive(config$path), name, id)
-  if (file.exists(dest)) {
-    orderly_log("pull", sprintf("%s:%s already exists, skipping", name, id))
+  remote <- get_remote(remote)
+  if (inherits(remote, "orderly_api_server")) {
+    pull_archive_api(name, id, config, remote)
+  } else if (inherits(remote, "orderly_remote_path")) {
+    pull_archive_path(name, id, config, remote)
   } else {
-    orderly_log("pull", sprintf("%s:%s", name, id))
-    tmp <- montagu::montagu_reports_report_download(name, id,
-                                                    location = server)
-    cat("\n") # httr's progress bar is rubbish
-    on.exit(file.remove(tmp))
-    tmp2 <- tempfile()
-    code <- utils::unzip(tmp, exdir = tmp2)
-    on.exit(unlink(tmp2, recursive = TRUE), add = TRUE)
-
-    ## R's file.copy is exceedingly rubbish
-    dir.create(dirname(dest), FALSE, TRUE)
-    file.copy(file.path(tmp2, basename(dest)),
-              dirname(dest), recursive = TRUE)
+    stop("Unknown remote type ", paste(squote(class(remote)), collapse = " / "))
   }
 }
+
 
 ##' Run a report on a remote server (for now this means montagu).  Be
 ##' careful doing this because once a report is run to completion on
@@ -123,22 +101,23 @@ pull_report <- function(name, id, config, server) {
 ##' @param ref Optional reference, indicating which branch should be
 ##'   used.  This cannot be used on production.
 ##'
-##' @param server Name of the montagu server to use.  Optionas are
-##'   \code{production}, \code{science} and \code{uat}.
+##' @inheritParams pull_dependencies
 ##'
 ##' @export
 orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
                                timeout = 3600, poll = 1,
                                open = TRUE, stop_on_error = TRUE,
-                               progress = TRUE, server = NULL) {
-  loadNamespace("montagu")
-  if (server == "production" && !is.null(ref)) {
-    stop("Can't specify 'ref' on production")
+                               progress = TRUE, remote = NULL) {
+  remote <- get_remote()
+  if (inherits(remote, "orderly_api_server")) {
+    orderly_run_remote_api(name = name, parameters = parameters, ref = ref,
+                           timeout = timeout, poll = poll, open = open,
+                           stop_on_error = stop_on_error,
+                           progress = progress, remote = remote)
+  } else if (inherits(remote, "orderly_remote_path")) {
+    stop("Can't run reports with remote type ",
+         paste(squote(class(remote)), collapse = " / "))
   }
-  montagu::montagu_reports_run(name, parameters = parameters, ref = ref,
-                               timeout = timeout, poll = poll,
-                               open = open, stop_on_error = stop_on_error,
-                               progress = progress, location = server)
 }
 
 ##' Publish a report on a remote server
@@ -156,9 +135,52 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
 ##' @inheritParams orderly_run_remote
 ##' @export
 orderly_publish_remote <- function(name, id, value = TRUE, server = NULL) {
+  remote <- get_remote()
+  if (inherits(remote, "orderly_api_server")) {
+    orderly_publish_remote_api(name = name, id = id, value = value,
+                               remote = remote)
+  } else if (inherits(remote, "orderly_remote_path")) {
+    ## This one can actually be done over disk too
+    stop("Can't publish reports with remote type ",
+         paste(squote(class(remote)), collapse = " / "))
+  }
+
+  ## This one can actually be done over disk too
   loadNamespace("montagu")
   assert_scalar_character(name)
   assert_scalar_character(id)
   assert_scalar_logical(value)
   montagu::montagu_reports_publish(name, id, value, server)
+}
+
+
+##' Set and get default remote locations
+##'
+##' @title Set default remote location
+##' @param value An \code{orderly_remote_location} object.
+##' @export
+##' @rdname default_remote
+set_default_remote <- function(value) {
+  if (!is.null(value)) {
+    assert_is(value, "orderly_remote_location")
+  }
+  cache$default_remote <- value
+}
+
+
+##' @rdname default_remote
+get_default_remote <- function() {
+  if (!is.null(cache$default_remote)) {
+    return(cache$default_remote)
+  }
+  default_remote_path <- Sys.getenv("ORDERLY_DEFAULT_REMOTE_PATH", NA_character_)
+  if (!is.na(default_remote_path)) {
+    return(orderly_remote_path(default_remote_path))
+  }
+  stop("default remote has not been set yet: use 'orderly::set_default_remote'")
+}
+
+
+get_remote <- function(remote) {
+  remote %||% get_default_remote()
 }
