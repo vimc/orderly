@@ -47,7 +47,7 @@ pull_dependencies <- function(name, config = NULL, locate = TRUE,
   depends <- info$depends
   for (i in seq_along(depends)) {
     if (!isTRUE(depends[[i]]$draft)) {
-      pull_report(names(depends)[[i]], depends[[i]]$id, config, remote)
+      pull_archive(names(depends)[[i]], depends[[i]]$id, config, remote)
     }
   }
 }
@@ -134,7 +134,7 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
 ##'
 ##' @inheritParams orderly_run_remote
 ##' @export
-orderly_publish_remote <- function(name, id, value = TRUE, server = NULL) {
+orderly_publish_remote <- function(name, id, value = TRUE, remote = NULL) {
   remote <- get_remote()
   if (inherits(remote, "orderly_api_server")) {
     orderly_publish_remote_api(name = name, id = id, value = value,
@@ -144,13 +144,6 @@ orderly_publish_remote <- function(name, id, value = TRUE, server = NULL) {
     stop("Can't publish reports with remote type ",
          paste(squote(class(remote)), collapse = " / "))
   }
-
-  ## This one can actually be done over disk too
-  loadNamespace("montagu")
-  assert_scalar_character(name)
-  assert_scalar_character(id)
-  assert_scalar_logical(value)
-  montagu::montagu_reports_publish(name, id, value, server)
 }
 
 

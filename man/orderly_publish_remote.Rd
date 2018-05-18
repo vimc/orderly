@@ -4,7 +4,7 @@
 \alias{orderly_publish_remote}
 \title{Publish orderly report on remote server}
 \usage{
-orderly_publish_remote(name, id, value = TRUE, server = NULL)
+orderly_publish_remote(name, id, value = TRUE, remote = NULL)
 }
 \arguments{
 \item{name}{Name of the report (unlike
@@ -14,6 +14,9 @@ orderly_publish_remote(name, id, value = TRUE, server = NULL)
 
 \item{value}{As \code{\link{orderly_publish}}, \code{TRUE} or
 \code{FALSE} to publish or unpublish a report (respectively)}
+
+\item{remote}{Description of the location.  This must be an
+\code{orderly_remote} object.}
 }
 \description{
 Publish a report on a remote server
