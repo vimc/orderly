@@ -24,11 +24,13 @@ test_that("run", {
   ## what the run/commit workflow should look like (especially when
   ## developing a draft analysis)
   config <- orderly_config(path)
+
   info <- recipe_read(file.path(path, "src", "example"), config)
   expect_equal(info$name, basename(path_example))
 
   envir <- orderly_environment(NULL)
-  p <- recipe_run(info, parameters, envir, config = path, echo = FALSE)
+  p <- recipe_run(info, parameters, envir, config = path, echo = FALSE,
+                  message = "example message")
   expect_true(is_directory(p))
   expect_equal(normalizePath(dirname(dirname(p))),
                normalizePath(path_draft(path)))
@@ -53,13 +55,14 @@ test_that("run", {
   expect_is(d$session_info, "sessionInfo")
   expect_is(d$time, "POSIXt")
   expect_is(d$env, "list")
-
+  
   expect_identical(readBin(file.path(p, "mygraph.png"), raw(), 8),
                    MAGIC_PNG)
 
   run <- yaml_read(file.path(p, "orderly_run.yml"))
   expect_equal(run$id, basename(p))
   expect_equal(run$name, info$name)
+  expect_equal(run$message, "example message")
   expect_identical(unname(unlist(run$hash_artefacts, use.names = FALSE)),
                    hash_files(file.path(p, "mygraph.png"), FALSE))
   expect_identical(run$hash_resources, list())
@@ -407,6 +410,27 @@ test_that("test mode artefacts", {
 
   writeLines(character(0), "mygraph.png")
   expect_true(orderly_test_check())
+})
+
+test_that("run with message", {
+  path <- prepare_orderly_example("example")
+  test_message <- "test"
+  id <- orderly_run("example", list(cyl = 4), config = path, echo = FALSE,
+                    message = test_message)
+  p <- orderly_commit(id, config = path)
+  run <- yaml_read(file.path(p, "orderly_run.yml"))
+  expect_equal(run$message, test_message)
+  
+  # test with bad messages
+  test_message <- c("bad", "message")
+  expect_error(orderly_run("example", list(cyl = 4), config = path,
+               echo = FALSE,  message = test_message),
+               "'message' must be a scalar")
+               
+  test_message <- 123.456
+  expect_error(orderly_run("example", list(cyl = 4), config = path,
+               echo = FALSE,  message = test_message),
+               "'message' must be character")
 })
 
 test_that("shiny app", {
