@@ -25,7 +25,7 @@
 ##'   an environment).
 ##' @param ref A git reference to use for this run (see Details)
 ##' @param open Open the directory after running?
-##' @param message An optional message explaining why the model was
+##' @param message An optional message explaining why the report was
 ##'   run
 ##'
 ##' @inheritParams orderly_list

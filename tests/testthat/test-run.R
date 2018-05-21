@@ -29,8 +29,8 @@ test_that("run", {
   expect_equal(info$name, basename(path_example))
 
   envir <- orderly_environment(NULL)
-  p <- recipe_run(info, parameters, envir, config = path, echo = FALSE,
-                  message = "example message")
+  p <- recipe_run(info, parameters, envir, config = path, echo = FALSE)
+
   expect_true(is_directory(p))
   expect_equal(normalizePath(dirname(dirname(p))),
                normalizePath(path_draft(path)))
@@ -55,14 +55,14 @@ test_that("run", {
   expect_is(d$session_info, "sessionInfo")
   expect_is(d$time, "POSIXt")
   expect_is(d$env, "list")
-  
+
   expect_identical(readBin(file.path(p, "mygraph.png"), raw(), 8),
                    MAGIC_PNG)
 
   run <- yaml_read(file.path(p, "orderly_run.yml"))
   expect_equal(run$id, basename(p))
   expect_equal(run$name, info$name)
-  expect_equal(run$message, "example message")
+  expect_null(run$message)
   expect_identical(unname(unlist(run$hash_artefacts, use.names = FALSE)),
                    hash_files(file.path(p, "mygraph.png"), FALSE))
   expect_identical(run$hash_resources, list())

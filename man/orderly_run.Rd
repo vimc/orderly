@@ -40,7 +40,7 @@ parents until it finds an \code{orderly_config.yml} file.}
 
 \item{open}{Open the directory after running?}
 
-\item{message}{An optional message explaining why the model was
+\item{message}{An optional message explaining why the report was
 run}
 }
 \description{
