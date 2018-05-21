@@ -25,6 +25,8 @@
 ##'   an environment).
 ##' @param ref A git reference to use for this run (see Details)
 ##' @param open Open the directory after running?
+##' @param message An optional message explaining why the report was
+##'   run
 ##'
 ##' @inheritParams orderly_list
 ##' @param echo Print the result of running the R code to the console
@@ -32,7 +34,8 @@
 ##' @export
 orderly_run <- function(name, parameters = NULL, envir = NULL,
                         config = NULL, locate = TRUE, echo = TRUE,
-                        id_file = NULL, ref = NULL, open = FALSE) {
+                        id_file = NULL, ref = NULL, open = FALSE,
+                        message = NULL) {
   assert_scalar_logical(open)
   envir <- orderly_environment(envir)
   config <- orderly_config_get(config, locate)
@@ -43,7 +46,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   info <- recipe_read(file.path(path_src(config$path), name), config)
   path <- recipe_run(info, parameters, envir,
                      config = config, locate = FALSE, echo = echo,
-                     id_file = id_file)
+                     id_file = id_file, message = message)
   ## TODO: I might want to give this as <name>/<id> - not sure?
   ##
   ## The disadvantage of this is that we need to parse these, check
@@ -155,8 +158,12 @@ orderly_test_check <- function() {
 
 recipe_run <- function(info, parameters, envir,
                        config = NULL, locate = TRUE, echo = TRUE,
-                       id_file = NULL) {
+                       id_file = NULL, message = NULL) {
   config <- orderly_config_get(config, locate)
+  
+  if (!is.null(message)) {
+    assert_scalar_character(message)
+  }
 
   ## should these go later?
   con_rds <- orderly_db("rds", config, FALSE)
@@ -194,6 +201,7 @@ recipe_run <- function(info, parameters, envir,
                name = info$name,
                parameters = parameters,
                date = as.character(Sys.time()),
+               message = message,
                ## Don't know what of these two are most useful:
                hash_orderly = info$hash,
                hash_input = hash_files("orderly.yml", FALSE),

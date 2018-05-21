@@ -60,6 +60,7 @@ test_that("run", {
   run <- yaml_read(file.path(p, "orderly_run.yml"))
   expect_equal(run$id, basename(p))
   expect_equal(run$name, info$name)
+  expect_null(run$message)
   expect_identical(unname(unlist(run$hash_artefacts, use.names = FALSE)),
                    hash_files(file.path(p, "mygraph.png"), FALSE))
   expect_identical(run$hash_resources, list())
@@ -407,6 +408,27 @@ test_that("test mode artefacts", {
 
   writeLines(character(0), "mygraph.png")
   expect_true(orderly_test_check())
+})
+
+test_that("run with message", {
+  path <- prepare_orderly_example("example")
+  test_message <- "test"
+  id <- orderly_run("example", list(cyl = 4), config = path, echo = FALSE,
+                    message = test_message)
+  p <- orderly_commit(id, config = path)
+  run <- yaml_read(file.path(p, "orderly_run.yml"))
+  expect_equal(run$message, test_message)
+  
+  # test with bad messages
+  test_message <- c("bad", "message")
+  expect_error(orderly_run("example", list(cyl = 4), config = path,
+               echo = FALSE,  message = test_message),
+               "'message' must be a scalar")
+               
+  test_message <- 123.456
+  expect_error(orderly_run("example", list(cyl = 4), config = path,
+               echo = FALSE,  message = test_message),
+               "'message' must be character")
 })
 
 test_that("shiny app", {

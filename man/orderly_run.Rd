@@ -7,7 +7,7 @@
 \usage{
 orderly_run(name, parameters = NULL, envir = NULL, config = NULL,
   locate = TRUE, echo = TRUE, id_file = NULL, ref = NULL,
-  open = FALSE)
+  open = FALSE, message = NULL)
 
 orderly_data(name, parameters = NULL, envir = list(), config = NULL,
   locate = TRUE)
@@ -39,6 +39,9 @@ parents until it finds an \code{orderly_config.yml} file.}
 \item{ref}{A git reference to use for this run (see Details)}
 
 \item{open}{Open the directory after running?}
+
+\item{message}{An optional message explaining why the report was
+run}
 }
 \description{
 Run a report.  The \code{orderly_data} function is for testing the
