@@ -24,13 +24,11 @@ test_that("run", {
   ## what the run/commit workflow should look like (especially when
   ## developing a draft analysis)
   config <- orderly_config(path)
-
   info <- recipe_read(file.path(path, "src", "example"), config)
   expect_equal(info$name, basename(path_example))
 
   envir <- orderly_environment(NULL)
   p <- recipe_run(info, parameters, envir, config = path, echo = FALSE)
-
   expect_true(is_directory(p))
   expect_equal(normalizePath(dirname(dirname(p))),
                normalizePath(path_draft(path)))
