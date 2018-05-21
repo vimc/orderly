@@ -19,3 +19,11 @@ A research group with a potentially changing SQL database who want to create rep
 * Run an R script against the exported tables, producing one or more report artefacts
 * Save a set of metadata
 * Archive the exported data set
+
+## Installation
+
+```r
+# install.packages("drat")
+drat:::add("vimc")
+install.packages("orderly")
+```

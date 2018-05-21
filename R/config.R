@@ -10,7 +10,8 @@ orderly_config <- function(path) {
 
 orderly_config_read_yaml <- function(filename, path) {
   info <- yaml_read(filename)
-  check_fields(info, filename, "source", c("destination", "fields"))
+  check_fields(info, filename, "source",
+               c("destination", "fields", "minimum_orderly_version"))
 
   ## There's heaps of really boring validation to do here that I am
   ## going to skip.  The drama that we will have is that there are
@@ -33,6 +34,13 @@ orderly_config_read_yaml <- function(filename, path) {
   info$fields <- config_check_fields(info$fields, filename)
   info$source <- driver_config("source")
   info$destination <- driver_config("destination")
+
+  v <- info$minimum_orderly_version
+  if (!is.null(v) && utils::packageVersion("orderly") < v) {
+    stop(sprintf(
+      "Orderly version '%s' is required, but only '%s' installed",
+      v, utils::packageVersion("orderly")))
+  }
 
   info$path <- normalizePath(path, mustWork = TRUE)
   class(info) <- "orderly_config"

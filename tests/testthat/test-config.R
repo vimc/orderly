@@ -66,3 +66,30 @@ test_that("get: default", {
   cfg2 <- with_wd(path, orderly_default_config(TRUE))
   expect_identical(cfg2$path, normalizePath(path))
 })
+
+
+test_that("minimum orderly version is enforced", {
+  path <- tempfile()
+  dir.create(path)
+
+  dat <- list(source = list(driver = "RSQLite::SQLite"),
+              minimum_orderly_version = "9.9.9")
+  writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
+
+  expect_error(orderly_config(path),
+               "Orderly version '9.9.9' is required, but only",
+               fixed = TRUE)
+})
+
+
+test_that("minimum version is a less than relationship", {
+  path <- tempfile()
+  dir.create(path)
+
+  dat <- list(source = list(driver = "RSQLite::SQLite"),
+              minimum_orderly_version = as.character(packageVersion("orderly")))
+  writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
+  cfg <- orderly_config(path)
+  expect_is(cfg, "orderly_config")
+  expect_equal(cfg$minimum_orderly_version, dat$minimum_orderly_version)
+})
