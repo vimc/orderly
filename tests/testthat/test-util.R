@@ -64,17 +64,18 @@ test_that("secrets", {
             password = "VAULT:/secret/users/alice:password")
   vaultr::vault_clear_token_cache()
   withr::with_envvar(c(VAULTR_AUTH_METHOD = NA_character_), {
-    expect_error(resolve_secrets(x), "Have not authenticated against vault")
+    expect_error(resolve_secrets(x, NULL),
+                 "Have not authenticated against vault")
   })
   withr::with_envvar(c(VAULTR_AUTH_METHOD = "token", VAULT_TOKEN = NA), {
-    expect_error(resolve_secrets(x), "token not found")
+    expect_error(resolve_secrets(x, NULL), "token not found")
   })
   withr::with_envvar(c(VAULTR_AUTH_METHOD = "token", VAULT_TOKEN = "fake"), {
-    expect_error(resolve_secrets(x), "Token verification failed with code")
+    expect_error(resolve_secrets(x, NULL), "Token verification failed with code")
   })
-  expect_equal(resolve_secrets(x),
+  expect_equal(resolve_secrets(x, NULL),
                list(name = "alice", password = "ALICE"))
-  expect_equal(resolve_secrets(unlist(x)),
+  expect_equal(resolve_secrets(unlist(x), NULL),
                list(name = "alice", password = "ALICE"))
 })
 
@@ -90,7 +91,7 @@ test_that("resolve secret env", {
   vars <- c("ORDERLY_PASSWORD"="VAULT:/secret/users/alice:password",
             "ORDERLY_USER"="alice")
 
-  res <- withr::with_envvar(vars, resolve_driver_config(x))
+  res <- withr::with_envvar(vars, resolve_driver_config(x, NULL))
   expect_equal(res,
                list(user = "alice", password = "ALICE", other = "string"))
 })
