@@ -7,7 +7,7 @@
 \usage{
 set_default_remote(value)
 
-get_default_remote()
+get_default_remote(config)
 }
 \arguments{
 \item{value}{An \code{orderly_remote_location} object.}
