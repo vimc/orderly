@@ -11,7 +11,8 @@ orderly_config <- function(path) {
 orderly_config_read_yaml <- function(filename, path) {
   info <- yaml_read(filename)
   check_fields(info, filename, "source",
-               c("destination", "fields", "minimum_orderly_version"))
+               c("destination", "fields", "minimum_orderly_version",
+                 "api_server"))
 
   ## There's heaps of really boring validation to do here that I am
   ## going to skip.  The drama that we will have is that there are
@@ -40,6 +41,11 @@ orderly_config_read_yaml <- function(filename, path) {
     stop(sprintf(
       "Orderly version '%s' is required, but only '%s' installed",
       v, utils::packageVersion("orderly")))
+  }
+
+  api_server <- info$api_server
+  if (!is.null(api_server)) {
+    info$api_server <- config_check_api_server(api_server, filename)
   }
 
   info$path <- normalizePath(path, mustWork = TRUE)
@@ -79,6 +85,39 @@ config_check_fields <- function(x, filename) {
              type_sql = vcapply(dat, "[[", "type_sql"),
              description = vcapply(dat, "[[", "description"),
              stringsAsFactors = FALSE)
+}
+
+config_check_api_server <- function(dat, filename) {
+  if (is.null(dat)) {
+    return(NULL)
+  }
+
+  assert_named(dat, unique = TRUE)
+
+  check1 <- function(key) {
+    check_fields(dat[[key]],
+                 sprintf("%s:api_server:%s", filename, key),
+                 c("host", "port", "basic"),
+                 c("username", "password"))
+    check_field <- function(nm, required, fn) {
+      x <- dat[[key]][[nm]]
+      if (required || !is.null(x)) {
+        fn(x, sprintf("%s:api_server:key:%s", filename, key, nm))
+      }
+    }
+
+    check_field("basic", TRUE, assert_scalar_logical)
+    ## check_field("port", TRUE, assert_scalar_integer)
+    check_field("host", TRUE, assert_scalar_character)
+    check_field("username", FALSE, assert_scalar_character)
+    check_field("password", FALSE, assert_scalar_character)
+  }
+
+  for (k in names(dat)) {
+    check1(k)
+  }
+
+  dat
 }
 
 sql_type <- function(type, name) {
