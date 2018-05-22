@@ -12,7 +12,7 @@ orderly_config_read_yaml <- function(filename, path) {
   info <- yaml_read(filename)
   check_fields(info, filename, "source",
                c("destination", "fields", "minimum_orderly_version",
-                 "api_server"))
+                 "api_server", "vault_server"))
 
   ## There's heaps of really boring validation to do here that I am
   ## going to skip.  The drama that we will have is that there are
@@ -41,6 +41,11 @@ orderly_config_read_yaml <- function(filename, path) {
     stop(sprintf(
       "Orderly version '%s' is required, but only '%s' installed",
       v, utils::packageVersion("orderly")))
+  }
+
+  if (!is.null(info$vault_server)) {
+    assert_scalar_character(info$vault_server,
+                            sprintf("%s:vault_server", filename))
   }
 
   api_server <- info$api_server
