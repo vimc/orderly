@@ -3,9 +3,9 @@ context("remote")
 
 test_that("defaults: null", {
   expect_null(set_default_remote(NULL))
-  expect_error(get_default_remote(),
+  expect_error(get_default_remote(NULL),
                "default remote has not been set yet")
-  expect_error(get_remote(NULL),
+  expect_error(get_remote(NULL, NULL),
                "default remote has not been set yet")
 })
 
@@ -16,7 +16,7 @@ test_that("defaults: envvar", {
   writeLines("", path_orderly_config_yml(tmp))
   withr::with_envvar(
     c("ORDERLY_DEFAULT_REMOTE_PATH" = tmp),
-    expect_equal(get_default_remote(),
+    expect_equal(get_default_remote(NULL),
                  orderly_remote_path(tmp)))
 })
 
