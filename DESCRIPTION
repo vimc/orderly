@@ -19,7 +19,7 @@ Imports:
     yaml
 Suggests:
     knitr,
-    montagu (>= 0.1.7),
+    montagu (>= 0.1.8),
     png,
     processx,
     rmarkdown,

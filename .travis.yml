@@ -10,8 +10,8 @@ after_success:
   - Rscript -e 'covr::codecov()'
 r_github_packages:
   - ropensci/cyphr
-  - vimc/montagu-r
-  - vimc/vaultr@i600
+  - vimc/montagu-r@i1772
+  - vimc/vaultr
 env:
   global:
     - VAULTR_TEST_SERVER_INSTALL=true
