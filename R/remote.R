@@ -167,10 +167,12 @@ set_default_remote <- function(value) {
 
 
 ##' @rdname default_remote
-get_default_remote <- function(config) {
+##' @inheritParams orderly_list
+get_default_remote <- function(config = NULL, locate = TRUE) {
   if (!is.null(cache$default_remote)) {
     return(cache$default_remote)
   }
+  config <- orderly_config_get(config, locate)
   if (length(config$api_server) > 0L) {
     return(names(config$api_server)[[1]])
   }
