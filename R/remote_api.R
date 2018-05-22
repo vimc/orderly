@@ -38,10 +38,11 @@ pull_archive_api <- function(name, id, config, remote) {
 }
 
 
-orderly_run_remote_api <- function(name, parameters = NULL, ref = NULL,
+orderly_run_remote_api <- function(name, config, parameters = NULL, ref = NULL,
                                    timeout = 3600, poll = 1,
                                    open = TRUE, stop_on_error = TRUE,
                                    progress = TRUE, remote = NULL) {
+  assert_is(config, "orderly_config")
   loadNamespace("montagu")
   remote <- orderly_remote_api_server(config, remote)
 
@@ -55,7 +56,9 @@ orderly_run_remote_api <- function(name, parameters = NULL, ref = NULL,
 }
 
 
-orderly_publish_remote_api <- function(name, id, value = TRUE, remote = NULL) {
+orderly_publish_remote_api <- function(name, id, config, value = TRUE,
+                                       remote = NULL) {
+  assert_is(config, "orderly_config")
   ## This one can actually be done over disk too
   loadNamespace("montagu")
   remote <- orderly_remote_api_server(config, remote)
