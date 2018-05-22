@@ -128,7 +128,7 @@ config_check_api_server <- function(dat, filename) {
     server
   }
 
-  lapply(names(dat), check1)
+  set_names(lapply(names(dat), check1), names(dat))
 }
 
 sql_type <- function(type, name) {
