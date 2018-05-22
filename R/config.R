@@ -95,29 +95,34 @@ config_check_api_server <- function(dat, filename) {
   assert_named(dat, unique = TRUE)
 
   check1 <- function(key) {
-    check_fields(dat[[key]],
+    server <- dat[[key]]
+    check_fields(server,
                  sprintf("%s:api_server:%s", filename, key),
                  c("host", "port", "basic"),
                  c("username", "password"))
     check_field <- function(nm, required, fn) {
-      x <- dat[[key]][[nm]]
+      x <- server[[nm]]
       if (required || !is.null(x)) {
         fn(x, sprintf("%s:api_server:key:%s", filename, key, nm))
       }
     }
+
+    server <- resolve_env(server)
 
     check_field("basic", TRUE, assert_scalar_logical)
     ## check_field("port", TRUE, assert_scalar_integer)
     check_field("host", TRUE, assert_scalar_character)
     check_field("username", FALSE, assert_scalar_character)
     check_field("password", FALSE, assert_scalar_character)
+
+    if (requireNamespace("montagu", quietly = TRUE)) {
+      montagu::montagu_add_location(nm, x$hostname, x$port, x$basic)
+    }
+
+    server
   }
 
-  for (k in names(dat)) {
-    check1(k)
-  }
-
-  dat
+  lapply(dat, check1)
 }
 
 sql_type <- function(type, name) {
