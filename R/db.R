@@ -30,7 +30,7 @@ orderly_db_args <- function(type, config) {
 
   args <- withr::with_envvar(
     orderly_envir_read(config$path),
-    args <- resolve_driver_config(x$args))
+    args <- resolve_driver_config(x$args), config$vault_server)
 
   if (x$driver[[2]] == "SQLite") {
     dbname <- args$dbname
