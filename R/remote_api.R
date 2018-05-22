@@ -74,19 +74,15 @@ orderly_remote_api_server <- function(config, remote) {
   }
 
   ## This is the server that we're going to go for
-  remote <- monagu::montagu_location(remote %||% names(api_server)[[1L]])
+  remote <- montagu::montagu_location(remote %||% names(api_server)[[1L]])
 
   ## Look up the secrets in the vault
   server_data <- resolve_secrets(api_server[[remote]], config$vault_server)
 
   ## Then set the username/password varibles so that they can be found
   ## easily:
-  for (nm in c("username", "password")) {
-    key <- sprintf("montagu.%s.%s", remote, nm)
-    if (!is.null(server_data[[nm]]) && is.null(getOption(key))) {
-      do.call("options", set_names(server_data[nm], key))
-    }
-  }
+  type <- c("username", "password")
+  options(set_names(server_data[type], sprintf("montagu.%s.%s", remote, type)))
 
   remote
 }
