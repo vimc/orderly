@@ -112,7 +112,19 @@ config_check_api_server <- function(dat, filename) {
       }
     }
 
-    server <- resolve_env(server)
+    ## NOTE: it would be ideal here to check that the variables are
+    ## all set up, but this seems somewhat restrictive.  So we just
+    ## send a message indicating that this has failed.
+    server <- tryCatch(
+      resolve_env(server),
+      error = function(e) {
+        message(sprintf("Failed to resolve api_server '%s':\n\t%s",
+                        name, e$message))
+        message(
+          "\tContacting this server will fail (e.g., fetching dependencies)")
+        message("\tbut otherwise orderly will work, so continuing")
+        server
+      })
 
     check_field("basic", TRUE, assert_scalar_logical)
     ## check_field("port", TRUE, assert_scalar_integer)
