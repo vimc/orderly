@@ -10,7 +10,7 @@ after_success:
   - Rscript -e 'covr::codecov()'
 r_github_packages:
   - ropensci/cyphr
-  - vimc/montagu-r
+  - vimc/montagu-r@i1786
   - vimc/vaultr
 env:
   global:
