@@ -252,10 +252,14 @@ append_text <- function(filename, txt) {
   writeLines(c(orig, txt), filename)
 }
 
-Sys_getenv <- function(x, default = NULL) {
-  v <- Sys.getenv(x, default %||% NA_character_)
-  if (is.na(v) && is.null(default)) {
-    stop(sprintf("Environment variable '%s' is not set", x))
+Sys_getenv <- function(x, error = TRUE, default = NULL) {
+  v <- Sys.getenv(x, NA_character_)
+  if (is.na(v)) {
+    if (error) {
+      stop(sprintf("Environment variable '%s' is not set", x))
+    } else {
+      v <- default
+    }
   }
   v
 }
@@ -306,10 +310,10 @@ resolve_driver_config <- function(args, vault_server) {
   resolve_secrets(resolve_env(args), vault_server)
 }
 
-resolve_env <- function(x) {
+resolve_env <- function(x, error = TRUE, default = NULL) {
   f <- function(x) {
     if (grepl("^\\$[0-9A-Z_]+$", x)) {
-      Sys_getenv(substr(x, 2, nchar(x)))
+      Sys_getenv(substr(x, 2, nchar(x)), error = error, default = NULL)
     } else {
       x
     }
