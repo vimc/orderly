@@ -333,6 +333,12 @@ recipe_check_artefacts <- function(info, id) {
     stop("Script did not produce expected artefacts: ",
          paste(artefacts[!found], collapse = ", "))
   }
+  unexpected <- recipe_unexpected_artefacts(info, NULL)
+  if (length(unexpected) != 0) {
+    orderly_log("artefact", paste("Unexpected artefacts created: ",
+                                  unexpected, collapse = ", "))
+  }
+  
   ## TODO: we should watermark the images here but there are some
   ## issues to resolve first:
   ##
@@ -362,6 +368,17 @@ recipe_exists_artefacts <- function(info, id) {
   exists <- file.exists(expected)
   names(exists) <- expected
   exists
+}
+
+recipe_unexpected_artefacts <- function(info, id) {
+  expected <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
+  # we expect to see all artefacts from the config, the source file and the yml
+  # config
+  expected <- c(expected, info$script, "orderly.yml")
+  found <- list.files()
+  # what files have we found that we not contained in expected
+  unexpected <- found[!(found %in% expected)]
+  unexpected
 }
 
 iso_time_str <- function(time = Sys.time()) {
