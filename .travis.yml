@@ -11,7 +11,7 @@ after_success:
 r_github_packages:
   - ropensci/cyphr
   - vimc/montagu-r
-  - vimc/vaultr@i600
+  - vimc/vaultr
 env:
   global:
     - VAULTR_TEST_SERVER_INSTALL=true

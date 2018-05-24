@@ -93,3 +93,22 @@ test_that("minimum version is a less than relationship", {
   expect_is(cfg, "orderly_config")
   expect_equal(cfg$minimum_orderly_version, dat$minimum_orderly_version)
 })
+
+
+test_that("support declaring api server", {
+  path <- tempfile()
+  dir.create(path)
+  dat <- list(source = list(driver = "RSQLite::SQLite"),
+              api_server = list(
+                myhost = list(
+                  host = "myhost.com",
+                  port = 443,
+                  basic = TRUE,
+                  username = "orderly",
+                  password = "secert")))
+  writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
+  cfg <- orderly_config(path)
+
+  expect_is(cfg$api_server, "list")
+  expect_equal(cfg$api_server, dat$api_server)
+})

@@ -62,7 +62,7 @@ pull_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
                          remote = NULL) {
   config <- orderly_config_get(config, locate)
 
-  remote <- get_remote(remote)
+  remote <- get_remote(remote, config)
   if (inherits(remote, "orderly_api_server")) {
     pull_archive_api(name, id, config, remote)
   } else if (inherits(remote, "orderly_remote_path")) {
@@ -107,13 +107,16 @@ pull_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
 orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
                                timeout = 3600, poll = 1,
                                open = TRUE, stop_on_error = TRUE,
-                               progress = TRUE, remote = NULL) {
-  remote <- get_remote()
+                               progress = TRUE,
+                               config = NULL, locate = TRUE, remote = NULL) {
+  config <- orderly_config_get(config, locate)
+  remote <- get_remote(remote, config)
   if (inherits(remote, "orderly_api_server")) {
     orderly_run_remote_api(name = name, parameters = parameters, ref = ref,
                            timeout = timeout, poll = poll, open = open,
                            stop_on_error = stop_on_error,
-                           progress = progress, remote = remote)
+                           progress = progress,
+                           config = config, remote = remote)
   } else if (inherits(remote, "orderly_remote_path")) {
     stop("Can't run reports with remote type ",
          paste(squote(class(remote)), collapse = " / "))
@@ -134,11 +137,13 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
 ##'
 ##' @inheritParams orderly_run_remote
 ##' @export
-orderly_publish_remote <- function(name, id, value = TRUE, remote = NULL) {
-  remote <- get_remote()
+orderly_publish_remote <- function(name, id, value = TRUE,
+                                   config = NULL, locate = TRUE, remote = NULL) {
+  config <- orderly_config_get(config, locate)
+  remote <- get_remote(remote, config)
   if (inherits(remote, "orderly_api_server")) {
-    orderly_publish_remote_api(name = name, id = id, value = value,
-                               remote = remote)
+    orderly_publish_remote_api(name = name, id = id, config = config,
+                               value = value, remote = remote)
   } else if (inherits(remote, "orderly_remote_path")) {
     ## This one can actually be done over disk too
     stop("Can't publish reports with remote type ",
@@ -162,9 +167,14 @@ set_default_remote <- function(value) {
 
 
 ##' @rdname default_remote
-get_default_remote <- function() {
+##' @inheritParams orderly_list
+get_default_remote <- function(config = NULL, locate = TRUE) {
   if (!is.null(cache$default_remote)) {
     return(cache$default_remote)
+  }
+  config <- orderly_config_get(config, locate)
+  if (length(config$api_server) > 0L) {
+    return(names(config$api_server)[[1]])
   }
   default_remote_path <- Sys.getenv("ORDERLY_DEFAULT_REMOTE_PATH", NA_character_)
   if (!is.na(default_remote_path)) {
@@ -174,6 +184,6 @@ get_default_remote <- function() {
 }
 
 
-get_remote <- function(remote) {
-  remote %||% get_default_remote()
+get_remote <- function(remote, config) {
+  remote %||% get_default_remote(config)
 }

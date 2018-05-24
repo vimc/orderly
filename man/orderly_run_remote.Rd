@@ -6,7 +6,7 @@
 \usage{
 orderly_run_remote(name, parameters = NULL, ref = NULL, timeout = 3600,
   poll = 1, open = TRUE, stop_on_error = TRUE, progress = TRUE,
-  remote = NULL)
+  config = NULL, locate = TRUE, remote = NULL)
 }
 \arguments{
 \item{name}{Name of the report}
@@ -29,6 +29,14 @@ will be much easier to debug, but more annoying in scripts.}
 
 \item{progress}{Logical, indicating if a progress spinner should
 be included.}
+
+\item{config}{An orderly configuration, or the path to one (or
+\code{NULL} to locate one if \code{locate} is \code{TRUE}).}
+
+\item{locate}{Logical, indicating if the configuration should be
+searched for.  If \code{TRUE} and \code{config} is not given,
+then orderly looks in the working directory and up through its
+parents until it finds an \code{orderly_config.yml} file.}
 
 \item{remote}{Description of the location.  This must be an
 \code{orderly_remote} object.}

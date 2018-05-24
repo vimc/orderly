@@ -11,7 +11,8 @@ orderly_config <- function(path) {
 orderly_config_read_yaml <- function(filename, path) {
   info <- yaml_read(filename)
   check_fields(info, filename, "source",
-               c("destination", "fields", "minimum_orderly_version"))
+               c("destination", "fields", "minimum_orderly_version",
+                 "api_server", "vault_server"))
 
   ## There's heaps of really boring validation to do here that I am
   ## going to skip.  The drama that we will have is that there are
@@ -40,6 +41,16 @@ orderly_config_read_yaml <- function(filename, path) {
     stop(sprintf(
       "Orderly version '%s' is required, but only '%s' installed",
       v, utils::packageVersion("orderly")))
+  }
+
+  if (!is.null(info$vault_server)) {
+    assert_scalar_character(info$vault_server,
+                            sprintf("%s:vault_server", filename))
+  }
+
+  api_server <- info$api_server
+  if (!is.null(api_server)) {
+    info$api_server <- config_check_api_server(api_server, filename)
   }
 
   info$path <- normalizePath(path, mustWork = TRUE)
@@ -79,6 +90,57 @@ config_check_fields <- function(x, filename) {
              type_sql = vcapply(dat, "[[", "type_sql"),
              description = vcapply(dat, "[[", "description"),
              stringsAsFactors = FALSE)
+}
+
+config_check_api_server <- function(dat, filename) {
+  if (is.null(dat)) {
+    return(NULL)
+  }
+
+  assert_named(dat, unique = TRUE)
+
+  check1 <- function(name) {
+    server <- dat[[name]]
+    check_fields(server,
+                 sprintf("%s:api_server:%s", filename, name),
+                 c("host", "port", "basic"),
+                 c("username", "password"))
+    check_field <- function(nm, required, fn) {
+      x <- server[[nm]]
+      if (required || !is.null(x)) {
+        fn(x, sprintf("%s:api_server:%s:%s", filename, name, nm))
+      }
+    }
+
+    ## NOTE: it would be ideal here to check that the variables are
+    ## all set up, but this seems somewhat restrictive.  So we just
+    ## send a message indicating that this has failed.
+    server <- tryCatch(
+      resolve_env(server),
+      error = function(e) {
+        message(sprintf("Failed to resolve api_server '%s':\n\t%s",
+                        name, e$message))
+        message(
+          "\tContacting this server will fail (e.g., fetching dependencies)")
+        message("\tbut otherwise orderly will work, so continuing")
+        server
+      })
+
+    check_field("basic", TRUE, assert_scalar_logical)
+    ## check_field("port", TRUE, assert_scalar_integer)
+    check_field("host", TRUE, assert_scalar_character)
+    check_field("username", FALSE, assert_scalar_character)
+    check_field("password", FALSE, assert_scalar_character)
+
+    if (requireNamespace("montagu", quietly = TRUE)) {
+      montagu::montagu_add_location(
+        name, server$host, server$port, server$basic)
+    }
+
+    server
+  }
+
+  set_names(lapply(names(dat), check1), names(dat))
 }
 
 sql_type <- function(type, name) {

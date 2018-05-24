@@ -7,10 +7,18 @@
 \usage{
 set_default_remote(value)
 
-get_default_remote()
+get_default_remote(config = NULL, locate = TRUE)
 }
 \arguments{
 \item{value}{An \code{orderly_remote_location} object.}
+
+\item{config}{An orderly configuration, or the path to one (or
+\code{NULL} to locate one if \code{locate} is \code{TRUE}).}
+
+\item{locate}{Logical, indicating if the configuration should be
+searched for.  If \code{TRUE} and \code{config} is not given,
+then orderly looks in the working directory and up through its
+parents until it finds an \code{orderly_config.yml} file.}
 }
 \description{
 Set and get default remote locations

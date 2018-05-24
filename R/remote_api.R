@@ -7,12 +7,13 @@ orderly_api_server <- function(location) {
 ## without a working copy of the montagu reporting api.  I guess the
 ## simplest solution will be to have a copy running on support that we
 ## can point this at.
-pull_archive_api <- function(name, id, config, server) {
+pull_archive_api <- function(name, id, config, remote) {
   loadNamespace("montagu")
   assert_is(config, "orderly_config")
+  remote <- orderly_remote_api_server(config, remote)
   if (id == "latest") {
     ## Resolve id
-    v <- montagu::montagu_reports_report_versions(name, server)
+    v <- montagu::montagu_reports_report_versions(name, remote)
     ## TODO: more work needed here if we have two identical timestamps!
     id <- last(v)
   }
@@ -22,7 +23,7 @@ pull_archive_api <- function(name, id, config, server) {
   } else {
     orderly_log("pull", sprintf("%s:%s", name, id))
     tmp <- montagu::montagu_reports_report_download(name, id,
-                                                    location = server)
+                                                    location = remote)
     cat("\n") # httr's progress bar is rubbish
     on.exit(file.remove(tmp))
     tmp2 <- tempfile()
@@ -37,11 +38,14 @@ pull_archive_api <- function(name, id, config, server) {
 }
 
 
-orderly_run_remote_api <- function(name, parameters = NULL, ref = NULL,
+orderly_run_remote_api <- function(name, config, parameters = NULL, ref = NULL,
                                    timeout = 3600, poll = 1,
                                    open = TRUE, stop_on_error = TRUE,
                                    progress = TRUE, remote = NULL) {
+  assert_is(config, "orderly_config")
   loadNamespace("montagu")
+  remote <- orderly_remote_api_server(config, remote)
+
   if (remote == "production" && !is.null(ref)) {
     stop("Can't specify 'ref' on production")
   }
@@ -52,11 +56,36 @@ orderly_run_remote_api <- function(name, parameters = NULL, ref = NULL,
 }
 
 
-orderly_publish_remote_api <- function(name, id, value = TRUE, remote = NULL) {
+orderly_publish_remote_api <- function(name, id, config, value = TRUE,
+                                       remote = NULL) {
+  assert_is(config, "orderly_config")
   ## This one can actually be done over disk too
   loadNamespace("montagu")
+  remote <- orderly_remote_api_server(config, remote)
   assert_scalar_character(name)
   assert_scalar_character(id)
   assert_scalar_logical(value)
   montagu::montagu_reports_publish(name, id, value, remote)
+}
+
+
+orderly_remote_api_server <- function(config, remote) {
+  api_server <- config$api_server
+  if (is.null(api_server)) {
+    ## If there is no api_server section then none of this matters at all.
+    return()
+  }
+
+  ## This is the server that we're going to go for
+  remote <- montagu::montagu_location(remote %||% names(api_server)[[1L]])
+
+  ## Look up the secrets in the vault
+  server_data <- resolve_secrets(api_server[[remote]], config$vault_server)
+
+  ## Then set the username/password varibles so that they can be found
+  ## easily:
+  type <- c("username", "password")
+  options(set_names(server_data[type], sprintf("montagu.%s.%s", remote, type)))
+
+  remote
 }
