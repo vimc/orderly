@@ -306,8 +306,8 @@ indent <- function(x, n) {
   paste0(strrep(" ", n), strsplit(x, "\n", fixed = TRUE)[[1]])
 }
 
-resolve_driver_config <- function(args, vault_server) {
-  resolve_secrets(resolve_env(args), vault_server)
+resolve_driver_config <- function(args, config) {
+  resolve_secrets(resolve_env(args), config)
 }
 
 resolve_env <- function(x, error = TRUE, default = NULL) {
