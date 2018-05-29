@@ -1,3 +1,9 @@
+# 0.4.4
+
+* Print total elapsed time taken to print report
+* Runner can kill reports
+* Git is reset to previous HEAD immediately after preparing workdir
+
 # 0.4.1
 
 * Support for adding a message to a report

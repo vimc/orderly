@@ -14,6 +14,7 @@ RUNNER_QUEUED  <- "queued"
 RUNNER_RUNNING <- "running"
 RUNNER_SUCCESS <- "success"
 RUNNER_ERROR   <- "error"
+RUNNER_KILLED  <- "killed"
 RUNNER_UNKNOWN <- "unknown"
 
 ## TODO: through here we need to wrap some calls up in success/fail so
@@ -62,7 +63,8 @@ R6_orderly_runner <- R6::R6Class(
       dir.create(self$path_id, FALSE, TRUE)
     },
 
-    queue = function(name, parameters = NULL, ref = NULL, update = FALSE) {
+    queue = function(name, parameters = NULL, ref = NULL, update = FALSE,
+                     timeout = 600) {
       if (!self$allow_ref && !is.null(ref)) {
         stop("Reference switching is disabled in this runner")
       }
@@ -76,7 +78,8 @@ R6_orderly_runner <- R6::R6Class(
       if (!is.null(ref) && !git_ref_exists(ref, self$path)) {
         stop(sprintf("Did not find git reference '%s'", ref))
       }
-      key <- self$data$insert(name, parameters, ref)
+      assert_scalar_numeric(timeout)
+      key <- self$data$insert(name, parameters, ref, timeout)
       orderly_log("queue", sprintf("%s (%s)", key, name))
       key
     },
@@ -97,6 +100,25 @@ R6_orderly_runner <- R6::R6Class(
       list(key = key, status = state, id = id, output = out)
     },
 
+    queue_status = function(output = FALSE, limit = 50) {
+      queue <- tail(self$data$get_df(), limit)
+      if (is.null(self$process)) {
+        status <- "idle"
+        current <- NULL
+      } else {
+        status <- "running"
+
+        current <- self$process[c("key", "name", "start_at", "kill_at")]
+        now <- Sys.time()
+        current$elapsed <- as.numeric(now - current$start_at, "secs")
+        current$remaining <- as.numeric(current$kill_at - now, "secs")
+        if (output) {
+          current$output <- self$.read_logs(current$key)
+        }
+      }
+      list(status = status, queue = queue, current = current)
+    },
+
     ## This one could quite easily move into the montagu api; it
     ## doesn't take too much to do (write one file and write to the
     ## SQL database)
@@ -107,6 +129,17 @@ R6_orderly_runner <- R6::R6Class(
 
     rebuild = function() {
       orderly_rebuild(self$config, FALSE)
+    },
+
+    kill = function(key) {
+      current <- self$process$key
+      if (identical(key, current)) {
+        self$.kill_current()
+      } else if (is.null(current)) {
+        stop(sprintf("Can't kill '%s' - not currently running a report", key))
+      } else {
+        stop(sprintf("Can't kill '%s' - currently running '%s'", key, current))
+      }
     },
 
     git_status = function() {
@@ -141,26 +174,37 @@ R6_orderly_runner <- R6::R6Class(
     },
 
     poll = function() {
+      key <- self$process$key
       if (!is.null(self$process)) {
         if (self$process$px$is_alive()) {
-          "running"
+          if (Sys.time() > self$process$kill_at) {
+            self$.kill_current()
+            ret <- "timeout"
+          } else {
+            ret <- "running"
+          }
         } else {
           self$.cleanup()
-          "finish"
+          ret <- "finish"
         }
       } else if (self$.run_next()) {
-        "create"
+        ret <- "create"
+        key <- self$process$key
       } else {
-        "idle"
+        ret <-"idle"
       }
+      attr(ret, "key") <- key
+      ret
     },
 
-    .cleanup = function() {
+    .cleanup = function(state = NULL) {
       ok <- self$process$px$get_exit_status() == 0L
       key <- self$process$key
-      state <- if (ok) RUNNER_SUCCESS else RUNNER_ERROR
-      ## First, ensure that things are going to be sensibly set
-      ## even if we fail:
+      if (is.null(state)) {
+        state <- if (ok) RUNNER_SUCCESS else RUNNER_ERROR
+      }
+      ## First, ensure that things are going to be sensibly set even
+      ## if we fail:
       process <- self$process
       self$process <- NULL
       orderly_log(state, sprintf("%s (%s)", process$key, process$name))
@@ -177,6 +221,14 @@ R6_orderly_runner <- R6::R6Class(
       }
 
       self$data$set_state(key, state, id)
+    },
+
+    .kill_current = function() {
+      p <- self$process
+      orderly_log("kill", p$key)
+      ret <- p$px$kill()
+      self$.cleanup(RUNNER_KILLED)
+      ret
     },
 
     .read_logs = function(key) {
@@ -217,9 +269,12 @@ R6_orderly_runner <- R6::R6Class(
       log_err <- path_stderr(self$path_log, key)
       px <- processx::process$new(self$orderly_bin, args,
                                   stdout = log_out, stderr = log_err)
+      start_at <- Sys.time()
       self$process <- list(px = px,
                            key = key,
                            name = dat$name,
+                           start_at = start_at,
+                           kill_at = start_at + dat$timeout,
                            id_file = id_file,
                            stdout = log_out,
                            stderr = log_err)
@@ -251,7 +306,7 @@ process_wait <- function(px, filename, timeout = 1, poll = 0.02) {
 }
 
 runner_queue <- function() {
-  cols <- c("key", "state", "name", "parameters", "ref", "id")
+  cols <- c("key", "state", "name", "parameters", "ref", "id", "timeout")
   data <- matrix(character(0), 0, length(cols))
   colnames(data) <- cols
 
@@ -260,11 +315,17 @@ runner_queue <- function() {
       data
     },
 
+    get_df = function() {
+      ret <- as.data.frame(data, stringsAsFactors = FALSE)
+      ret$timeout <- as.numeric(ret$timeout)
+      ret
+    },
+
     length = function() {
       sum(data[, "state"] == RUNNER_QUEUED)
     },
 
-    insert = function(name, parameters = NULL, ref = NULL) {
+    insert = function(name, parameters = NULL, ref = NULL, timeout = 600) {
       existing <- data[, "key"]
       repeat {
         key <- ids::adjective_animal()
@@ -278,6 +339,7 @@ runner_queue <- function() {
       new[["state"]] <- RUNNER_QUEUED
       new[["parameters"]] <- parameters %||% NA_character_
       new[["ref"]] <- ref %||% NA_character_
+      new[["timeout"]] <- timeout
       data <<- rbind(data, new, deparse.level = 0)
       key
     },
@@ -286,7 +348,9 @@ runner_queue <- function() {
       i <- data[, "state"] == RUNNER_QUEUED
       if (any(i)) {
         i <- which(i)[[1L]]
-        as.list(data[i, ])
+        ret <- as.list(data[i, ])
+        ret$timeout <- as.numeric(ret$timeout)
+        ret
       } else {
         NULL
       }
