@@ -61,9 +61,8 @@ pull_dependencies <- function(name, config = NULL, locate = TRUE,
 pull_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
                          remote = NULL) {
   config <- orderly_config_get(config, locate)
-
   remote <- get_remote(remote, config)
-  if (inherits(remote, "orderly_api_server")) {
+  if (inherits(remote, "montagu_server")) {
     pull_archive_api(name, id, config, remote)
   } else if (inherits(remote, "orderly_remote_path")) {
     pull_archive_path(name, id, config, remote)
@@ -111,7 +110,7 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
                                config = NULL, locate = TRUE, remote = NULL) {
   config <- orderly_config_get(config, locate)
   remote <- get_remote(remote, config)
-  if (inherits(remote, "orderly_api_server")) {
+  if (inherits(remote, "montagu_server")) {
     orderly_run_remote_api(name = name, parameters = parameters, ref = ref,
                            timeout = timeout, poll = poll, open = open,
                            stop_on_error = stop_on_error,
@@ -141,7 +140,7 @@ orderly_publish_remote <- function(name, id, value = TRUE,
                                    config = NULL, locate = TRUE, remote = NULL) {
   config <- orderly_config_get(config, locate)
   remote <- get_remote(remote, config)
-  if (inherits(remote, "orderly_api_server")) {
+  if (inherits(remote, "montagu_server")) {
     orderly_publish_remote_api(name = name, id = id, config = config,
                                value = value, remote = remote)
   } else if (inherits(remote, "orderly_remote_path")) {
@@ -174,9 +173,10 @@ get_default_remote <- function(config = NULL, locate = TRUE) {
   }
   config <- orderly_config_get(config, locate)
   if (length(config$api_server) > 0L) {
-    return(names(config$api_server)[[1]])
+    return(config$api_server[[1]])
   }
-  default_remote_path <- Sys.getenv("ORDERLY_DEFAULT_REMOTE_PATH", NA_character_)
+  default_remote_path <- Sys.getenv("ORDERLY_DEFAULT_REMOTE_PATH",
+                                    NA_character_)
   if (!is.na(default_remote_path)) {
     return(orderly_remote_path(default_remote_path))
   }

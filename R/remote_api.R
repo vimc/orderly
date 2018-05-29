@@ -1,8 +1,3 @@
-orderly_api_server <- function(location) {
-  structure(list(location = location),
-            class = "orderly_api_server")
-}
-
 ## Communication with the API.  This is almost impossible to test
 ## without a working copy of the montagu reporting api.  I guess the
 ## simplest solution will be to have a copy running on support that we
@@ -10,7 +5,7 @@ orderly_api_server <- function(location) {
 pull_archive_api <- function(name, id, config, remote) {
   loadNamespace("montagu")
   assert_is(config, "orderly_config")
-  remote <- orderly_remote_api_server(config, remote)
+  orderly_remote_resolve_secrets(config, remote)
   if (id == "latest") {
     ## Resolve id
     v <- montagu::montagu_reports_report_versions(name, remote)
@@ -44,7 +39,7 @@ orderly_run_remote_api <- function(name, config, parameters = NULL, ref = NULL,
                                    progress = TRUE, remote = NULL) {
   assert_is(config, "orderly_config")
   loadNamespace("montagu")
-  remote <- orderly_remote_api_server(config, remote)
+  orderly_remote_resolve_secrets(config, remote)
 
   if (remote == "production" && !is.null(ref)) {
     stop("Can't specify 'ref' on production")
@@ -61,7 +56,7 @@ orderly_publish_remote_api <- function(name, id, config, value = TRUE,
   assert_is(config, "orderly_config")
   ## This one can actually be done over disk too
   loadNamespace("montagu")
-  remote <- orderly_remote_api_server(config, remote)
+  orderly_remote_resolve_secrets(config, remote)
   assert_scalar_character(name)
   assert_scalar_character(id)
   assert_scalar_logical(value)
@@ -69,23 +64,17 @@ orderly_publish_remote_api <- function(name, id, config, value = TRUE,
 }
 
 
-orderly_remote_api_server <- function(config, remote) {
-  api_server <- config$api_server
-  if (is.null(api_server)) {
-    ## If there is no api_server section then none of this matters at all.
-    return()
+orderly_remote_resolve_secrets <- function(config, remote) {
+  ## Look up the secrets in the vault: this might move into montagu,
+  ## because then this gets heaps easier
+  if (!remote$is_authorised()) {
+    ## TODO: this used to cache the vault client; that was the job of
+    ## the vault package I think, but it doesn't matter here because
+    ## we rewrite the values.
+    auth <- resolve_secrets(list(username = remote$username,
+                                 password = remote$password),
+                            config)
+    remote$username <- resolve_secrets(auth$username, config)
+    remote$password <- resolve_secrets(auth$password, config)
   }
-
-  ## This is the server that we're going to go for
-  remote <- montagu::montagu_location(remote %||% names(api_server)[[1L]])
-
-  ## Look up the secrets in the vault
-  server_data <- resolve_secrets(api_server[[remote]], config$vault_server)
-
-  ## Then set the username/password varibles so that they can be found
-  ## easily:
-  type <- c("username", "password")
-  options(set_names(server_data[type], sprintf("montagu.%s.%s", remote, type)))
-
-  remote
 }

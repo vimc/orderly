@@ -103,8 +103,8 @@ config_check_api_server <- function(dat, filename) {
     server <- dat[[name]]
     check_fields(server,
                  sprintf("%s:api_server:%s", filename, name),
-                 c("host", "port", "basic"),
-                 c("username", "password"))
+                 c("host", "port"),
+                 c("basic", "username", "password"))
     check_field <- function(nm, required, fn) {
       x <- server[[nm]]
       if (required || !is.null(x)) {
@@ -112,32 +112,25 @@ config_check_api_server <- function(dat, filename) {
       }
     }
 
-    ## NOTE: it would be ideal here to check that the variables are
-    ## all set up, but this seems somewhat restrictive.  So we just
-    ## send a message indicating that this has failed.
-    server <- tryCatch(
-      resolve_env(server),
-      error = function(e) {
-        message(sprintf("Failed to resolve api_server '%s':\n\t%s",
-                        name, e$message))
-        message(
-          "\tContacting this server will fail (e.g., fetching dependencies)")
-        message("\tbut otherwise orderly will work, so continuing")
-        server
-      })
-
-    check_field("basic", TRUE, assert_scalar_logical)
+    server <- resolve_env(server, error = FALSE)
+    if (is.null(server$basic)) {
+      server$basic <- FALSE
+    } else {
+      check_field("basic", TRUE, assert_scalar_logical)
+    }
     ## check_field("port", TRUE, assert_scalar_integer)
     check_field("host", TRUE, assert_scalar_character)
     check_field("username", FALSE, assert_scalar_character)
     check_field("password", FALSE, assert_scalar_character)
 
     if (requireNamespace("montagu", quietly = TRUE)) {
-      montagu::montagu_add_location(
-        name, server$host, server$port, server$basic)
+      ret <- montagu::montagu_server(
+        name, server$host, server$port, server$basic,
+        server$username, server$password)
+    } else {
+      ret <- NULL
     }
-
-    server
+    ret
   }
 
   set_names(lapply(names(dat), check1), names(dat))
