@@ -68,7 +68,13 @@ orderly_remote_resolve_secrets <- function(config, remote) {
   ## Look up the secrets in the vault: this might move into montagu,
   ## because then this gets heaps easier
   if (!remote$is_authorised()) {
-    remote$username <- resolve_secrets(remote$username, config)
-    remote$password <- resolve_secrets(remote$password, config)
+    ## TODO: this used to cache the vault client; that was the job of
+    ## the vault package I think, but it doesn't matter here because
+    ## we rewrite the values.
+    auth <- resolve_secrets(list(username = remote$username,
+                                 password = remote$password),
+                            config)
+    remote$username <- resolve_secrets(auth$username, config)
+    remote$password <- resolve_secrets(auth$password, config)
   }
 }
