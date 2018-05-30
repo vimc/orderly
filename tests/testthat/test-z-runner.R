@@ -203,6 +203,8 @@ test_that("Can't git change", {
 
 test_that("kill", {
   skip_on_windows()
+  skip_on_appveyor()
+  skip_on_travis() # TODO: these need fixing
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
   name <- "interactive"
@@ -217,6 +219,8 @@ test_that("kill", {
 
 test_that("kill - wrong process", {
   skip_on_windows()
+  skip_on_appveyor()
+  skip_on_travis() # TODO: these need fixing
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
   name <- "interactive"
@@ -240,6 +244,8 @@ test_that("kill - no process", {
 
 test_that("timeout", {
   skip_on_windows()
+  skip_on_appveyor()
+  skip_on_travis() # TODO: these need fixing
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
   name <- "interactive"
