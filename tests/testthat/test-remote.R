@@ -11,6 +11,25 @@ test_that("defaults: null", {
 })
 
 
+test_that("get_remote", {
+  config <- list(api_server = list(foo = "foo", bar = "bar"))
+  class(config) <- "orderly_config"
+  expect_equal(get_remote(NULL, config), "foo")
+  expect_equal(get_remote("foo", config), "foo")
+  expect_equal(get_remote("bar", config), "bar")
+  expect_error(get_remote("other", config),
+               "Unknown remote 'other'",
+               fixed = TRUE)
+
+  p <- prepare_orderly_example("minimal")
+  expect_equal(get_remote(p, config), orderly_remote_path(p))
+
+  expect_error(get_remote(TRUE, config),
+               "Unknown remote type 'logical'",
+               fixed = TRUE)
+})
+
+
 test_that("defaults: envvar", {
   path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
