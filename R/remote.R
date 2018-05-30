@@ -185,5 +185,23 @@ get_default_remote <- function(config = NULL, locate = TRUE) {
 
 
 get_remote <- function(remote, config) {
-  remote %||% get_default_remote(config)
+  if (is.null(remote)) {
+    get_default_remote(config)
+  } else if (inherits(remote, c("montagu_server", "orderly_remote_path"))) {
+    remote
+  } else if (is.character(remote)) {
+    assert_scalar(remote)
+    if (remote %in% names(config$api_server)) {
+      config$api_server[[remote]]
+    } else if (file.exists(remote)) {
+      orderly_remote_path(remote)
+    } else {
+      stop(sprintf("Unknown remote '%s'", remote),
+           call. = FALSE)
+    }
+  } else {
+    stop("Unknown remote type ",
+         paste(squote(class(remote)), collapse = " / "),
+         call. = FALSE)
+  }
 }
