@@ -150,7 +150,6 @@ R6_orderly_runner <- R6::R6Class(
     },
 
     git_fetch = function() {
-      orderly_log("git", "fetch")
       res <- git_fetch(self$path)
       if (length(res$output) > 0L) {
         orderly_log("fetch", res$output)
@@ -159,7 +158,6 @@ R6_orderly_runner <- R6::R6Class(
     },
 
     git_pull = function() {
-      orderly_log("git", "pull")
       res <- git_pull(self$path)
       if (length(res$output) > 0L) {
         orderly_log("pull", res$output)

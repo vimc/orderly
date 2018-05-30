@@ -91,16 +91,18 @@ git_checkout_branch <- function(name, force = FALSE, root = NULL,
   ##      ^ this does not return anything sensible when we were in
   ##        detached head state; detect HEAD and get the hash perhaps?
   args <- c("checkout", if (create) "-b", name)
-  orderly_log("checkout", sprintf("%s; was %s", name, prev))
+  orderly_log("git", sprintf("checkout %s; was %s", name, prev))
   git_run(args, root = root, check = TRUE)
   prev
 }
 
 git_fetch <- function(root = NULL) {
+  orderly_log("git", "fetch")
   git_run("fetch", root = root, check = TRUE)
 }
 
 git_pull <- function(root = NULL) {
+  orderly_log("git", "fetch")
   git_run("pull", root = root, check = TRUE)
 }
 
