@@ -23,8 +23,14 @@
 ##'   environment as the parent.  For \code{orderly_data}, this may be
 ##'   \code{list()} in which case a list will be returned (rather than
 ##'   an environment).
+##'
 ##' @param ref A git reference to use for this run (see Details)
+##'
+##' @param fetch Logical, indicating if git should be fetched before
+##'   checking out the reference \code{ref}.
+##'
 ##' @param open Open the directory after running?
+##'
 ##' @param message An optional message explaining why the report was
 ##'   run
 ##'
@@ -34,8 +40,8 @@
 ##' @export
 orderly_run <- function(name, parameters = NULL, envir = NULL,
                         config = NULL, locate = TRUE, echo = TRUE,
-                        id_file = NULL, ref = NULL, open = FALSE,
-                        message = NULL) {
+                        id_file = NULL, fetch = FALSE, ref = NULL,
+                        open = FALSE, message = NULL) {
   assert_scalar_logical(open)
   envir <- orderly_environment(envir)
   config <- orderly_config_get(config, locate)
@@ -44,7 +50,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
     assert_scalar_character(message)
   }
 
-  info <- recipe_prepare(config, name, id_file, ref)
+  info <- recipe_prepare(config, name, id_file, ref, fetch)
   path <- recipe_run(info, parameters, envir, config, echo = echo,
                      message = message)
 
@@ -92,7 +98,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
 
   config <- orderly_config_get(config, locate)
   ## TODO: support ref here
-  info <- recipe_prepare(config, name, id_file = NULL, ref = NULL)
+  info <- recipe_prepare(config, name, id_file = NULL, ref = NULL, fetch = FALSE)
   owd <- setwd(info$workdir)
   prep <- orderly_prepare_data(config, info, parameters, envir)
 
@@ -159,12 +165,16 @@ orderly_test_check <- function() {
   invisible(all(found))
 }
 
-recipe_prepare <- function(config, name, id_file = NULL, ref = NULL) {
+recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
+                           fetch = FALSE) {
   assert_is(config, "orderly_config")
   config <- orderly_config_get(config, FALSE)
 
   orderly_log("name", name)
   if (!is.null(ref)) {
+    if (fetch) {
+      git_fetch(config$path)
+    }
     prev <- git_detach_head_at_ref(ref, config$path)
     on.exit(git_checkout_branch(prev, TRUE, config$path))
   }
