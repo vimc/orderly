@@ -383,7 +383,7 @@ recipe_unexpected_artefacts <- function(info, id) {
 
   found <- list.files()
   # what files have we found that we not contained in expected
-  unexpected <- found[!(found %in% expected)]
+  unexpected <- setdiff(found, expected)
   unexpected
 }
 
