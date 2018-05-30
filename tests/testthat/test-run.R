@@ -431,6 +431,35 @@ test_that("run with message", {
                "'message' must be character")
 })
 
+test_that("unexpected artefact", {
+  # test 1 produce a file that we weren't expecting
+  orderly_log_on()
+  path <- prepare_orderly_example("minimal")
+  tmp <- tempfile()
+  path_example <- file.path(path, "src", "example")
+  write(sprintf("file.create('%s')", "bad_file"), 
+        file = file.path(path_example, "script.R"), append = TRUE)
+  expect_message(orderly_run("example", config = path, id_file = tmp, echo = FALSE),
+                 "Unexpected artefacts created: bad_file")
+  orderly_log_off()
+  
+  # test 2 add ignore to yaml, this should not produce a warning
+  orderly_log_on()
+  path <- prepare_orderly_example("minimal")
+  tmp <- tempfile()
+  path_example <- file.path(path, "src", "example")
+  # create bad file
+  write(sprintf("file.create('%s')", "bad_file"),
+        file = file.path(path_example, "script.R"), append = TRUE)
+  # tell the yaml to ignore the bad file
+  write("ignore: bad_file",
+        file = file.path(path_example, "orderly.yml"), append = TRUE)
+  # we're expecting no message at this point
+  expect_message(orderly_run("example", config = path, id_file = tmp, echo = TRUE),
+                 regexp = NA)
+  orderly_log_off()
+})
+
 test_that("shiny app", {
   path <- prepare_orderly_example("shiny")
   id <- orderly_run("example", config = path, echo = FALSE)

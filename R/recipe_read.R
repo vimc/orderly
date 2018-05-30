@@ -20,6 +20,7 @@ recipe_read <- function(path, config) {
                 "resources",
                 "connection",
                 "depends",
+                "ignore",
                 config$fields$name[!config$fields$required])
   check_fields(info, filename, required, optional)
 

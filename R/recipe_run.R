@@ -335,7 +335,7 @@ recipe_check_artefacts <- function(info, id) {
   }
   unexpected <- recipe_unexpected_artefacts(info, NULL)
   if (length(unexpected) != 0) {
-    orderly_log("artefact", paste("Unexpected artefacts created: ",
+    orderly_log("unex_art", paste("Unexpected artefacts created:",
                                   unexpected, collapse = ", "))
   }
   
@@ -375,6 +375,12 @@ recipe_unexpected_artefacts <- function(info, id) {
   # we expect to see all artefacts from the config, the source file and the yml
   # config
   expected <- c(expected, info$script, "orderly.yml")
+  # did the yaml file list files to be ignored? [TODO regex]
+  ignorance <- info$ignore
+  if (!is.null(ignorance)) {
+    expected <- c(expected, ignorance)
+  }
+
   found <- list.files()
   # what files have we found that we not contained in expected
   unexpected <- found[!(found %in% expected)]
