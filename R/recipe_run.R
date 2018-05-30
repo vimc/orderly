@@ -445,8 +445,6 @@ orderly_environment <- function(envir, list_ok = FALSE) {
 }
 
 
-## TODO: some big renaming work would be useful here - this one
-## becomes orderly_prepare_data I think
 orderly_prepare_data <- function(config, info, parameters, envir) {
   ## Because the script (including the files in sources) might modify
   ## the data we need to make sure that we grab a copy of it now (as a
