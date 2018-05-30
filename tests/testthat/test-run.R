@@ -432,18 +432,21 @@ test_that("run with message", {
 })
 
 test_that("unexpected artefact", {
-  # test 1 produce a file that we weren't expecting
+  # test 1 produce a file that we weren't expecting, this should produce an
+  # "unex_art" message
   orderly_log_on()
   path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
   write(sprintf("file.create('%s')", "bad_file"), 
         file = file.path(path_example, "script.R"), append = TRUE)
-  expect_message(orderly_run("example", config = path, id_file = tmp, echo = FALSE),
-                 "Unexpected artefacts created: bad_file")
+  expect_message(orderly_run("example", config = path, id_file = tmp,
+                             echo = FALSE),
+                 "unex_art")
   orderly_log_off()
   
-  # test 2 add ignore to yaml, this should not produce a warning
+  # test 2 produce a file and add an ignore to yaml
+  # this should not produce any "unex_art" messages
   orderly_log_on()
   path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
@@ -454,9 +457,26 @@ test_that("unexpected artefact", {
   # tell the yaml to ignore the bad file
   write("ignore: bad_file",
         file = file.path(path_example, "orderly.yml"), append = TRUE)
-  # we're expecting no message at this point
-  expect_message(orderly_run("example", config = path, id_file = tmp, echo = TRUE),
-                 regexp = NA)
+  # we're not expecting an 'unex_art' message at this point
+  # grab all messages...
+  messages <- capture_messages(orderly_run("example", config = path,
+                                           id_file = tmp, echo = FALSE))
+  # ...make sure none of the messages contain "unex_art"
+  expect_false(any(grep("unex_art", messages)))
+  orderly_log_off()
+  
+  # test 3 don't produce any unexpected artefacts, this should not produce any
+  # "unex_art" messages
+  orderly_log_on()
+  path <- prepare_orderly_example("minimal")
+  tmp <- tempfile()
+  path_example <- file.path(path, "src", "example")
+  # we're not expecting an 'unex_art' message at this point
+  # grab all messages...
+  messages <- capture_messages(orderly_run("example", config = path,
+                                           id_file = tmp, echo = FALSE))
+  # ...make sure none of the messages contain "unex_art"
+  expect_false(any(grep("unex_art", messages)))
   orderly_log_off()
 })
 
