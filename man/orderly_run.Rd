@@ -6,8 +6,8 @@
 \title{Run a report}
 \usage{
 orderly_run(name, parameters = NULL, envir = NULL, config = NULL,
-  locate = TRUE, echo = TRUE, id_file = NULL, ref = NULL,
-  open = FALSE, message = NULL)
+  locate = TRUE, echo = TRUE, id_file = NULL, fetch = FALSE,
+  ref = NULL, open = FALSE, message = NULL)
 
 orderly_data(name, parameters = NULL, envir = list(), config = NULL,
   locate = TRUE)
@@ -35,6 +35,9 @@ parents until it finds an \code{orderly_config.yml} file.}
 \item{echo}{Print the result of running the R code to the console}
 
 \item{id_file}{Write the identifier into a file}
+
+\item{fetch}{Logical, indicating if git should be fetched before
+checking out the reference \code{ref}.}
 
 \item{ref}{A git reference to use for this run (see Details)}
 

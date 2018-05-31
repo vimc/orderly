@@ -269,7 +269,7 @@ dir.create(file.path(path, "src", "new"))
 
 ## ## Customising the configuration
 
-## The contents of orderly_config.yml may contain things like secrets
+## The contents of `orderly_config.yml` may contain things like secrets
 ## (passwords) or hostnames that vary depending on deployment (e.g.,
 ## testing locally vs running on a remote system).  To customise this,
 ## you can use environment variables within the configuration.  So
@@ -300,7 +300,8 @@ dir.create(file.path(path, "src", "new"))
 ## environment varaibles, as used this way **must** begin with a
 ## dollar sign and consist only of uppercase letters, numbers and the
 ## underscore character.  You can then set the environment variables
-## in an .Renviron file or your .profile file.  Alternatively, you can
+## in an `.Renviron` (either within the project or in your home
+## directory) file or your `.profile` file.  Alternatively, you can
 ## create a file `orderly_envir.yml` in the same directory as
 ## `orderly_config.yml` with key-value pairs, such as
 
@@ -314,7 +315,7 @@ dir.create(file.path(path, "src", "new"))
 
 ## This will be read every time that `orderly_config.yml` is read (in
 ## contrast with .Renviron which is read only at the start of a
-## session).
+## session).  This will likely be more pleasant to work with.
 
 ## The advantage of using environment variables is that you can add
 ## the `orderly_envir.yml` file to your `.gitignore` and avoid

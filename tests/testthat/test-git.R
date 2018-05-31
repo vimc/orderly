@@ -143,3 +143,29 @@ test_that("run missing ref", {
   id <- runner$queue("minimal", ref = NULL, update = TRUE)
   expect_equal(git_ref_to_sha("HEAD", path2), sha1)
 })
+
+
+test_that("fetch before run", {
+  path <- prepare_orderly_git_example()
+  path1 <- path[["origin"]]
+  path2 <- path[["local"]]
+  sha1 <- git_ref_to_sha("HEAD", path1)
+  sha2 <- git_ref_to_sha("HEAD", path2)
+
+  id1 <- orderly_run("minimal", config = path2, echo = FALSE,
+                     ref = "origin/master")
+  expect_equal(git_ref_to_sha("HEAD", path2), sha2)
+  expect_equal(git_ref_to_sha("origin/master", path2), sha2)
+
+  id2 <- orderly_run("minimal", config = path2, echo = FALSE,
+                     ref = "origin/master", fetch = TRUE)
+
+  expect_equal(git_ref_to_sha("HEAD", path2), sha2)
+  expect_equal(git_ref_to_sha("origin/master", path2), sha1)
+
+  d1 <- readRDS(path_orderly_run_rds(file.path(path2, "draft", "minimal", id1)))
+  d2 <- readRDS(path_orderly_run_rds(file.path(path2, "draft", "minimal", id2)))
+
+  expect_equal(d1$git$sha, sha2)
+  expect_equal(d2$git$sha, sha1)
+})

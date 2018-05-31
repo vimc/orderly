@@ -57,6 +57,62 @@ test_that("run: ref", {
   expect_equal(d$name, "other")
 })
 
+
+test_that("run: fetch", {
+  path <- prepare_orderly_git_example()
+  path_local <- path[["local"]]
+  path_origin <- path[["origin"]]
+  sha_local <- git_ref_to_sha("HEAD", path_local)
+  sha_origin <- git_ref_to_sha("HEAD", path_origin)
+
+  args <- c("--root", path_local, "run", "--ref", "origin/master", "--fetch",
+            "minimal")
+  res <- main_args(args)
+  expect_true(res$options$fetch)
+  expect_false(res$options$pull)
+
+  res$target(res)
+
+  id <- orderly_latest("minimal", config = path_local)
+  d <- readRDS(path_orderly_run_rds(
+    file.path(path_local, "archive", "minimal", id)))
+  expect_equal(d$git$sha, sha_origin)
+  expect_equal(git_ref_to_sha("HEAD", path_local), sha_local)
+})
+
+
+test_that("run: pull & ref don't go together", {
+  path <- unzip_git_demo()
+  args <- c("--root", path, "run", "--ref", "origin/master", "--pull",
+            "minimal")
+  res <- main_args(args)
+  expect_error(res$target(res),
+               "Can't use --pull with --ref; perhaps you meant --fetch ?",
+               fixed = TRUE)
+})
+
+
+test_that("run: pull before run", {
+  path <- prepare_orderly_git_example()
+  path_local <- path[["local"]]
+  path_origin <- path[["origin"]]
+  sha_local <- git_ref_to_sha("HEAD", path_local)
+  sha_origin <- git_ref_to_sha("HEAD", path_origin)
+
+  args <- c("--root", path_local, "run", "--pull", "minimal")
+  res <- main_args(args)
+  expect_true(res$options$pull)
+  expect_null(res$options$ref)
+  res$target(res)
+
+  id <- orderly_latest("minimal", config = path_local)
+  d <- readRDS(path_orderly_run_rds(
+    file.path(path_local, "archive", "minimal", id)))
+  expect_equal(d$git$sha, sha_origin)
+  expect_equal(git_ref_to_sha("HEAD", path_local), sha_origin)
+})
+
+
 test_that("commit", {
   path <- prepare_orderly_example("minimal")
   id <- orderly_run("example", config = path, echo = FALSE)

@@ -48,7 +48,9 @@ main_args <- function(args) {
   use$args(res)
 }
 
-## 1. orderly [--root] run <name> [--no-commit] [--parameters=PARAMS]
+## 1. orderly [--root] run <name> [--no-commit] [--parameters=PARAMS] \
+##                         [--print-log] [--id-file=FILE] \
+##                         [--ref=REF [--fetch] | --pull]
 main_args_run <- function(res) {
   opts <- list(
     optparse::make_option("--no-commit",
@@ -75,7 +77,17 @@ main_args_run <- function(res) {
     optparse::make_option("--ref",
                           help = "Git reference (branch or sha) to use",
                           type = "character",
-                          default = NULL))
+                          default = NULL),
+    optparse::make_option("--fetch",
+                          help = "Fetch git before updating reference",
+                          type = "logical",
+                          default = FALSE,
+                          action = "store_true"),
+    optparse::make_option("--pull",
+                          help = "Pull git before running report",
+                          type = "logical",
+                          default = FALSE,
+                          action = "store_true"))
   parser <- optparse::OptionParser(
     option_list = opts,
     usage = "%prog [--root=ROOT] run [options] <name>")
@@ -101,10 +113,19 @@ main_do_run <- function(x) {
   }
   print_log <- x$options$print_log
   ref <- x$options$ref
+  fetch <- x$options$fetch
+  pull <- x$options$pull
 
   main_run <- function() {
+    if (pull) {
+      if (is.null(ref)) {
+        git_pull(config$path)
+      } else {
+        stop("Can't use --pull with --ref; perhaps you meant --fetch ?")
+      }
+    }
     id <- orderly_run(name, parameters, config = config, id_file = id_file,
-                      ref = ref)
+                      ref = ref, fetch = fetch)
     if (commit) {
       orderly_commit(id, name, config)
     }

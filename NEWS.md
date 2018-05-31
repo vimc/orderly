@@ -1,3 +1,12 @@
+# 0.4.4
+
+* Print total elapsed time taken to print report
+* Runner can kill reports
+* Git is reset to previous HEAD immediately after preparing workdir
+* `orderly_run` gains a `--fetch` argument, used when `--ref` is specified to run `git fetch` before resolving `ref`
+* The orderly runner looks up a the `sha` for a `ref` at the point of queuing, rather than the point of running
+* The cli tool gets a `--pull` and `--fetch` argument
+
 # 0.4.1
 
 * Support for adding a message to a report
