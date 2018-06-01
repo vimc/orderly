@@ -1,3 +1,7 @@
+# 0.4.5
+
+* `push_archive`, the inverse of `pull_archive` for copying an archive report elsewhere (VIMC-1811).  Currently only supported for `remote` as a path.
+
 # 0.4.4
 
 * Print total elapsed time taken to print report
