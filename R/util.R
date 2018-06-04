@@ -169,8 +169,8 @@ list_dirs <- function(path) {
   files[file.info(files, extra_cols = FALSE)$isdir]
 }
 
-file_copy <- function(...) {
-  ok <- file.copy(...)
+file_copy <- function(..., overwrite = TRUE) {
+  ok <- file.copy(..., overwrite = overwrite)
   if (any(!ok)) {
     stop("Error copying files")
   }
