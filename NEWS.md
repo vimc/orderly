@@ -1,3 +1,7 @@
+# 0.4.5
+
+* Copy a template report from the `orderly/template.yml` wiithin the orderly root if available, then falling back on the version in the package.
+
 # 0.4.4
 
 * Print total elapsed time taken to print report
