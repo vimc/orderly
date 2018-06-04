@@ -20,7 +20,7 @@ pull_archive_api <- function(name, id, config, remote) {
       call. = FALSE)
   }
   dest <- file.path(path_archive(config$path), name, id)
-  if (file.exists(dest)) {
+  if (file.exists(file.path(dest, "orderly_run.yml"))) {
     orderly_log("pull", sprintf("%s:%s already exists, skipping", name, id))
   } else {
     orderly_log("pull", sprintf("%s:%s", name, id))
