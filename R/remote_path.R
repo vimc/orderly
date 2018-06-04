@@ -41,10 +41,7 @@ pull_archive_path <- function(name, id, config, from, overwrite = FALSE) {
     ## This little dance means that in the event of a failure we don't
     ## get partial copies.
     on.exit(unlink(dest, recursive = TRUE))
-    ok <- file_copy(src, dest_dir, recursive = TRUE)
-    if (!ok) {
-      stop("Some sort of error copying %s => %s", src, dest)
-    }
+    file_copy(src, dest_dir, recursive = TRUE)
     on.exit()
   }
 }

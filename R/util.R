@@ -174,6 +174,7 @@ file_copy <- function(..., overwrite = TRUE) {
   if (any(!ok)) {
     stop("Error copying files")
   }
+  ok
 }
 
 is_directory <- function(x) {
