@@ -376,10 +376,10 @@ recipe_unexpected_artefacts <- function(info, id) {
   # config
   expected <- c(expected, info$script, "orderly.yml")
   # did the yaml file list files to be ignored? [TODO regex]
-  ignorance <- info$ignore
-  if (!is.null(ignorance)) {
-    expected <- c(expected, ignorance)
-  }
+  # ignorance <- info$ignore
+  # if (!is.null(ignorance)) {
+  #   expected <- c(expected, ignorance)
+  # }
 
   found <- list.files()
   # what files have we found that we not contained in expected
