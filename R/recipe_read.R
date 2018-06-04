@@ -20,7 +20,6 @@ recipe_read <- function(path, config) {
                 "resources",
                 "connection",
                 "depends",
-                # "ignore",
                 config$fields$name[!config$fields$required])
   check_fields(info, filename, required, optional)
 
@@ -56,9 +55,6 @@ recipe_read <- function(path, config) {
   if (!is.null(info$connection)) {
     assert_scalar_character(info$connection)
   }
-  # if (!is.null(info$packages)) {
-  #   assert_character(info$packages, fieldname("ignore"))
-  # }
 
   is_shiny <- info$artefacts[, "format"] == "shinyapp"
   shiny_dirs <- unlist(info$artefacts[is_shiny, "filenames"], use.names = FALSE)

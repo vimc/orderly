@@ -443,24 +443,6 @@ test_that("unexpected artefact", {
                              echo = FALSE),
                  "unex_art")
   
-  # test 2 produce a file and add an ignore to yaml
-  # this should not produce any "unex_art" messages
-  # path <- prepare_orderly_example("minimal")
-  # tmp <- tempfile()
-  # path_example <- file.path(path, "src", "example")
-  # # create bad file
-  # write(sprintf("file.create('%s')", "bad_file"),
-  #       file = file.path(path_example, "script.R"), append = TRUE)
-  # # tell the yaml to ignore the bad file
-  # write("ignore: bad_file",
-  #       file = file.path(path_example, "orderly.yml"), append = TRUE)
-  # # we're not expecting an 'unex_art' message at this point
-  # # grab all messages...
-  # messages <- capture_messages(orderly_run("example", config = path,
-  #                                          id_file = tmp, echo = FALSE))
-  # # ...make sure none of the messages contain "unex_art"
-  # expect_false(any(grep("unex_art", messages)))
-  
   # test 3 don't produce any unexpected artefacts, this should not produce any
   # "unex_art" messages
   path <- prepare_orderly_example("minimal")
