@@ -21,14 +21,7 @@ pull_archive_api <- function(name, id, config, remote) {
                                                     location = remote)
     cat("\n") # httr's progress bar is rubbish
     on.exit(file.remove(tmp))
-    tmp2 <- tempfile()
-    code <- utils::unzip(tmp, exdir = tmp2)
-    on.exit(unlink(tmp2, recursive = TRUE), add = TRUE)
-
-    ## R's file.copy is exceedingly rubbish
-    dir.create(dirname(dest), FALSE, TRUE)
-    file.copy(file.path(tmp2, basename(dest)),
-              dirname(dest), recursive = TRUE)
+    unzip_archive(tmp, config$path, name, id)
   }
 }
 
@@ -77,4 +70,37 @@ orderly_remote_resolve_secrets <- function(config, remote) {
     remote$username <- resolve_secrets(auth$username, config)
     remote$password <- resolve_secrets(auth$password, config)
   }
+}
+
+
+## This works around a series of failure modes in unpacking an archive
+## that tries to minimise the chance that an invalid archive is
+## unpacked.
+unzip_archive <- function(zip, root, name, id) {
+  tmp <- tempfile()
+  on.exit(unlink(tmp, recursive = TRUE))
+  res <- utils::unzip(zip, exdir = tmp)
+
+  files <- dir(tmp, all.files = TRUE, no.. = TRUE)
+  if (length(files) == 0L) {
+    stop("Corrupt zip file? No files extracted")
+  } else if (length(files) > 1L) {
+    stop("Invalid orderly archive", call. = FALSE)
+  }
+  if (files != id) {
+    stop(sprintf("This is archive '%s' but expected '%s'",
+                 files, id), call. = FALSE)
+  }
+
+  expected <- c("orderly.yml", "orderly_run.yml", "orderly_run.rds")
+  msg <- !file.exists(file.path(tmp, id, expected))
+  if (any(msg)) {
+    stop(sprintf("Invalid orderly archive: missing files %s",
+                 paste(expected[msg], collapse = ", ")), call. = FALSE)
+  }
+
+  ## R's file.copy is exceedingly rubbish
+  dest <- file.path(root, "archive", name)
+  dir.create(dest, FALSE, TRUE)
+  file_copy(file.path(tmp, id), dest, recursive = TRUE)
 }
