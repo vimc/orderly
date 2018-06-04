@@ -17,7 +17,7 @@ orderly_new <- function(name, config = NULL, locate = TRUE, quiet = FALSE) {
   }
   dir.create(dest)
   yml <- file.path(dest, "orderly.yml")
-  file.copy(orderly_file("orderly_example.yml"), yml)
+  file_copy(orderly_file("orderly_example.yml"), yml)
 
   if (nrow(config$fields) > 0L) {
     txt <- readLines(yml)

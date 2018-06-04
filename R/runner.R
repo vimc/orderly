@@ -215,7 +215,7 @@ R6_orderly_runner <- R6::R6Class(
         base <- if (state == RUNNER_SUCCESS) path_archive else path_draft
         p <- file.path(base(self$path), process$name, id)
         if (file.exists(p)) {
-          file.copy(c(process$stdout, process$stderr), p)
+          file_copy(c(process$stdout, process$stderr), p)
         }
       } else {
         id <- NA_character_

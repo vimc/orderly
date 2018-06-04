@@ -81,7 +81,7 @@ copy_report <- function(workdir, name, config) {
   }
   dir_create(parent)
   orderly_log("copy", "")
-  ok <- file.copy(workdir, parent, recursive = TRUE)
+  ok <- file_copy(workdir, parent, recursive = TRUE)
   if (!ok) {
     try(unlink(dest, recursive = TRUE), silent = TRUE)
     stop("Error copying file")
