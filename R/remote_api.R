@@ -6,6 +6,18 @@ pull_archive_api <- function(name, id, config, remote) {
   loadNamespace("montagu")
   assert_is(config, "orderly_config")
   orderly_remote_resolve_secrets(config, remote)
+
+  v <- withCallingHandlers(
+    montagu::montagu_reports_report_versions(name, remote),
+    error = function(e) {
+      valid <- montagu::montagu_reports_list(remote)
+      if (!(name %in% valid$name)) {
+        stop(sprintf("No versions of report '%s' found at '%s'",
+                     name, remote$name),
+             call. = FALSE)
+      }
+    })
+
   if (id == "latest") {
     ## Resolve id
     v <- montagu::montagu_reports_report_versions(name, remote)
