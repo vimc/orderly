@@ -10,7 +10,14 @@ pull_archive_api <- function(name, id, config, remote) {
     ## Resolve id
     v <- montagu::montagu_reports_report_versions(name, remote)
     ## TODO: more work needed here if we have two identical timestamps!
-    id <- last(v)
+    id <- latest_id(v)
+  } else if (!(id %in% v)) {
+    ## Confirm that the report does actually exist, working around
+    ## VIMC-1281:
+    stop(sprintf(
+      "Version '%s' not found at '%s': valid versions are:\n%s",
+      id, remote$name, paste(sprintf("  - %s", v), collapse = "\n")),
+      call. = FALSE)
   }
   dest <- file.path(path_archive(config$path), name, id)
   if (file.exists(dest)) {
