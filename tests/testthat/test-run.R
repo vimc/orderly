@@ -434,7 +434,6 @@ test_that("run with message", {
 test_that("unexpected artefact", {
   # test 1 produce a file that we weren't expecting, this should produce an
   # "unex_art" message
-  orderly_log_on()
   path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
@@ -443,11 +442,9 @@ test_that("unexpected artefact", {
   expect_message(orderly_run("example", config = path, id_file = tmp,
                              echo = FALSE),
                  "unex_art")
-  orderly_log_off()
   
   # test 2 produce a file and add an ignore to yaml
   # this should not produce any "unex_art" messages
-  orderly_log_on()
   path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
@@ -463,11 +460,9 @@ test_that("unexpected artefact", {
                                            id_file = tmp, echo = FALSE))
   # ...make sure none of the messages contain "unex_art"
   expect_false(any(grep("unex_art", messages)))
-  orderly_log_off()
   
   # test 3 don't produce any unexpected artefacts, this should not produce any
   # "unex_art" messages
-  orderly_log_on()
   path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
@@ -477,7 +472,6 @@ test_that("unexpected artefact", {
                                            id_file = tmp, echo = FALSE))
   # ...make sure none of the messages contain "unex_art"
   expect_false(any(grep("unex_art", messages)))
-  orderly_log_off()
 })
 
 test_that("shiny app", {
