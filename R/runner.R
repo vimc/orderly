@@ -97,7 +97,16 @@ R6_orderly_runner <- R6::R6Class(
         state <- d$state
         id <- d$id
       }
-      if (output) {
+      ## TODO: This should move into a separate field but that
+      ## requires getting changes through the reporting api.  We'll do
+      ## that in a second pass and move the data from here to that
+      ## field.
+      if (state == "queued") {
+        queue <- self$data$get()
+        i <- queue[, "state"] %in% c(RUNNER_QUEUED, RUNNER_RUNNING)
+        out <- paste(queue[i, "state"], queue[i, "key"], queue[i, "name"],
+                     sep = ":")
+      } else if (output) {
         out <- self$.read_logs(key)
       }
       list(key = key, status = state, id = id, output = out)
