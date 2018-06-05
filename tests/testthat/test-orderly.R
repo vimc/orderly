@@ -49,3 +49,19 @@ test_that("init - no doc", {
   expect_true(file.exists(file.path(path, "data")))
   expect_true(file.exists(file.path(path, "archive")))
 })
+
+
+test_that("orderly_run_info reports on artefacts", {
+  path <- prepare_orderly_example("depends")
+  id1 <- orderly_run("example", config = path, echo = FALSE)
+  id2 <- orderly_run("depend", config = path, echo = FALSE)
+
+  d <- readRDS(file.path(path, "draft", "depend", id2, "output.rds"))
+  expect_equal(d$depends$id, id1)
+})
+
+
+test_that("orderly_run_info errors when not running", {
+  expect_error(orderly_run_info(),
+               "Not currently running an orderly report")
+})
