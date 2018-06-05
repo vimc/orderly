@@ -35,7 +35,7 @@ orderly_init <- function(root, doc = TRUE, quiet = FALSE) {
     file_copy(orderly_file("readme_root.md"),
               file.path(root, "README.md"))
   }
-  file.copy(orderly_file("orderly_config_example.yml"),
+  file_copy(orderly_file("orderly_config_example.yml"),
             path_orderly_config_yml(root))
   if (!quiet) {
     message(sprintf("Now, edit the file 'orderly_config.yml' within '%s'",

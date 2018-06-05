@@ -365,7 +365,7 @@ recipe_prepare_workdir <- function(info) {
                    info$depends$filename,
                    info$depends$as)
     orderly_log("depends", str)
-    file.copy(src, dst)
+    file_copy(src, dst)
   }
 
   info$owd <- owd
