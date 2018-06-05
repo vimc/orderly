@@ -65,3 +65,16 @@ test_that("orderly_run_info errors when not running", {
   expect_error(orderly_run_info(),
                "Not currently running an orderly report")
 })
+
+
+test_that("orderly_run_info is usable from test_start", {
+  path <- prepare_orderly_example("depends")
+  id1 <- orderly_run("example", config = path, echo = FALSE)
+  id2 <- orderly_test_start("depend", config = path)
+  on.exit(orderly_test_end())
+  expect_equal(orderly_run_info()$depends$id, id1)
+  orderly_test_end()
+  on.exit()
+  expect_error(orderly_run_info(),
+               "Not currently running an orderly report")
+})
