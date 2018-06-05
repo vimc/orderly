@@ -18,7 +18,7 @@ skip_if_no_git <- function() {
 }
 
 skip_on_windows <- function() {
-  skip_on_os("windows")
+  testthat::skip_on_os("windows")
 }
 
 skip_if_no_vault_server <- function() {
