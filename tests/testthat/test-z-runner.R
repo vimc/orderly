@@ -297,6 +297,7 @@ test_that("queue_status", {
 
 test_that("queue status", {
   skip_on_windows()
+  skip_on_travis()
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
 
