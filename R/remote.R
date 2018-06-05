@@ -57,7 +57,7 @@ pull_dependencies <- function(name, config = NULL, locate = TRUE,
 ##' @rdname pull_dependencies
 ##'
 ##' @param id The identifier (for \code{pull_archive}.  The default is
-##'   to pull the latest report.
+##'   to use the latest report.
 pull_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
                          remote = NULL) {
   config <- orderly_config_get(config, locate)
@@ -66,6 +66,32 @@ pull_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
     pull_archive_api(name, id, config, remote)
   } else if (inherits(remote, "orderly_remote_path")) {
     pull_archive_path(name, id, config, remote)
+  } else {
+    stop("Unknown remote type ", paste(squote(class(remote)), collapse = " / "))
+  }
+}
+
+
+##' Push an archive report to a remote location.
+##'
+##' This is experimental and only supported using paths for
+##' \code{remote}.  It will be useful for doing something like sharing
+##' preliminary artefacts peer-to-peer before running centrally.  It
+##' is not supported (yet) for pushing onto a montagu server, but that
+##' would be nice to have (probably locked down the same way that the
+##' \code{ref} argument is).
+##'
+##' @title Push an archive report to a remote location
+##' @inheritParams pull_dependencies
+##' @export
+push_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
+                         remote = NULL) {
+  config <- orderly_config_get(config, locate)
+  remote <- get_remote(remote, config)
+  if (inherits(remote, "montagu_server")) {
+    stop("'montagu_server' remotes do not support push (yet)")
+  } else if (inherits(remote, "orderly_remote_path")) {
+    push_archive_path(name, id, config, remote)
   } else {
     stop("Unknown remote type ", paste(squote(class(remote)), collapse = " / "))
   }

@@ -25,7 +25,7 @@ parents until it finds an \code{orderly_config.yml} file.}
 \code{orderly_remote} object.}
 
 \item{id}{The identifier (for \code{pull_archive}.  The default is
-to pull the latest report.}
+to use the latest report.}
 }
 \description{
 Download dependent reports (WARNING: this is still in transition
