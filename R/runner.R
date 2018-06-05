@@ -103,7 +103,8 @@ R6_orderly_runner <- R6::R6Class(
       ## field.
       if (state == "queued") {
         queue <- self$data$get()
-        i <- queue[, "state"] %in% c(RUNNER_QUEUED, RUNNER_RUNNING)
+        i <- (queue[, "state"] %in% c(RUNNER_QUEUED, RUNNER_RUNNING)) &
+          seq_len(nrow(queue)) < which(queue[, "key"] == key)
         out <- paste(queue[i, "state"], queue[i, "key"], queue[i, "name"],
                      sep = ":")
       } else if (output) {
