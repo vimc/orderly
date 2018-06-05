@@ -187,9 +187,9 @@ recipe_read_check_artefacts <- function(x, filename, path) {
   assert_named(x, FALSE, "artefacts")
   unk <- setdiff(names(x), valid_formats())
   if (length(unk) > 0L) {
-    stop("Unknown artefact %s: %s",
-         ngettext(length(unk), "type", "types"),
-         paste(unk, collapse = ", "))
+    stop(sprintf("Unknown artefact %s: '%s'",
+                 ngettext(length(unk), "type", "types"),
+                 paste(unk, collapse = ", ")))
   }
 
   res <- t(vapply(seq_along(x), check_artefact, vector("list", 3L)))

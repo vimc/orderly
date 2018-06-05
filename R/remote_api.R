@@ -27,7 +27,7 @@ pull_archive_api <- function(name, id, config, remote) {
 
     ## R's file.copy is exceedingly rubbish
     dir.create(dirname(dest), FALSE, TRUE)
-    file.copy(file.path(tmp2, basename(dest)),
+    file_copy(file.path(tmp2, basename(dest)),
               dirname(dest), recursive = TRUE)
   }
 }
