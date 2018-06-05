@@ -293,3 +293,43 @@ test_that("queue_status", {
   res <- runner$queue_status(limit = 1)
   expect_equal(nrow(res$queue), 1L)
 })
+
+
+test_that("queue status", {
+  skip_on_windows()
+  path <- prepare_orderly_example("interactive")
+  runner <- orderly_runner(path)
+
+  name <- "interactive"
+  key1 <- runner$queue(name)
+  key2 <- runner$queue(name)
+  key3 <- runner$queue(name)
+
+  expect_equal(runner$status(key1)$output, character())
+  expect_equal(runner$status(key2)$output,
+               sprintf("queued:%s:%s", key1, "interactive"))
+  expect_equal(runner$status(key3)$output,
+               sprintf("queued:%s:%s", c(key1, key2), "interactive"))
+
+  tmp <- runner$poll()
+  id <- wait_for_id(runner, key1)
+
+  expect_null(runner$status(key1)$output)
+  expect_equal(runner$status(key2)$output,
+               sprintf("running:%s:%s", key1, "interactive"))
+  expect_equal(runner$status(key3)$output,
+               sprintf("%s:%s:%s", c("running", "queued"),
+                       c(key1, key2), "interactive"))
+
+  ## into the main bit of output here:
+  expect_equal(names(runner$status(key1, output = TRUE)$output),
+               c("stderr", "stdout"))
+
+  writeLines("continue", file.path(path, "draft", name, id, "resume"))
+  wait_while_running(runner)
+
+  expect_null(runner$status(key1)$output)
+  expect_equal(runner$status(key2)$output, character(0))
+  expect_equal(runner$status(key3)$output,
+               sprintf("queued:%s:%s", key2, "interactive"))
+})
