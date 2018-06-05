@@ -19,9 +19,6 @@ pull_archive_api <- function(name, id, config, remote) {
     })
 
   if (id == "latest") {
-    ## Resolve id
-    v <- montagu::montagu_reports_report_versions(name, remote)
-    ## TODO: more work needed here if we have two identical timestamps!
     id <- latest_id(v)
   } else if (!(id %in% v)) {
     ## Confirm that the report does actually exist, working around
