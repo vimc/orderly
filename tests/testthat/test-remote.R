@@ -101,7 +101,7 @@ test_that("unpack failure: missing files", {
   expect_error(unzip_archive(zip, tempfile(), NULL, id),
                "Invalid orderly archive: missing files orderly_run.yml",
                fixed = TRUE)
-)}
+})
           
 test_that("push report (path)", {
   ours <- create_orderly_demo()
