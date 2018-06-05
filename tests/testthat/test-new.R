@@ -50,3 +50,16 @@ test_that("custom fields", {
   expect_equal(dat["foo"], list(foo = NULL))
   expect_false("bar" %in% names(dat))
 })
+
+
+test_that("custom template is copied", {
+  path <- prepare_orderly_example("minimal")
+  dir.create(file.path(path, "orderly"))
+  content <- "testing"
+  writeLines(content, file.path(path, "orderly", "template.yml"))
+
+  orderly_new("testing", path, quiet = TRUE)
+
+  expect_identical(readLines(file.path(path, "src", "testing", "orderly.yml")),
+                   content)
+})

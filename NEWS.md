@@ -1,5 +1,6 @@
 # 0.4.5
 
+* Copy a template report from the `orderly/template.yml` wiithin the orderly root if available, then falling back on the version in the package.
 * `push_archive`, the inverse of `pull_archive` for copying an archive report elsewhere (VIMC-1811).  Currently only supported for `remote` as a path.
 * `orderly::orderly_run_info()` can return information about the current run, including information on dependencies.
 
