@@ -1,4 +1,4 @@
-FROM r-base:3.4.0
+FROM r-base:3.5.0
 
 RUN apt-get update && apt-get -y install \
   git \

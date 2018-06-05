@@ -27,7 +27,8 @@ test_that("copy failure", {
   writeLines("a", path1)
   writeLines("b", path2)
   on.exit(file.remove(path1, path2))
-  expect_error(file_copy(path1, path2), "Error copying files")
+  expect_error(file_copy(path1, path2, overwrite = FALSE),
+               "Error copying files")
   expect_equal(readLines(path2), "b")
 })
 

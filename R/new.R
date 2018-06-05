@@ -32,7 +32,7 @@ orderly_new <- function(name, config = NULL, locate = TRUE, quiet = FALSE) {
     template <- orderly_file("orderly_example.yml")
   }
   yml <- file.path(dest, "orderly.yml")
-  file.copy(template, yml)
+  file_copy(template, yml)
 
   if (!is_custom_template && nrow(config$fields) > 0L) {
     txt <- readLines(yml)

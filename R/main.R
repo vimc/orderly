@@ -139,7 +139,7 @@ main_do_run <- function(x) {
     ## we should run this with try() so that we can capture logs there
     id <- capture_log(main_run(), log, TRUE)
     dest <- (if (commit) path_archive else path_draft)(config$path)
-    file.copy(log, file.path(dest, name, id, "orderly.log"))
+    file_copy(log, file.path(dest, name, id, "orderly.log"))
   }
 
   ## TODO: is it useful to write this to some location (rather than
