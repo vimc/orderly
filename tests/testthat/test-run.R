@@ -437,6 +437,31 @@ test_that("run with message", {
                "'message' must be character")
 })
 
+test_that("unexpected artefact", {
+  # test 1 produce a file that we weren't expecting, this should produce an
+  # "unex_art" message
+  path <- prepare_orderly_example("minimal")
+  tmp <- tempfile()
+  path_example <- file.path(path, "src", "example")
+  write(sprintf("file.create('%s')", "bad_file"), 
+        file = file.path(path_example, "script.R"), append = TRUE)
+  expect_message(orderly_run("example", config = path, id_file = tmp,
+                             echo = FALSE),
+                 "unex_art")
+  
+  # test 3 don't produce any unexpected artefacts, this should not produce any
+  # "unex_art" messages
+  path <- prepare_orderly_example("minimal")
+  tmp <- tempfile()
+  path_example <- file.path(path, "src", "example")
+  # we're not expecting an 'unex_art' message at this point
+  # grab all messages...
+  messages <- capture_messages(orderly_run("example", config = path,
+                                           id_file = tmp, echo = FALSE))
+  # ...make sure none of the messages contain "unex_art"
+  expect_false(any(grep("unex_art", messages)))
+})
+
 test_that("shiny app", {
   path <- prepare_orderly_example("shiny")
   id <- orderly_run("example", config = path, echo = FALSE)

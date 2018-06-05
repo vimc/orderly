@@ -101,4 +101,16 @@ test_that("unpack failure: missing files", {
   expect_error(unzip_archive(zip, tempfile(), NULL, id),
                "Invalid orderly archive: missing files orderly_run.yml",
                fixed = TRUE)
+)}
+          
+test_that("push report (path)", {
+  ours <- create_orderly_demo()
+  theirs <- prepare_orderly_example("demo")
+
+  remote <- orderly_remote_path(theirs)
+  push_archive("multifile-artefact", "latest", ours, remote = remote)
+
+  d <- orderly_list_archive(theirs)
+  expect_equal(d$name, "multifile-artefact")
+  expect_true(d$id %in% orderly_list_archive(ours)$id)
 })

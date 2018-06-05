@@ -1,8 +1,14 @@
-##' Create new report
+##' Create new report, starting from a template.  We first look for a
+##' file \code{orderly/template.yml} within the orderly root.  If that
+##' is not found, then a copy from the orderly package is used.
+##'
 ##' @title Create new report
+##'
 ##' @param name Name of the new report (will be a directory name).
+##'
 ##' @param quiet Logical, indicating if informational messages should
 ##'   be suppressed.
+##'
 ##' @inheritParams orderly_list
 ##' @export
 orderly_new <- function(name, config = NULL, locate = TRUE, quiet = FALSE) {
@@ -16,10 +22,19 @@ orderly_new <- function(name, config = NULL, locate = TRUE, quiet = FALSE) {
     stop(sprintf("A report already exists called '%s'", name))
   }
   dir.create(dest)
-  yml <- file.path(dest, "orderly.yml")
-  file.copy(orderly_file("orderly_example.yml"), yml)
 
-  if (nrow(config$fields) > 0L) {
+  ### Sort out the extra fields when present.  For a custom template
+  ### we don't get involved with this because it's too hard to work
+  ### out if a custom optional field has been included.
+  template <- file.path(config$path, "orderly", "template.yml")
+  is_custom_template <- file.exists(template)
+  if (!is_custom_template) {
+    template <- orderly_file("orderly_example.yml")
+  }
+  yml <- file.path(dest, "orderly.yml")
+  file_copy(template, yml)
+
+  if (!is_custom_template && nrow(config$fields) > 0L) {
     txt <- readLines(yml)
     fields <- config$fields
     desc <- ifelse(is.na(fields$description), fields$name, fields$description)

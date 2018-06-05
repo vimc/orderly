@@ -109,6 +109,22 @@ test_that("ill formed artefacts", {
                "Expected an ordered map")
 })
 
+test_that("unknown artefact type", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path))
+  config <- orderly_config(path)
+  path_example <- file.path(path, "src", "example")
+  yml <- file.path(path_example, "orderly.yml")
+  dat <- yaml_read(yml)
+
+  expect_silent(recipe_read(path_example, config))
+
+  dat$artefacts <- list(unknown = list(filename = "foo", description = "bar"))
+  writeLines(yaml::as.yaml(dat), yml)
+  expect_error(suppressMessages(recipe_read(path_example, config)),
+               "Unknown artefact type: 'unknown'")
+})
+
 test_that("resource case matters", {
   path <- prepare_orderly_example("minimal")
   file.rename(file.path(path, "src", "example", "script.R"),

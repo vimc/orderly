@@ -57,7 +57,7 @@ prepare_orderly_example <- function(name, path = tempfile()) {
   src <- orderly_file(file.path("examples", name))
   orderly_init(path, quiet = TRUE)
   src_files <- dir(src, full.names = TRUE)
-  file.copy(src_files, path, overwrite = TRUE, recursive = TRUE)
+  file_copy(src_files, path, overwrite = TRUE, recursive = TRUE)
 
   if (file.exists(file.path(path, "source.R"))) {
     generator <- source(file.path(path, "source.R"), local = TRUE)$value
@@ -168,7 +168,7 @@ unzip_git_demo <- function(path = tempfile()) {
   dir.create(path, FALSE, TRUE)
   src <- dir(file.path(tmp, "demo"), full.names = TRUE, all.files = TRUE,
              no.. = TRUE)
-  file.copy(src, path, recursive = TRUE)
+  file_copy(src, path, recursive = TRUE)
   unlink(tmp, recursive = TRUE)
   path
 }
