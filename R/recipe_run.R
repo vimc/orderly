@@ -190,7 +190,7 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
 
   info$id <- id
   info$workdir <- file.path(path_draft(config$path), info$name, id)
-  info$owd <- recipe_prepare_workdir(info)
+  info <- recipe_prepare_workdir(info)
   info$git <- git_info(info$path)
 
   info
@@ -229,7 +229,6 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
     depends <- NULL
   } else {
     depends <- info$depends
-    depends$id <- basename(depends$path)
     depends <- depends[c("name", "id", "filename", "as", "hash")]
   }
 
@@ -352,16 +351,20 @@ recipe_prepare_workdir <- function(info) {
     src <- file.path(info$depends$path, info$depends$filename)
     dst <- file.path(info$workdir, info$depends$as)
     dir_create(dirname(dst))
+    info$depends$id_requested <- info$depends$id
+    info$depends$id <- basename(info$depends$path)
+
     str <- sprintf("%s@%s:%s -> %s",
                    info$depends$name,
-                   basename(info$depends$path),
+                   info$depends$id,
                    info$depends$filename,
                    info$depends$as)
     orderly_log("depends", str)
     file.copy(src, dst)
   }
 
-  owd
+  info$owd <- owd
+  info
 }
 
 recipe_check_artefacts <- function(info) {
