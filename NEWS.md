@@ -1,3 +1,7 @@
+# 0.4.5
+
+* `orderly::orderly_run_info()` can return information about the current run, including information on dependencies.
+
 # 0.4.4
 
 * Print total elapsed time taken to print report
