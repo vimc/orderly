@@ -51,6 +51,8 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   }
 
   info <- recipe_prepare(config, name, id_file, ref, fetch)
+  on.exit(recipe_current_run_clear())
+
   path <- recipe_run(info, parameters, envir, config, echo = echo,
                      message = message)
 
@@ -132,6 +134,7 @@ orderly_test_end <- function(cleanup = FALSE) {
   orderly_log("setwd", "reverting to original directory")
   options(prompt = cache$test$prompt)
   cache$test <- NULL
+  recipe_current_run_clear()
   if (cleanup) {
     unlink(testdir, recursive = TRUE)
   }
@@ -190,8 +193,10 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
 
   info$id <- id
   info$workdir <- file.path(path_draft(config$path), info$name, id)
-  info$owd <- recipe_prepare_workdir(info)
+  info <- recipe_prepare_workdir(info)
   info$git <- git_info(info$path)
+
+  recipe_current_run_set(info)
 
   info
 }
@@ -229,7 +234,6 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
     depends <- NULL
   } else {
     depends <- info$depends
-    depends$id <- basename(depends$path)
     depends <- depends[c("name", "id", "filename", "as", "hash")]
   }
 
@@ -352,16 +356,20 @@ recipe_prepare_workdir <- function(info) {
     src <- file.path(info$depends$path, info$depends$filename)
     dst <- file.path(info$workdir, info$depends$as)
     dir_create(dirname(dst))
+    info$depends$id_requested <- info$depends$id
+    info$depends$id <- basename(info$depends$path)
+
     str <- sprintf("%s@%s:%s -> %s",
                    info$depends$name,
-                   basename(info$depends$path),
+                   info$depends$id,
                    info$depends$filename,
                    info$depends$as)
     orderly_log("depends", str)
     file.copy(src, dst)
   }
 
-  owd
+  info$owd <- owd
+  info
 }
 
 recipe_check_artefacts <- function(info) {
@@ -488,4 +496,31 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
   }
 
   list(data = ldata, hash_resources = hash_resources, n_dev = n_dev)
+}
+
+
+recipe_current_run_set <- function(info) {
+  cache$current <- info
+}
+
+
+recipe_current_run_get <- function() {
+  cache$current
+}
+
+
+recipe_current_run_clear <- function() {
+  cache$current <- NULL
+}
+
+
+##' Get information on current orderly run
+##' @title Information on current orderly run
+##' @export
+orderly_run_info <- function() {
+  info <- recipe_current_run_get()
+  if (is.null(info)) {
+    stop("Not currently running an orderly report")
+  }
+  info
 }
