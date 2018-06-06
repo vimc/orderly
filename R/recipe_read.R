@@ -272,6 +272,12 @@ recipe_read_check_depends <- function(x, filename, config) {
     }
     el$hash <- hash_files(filename_full, FALSE)
 
+    el$time <- readRDS(path_orderly_run_rds(el$path))$time
+
+    ## Is this considered to be the "latest" copy of a dependency?
+    el$is_latest <- el$id == "latest" ||
+      basename(el$path) == latest_id(dir(dirname(el$path)))
+
     ## Bit of a faff here to get the format into something that will
     ## serialise and interrogate nicely.
     as.data.frame(el, stringsAsFactors = FALSE)
