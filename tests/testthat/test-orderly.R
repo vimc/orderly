@@ -72,9 +72,40 @@ test_that("orderly_run_info is usable from test_start", {
   id1 <- orderly_run("example", config = path, echo = FALSE)
   id2 <- orderly_test_start("depend", config = path)
   on.exit(orderly_test_end())
-  expect_equal(orderly_run_info()$depends$id, id1)
+  info <- orderly_run_info()
+  expect_equal(info$depends$id, id1)
+  expect_is(info$depends$time, "POSIXt")
+  expect_true(info$depends$is_latest)
   orderly_test_end()
   on.exit()
   expect_error(orderly_run_info(),
                "Not currently running an orderly report")
+})
+
+
+test_that("orderly_run_info: is_latest detects latest version", {
+  path <- prepare_orderly_example("depends")
+  id1 <- orderly_run("example", config = path, echo = FALSE)
+  id2 <- orderly_run("example", config = path, echo = FALSE)
+
+  f <- function() {
+    orderly_test_start("depend", config = path)
+    on.exit(orderly_test_end())
+    info <- orderly_run_info()
+    info
+  }
+
+  p <- file.path(path, "src", "depend", "orderly.yml")
+  txt1 <- sub("latest$", id1, readLines(p))
+  txt2 <- sub("latest$", id2, readLines(p))
+
+  info0 <- f()
+  writeLines(txt1, p)
+  info1 <- f()
+  writeLines(txt2, p)
+  info2 <- f()
+
+  expect_true(info0$depends$is_latest)
+  expect_false(info1$depends$is_latest)
+  expect_true(info2$depends$is_latest)
 })
