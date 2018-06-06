@@ -1,3 +1,7 @@
+# 0.4.6
+
+* Also output times with `orderly::orderly_run_info` (#24/VIMC-1818)
+
 # 0.4.5
 
 * Copy a template report from the `orderly/template.yml` wiithin the orderly root if available, then falling back on the version in the package.
