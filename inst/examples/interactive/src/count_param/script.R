@@ -1,8 +1,7 @@
-dat <- jsonlite::read_json("parameters.json")
-end <- Sys.time() + dat$time
+end <- Sys.time() + time
 while (Sys.time() < end) {
   cat(sprintf("%s waiting...\n", runif(1)))
-  Sys.sleep(dat$poll)
+  Sys.sleep(poll)
 }
 
 png("mygraph.png")
