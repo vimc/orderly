@@ -1,7 +1,9 @@
 data:
   dat: SELECT name, number FROM thing
 script: script.R
-resources: parameters.json
+parameters:
+  - time
+  - poll
 artefacts:
   staticgraph:
     description: A graph of things
