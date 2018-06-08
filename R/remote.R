@@ -47,7 +47,8 @@ pull_dependencies <- function(name, config = NULL, locate = TRUE,
   depends <- info$depends
   for (i in seq_along(depends)) {
     if (!isTRUE(depends[[i]]$draft)) {
-      pull_archive(names(depends)[[i]], depends[[i]]$id, config, remote)
+      pull_archive(names(depends)[[i]], depends[[i]]$id, config,
+                   remote = remote)
     }
   }
 }
