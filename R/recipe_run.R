@@ -381,8 +381,7 @@ recipe_check_artefacts <- function(info) {
   }
   unexpected <- recipe_unexpected_artefacts(info, NULL)
   if (length(unexpected) != 0) {
-    orderly_log("unex_art", paste("Unexpected artefacts created:",
-                                  unexpected, collapse = ", "))
+    orderly_log("unexpect", sprintf("%s", unexpected))
   }
   
   ## TODO: we should watermark the images here but there are some
@@ -417,13 +416,28 @@ recipe_exists_artefacts <- function(info, id) {
 }
 
 recipe_unexpected_artefacts <- function(info, id) {
+  # expected artefacts
   expected <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
+  # expected resources
+  resources <- c()
+  if (!is.null(info$resources)) {
+    resources <- info$resources
+  }
+  # expected dependencies
+  dependencies <- c()
+  if (!is.null(info$depends)) {
+    dependencies <- unlist(info$depends[, "filename"], use.names = FALSE)
+  }
   # we expect to see all artefacts from the config, the source file and the yml
   # config
-  expected <- c(expected, info$script, "orderly.yml")
+  expected <- c(expected, resources, dependencies, info$script, "orderly.yml")
 
-  found <- list.files()
-  # what files have we found that we not contained in expected
+  # this is set to recursive to ensure that artefacts created in directories
+  # are tracked
+  found <- list.files(recursive = TRUE)
+  # TODO do we need to track when a user unexpectedly creates an empty directory ?
+
+  # what files have we found that were not contained in expected
   unexpected <- setdiff(found, expected)
   unexpected
 }

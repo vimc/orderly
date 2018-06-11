@@ -439,7 +439,7 @@ test_that("run with message", {
 
 test_that("unexpected artefact", {
   # test 1 produce a file that we weren't expecting, this should produce an
-  # "unex_art" message
+  # "unexpect" message
   path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
@@ -447,10 +447,25 @@ test_that("unexpected artefact", {
         file = file.path(path_example, "script.R"), append = TRUE)
   expect_message(orderly_run("example", config = path, id_file = tmp,
                              echo = FALSE),
-                 "unex_art")
+                 "unexpect")
+
+  # test 2 produce multiple files that we weren't expecting, including one in a
+  # subdirectory this should produce an "unexpect" message
+  path <- prepare_orderly_example("minimal")
+  tmp <- tempfile()
+  path_example <- file.path(path, "src", "example")
+  write(sprintf("file.create('%s')", "bad_file_1"),
+        file = file.path(path_example, "script.R"), append = TRUE)
+  write("dir.create('subdir')",
+        file = file.path(path_example, "script.R"), append = TRUE)
+  write(sprintf("file.create('%s', recursive=TRUE)", file.path("subdir", "bad_file_2")),
+        file = file.path(path_example, "script.R"), append = TRUE)
+  expect_message(orderly_run("example", config = path, id_file = tmp,
+                             echo = FALSE),
+                 "unexpect")
   
   # test 3 don't produce any unexpected artefacts, this should not produce any
-  # "unex_art" messages
+  # "unexpect" messages
   path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
@@ -459,7 +474,7 @@ test_that("unexpected artefact", {
   messages <- capture_messages(orderly_run("example", config = path,
                                            id_file = tmp, echo = FALSE))
   # ...make sure none of the messages contain "unex_art"
-  expect_false(any(grep("unex_art", messages)))
+  expect_false(any(grep("unexpect", messages)))
 })
 
 test_that("shiny app", {
