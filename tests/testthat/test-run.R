@@ -438,8 +438,8 @@ test_that("run with message", {
 })
 
 test_that("unexpected artefact", {
-  # test 1 produce a file that we weren't expecting, this should produce an
-  # "unexpect" message
+  # produce a file that we weren't expecting, this should produce an
+  # "unexpected" message
   path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
@@ -447,10 +447,12 @@ test_that("unexpected artefact", {
         file = file.path(path_example, "script.R"), append = TRUE)
   expect_message(orderly_run("example", config = path, id_file = tmp,
                              echo = FALSE),
-                 "unexpect")
+                 "unexpected")
+})
 
-  # test 2 produce multiple files that we weren't expecting, including one in a
-  # subdirectory this should produce an "unexpect" message
+test_that("two unexpected artefacts", {
+  # produce multiple files that we weren't expecting, including one in a
+  # subdirectory this should produce an "unexpected" message
   path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
@@ -462,19 +464,34 @@ test_that("unexpected artefact", {
         file = file.path(path_example, "script.R"), append = TRUE)
   expect_message(orderly_run("example", config = path, id_file = tmp,
                              echo = FALSE),
-                 "unexpect")
-  
-  # test 3 don't produce any unexpected artefacts, this should not produce any
-  # "unexpect" messages
+                 "unexpected")
+})
+
+test_that("readme is expected", {
   path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
-  # we're not expecting an 'unex_art' message at this point
+  # create a file called README.md, this shouldn't produce an error
+  write(sprintf("file.create('%s')", "README.md"),
+        file = file.path(path_example, "script.R"), append = TRUE)
+  # we're not expecting an 'unexpected' message at this point
   # grab all messages...
   messages <- capture_messages(orderly_run("example", config = path,
                                            id_file = tmp, echo = FALSE))
-  # ...make sure none of the messages contain "unex_art"
-  expect_false(any(grep("unexpect", messages)))
+  # ...make sure none of the messages contain "unexpected"
+  expect_false(any(grep("unexpected", messages)))
+})
+
+test_that("no unexpected artefact", {
+  path <- prepare_orderly_example("minimal")
+  tmp <- tempfile()
+  path_example <- file.path(path, "src", "example")
+  # we're not expecting an 'unexpected' message at this point
+  # grab all messages...
+  messages <- capture_messages(orderly_run("example", config = path,
+                                           id_file = tmp, echo = FALSE))
+  # ...make sure none of the messages contain "unexpected"
+  expect_false(any(grep("unexpected", messages)))
 })
 
 test_that("shiny app", {
