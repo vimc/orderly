@@ -8,7 +8,7 @@ test_that("on/off", {
   expect_true(orderly_log_on())
   expect_null(getOption("orderly.nolog"))
   expect_message(orderly_log("subject", "value"),
-                 "[ subject   ]  value", fixed = TRUE)
+                 "[ subject     ]  value", fixed = TRUE)
 
   expect_true(orderly_log_off())
   expect_false(orderly_log_off())

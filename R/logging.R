@@ -39,7 +39,7 @@ orderly_log <- function(topic, value) {
     if (n > 0L) {
       topic <- c(topic, rep_len("...", n))
     }
-    str <- trimws(sprintf("[ %-9s ]  %s", topic, value))
+    str <- trimws(sprintf("[ %-11s ]  %s", topic, value))
     if (n > 0L) {
       str <- paste(str, collapse = "\n")
     }
@@ -48,6 +48,6 @@ orderly_log <- function(topic, value) {
 }
 
 orderly_log_break <- function() {
-  orderly_log(strrep("-", 9),
+  orderly_log(strrep("-", 11),
               strrep("-", max(getOption("width") - 18, 0)))
 }

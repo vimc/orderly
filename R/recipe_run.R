@@ -381,7 +381,7 @@ recipe_check_artefacts <- function(info) {
   }
   unexpected <- recipe_unexpected_artefacts(info, NULL)
   if (length(unexpected) != 0) {
-    orderly_log("unexpect", sprintf("%s", unexpected))
+    orderly_log("unexpected", sprintf("%s", unexpected))
   }
   
   ## TODO: we should watermark the images here but there are some
@@ -439,6 +439,11 @@ recipe_unexpected_artefacts <- function(info, id) {
 
   # what files have we found that were not contained in expected
   unexpected <- setdiff(found, expected)
+
+  # remove any files of the form readme or readme.md
+  unexpected <- unexpected[!grepl("^readme(|.md)$", unexpected,
+                                  ignore.case = TRUE)]
+
   unexpected
 }
 
