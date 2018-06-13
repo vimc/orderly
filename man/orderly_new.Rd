@@ -21,5 +21,7 @@ parents until it finds an \code{orderly_config.yml} file.}
 be suppressed.}
 }
 \description{
-Create new report
+Create new report, starting from a template.  We first look for a
+file \code{orderly/template.yml} within the orderly root.  If that
+is not found, then a copy from the orderly package is used.
 }
