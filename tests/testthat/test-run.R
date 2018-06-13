@@ -460,7 +460,8 @@ test_that("two unexpected artefacts", {
         file = file.path(path_example, "script.R"), append = TRUE)
   write("dir.create('subdir')",
         file = file.path(path_example, "script.R"), append = TRUE)
-  write(sprintf("file.create('%s', recursive=TRUE)", file.path("subdir", "bad_file_2")),
+  write(sprintf("file.create('%s', recursive=TRUE)",
+                file.path("subdir", "bad_file_2")),
         file = file.path(path_example, "script.R"), append = TRUE)
   expect_message(orderly_run("example", config = path, id_file = tmp,
                              echo = FALSE),
