@@ -507,6 +507,14 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
   } else {
     hash_resources <- NULL
   }
+  missing_packages <- setdiff(info$packages, .packages(TRUE))
+  
+  if (length(missing_packages) > 0) {
+    orderly_log("packages",
+                sprintf("%s", missing_packages)) 
+    stop(paste("Missing packages:", 
+               paste(missing_packages, collapse = ", ")))
+  }
   for (p in info$packages) {
     library(p, character.only = TRUE)
   }
