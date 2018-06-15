@@ -109,3 +109,15 @@ test_that("orderly_run_info: is_latest detects latest version", {
   expect_false(info1$depends$is_latest)
   expect_true(info2$depends$is_latest)
 })
+
+
+test_that("orderly_test_start failure resets working directory", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "src", "example", "orderly.yml")
+  txt <- c(readLines(p), "packages: nonexistantpackage")
+  writeLines(txt, p)
+  wd <- getwd()
+  expect_error(orderly_test_start("example", config = path),
+               "nonexistantpackage")
+  expect_equal(getwd(), wd)
+})

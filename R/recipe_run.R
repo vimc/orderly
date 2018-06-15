@@ -100,8 +100,12 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
 
   config <- orderly_config_get(config, locate)
   ## TODO: support ref here
-  info <- recipe_prepare(config, name, id_file = NULL, ref = NULL, fetch = FALSE)
+  info <- recipe_prepare(config, name, id_file = NULL, ref = NULL,
+                         fetch = FALSE)
   owd <- setwd(info$workdir)
+  ## Ensure that if anything goes wrong we'll end up back where we
+  ## started (see VIMC-1870)
+  on.exit(setwd(owd))
   prep <- orderly_prepare_data(config, info, parameters, envir)
 
   cache$test <- list(owd = owd,
@@ -117,6 +121,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
     orderly_test_end()
   }, .GlobalEnv)
   orderly_log("setwd", "running in test draft directory")
+  on.exit()
 }
 
 ##' @export
