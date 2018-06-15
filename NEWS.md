@@ -1,4 +1,4 @@
-# 0.4.?
+# 0.4.7
 
 * Reset working directory if `orderly_test_start` fails on startup (VIMC-1870)
 
