@@ -1,3 +1,7 @@
+# 0.4.?
+
+* Reset working directory if `orderly_test_start` fails on startup (VIMC-1870)
+
 # 0.4.6
 
 * Also output times with `orderly::orderly_run_info` (#24/VIMC-1818)
