@@ -133,6 +133,8 @@ main_do_run <- function(x) {
   }
 
   if (print_log) {
+    sink(stderr(), type = "output")
+    on.exit(sink(NULL, type = "output"))
     id <- main_run()
   } else {
     log <- tempfile()
