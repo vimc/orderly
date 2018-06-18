@@ -83,7 +83,8 @@ test_that("run: success", {
                dat$output$stdout)
   expect_equal(dat2$output$stderr[seq_along(dat$output$stderr)],
                dat$output$stderr)
-  expect_true(all(lengths(dat2$output) > lengths(dat$output)))
+  expect_gt(length(dat2$output$stderr), length(dat$output$stderr))
+  expect_equal(dat$output$stdout, character())
 })
 
 test_that("run: error", {
