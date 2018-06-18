@@ -219,6 +219,11 @@ R6_orderly_runner <- R6::R6Class(
       ## if we fail:
       process <- self$process
       self$process <- NULL
+      process$px <- NULL
+
+      ## Force cleanup of the process so that the I/O completes
+      gc()
+
       orderly_log(state, sprintf("%s (%s)", process$key, process$name))
 
       if (file.exists(process$id_file)) {
