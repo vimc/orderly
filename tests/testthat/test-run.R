@@ -534,7 +534,7 @@ test_that("non-existent package", {
   # has orderly detected that the package does not exist>
   expect_error(orderly_run("example", config = path, id_file = tmp,
                            echo = FALSE),
-               "Missing packages: non_existent_package")
+               "Missing packages: 'non_existent_package'")
 })
 
 test_that("multiple non-existent packages", {
@@ -551,5 +551,6 @@ test_that("multiple non-existent packages", {
   # has orderly detected that the package does not exist>
   expect_error(orderly_run("example", config = path, id_file = tmp,
                            echo = FALSE),
-               "Missing packages: non_existent_package, non_existent_package_2")
+               paste("Missing packages:",
+                     "'non_existent_package', 'non_existent_package_2'"))
 })
