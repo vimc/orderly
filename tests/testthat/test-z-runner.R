@@ -57,7 +57,7 @@ test_that("run: success", {
                list(key = key,
                     status = "queued",
                     id = NA_character_,
-                    output = NULL))
+                    output = list(stdout = character(), stderr = NULL)))
 
   tmp <- runner$poll()
   expect_equal(tmp, structure("create", key = key))
@@ -306,19 +306,19 @@ test_that("queue status", {
   key2 <- runner$queue(name)
   key3 <- runner$queue(name)
 
-  expect_equal(runner$status(key1)$output, character())
-  expect_equal(runner$status(key2)$output,
+  expect_equal(runner$status(key1)$output$stdout, character())
+  expect_equal(runner$status(key2)$output$stdout,
                sprintf("queued:%s:%s", key1, "interactive"))
-  expect_equal(runner$status(key3)$output,
+  expect_equal(runner$status(key3)$output$stdout,
                sprintf("queued:%s:%s", c(key1, key2), "interactive"))
 
   tmp <- runner$poll()
   id <- wait_for_id(runner, key1)
 
-  expect_null(runner$status(key1)$output)
-  expect_equal(runner$status(key2)$output,
+  expect_null(runner$status(key1)$output$stdout)
+  expect_equal(runner$status(key2)$output$stdout,
                sprintf("running:%s:%s", key1, "interactive"))
-  expect_equal(runner$status(key3)$output,
+  expect_equal(runner$status(key3)$output$stdout,
                sprintf("%s:%s:%s", c("running", "queued"),
                        c(key1, key2), "interactive"))
 
@@ -329,8 +329,8 @@ test_that("queue status", {
   writeLines("continue", file.path(path, "draft", name, id, "resume"))
   wait_while_running(runner)
 
-  expect_null(runner$status(key1)$output)
-  expect_equal(runner$status(key2)$output, character(0))
-  expect_equal(runner$status(key3)$output,
+  expect_null(runner$status(key1)$output$stdout)
+  expect_equal(runner$status(key2)$output$stdout, character(0))
+  expect_equal(runner$status(key3)$output$stdout,
                sprintf("queued:%s:%s", key2, "interactive"))
 })
