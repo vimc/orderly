@@ -521,3 +521,35 @@ test_that("shiny app", {
   expect_equal(hash_files(file.path(p, dir(q)), FALSE),
                hash_files(file.path(q, dir(q)), FALSE))
 })
+
+test_that("non-existent package", {
+  path <- prepare_orderly_example("minimal")
+  tmp <- tempfile()
+  path_example <- file.path(path, "src", "example")
+  yml_path <- file.path(path_example, "orderly.yml")
+
+  # add a non-existent package to the yaml
+  write(sprintf("packages: %s", "non_existent_package"),
+        file = yml_path, append = TRUE)
+  # has orderly detected that the package does not exist>
+  expect_error(orderly_run("example", config = path, id_file = tmp,
+                           echo = FALSE),
+               "Missing packages: non_existent_package")
+})
+
+test_that("multiple non-existent packages", {
+  path <- prepare_orderly_example("minimal")
+  tmp <- tempfile()
+  path_example <- file.path(path, "src", "example")
+  yml_path <- file.path(path_example, "orderly.yml")
+
+  # add a non-existent package to the yaml
+  write(sprintf("packages: \n  - %s", "non_existent_package"),
+        file = yml_path, append = TRUE)
+  write(sprintf("  - %s", "non_existent_package_2"),
+        file = yml_path, append = TRUE)
+  # has orderly detected that the package does not exist>
+  expect_error(orderly_run("example", config = path, id_file = tmp,
+                           echo = FALSE),
+               "Missing packages: non_existent_package, non_existent_package_2")
+})
