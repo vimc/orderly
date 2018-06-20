@@ -54,12 +54,64 @@ test_that("custom fields", {
 
 test_that("custom template is copied", {
   path <- prepare_orderly_example("minimal")
-  dir.create(file.path(path, "orderly"))
+  p <- file.path(path, "template", "default")
+  dir.create(p, FALSE, TRUE)
+
   content <- "testing"
-  writeLines(content, file.path(path, "orderly", "template.yml"))
+  writeLines(content, file.path(p, "orderly.yml"))
 
   orderly_new("testing", path, quiet = TRUE)
-
   expect_identical(readLines(file.path(path, "src", "testing", "orderly.yml")),
                    content)
+})
+
+
+test_that("custom template can be overriden by system", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "template", "default")
+  dir.create(p, FALSE, TRUE)
+
+  content <- "testing"
+  writeLines(content, file.path(p, "orderly.yml"))
+
+  orderly_new("testing", path, quiet = TRUE, template = "system")
+  expect_identical(readLines(file.path(path, "src", "testing", "orderly.yml")),
+                   readLines(orderly_file("orderly_example.yml")))
+})
+
+
+test_that("custom template copies all files", {
+  path <- prepare_orderly_example("minimal")
+
+  p <- file.path(path, "template", "foo")
+  dir.create(p, FALSE, TRUE)
+  content <- "testing"
+  writeLines(content, file.path(p, "orderly.yml"))
+  dir.create(file.path(p, "R"))
+  writeLines("some content", file.path(p, "R", "functions.R"))
+  writeLines("hidden content", file.path(p, ".hidden"))
+
+  orderly_new("testing", path, quiet = TRUE, template = "foo")
+
+  list_files <- function(...) {
+    sort(dir(file.path(...), all.files = TRUE, recursive = TRUE))
+  }
+  hash_files <- function(...) {
+    files <- list_files(...)
+    set_names(tools::md5sum(file.path(file.path(...), files)), files)
+  }
+
+  expect_equal(list_files(path, "src", "testing"),
+               list_files(p))
+  expect_equal(hash_files(path, "src", "testing"),
+               hash_files(p))
+})
+
+
+test_that("missing templates are an error", {
+  path <- prepare_orderly_example("minimal")
+  expect_error(
+    orderly_new("testing", config = path, template = "foo"),
+    "Did not find file 'template/foo/orderly.yml' within orderly root")
+  expect_false(file.exists(file.path(path, "src", "testing")))
 })

@@ -4,7 +4,8 @@
 \alias{orderly_new}
 \title{Create new report}
 \usage{
-orderly_new(name, config = NULL, locate = TRUE, quiet = FALSE)
+orderly_new(name, config = NULL, locate = TRUE, quiet = FALSE,
+  template = NULL)
 }
 \arguments{
 \item{name}{Name of the new report (will be a directory name).}
@@ -19,9 +20,34 @@ parents until it finds an \code{orderly_config.yml} file.}
 
 \item{quiet}{Logical, indicating if informational messages should
 be suppressed.}
+
+\item{template}{The name of a template.  If \code{NULL} orderly
+will search for a template (see Details).  If given it must be
+the name of a directory within a directory \code{templates} in
+your project root.  The special label "orderly" will use
+orderly's builtin template.}
 }
 \description{
-Create new report, starting from a template.  We first look for a
-file \code{orderly/template.yml} within the orderly root.  If that
-is not found, then a copy from the orderly package is used.
+Create new report, starting from a template.  Orderly comes with a
+set of templates, but projects can bring their own templates; see
+Details below for how these are configured and discovered by
+orderly.
+}
+\details{
+To create a custom template, create a directory \code{templates}
+within your orderly root.  Within that directory create
+directories containing all the files that you would like a report
+to contain.  This \code{emph} must contain a file
+\code{orderly.yml} but may contain further files (for example, you
+might want a default script and Rmd file).
+
+If \code{template} is not given (i.e., is \code{NULL}) then we
+look for a template called \code{default} (i.e., stored at
+\code{template/default}), then fall back on the system orderly
+template.
+
+We first look for a file \code{orderly/template.yml} within the
+orderly root.  If that is not found, then a copy from the orderly
+package is used.  This can always be used by using \code{template
+= "system"}.
 }

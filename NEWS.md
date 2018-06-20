@@ -1,6 +1,7 @@
 # 0.4.7
 
 * Reset working directory if `orderly_test_start` fails on startup (VIMC-1870)
+* Extend the templates to allow for multiple files and versions of templates (VIMC-1877)
 
 # 0.4.6
 
