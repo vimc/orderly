@@ -46,7 +46,6 @@ orderly_new <- function(name, config = NULL, locate = TRUE, quiet = FALSE,
   if (file.exists(dest)) {
     stop(sprintf("A report already exists called '%s'", name))
   }
-  dir.create(dest)
 
   if (is.null(template)) {
     template <-
@@ -68,13 +67,14 @@ orderly_new <- function(name, config = NULL, locate = TRUE, quiet = FALSE,
 
 
 orderly_new_system <- function(dest, config) {
+  dir.create(dest)
   template <- orderly_file("orderly_example.yml")
   dest_yml <- file.path(dest, "orderly.yml")
 
   if (nrow(config$fields) == 0L) {
     file_copy(template, dest_yml)
   } else {
-    xt <- readLines(template)
+    txt <- readLines(template)
     fields <- config$fields
     desc <- ifelse(is.na(fields$description), fields$name, fields$description)
     req <- ifelse(fields$required, "required", "optional")
@@ -90,9 +90,9 @@ orderly_new_system <- function(dest, config) {
 orderly_new_user <- function(dest, config, template) {
   if (!has_template(config$path, template)) {
     stop(sprintf("Did not find file '%s' within orderly root",
-                 file.path("template", name, "orderly.yml")))
+                 file.path("template", template, "orderly.yml")))
   }
-
+  dir.create(dest)
   path_template <- file.path(config$path, "template", template)
   files <- dir(path_template, all.files = TRUE, no.. = TRUE, full.names = TRUE)
   file_copy(files, dest, recursive = TRUE)
