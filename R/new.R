@@ -1,6 +1,24 @@
-##' Create new report, starting from a template.  We first look for a
-##' file \code{orderly/template.yml} within the orderly root.  If that
-##' is not found, then a copy from the orderly package is used.
+##' Create new report, starting from a template.  Orderly comes with a
+##' set of templates, but projects can bring their own templates; see
+##' Details below for how these are configured and discovered by
+##' orderly.
+##'
+##' To create a custom template, create a directory \code{templates}
+##' within your orderly root.  Within that directory create
+##' directories containing all the files that you would like a report
+##' to contain.  This \code{emph} must contain a file
+##' \code{orderly.yml} but may contain further files (for example, you
+##' might want a default script and Rmd file).
+##'
+##' If \code{template} is not given (i.e., is \code{NULL}) then we
+##' look for a template called \code{default} (i.e., stored at
+##' \code{template/default}), then fall back on the system orderly
+##' template.
+##'
+##' We first look for a file \code{orderly/template.yml} within the
+##' orderly root.  If that is not found, then a copy from the orderly
+##' package is used.  This can always be used by using \code{template
+##' = "system"}.
 ##'
 ##' @title Create new report
 ##'
@@ -9,9 +27,16 @@
 ##' @param quiet Logical, indicating if informational messages should
 ##'   be suppressed.
 ##'
+##' @param template The name of a template.  If \code{NULL} orderly
+##'   will search for a template (see Details).  If given it must be
+##'   the name of a directory within a directory \code{templates} in
+##'   your project root.  The special label "orderly" will use
+##'   orderly's builtin template.
+##'
 ##' @inheritParams orderly_list
 ##' @export
-orderly_new <- function(name, config = NULL, locate = TRUE, quiet = FALSE) {
+orderly_new <- function(name, config = NULL, locate = TRUE, quiet = FALSE,
+                        template = NULL) {
   config <- orderly_config_get(config, locate)
   assert_scalar_character(name)
   if (grepl("[[:space:]]", name)) {
@@ -23,28 +48,15 @@ orderly_new <- function(name, config = NULL, locate = TRUE, quiet = FALSE) {
   }
   dir.create(dest)
 
-  ### Sort out the extra fields when present.  For a custom template
-  ### we don't get involved with this because it's too hard to work
-  ### out if a custom optional field has been included.
-  template <- file.path(config$path, "orderly", "template.yml")
-  is_custom_template <- file.exists(template)
-  if (!is_custom_template) {
-    template <- orderly_file("orderly_example.yml")
+  if (is.null(template)) {
+    template <-
+      if (has_template(config$path, "default")) "default" else "system"
   }
-  yml <- file.path(dest, "orderly.yml")
-  file_copy(template, yml)
 
-  if (!is_custom_template && nrow(config$fields) > 0L) {
-    txt <- readLines(yml)
-    fields <- config$fields
-    desc <- ifelse(is.na(fields$description), fields$name, fields$description)
-    req <- ifelse(fields$required, "required", "optional")
-    str <- sprintf("%s -- %s (%s)", desc, fields$type, req)
-    str <- vcapply(strwrap(str, prefix = "# ", simplify = FALSE),
-                   paste, collapse = "\n")
-    ex <- sprintf(ifelse(fields$required, "%s: ~", "# %s:"), fields$name)
-    orig <- readLines(yml)
-    writeLines(c(orig, paste("", str, "#", ex, sep = "\n")), yml)
+  if (template == "system") {
+    orderly_new_system(dest, config)
+  } else {
+    orderly_new_user(dest, config, template)
   }
 
   if (!quiet) {
@@ -52,4 +64,41 @@ orderly_new <- function(name, config = NULL, locate = TRUE, quiet = FALSE) {
     message("Edit the file 'orderly.yml' within this directory")
   }
   invisible(dest)
+}
+
+
+orderly_new_system <- function(dest, config) {
+  template <- orderly_file("orderly_example.yml")
+  dest_yml <- file.path(dest, "orderly.yml")
+
+  if (nrow(config$fields) == 0L) {
+    file_copy(template, dest_yml)
+  } else {
+    xt <- readLines(template)
+    fields <- config$fields
+    desc <- ifelse(is.na(fields$description), fields$name, fields$description)
+    req <- ifelse(fields$required, "required", "optional")
+    str <- sprintf("%s -- %s (%s)", desc, fields$type, req)
+    str <- vcapply(strwrap(str, prefix = "# ", simplify = FALSE),
+                   paste, collapse = "\n")
+    ex <- sprintf(ifelse(fields$required, "%s: ~", "# %s:"), fields$name)
+    writeLines(c(txt, paste("", str, "#", ex, sep = "\n")), dest_yml)
+  }
+}
+
+
+orderly_new_user <- function(dest, config, template) {
+  if (!has_template(config$path, template)) {
+    stop(sprintf("Did not find file '%s' within orderly root",
+                 file.path("template", name, "orderly.yml")))
+  }
+
+  path_template <- file.path(config$path, "template", template)
+  files <- dir(path_template, all.files = TRUE, no.. = TRUE, full.names = TRUE)
+  file_copy(files, dest, recursive = TRUE)
+}
+
+
+has_template <- function(root, name) {
+  file.exists(file.path(root, "template", name, "orderly.yml"))
 }
