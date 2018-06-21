@@ -495,6 +495,16 @@ test_that("no unexpected artefact", {
   expect_false(any(grep("unexpected", messages)))
 })
 
+
+test_that("renamed dependencies are expected", {
+  path <- prepare_orderly_example("depends")
+  orderly_run("example", config = path, echo = FALSE)
+  messages <- capture_messages(
+    orderly_run("depend", config = path, echo = FALSE))
+  expect_false(any(grep("unexpected", messages)))
+})
+
+
 test_that("shiny app", {
   path <- prepare_orderly_example("shiny")
   id <- orderly_run("example", config = path, echo = FALSE)
