@@ -564,3 +564,23 @@ test_that("multiple non-existent packages", {
                paste("Missing packages:",
                      "'non_existent_package', 'non_existent_package_2'"))
 })
+
+
+test_that("use multiple versions of an artefact", {
+  path <- prepare_orderly_example("depends")
+
+  id1 <- orderly_run("example", config = path, echo = FALSE)
+  id2 <- orderly_run("example", config = path, echo = FALSE)
+  orderly_commit(id2, config = path)
+
+  id3 <- orderly_run("depend2", config = path, echo = FALSE)
+
+  p1 <- file.path(path, "draft", "depend2", id3,
+                  c("previous1.rds", "previous2.rds"))
+  expect_true(all(file.exists(p1)))
+
+  p2 <- file.path(path, c("draft", "archive"), "example", c(id1, id2),
+                  "data.rds")
+  expect_equal(hash_files(p1, FALSE),
+               hash_files(p2, FALSE))
+})
