@@ -251,14 +251,14 @@ recipe_read_check_depends <- function(x, filename, config) {
                                    must_work = TRUE)
     assert_named(el$use, TRUE, sprintf("%s:depends:%s:use", filename, name))
     ## TODO: should check that these are not listed as resources I think
-    err <- !vapply(el$use, function(x) is.character(x) && length(x) == 1, TRUE)
+    err <- !vlapply(el$use, function(x) is.character(x) && length(x) == 1)
     if (any(err)) {
       stop(sprintf("%s:depends:%s:use must all be scalar character",
                    filename, name))
     }
 
-    el$filename = vapply(el$use, identity, character(1), USE.NAMES = FALSE)
-    el$as = names(el$use)
+    el$filename <- vcapply(el$use, identity, USE.NAMES = FALSE)
+    el$as <- names(el$use)
     el$use <- NULL
 
     filename_full <- file.path(el$path, el$filename)
