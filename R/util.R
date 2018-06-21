@@ -486,3 +486,18 @@ list_all_files <- function(path) {
   sort_c(dir(path, recursive = TRUE, full.names = TRUE, all.files = TRUE,
              no.. = TRUE))
 }
+
+
+ordered_map_to_list <- function(x) {
+  ## This should not happen, but this is what would happen if we had
+  ## a corrupted ordered map.  I think that the yaml parrsers will
+  ## fix that for us though.  See similar faff in
+  ## recipe_read_check_artefacts.
+  stopifnot(all(lengths(x) == 1L),
+            vlapply(x, function(el) !is.null(names(el))))
+  if (!all(lengths(x) == 1L)) {
+    stop("I am confused here")
+  }
+  set_names(lapply(x, function(x) x[[1]]),
+            vcapply(x, names))
+}
