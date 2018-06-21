@@ -431,7 +431,7 @@ recipe_unexpected_artefacts <- function(info, id) {
   # expected dependencies
   dependencies <- c()
   if (!is.null(info$depends)) {
-    dependencies <- unlist(info$depends[, "filename"], use.names = FALSE)
+    dependencies <- info$depends$as
   }
   # we expect to see all artefacts from the config, the source file and the yml
   # config
