@@ -231,7 +231,9 @@ recipe_read_check_depends <- function(x, filename, config) {
   if (is.null(x)) {
     return(NULL)
   }
-  assert_named(x, TRUE, sprintf("%s:%s", filename, "depends"))
+  if (is.null(names(x))) {
+    x <- ordered_map_to_list(x)
+  }
 
   check_use1 <- function(i) {
     name <- names(x)[[i]]
