@@ -4,7 +4,8 @@ RUN apt-get update && apt-get -y install \
   git \
   libimage-exiftool-perl \
   libssl-dev \
-  libpq-dev
+  libpq-dev \
+  wget
 
 # R package dependencies, including a few extras that we'll want handy
 RUN install2.r \
