@@ -7,7 +7,7 @@ RUN apt-get update && apt-get -y install \
   libpq-dev
 
 # R package dependencies, including a few extras that we'll want handy
-RUN install.r \
+RUN install2.r \
   DBI \
   R6 \
   RSQLite \
