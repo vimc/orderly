@@ -50,7 +50,9 @@ orderly_run_remote_api <- function(name, config, parameters = NULL, ref = NULL,
   loadNamespace("montagu")
   orderly_remote_resolve_secrets(config, remote)
 
-  if (remote == "production" && !is.null(ref)) {
+  ## TODO: this should come out and be replaced by control at the
+  ## level of the *server*.
+  if (remote$name == "production" && !is.null(ref)) {
     stop("Can't specify 'ref' on production")
   }
   montagu::montagu_reports_run(name, parameters = parameters, ref = ref,
