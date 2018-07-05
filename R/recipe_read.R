@@ -6,6 +6,7 @@ recipe_read <- function(path, config) {
   assert_file_exists(path, name = "Report working directory")
   assert_file_exists(filename, name = "Orderly configuration")
   info <- yaml_read(filename)
+
   required <- c("script", # filename
                 "artefacts",
                 "data",
