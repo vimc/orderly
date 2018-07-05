@@ -602,7 +602,6 @@ test_that("missing required", {
 
   # get required fields out of config
   config <- orderly_config(path)
-  print(config$fields)
   req_fields <- config$fields$name[config$fields$required]
   # iterate over the required fields...
   for (field in req_fields) {
@@ -611,16 +610,15 @@ test_that("missing required", {
     writeLines(broken_yml, file.path(path_example, "orderly.yml"))
     # required fields still missing
     missing_required <- setdiff(req_fields, field)
-    
+
     # we are expecting an error message here
     if (length(missing_required) > 0) {
-      err_msg <- sprintf("Fields missing from %s: %s",
-                        file.path(path_example, "orderly.yml"),
+      err_msg <- sprintf("Fields missing from .*: %s",
                         paste(missing_required, collapse = ", ")
                         )
       expect_error(orderly_run("example", config = path, id_file = tmp,
                                echo = FALSE),
-                   err_msg)
+                   regexp = err_msg)
     }
   }
 })
