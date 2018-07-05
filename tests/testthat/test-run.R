@@ -584,3 +584,43 @@ test_that("use multiple versions of an artefact", {
   expect_equal(hash_files(p1, FALSE),
                hash_files(p2, FALSE))
 })
+
+test_that("missing required", {
+  path <- prepare_orderly_example("example")
+  # we need to use an orderly config with required fields set
+  # so copy it over
+  file.copy("example_config.yml", file.path(path, "orderly_config.yml"),
+            overwrite = TRUE)
+  path_example <- file.path(path, "src", "example")
+  # minimal report yml without required fields
+  minimal_yml <- c("data: ~",
+                   "script: script.R",
+                   "artefacts:",
+                   "  data:",
+                   "    filenames: data.rds",
+                   "    description: the data")
+
+  # get required fields out of config
+  config <- orderly_config(path)
+  print(config$fields)
+  req_fields <- config$fields$name[config$fields$required]
+  # iterate over the required fields...
+  for (field in req_fields) {
+    # ...add a null field to end of yml...
+    broken_yml <- c(minimal_yml, sprintf("%s: %s", field, "value"))
+    writeLines(broken_yml, file.path(path_example, "orderly.yml"))
+    # required fields still missing
+    missing_required <- setdiff(req_fields, field)
+    
+    # we are expecting an error message here
+    if (length(missing_required) > 0) {
+      err_msg <- sprintf("Fields missing from %s: %s",
+                        file.path(path_example, "orderly.yml"),
+                        paste(missing_required, collapse = ", ")
+                        )
+      expect_error(orderly_run("example", config = path, id_file = tmp,
+                               echo = FALSE),
+                   err_msg)
+    }
+  }
+})
