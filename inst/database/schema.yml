@@ -1,0 +1,141 @@
+# By default first element is primary key, unless `primary_key` is
+# given (may be multiple columns)
+#
+# By default fields are marked not null unless `nullable: true`
+
+# This is just a standalone table with limited schema information.  I
+# don't know what more we really need here.
+schema:
+  columns:
+    - version: {type: TEXT}
+    - orderly_version: {type: TEXT}
+    - created: {type: TIMESTAMP}
+    - hash: {type: TEXT}
+
+# It might be more useful to put more information against this, but
+# for now it doesn't really exist because all that information might
+# vary with report version.  However, this could be used in order to
+# support renames (VIMC-881), allowing us to override the previously
+# used report name.
+report:
+  columns:
+    - name: {type: TEXT}
+
+# Every time we see a new file it'll end up here.  This would be a
+# useful starting place for deduplicating the orderly archive in a
+# fairly safe way.
+file:
+  columns:
+    - hash: {type: TEXT}
+    - size: {type: BIGINT}
+
+# The extracted data
+data:
+  columns:
+    - hash: {type: TEXT}
+    - n_rows: {type: BIGINT}
+    - n_cols: {type: BIGINT}
+    - size_csv: {type: BIGINT}
+    - size_rds: {type: BIGINT}
+
+# A realisation of a file requires a filename.  These are scoped by
+# the report version and by the use within the report.
+file_mapping:
+  columns:
+    - id: {type: SERIAL}
+    - hash: {fk: file.hash}
+    - report: {fk: report_version.id}
+    - filename: {type: TEXT}
+    # In theory 'use' would be derivable from where the other end of
+    # the key goes but that's going to be super annoying to work out
+    - file_use: {fk: file_use.name}
+    - mime: {type: TEXT}
+
+# Enum table for types of file use
+file_use:
+  columns:
+    - name: {type: TEXT}
+  values:
+    - {name: view}
+    - {name: data}
+    - {name: script}
+    - {name: source}
+    - {name: resource}
+    - {name: artefact}
+    - {name: orderly_yml}
+    - {name: unknown}
+
+# Link views into the report
+report_version_view:
+  columns:
+    - id: {type: SERIAL}
+    - report_version: {fk: report_version.id}
+    - name: {type: TEXT}
+    - sql: {fk: sql.hash}
+    - file: {fk: file_mapping.id, nullable: true}
+
+# This is the input to get the data
+report_version_data:
+  columns:
+    - id: {type: SERIAL}
+    - report_version: {fk: report_version.id}
+    - name: {type: TEXT}
+    - sql: {fk: sql.hash}
+    - file: {fk: file_mapping.id, nullable: true}
+    - data: {fk: data.hash}
+
+# What versions of packages were loaded?
+report_version_package:
+  columns:
+    - id: {type: SERIAL}
+    - report_version: {fk: report_version.id}
+    - package_name: {type: TEXT}
+    - package_version: {type: TEXT}
+    - package_repo: {type: TEXT}
+
+report_version:
+  columns:
+    - id: {type: TEXT}
+    - report: {fk: report.name}
+    - date: {type: TIMESTAMP}
+    - displayname: {type: TEXT}
+    - description: {type: TEXT}
+    # These columns are listed in order of use
+    - views:
+    - script: {fk: file_mapping.id}
+    # NOTE: fields listed in orderly_config.yml will also be
+    # included here.
+
+report_version_inputs:
+  columns:
+    - id: {type: SERIAL}
+    - report: {fk: report.name}
+    - file: {fk: file_mapping.id}
+
+artefact:
+  columns:
+    - id: {type: SERIAL}
+    - report_version: {fk: report_version.id}
+    - type: {fk: artefact_type.name}
+    - description: {type: TEXT}
+    - order: {type: INTEGER}
+
+# I really don't like that this creates a duplicated set of
+# information; for this to hold we need that the 'file' here is in the
+# same report and has the file_mapping type of "artefact" which seems
+# a bit tedious.  OTOH I really like the idea of a global file use
+# list.
+#
+# This could be solved by a second-order constraint but we'll just do
+# it via the application logic I think
+artefact_file:
+  columns:
+    - id: {type: SERIAL}
+    - artefact: {fk: artefact.id}
+    - file: {fk: file_mapping.id, nullable: true}
+
+# Values here will be populated by orderly as we keep a list in the
+# package and we should not repeat that definition.
+artefact_type:
+  columns:
+    - name: {type: TEXT}
