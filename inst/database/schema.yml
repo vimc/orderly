@@ -12,6 +12,10 @@ orderly_schema:
     - created: {type: TIMESTAMP}
     - hash: {type: TEXT}
 
+orderly_schema_tables:
+  columns:
+    - name: {type: TEXT}
+
 # It might be more useful to put more information against this, but
 # for now it doesn't really exist because all that information might
 # vary with report version.  However, this could be used in order to
