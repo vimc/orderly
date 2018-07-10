@@ -5,7 +5,7 @@
 
 # This is just a standalone table with limited schema information.  I
 # don't know what more we really need here.
-schema:
+orderly_schema:
   columns:
     - version: {type: TEXT}
     - orderly_version: {type: TEXT}
@@ -71,7 +71,7 @@ report_version_view:
     - id: {type: SERIAL}
     - report_version: {fk: report_version.id}
     - name: {type: TEXT}
-    - sql: {fk: sql.hash}
+    - sql: {fk: sql_queries.hash}
     - file: {fk: file_mapping.id, nullable: true}
 
 # This is the input to get the data
@@ -80,9 +80,15 @@ report_version_data:
     - id: {type: SERIAL}
     - report_version: {fk: report_version.id}
     - name: {type: TEXT}
-    - sql: {fk: sql.hash}
+    - sql: {fk: sql_queries.hash}
     - file: {fk: file_mapping.id, nullable: true}
     - data: {fk: data.hash}
+
+
+sql_queries:
+  columns:
+    - hash: {type: TEXT}
+    - value: {type: TEXT}
 
 # What versions of packages were loaded?
 report_version_package:
@@ -101,7 +107,6 @@ report_version:
     - displayname: {type: TEXT}
     - description: {type: TEXT}
     # These columns are listed in order of use
-    - views:
     - script: {fk: file_mapping.id}
     # NOTE: fields listed in orderly_config.yml will also be
     # included here.
