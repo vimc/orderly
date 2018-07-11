@@ -565,7 +565,6 @@ test_that("multiple non-existent packages", {
                      "'non_existent_package', 'non_existent_package_2'"))
 })
 
-
 test_that("use multiple versions of an artefact", {
   path <- prepare_orderly_example("depends")
 
@@ -585,29 +584,50 @@ test_that("use multiple versions of an artefact", {
                hash_files(p2, FALSE))
 })
 
-test_that("missing required", {
-  path <- prepare_orderly_example("example")
-  # we need to use an orderly config with required fields set
-  # so copy it over
+test_that("required field OK", {
+  path <- prepare_orderly_example("minimal")
+  tmp <- tempfile()
+  # we need to use an orderly config with required fields set so copy it over
+  # this must have exactly two required fields
   file.copy("example_config.yml", file.path(path, "orderly_config.yml"),
             overwrite = TRUE)
   path_example <- file.path(path, "src", "example")
-  # minimal report yml without required fields
-  minimal_yml <- c("data: ~",
-                   "script: script.R",
-                   "artefacts:",
-                   "  data:",
-                   "    filenames: data.rds",
-                   "    description: the data")
+  # grab the current report yml without required fields
+  # this will fail with the new orderly_config.yml
+  yml_path <- file.path(path_example, "orderly.yml")
+  minimal_yml <- readLines(yml_path)
+  # get required fields out of config
+  config <- orderly_config(path)
+  req_fields <- config$fields$name[config$fields$required]
+  # set required fields to correct type
+  minimal_yml <- c(minimal_yml, sprintf("%s: %s", req_fields[1], "character"))
+  minimal_yml <- c(minimal_yml, sprintf("%s: %s", req_fields[2], "character"))
+  writeLines(minimal_yml, yml_path)
+  
+  id <- orderly_run("example", config = path, id_file = tmp, echo = FALSE)
+  p <- file.path(path_draft(path), "example", id, "mygraph.png")
+  expect_true(file.exists(p))
+})
 
+test_that("missing required field", {
+  path <- prepare_orderly_example("minimal")
+  tmp <- tempfile()
+  # we need to use an orderly config with required fields set so copy it over
+  file.copy("example_config.yml", file.path(path, "orderly_config.yml"),
+            overwrite = TRUE)
+  path_example <- file.path(path, "src", "example")
+  # grab the current report yml without required fields
+  # this will fail with the new orderly_config.yml
+  yml_path <- file.path(path_example, "orderly.yml")
+  minimal_yml <- readLines(yml_path)
   # get required fields out of config
   config <- orderly_config(path)
   req_fields <- config$fields$name[config$fields$required]
   # iterate over the required fields...
   for (field in req_fields) {
-    # ...add a null field to end of yml...
-    broken_yml <- c(minimal_yml, sprintf("%s: %s", field, "value"))
-    writeLines(broken_yml, file.path(path_example, "orderly.yml"))
+    # ...add one of them to the end of the file
+    broken_yml <- c(minimal_yml, sprintf("%s: %s", field, "Value"))
+    writeLines(broken_yml, yml_path)
     # required fields still missing
     missing_required <- setdiff(req_fields, field)
 
@@ -622,3 +642,32 @@ test_that("missing required", {
     }
   }
 })
+
+test_that("required field wrong type", {
+  path <- prepare_orderly_example("minimal")
+  tmp <- tempfile()
+  # we need to use an orderly config with required fields set so copy it over
+  # this must have exactly two required fields
+  file.copy("example_config.yml", file.path(path, "orderly_config.yml"),
+            overwrite = TRUE)
+  path_example <- file.path(path, "src", "example")
+  # grab the current report yml without required fields
+  # this will fail with the new orderly_config.yml
+  yml_path <- file.path(path_example, "orderly.yml")
+  minimal_yml <- readLines(yml_path)
+  # get required fields out of config
+  config <- orderly_config(path)
+  req_fields <- config$fields$name[config$fields$required]
+  # add the second required to the yml with the wrong type
+  minimal_yml <- c(minimal_yml, sprintf("%s: %s", req_fields[1], "character"))
+  minimal_yml <- c(minimal_yml, sprintf("%s: %s", req_fields[2], 1))
+  writeLines(minimal_yml, yml_path)
+  
+  # first required field wont give an error, the second will
+  err_msg <- sprintf("'.*orderly.yml:%s' must be character", req_fields[2])
+  expect_error(orderly_run("example", config = path, id_file = tmp, 
+                           echo = FALSE),
+               regexp = err_msg)
+})
+
+
