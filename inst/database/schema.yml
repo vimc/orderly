@@ -7,10 +7,9 @@
 # don't know what more we really need here.
 orderly_schema:
   columns:
-    - version: {type: TEXT}
+    - schema_version: {type: TEXT}
     - orderly_version: {type: TEXT}
     - created: {type: TIMESTAMP}
-    - hash: {type: TEXT}
 
 orderly_schema_tables:
   columns:
