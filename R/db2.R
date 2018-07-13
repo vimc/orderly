@@ -248,28 +248,20 @@ report_data_import <- function(con, workdir, config) {
     browser()
   }
 
-  if (!is.null(dat_in2$sources)) {
-    message("fix sources")
-    ## This one is easy I think
-    browser()
-  }
-
   ## TODO: patch this back in for the saved rds I think
   hash_orderly_yml <- hash_files(file.path(workdir, "orderly.yml"), FALSE)
 
   ## A hash for sources seems to be potentially missing!
   ## dat_rds$meta$hash_sources
   file_in <- list(resource = dat_in2$resources,
-                  source = dat_in2$sources,
                   script = dat_in2$script,
                   orderly_yml = "orderly.yml")
   file_in_name <- unlist(file_in, FALSE, FALSE)
   file_in_hash <- c(list_to_character(dat_rds$meta$hash_resources, FALSE),
-                    list_to_character(dat_rds$meta$hash_sources, FALSE),
                     dat_rds$meta$hash_script,
                     hash_orderly_yml)
-
   file_in_use <- rep(names(file_in), lengths(file_in))
+  file_in_use[file_in_name %in% dat_in2$sources] <- "source"
 
   ## These might be missing:
   sql <- sprintf("SELECT hash from file WHERE hash IN (%s)",
