@@ -132,8 +132,16 @@ artefact_format:
 # We could go more detailed here and get the report name and id but
 # that would duplicate information so I'm not doing that here.  (The
 # information redundant in the yml/rds but that's ok I feel).
+#
+# This is a bit of a risk because it is going to assume that the
+# artefact really was included in the upstream report.  But we can
+# depend on _any_ file not just dependencies, so this might fail for
+# montagu-reports which would make this inviable.  That should be
+# tightened up a lot in the recipe_read!
 depends:
   columns:
-    - file: {fk: file_artefact.id}
+    - id: {type: SERIAL}
+    - report_version: {fk: report_version.id}
+    - use: {fk: file_artefact.id}
     - as: {type: TEXT}
     - latest: {type: BOOLEAN}

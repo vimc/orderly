@@ -238,14 +238,31 @@ report_data_import <- function(con, workdir, config) {
   }
 
   if (!is.null(dat_in2$depends)) {
-    message("fix depends")
-    ## some proper work to do here, but not too bad.  But the demo
-    ## does not actually include a report that depends on other
-    ## reports!  This seems like a major oversight and something that
-    ## we should get fixed really.
-    ##
-    ## Somewhat more to do in the case of dependencies...
-    browser()
+    ## locate the artefacts:
+    sql_depends <- paste(
+      "SELECT file_artefact.id",
+      "  FROM file_artefact JOIN report_version_artefact",
+      "    ON file_artefact.artefact = report_version_artefact.id",
+      " WHERE report_version_artefact.report_version = $1",
+      "   AND file_artefact.filename = $2")
+    find_depends <- function(id, filename) {
+      res <- DBI::dbGetQuery(con, sql_depends, list(id, filename))$id
+      if (length(res) == 0L) NA_integer_ else res
+    }
+    depends_use <- Map(find_depends, dat_rds$meta$depends$id,
+                       dat_rds$meta$depends$filename, USE.NAMES = FALSE)
+    depends_use <- vapply(depends_use, identity, integer(1))
+    if (any(is.na(depends_use))) {
+      stop("Uncaught dependency problem!")
+    }
+    ## TODO: this does not indicate if the version _requested_ was the
+    ## latest.
+    depends <- data_frame(
+      report_version = id,
+      use = depends_use,
+      as = dat_in2$depends$as,
+      latest = dat_in2$depends$is_latest)
+    DBI::dbWriteTable(con, "depends", depends, append = TRUE)
   }
 
   ## TODO: patch this back in for the saved rds I think
