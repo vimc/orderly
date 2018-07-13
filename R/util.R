@@ -189,6 +189,10 @@ squote <- function(x) {
   sprintf("'%s'", x)
 }
 
+dquote <- function(x) {
+  sprintf('"%s"', x)
+}
+
 pasteq <- function(x, sep = ", ") {
   paste(squote(x), collapse = ", ")
 }
@@ -356,6 +360,10 @@ data_frame <- function(...) {
   data.frame(..., stringsAsFactors = FALSE)
 }
 
+as_data_frame <- function(...) {
+  as.data.frame(..., stringsAsFactors = FALSE)
+}
+
 readlines_if_exists <- function(path, missing = NULL) {
   if (file.exists(path)) {
     readLines(path)
@@ -500,4 +508,19 @@ ordered_map_to_list <- function(x) {
   }
   set_names(lapply(x, function(x) x[[1]]),
             vcapply(x, names))
+}
+
+
+drop_na <- function(x) {
+  x[!is.na(x)]
+}
+
+
+drop_null <- function(x) {
+  x[!vlapply(x, is.null)]
+}
+
+
+list_to_character <- function(x, named = TRUE) {
+  vcapply(x, identity, USE.NAMES = named)
 }
