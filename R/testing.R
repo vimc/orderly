@@ -115,6 +115,12 @@ demo_change_time <- function(id, time, path) {
   dat$id <- id_new
   writeLines(yaml::as.yaml(dat), yml)
 
+  rds <- path_orderly_run_rds(p)
+  dat <- readRDS(rds)
+  dat$time <- time
+  dat$meta$id <- id_new
+  saveRDS(dat, rds)
+
   orderly_commit(id_new, name)
 
   id_new
