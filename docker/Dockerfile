@@ -11,6 +11,7 @@ RUN apt-get update && apt-get -y install \
 RUN install2.r \
   DBI \
   R6 \
+  RPostgres \
   RSQLite \
   digest \
   ids \
@@ -22,8 +23,7 @@ RUN install2.r \
   withr \
   yaml
 
-RUN Rscript -e 'remotes::install_github("rstats-db/RPostgres@v0.1-4")' && \
-  Rscript -e 'remove.packages("BH")'
+RUN Rscript -e 'remove.packages("BH")'
 
 # Install Pandoc
 ENV PANDOC_VERSION "1.19.2.1"
