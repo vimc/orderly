@@ -12,7 +12,7 @@ ORDERLY_SCHEMA_VERSION <- "0.0.1"
 ## super likely to change it would be good
 ORDERLY_SCHEMA_TABLE <- "orderly_schema"
 ORDERLY_MAIN_TABLE <- "report_version"
-ORDERLY_ALL_TABLES <- "orderly_schema_tables"
+ORDERY_TABLE_LIST <- "orderly_schema_tables"
 
 orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
   d <- yaml_read(orderly_file("database/schema.yml"))
@@ -151,13 +151,10 @@ report_db2_rebuild <- function(config) {
   con <- orderly_db("destination", config)
   on.exit(DBI::dbDisconnect(con))
 
-  if (DBI::dbExistsTable(con, ORDERLY_ALL_TABLES)) {
+  if (DBI::dbExistsTable(con, ORDERY_TABLE_LIST)) {
     withCallingHandlers({
       DBI::dbBegin(con)
-      tables <- DBI::dbReadTable(con, ORDERLY_ALL_TABLES)$name
-      for (t in tables) {
-        DBI::dbRemoveTable(con, t)
-      }
+      report_db2_destroy(con)
       DBI::dbCommit(con)
     }, error = function(e) DBI::dbRollback(con))
   }
@@ -339,5 +336,14 @@ report_data_add_files <- function(con, hashes, paths, workdir) {
     file <- data_frame(hash = hashes[i],
                        size = file.size(file.path(workdir, paths[i])))
     DBI::dbWriteTable(con, "file", file, append = TRUE)
+  }
+}
+
+
+report_db2_destroy <- function(con) {
+  if (DBI::dbExistsTable(con, ORDERY_TABLE_LIST)) {
+    for (t in DBI::dbReadTable(con, ORDERY_TABLE_LIST)[[1L]]) {
+      DBI::dbRemoveTable(con, t)
+    }
   }
 }
