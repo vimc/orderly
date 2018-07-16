@@ -174,6 +174,11 @@ report_data_import <- function(con, workdir, config) {
   dat_in1 <- yaml_read(file.path(workdir, "orderly.yml"))
   dat_in2 <- recipe_read(workdir, config)
 
+  ## Old copies of the data don't do this and that's not great.
+  if (is.null(dat_rds$meta)) {
+    dat_rds$meta <- dat_yml
+  }
+
   id <- dat_rds$meta$id
   name <- dat_rds$meta$name
 
