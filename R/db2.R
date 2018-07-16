@@ -256,15 +256,18 @@ report_data_import <- function(con, workdir, config) {
                        dat_rds$meta$depends$filename, USE.NAMES = FALSE)
     depends_use <- vapply(depends_use, identity, integer(1))
     if (any(is.na(depends_use))) {
+      browser()
+      ## sql <- paste(
+      ##   "SELECT *",
+      ##   "  FROM file_artefact JOIN report_version_artefact",
+      ##   "    ON file_artefact.artefact = report_version_artefact.id")
+      ## DBI::dbGetQuery(con, sql)
       stop("Uncaught dependency problem!")
     }
-    ## TODO: this does not indicate if the version _requested_ was the
-    ## latest.
     depends <- data_frame(
       report_version = id,
       use = depends_use,
-      as = dat_in2$depends$as,
-      latest = dat_in2$depends$is_latest)
+      as = dat_in2$depends$as)
     DBI::dbWriteTable(con, "depends", depends, append = TRUE)
   }
 

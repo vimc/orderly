@@ -144,4 +144,3 @@ depends:
     - report_version: {fk: report_version.id}
     - use: {fk: file_artefact.id}
     - as: {type: TEXT}
-    - latest: {type: BOOLEAN}
