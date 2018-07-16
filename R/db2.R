@@ -28,8 +28,9 @@ orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
   d <- set_names(lapply(names(d), preprepare), names(d))
 
   if (!is.null(fields)) {
-    f <- set_names(lapply(fields$type, function(t) list(type = t)),
-                        fields$name)
+    f <- set_names(Map(function(t, n) list(type = t, nullable = n),
+                       fields$type, !fields$required),
+                   fields$name)
     d[[ORDERLY_MAIN_TABLE]]$columns <- c(d[[ORDERLY_MAIN_TABLE]]$columns, f)
   }
 
