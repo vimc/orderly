@@ -203,8 +203,12 @@ report_data_import <- function(con, workdir, config) {
   DBI::dbWriteTable(con, "report_version", report_version, append = TRUE)
 
   if (!is.null(dat_in2$views)) {
-    message("fix views")
-    browser()
+    report_version_view <- data_frame(
+      report_version = id,
+      name = names(dat_in2$views),
+      sql = unname(dat_in2$views))
+    DBI::dbWriteTable(con, "report_version_view", report_version_view,
+                      append = TRUE)
   }
 
   ## Then see if the data is known:
