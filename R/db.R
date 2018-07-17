@@ -84,7 +84,7 @@ report_db_init <- function(con, config, must_create = FALSE) {
   orderly_table
 }
 
-report_db_rebuild <- function(config) {
+report_db_rebuild <- function(config, verbose = TRUE) {
   assert_is(config, "orderly_config")
   root <- config$path
   con <- orderly_db("destination", config)
@@ -128,10 +128,14 @@ report_db_cols <- function() {
 ##' Rebuild the report database
 ##' @title Rebuild the report database
 ##' @inheritParams orderly_list
+##'
+##' @param verbose Logical, indicating if information about the
+##'   rebuild should be printed as it runs
+##'
 ##' @export
-orderly_rebuild <- function(config = NULL, locate = TRUE) {
+orderly_rebuild <- function(config = NULL, locate = TRUE, verbose = TRUE) {
   config <- orderly_config_get(config, locate)
-  report_db_rebuild(config)
+  report_db_rebuild(config, verbose)
   invisible(NULL)
 }
 
