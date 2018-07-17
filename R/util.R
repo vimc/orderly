@@ -29,6 +29,13 @@ read_lines <- function(...) {
 vcapply <- function(X, FUN, ...) {
   vapply(X, FUN, character(1), ...)
 }
+
+
+viapply <- function(X, FUN, ...) {
+  vapply(X, FUN, integer(1), ...)
+}
+
+
 vlapply <- function(X, FUN, ...) {
   vapply(X, FUN, logical(1), ...)
 }
@@ -523,4 +530,9 @@ drop_null <- function(x) {
 
 list_to_character <- function(x, named = TRUE) {
   vcapply(x, identity, USE.NAMES = named)
+}
+
+
+list_to_integer <- function(x, named = TRUE) {
+  viapply(x, identity, USE.NAMES = named)
 }

@@ -174,15 +174,17 @@ report_data_import <- function(con, workdir, config) {
   dat_in1 <- yaml_read(file.path(workdir, "orderly.yml"))
   dat_in2 <- recipe_read(workdir, config)
 
-  ## Old copies of the data don't do this and that's not great.
   if (is.null(dat_rds$meta)) {
+    ## VIMC-1958
     dat_rds$meta <- dat_yml
+    if (!is.null(dat_in2$depends)) {
+      dat_rds$meta$depends <- dat_in2$depends
+      dat_rds$meta$depends$id <- vcapply(dat_yml$depends, "[[", "id")
+    }
   }
 
   id <- dat_rds$meta$id
   name <- dat_rds$meta$name
-
-  ## Start with the easy things!
 
   sql_name <- "SELECT name FROM report WHERE name = $1"
   if (nrow(DBI::dbGetQuery(con, sql_name, name)) == 0L) {
@@ -235,43 +237,25 @@ report_data_import <- function(con, workdir, config) {
   }
 
   if (length(dat_in2$packages) > 0L) {
+    r_version <-
+      paste(dat_rds$session_info$R.version[c("major", "minor")], collapse = ".")
+    pkgs_base <-
+      set_names(rep(r_version, length(dat_rds$session_info$basePkgs)),
+                dat_rds$session_info$basePkgs)
+    pkgs_other <- vcapply(unlist(
+      unname(dat_rds$session_info[c("otherPkgs", "loadedOnly")]), FALSE),
+      "[[", "Version")
     report_version_package <- data_frame(
       report_version = rep(id, length(dat_in2$packages)),
       package_name = dat_in2$packages,
-      package_version = vcapply(dat_in2$packages, function(x)
-        dat_rds$session_info$otherPkgs[[x]]$Version))
+      package_version = c(pkgs_base, pkgs_other)[dat_in2$packages])
+    rownames(report_version_package) <- NULL
     DBI::dbWriteTable(con, "report_version_package", report_version_package,
                       append = TRUE)
   }
 
-  if (!is.null(dat_in2$depends)) {
-    ## locate the artefacts:
-    sql_depends <- paste(
-      "SELECT file_artefact.id",
-      "  FROM file_artefact JOIN report_version_artefact",
-      "    ON file_artefact.artefact = report_version_artefact.id",
-      " WHERE report_version_artefact.report_version = $1",
-      "   AND file_artefact.filename = $2")
-    find_depends <- function(id, filename) {
-      res <- DBI::dbGetQuery(con, sql_depends, list(id, filename))$id
-      if (length(res) == 0L) NA_integer_ else res
-    }
-    depends_use <- Map(find_depends, dat_rds$meta$depends$id,
-                       dat_rds$meta$depends$filename, USE.NAMES = FALSE)
-    depends_use <- vapply(depends_use, identity, integer(1))
-    if (any(is.na(depends_use))) {
-      browser()
-      ## sql <- paste(
-      ##   "SELECT *",
-      ##   "  FROM file_artefact JOIN report_version_artefact",
-      ##   "    ON file_artefact.artefact = report_version_artefact.id")
-      ## DBI::dbGetQuery(con, sql)
-      stop("Uncaught dependency problem!")
-    }
-    depends <- data_frame(
-      report_version = id,
-      use = depends_use,
-      as = dat_in2$depends$as)
+  depends <- report_data_find_dependencies(con, dat_rds$meta)
+  if (!is.null(depends)) {
     DBI::dbWriteTable(con, "depends", depends, append = TRUE)
   }
 
@@ -352,6 +336,71 @@ report_data_add_files <- function(con, hashes, paths, workdir) {
   }
 }
 
+
+## This section is far too complicated and will get rationalised soon.
+## It's mostly hard because there's a problem with a previous report
+## (just one: native-2015-with-herd-effects/20171101-103805-a636d323)
+## that has a dependency on a file that is dragged in from a previous
+## dependency.
+##
+## There are also issues in native-201710-diagnostics-burden with
+## dependencies on resources.
+report_data_find_dependencies <- function(con, meta) {
+  if (is.null(meta$depends)) {
+    return(NULL)
+  }
+
+  sql_depends <- paste(
+    "SELECT file_artefact.id",
+    "  FROM file_artefact JOIN report_version_artefact",
+    "    ON file_artefact.artefact = report_version_artefact.id",
+    " WHERE report_version_artefact.report_version = $1",
+    "   AND file_artefact.filename = $2")
+  find_depends <- function(id, filename) {
+    res <- DBI::dbGetQuery(con, sql_depends, list(id, filename))$id
+    if (length(res) == 0L) NA_integer_ else res
+  }
+  depends_use <- list_to_integer(
+    Map(find_depends, meta$depends$id, meta$depends$filename,
+        USE.NAMES = FALSE))
+
+  i <- is.na(depends_use)
+  if (any(i)) {
+    ## try and find this in the parent.
+    message(sprintf("Uncaught dependency problem: %s/%s", meta$name, meta$id))
+    ## What we really want to see is the contents of "depends" for
+    ## that previous report
+    sql_real_depends <- paste(
+      "SELECT use",
+      "  FROM depends",
+      "  JOIN file_artefact",
+      "    ON file_artefact.id = depends.use",
+      ' WHERE report_version = $1 AND "as" = $2')
+    find_real_depends <- function(id, filename) {
+      res <- DBI::dbGetQuery(con, sql_real_depends, list(id, filename))$use
+      if (length(res) == 0L) NA_integer_ else res
+    }
+    depends_use[i] <- list_to_integer(
+      Map(find_real_depends, meta$depends$id[i],
+          meta$depends$filename[i], USE.NAMES = FALSE))
+  }
+
+  depends <- data_frame(
+    report_version = meta$id,
+    use = depends_use,
+    as = meta$depends$as)
+
+  i <- is.na(depends_use)
+  if (any(i)) {
+    message(sprintf("...discarding %d unrecoverable dependencies", sum(i)))
+    if (all(i)) {
+      return(NULL)
+    }
+    depends <- depends[!i, ]
+  }
+
+  depends
+}
 
 report_db2_destroy <- function(con) {
   if (DBI::dbExistsTable(con, ORDERY_TABLE_LIST)) {
