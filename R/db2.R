@@ -163,7 +163,7 @@ report_db2_rebuild <- function(config, verbose = TRUE) {
   reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
   for (p in reports[order(basename(reports))]) {
     if (verbose) {
-      message(basename(p))
+      message(sprintf("%s (%s)", basename(p), basename(dirname(p))))
     }
     report_data_import(con, p, config)
   }
@@ -370,7 +370,7 @@ report_data_find_dependencies <- function(con, meta) {
   i <- is.na(depends_use)
   if (any(i)) {
     ## try and find this in the parent.
-    message(sprintf("Uncaught dependency problem: %s/%s", meta$name, meta$id))
+    message(sprintf("Invalid dependency for %s/%s", meta$name, meta$id))
     ## What we really want to see is the contents of "depends" for
     ## that previous report
     sql_real_depends <- paste(
