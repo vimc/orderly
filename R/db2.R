@@ -146,7 +146,7 @@ report_db2_init <- function(con, config, must_create = FALSE) {
 }
 
 
-report_db2_rebuild <- function(config) {
+report_db2_rebuild <- function(config, verbose = TRUE) {
   assert_is(config, "orderly_config")
   root <- config$path
   con <- orderly_db("destination", config)
@@ -162,6 +162,9 @@ report_db2_rebuild <- function(config) {
   report_db2_init(con, config)
   reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
   for (p in reports[order(basename(reports))]) {
+    if (verbose) {
+      message(basename(p))
+    }
     report_data_import(con, p, config)
   }
 }
