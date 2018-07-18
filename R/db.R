@@ -114,7 +114,7 @@ report_db_cols <- function() {
     hash_script = "TEXT",
     ## OUTPUTS
     parameters = "TEXT",     # should be json (dict with values)
-    date = "DATETIME",
+    date = "TIMESTAMP",
     hash_orderly = "TEXT",
     hash_input = "TEXT",
     hash_resources = "TEXT", # should be json (dict)
