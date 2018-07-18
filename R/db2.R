@@ -42,10 +42,13 @@ orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
         fk <- strsplit(el$fk, ".", fixed = TRUE)[[1L]]
         el$fk_table <- fk[[1L]]
         el$fk_column <- fk[[2L]]
-        el$fk_sql <-
+        el$fk_sql_alter <-
           sprintf(
             'ALTER TABLE "%s" ADD FOREIGN KEY ("%s") REFERENCES "%s" ("%s")',
             x$name, nm, el$fk_table, el$fk_column)
+        el$fk_sql_create <-
+          sprintf('FOREIGN KEY ("%s") REFERENCES "%s" ("%s")',
+                  nm, el$fk_table, el$fk_column)
         el$type <- d[[el$fk_table]]$columns[[el$fk_column]]$type
         if (el$type == "SERIAL") {
           el$type <- "INTEGER"
@@ -60,17 +63,22 @@ orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
     type <- vcapply(x$columns, "[[", "type")
     null <- unname(ifelse(is_nullable | type == "SERIAL", "", " NOT NULL"))
     if (dialect == "sqlite") {
-      type[type == "SERIAL"] <- "INTEGER PRIMARY KEY"
+      type[type == "SERIAL"] <- "INTEGER"
     }
+    type[[1]] <- paste(type[[1]], "PRIMARY KEY")
+    null[[1]] <- ""
+
     ## TODO: other column types do not enforce uniqueness, which is
     ## not great; it should be enough to pop "PRIMARY KEY" after them
     ## I think.  Then we can in general drop the null generation from
     ## all first columns
-    cols <- paste(sprintf('"%s" %s%s', names(x$columns), type, null),
-                  collapse = ", ")
-
-    x$sql_create <- paste0(sprintf('CREATE TABLE "%s" (', x$name), cols, ");")
-    x$sql_fk <- vcapply(drop_null(lapply(x$columns, "[[", "fk_sql")),
+    cols <- sprintf('"%s" %s%s', names(x$columns), type, null)
+    fks <-
+      list_to_character(drop_null(lapply(x$columns, "[[", "fk_sql_create")),
+                        FALSE)
+    x$sql_create <- sprintf('CREATE TABLE "%s" (%s);',
+                            x$name, paste(c(cols, fks), collapse = ", "))
+    x$sql_fk <- vcapply(drop_null(lapply(x$columns, "[[", "fk_sql_alter")),
                         identity, USE.NAMES = FALSE)
     if (!is.null(x$values)) {
       x$values <- do.call(
@@ -107,6 +115,8 @@ report_db2_init <- function(con, config, must_create = FALSE) {
     dialect <- "sqlite" # TODO: get from config
     dat <- orderly_schema_prepare(config$fields, dialect)
 
+    ## This should probably be tuneable:
+    DBI::dbExecute(con, "PRAGMA foreign_keys = ON")
     withCallingHandlers({
       DBI::dbBegin(con)
       for (s in dat$sql) {
