@@ -194,7 +194,7 @@ report_data_import <- function(con, workdir, config) {
   dat_rds <- readRDS(path_orderly_run_rds(workdir))
   dat_yml <- yaml_read(path_orderly_run_yml(workdir))
   dat_in1 <- yaml_read(file.path(workdir, "orderly.yml"))
-  dat_in2 <- recipe_read(workdir, config)
+  dat_in2 <- recipe_read(workdir, config, FALSE)
 
   if (is.null(dat_rds$meta)) {
     ## VIMC-1958
