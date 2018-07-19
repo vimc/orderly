@@ -89,7 +89,7 @@ orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
     } else if (x$name == "orderly_schema") {
       x$values <- data_frame(
         schema_version = ORDERLY_SCHEMA_VERSION,
-        orderly_version = as.character(packageVersion("orderly")),
+        orderly_version = as.character(utils::packageVersion("orderly")),
         created = Sys.time())
     } else if (x$name == "orderly_schema_tables") {
       x$values <- data_frame(name = names(d))
