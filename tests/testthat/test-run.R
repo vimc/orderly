@@ -102,7 +102,7 @@ test_that("run", {
 
   con_destination <- orderly_db("destination", config)
   on.exit(DBI::dbDisconnect(con_destination))
-  expect_equal(DBI::dbListTables(con_destination), "orderly")
+  expect_true(DBI::dbExistsTable(con_destination, "orderly"))
   d <- DBI::dbReadTable(con_destination, "orderly")
   expect_true(all(vlapply(d[names(d) != "published"], is.character)))
   expect_true(is.numeric(d$published))
