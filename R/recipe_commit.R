@@ -40,6 +40,9 @@ recipe_commit <- function(workdir, config) {
   })
 
   success <- DBI::dbWriteTable(con, tbl, dat, append = TRUE)
+
+  report_data_import(con, workdir, config)
+
   if (success) {
     ## I should do something here if the unlink fails, though I don't
     ## know exactly what.  But because a *second* round of copy here

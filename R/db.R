@@ -81,6 +81,8 @@ report_db_init <- function(con, config, must_create = FALSE) {
                    paste(squote(extra), collapse = ", ")))
     }
   }
+
+  report_db2_init(con, config, must_create)
   orderly_table
 }
 
@@ -97,6 +99,8 @@ report_db_rebuild <- function(config, verbose = TRUE) {
     dat <- rbind_df(lapply(reports, report_read_data, config))
     DBI::dbWriteTable(con, tbl, dat, append = TRUE)
   }
+
+  report_db2_rebuild(config, verbose)
 }
 
 report_db_cols <- function() {
