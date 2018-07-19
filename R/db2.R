@@ -200,8 +200,10 @@ report_data_import <- function(con, workdir, config) {
     ## VIMC-1958
     dat_rds$meta <- dat_yml
     if (!is.null(dat_in2$depends)) {
-      dat_rds$meta$depends <- dat_in2$depends
-      dat_rds$meta$depends$id <- vcapply(dat_yml$depends, "[[", "id")
+      cols <- c("name", "id", "filename", "as", "hash")
+      dat_rds$meta$depends <- as_data_frame(set_names(
+        lapply(cols, function(v) vcapply(dat_yml$depends, "[[", v)),
+        cols))
     }
   }
 
