@@ -124,16 +124,12 @@ report_db2_init <- function(con, config, must_create = FALSE) {
       DBI::dbExecute(con, "PRAGMA foreign_keys = ON")
     }
 
-    withCallingHandlers({
-      DBI::dbBegin(con)
-      for (s in dat$sql) {
-        DBI::dbExecute(con, s)
-      }
-      for (nm in names(dat$values)) {
-        DBI::dbWriteTable(con, nm, dat$values[[nm]], append = TRUE)
-      }
-      DBI::dbCommit(con)
-    }, error = function(e) DBI::dbRollback(con))
+    for (s in dat$sql) {
+      DBI::dbExecute(con, s)
+    }
+    for (nm in names(dat$values)) {
+      DBI::dbWriteTable(con, nm, dat$values[[nm]], append = TRUE)
+    }
   } else if (must_create) {
     stop(sprintf("Table '%s' already exists", ORDERLY_SCHEMA_TABLE))
   } else {
@@ -170,11 +166,7 @@ report_db2_rebuild <- function(config, verbose = TRUE) {
   on.exit(DBI::dbDisconnect(con))
 
   if (DBI::dbExistsTable(con, ORDERY_TABLE_LIST)) {
-    withCallingHandlers({
-      DBI::dbBegin(con)
-      report_db2_destroy(con)
-      DBI::dbCommit(con)
-    }, error = function(e) DBI::dbRollback(con))
+    report_db2_destroy(con)
   }
   report_db2_init(con, config)
   reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
