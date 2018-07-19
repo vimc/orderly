@@ -135,7 +135,7 @@ report_db2_init <- function(con, config, must_create = FALSE) {
       DBI::dbCommit(con)
     }, error = function(e) DBI::dbRollback(con))
   } else if (must_create) {
-    stop(sprintf("Table '%s' already exists", orderly_table))
+    stop(sprintf("Table '%s' already exists", ORDERLY_SCHEMA_TABLE))
   } else {
     sql <- sprintf("SELECT * FROM %s LIMIT 0", ORDERLY_MAIN_TABLE)
     d <- DBI::dbGetQuery(con, sql)
