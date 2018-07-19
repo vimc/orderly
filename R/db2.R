@@ -44,7 +44,7 @@ orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
         el$fk_column <- fk[[2L]]
         el$fk_sql_alter <-
           sprintf(
-            'ALTER TABLE "%s" ADD FOREIGN KEY ("%s") REFERENCES "%s" ("%s")',
+            'ALTER TABLE "%s" ADD FOREIGN KEY ("%s") REFERENCES "%s" ("%s");',
             x$name, nm, el$fk_table, el$fk_column)
         el$fk_sql_create <-
           sprintf('FOREIGN KEY ("%s") REFERENCES "%s" ("%s")',
@@ -76,8 +76,9 @@ orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
     fks <-
       list_to_character(drop_null(lapply(x$columns, "[[", "fk_sql_create")),
                         FALSE)
-    x$sql_create <- sprintf('CREATE TABLE "%s" (%s);',
-                            x$name, paste(c(cols, fks), collapse = ", "))
+    table_elements <- c(cols, if (dialect == "sqlite") fks)
+    x$sql_create <- sprintf('CREATE TABLE "%s" (\n%s\n);',
+                            x$name, paste(table_elements, collapse = ",\n"))
     x$sql_fk <- vcapply(drop_null(lapply(x$columns, "[[", "fk_sql_alter")),
                         identity, USE.NAMES = FALSE)
     if (!is.null(x$values)) {
@@ -97,8 +98,7 @@ orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
   }
 
   tables <- lapply(d, prepare_table)
-
-  sql <- vcapply(tables, "[[", "sql_create")
+  sql <- vcapply(tables, "[[", "sql_create", USE.NAMES = FALSE)
   if (dialect == "postgres") {
     sql <- c(sql, unlist(lapply(tables, "[[", "sql_fk"), FALSE, FALSE))
   }
@@ -112,11 +112,18 @@ orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
 ## Same pattern as existing db.R version but with
 report_db2_init <- function(con, config, must_create = FALSE) {
   if (!DBI::dbExistsTable(con, ORDERLY_SCHEMA_TABLE)) {
-    dialect <- "sqlite" # TODO: get from config
-    dat <- orderly_schema_prepare(config$fields, dialect)
+    if (config$destination$driver[[1]] == "RSQLite") {
+      dialect <- "sqlite"
+    } else {
+      dialect <- "postgres"
+    }
+   dat <- orderly_schema_prepare(config$fields, dialect)
 
     ## This should probably be tuneable:
-    DBI::dbExecute(con, "PRAGMA foreign_keys = ON")
+    if (dialect == "sqlite") {
+      DBI::dbExecute(con, "PRAGMA foreign_keys = ON")
+    }
+
     withCallingHandlers({
       DBI::dbBegin(con)
       for (s in dat$sql) {
