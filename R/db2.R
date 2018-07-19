@@ -178,11 +178,13 @@ report_db2_rebuild <- function(config, verbose = TRUE) {
   }
   report_db2_init(con, config)
   reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
-  for (p in reports[order(basename(reports))]) {
-    if (verbose) {
-      message(sprintf("%s (%s)", basename(p), basename(dirname(p))))
+  if (length(reports) > 0L) {
+    for (p in reports[order(basename(reports))]) {
+      if (verbose) {
+        message(sprintf("%s (%s)", basename(p), basename(dirname(p))))
+      }
+      report_data_import(con, p, config)
     }
-    report_data_import(con, p, config)
   }
 }
 
