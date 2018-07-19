@@ -1,3 +1,7 @@
+# 0.5.0
+
+* New internal database structure (VIMC-1930)
+
 # 0.4.8
 
 * Fix running reports on montagu servers (VIMC-1911)
