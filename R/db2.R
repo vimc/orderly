@@ -217,10 +217,13 @@ report_data_import <- function(con, workdir, config) {
     date = dat_rds$meta$date,
     displayname = dat_rds$meta$displayname %||% NA_character_,
     description = dat_rds$meta$description %||% NA_character_)
-  if (!is.null(config$fields)) {
-    extra <- set_names(lapply(config$fields$name, function(x) dat_in2[[x]]),
-                       config$fields$name)
-    report_version <- cbind(report_version, as_data_frame(drop_null(extra)))
+  if (nrow(config$fields) > 0L) {
+    extra <- drop_null(set_names(
+      lapply(config$fields$name, function(x) dat_in2[[x]]),
+      config$fields$name))
+    if (length(extra) > 0L) {
+      report_version <- cbind(report_version, as_data_frame(extra))
+    }
   }
   DBI::dbWriteTable(con, "report_version", report_version, append = TRUE)
 
