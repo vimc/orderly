@@ -24,6 +24,17 @@ report:
   columns:
     - name: {type: TEXT}
 
+# The core table
+report_version:
+  columns:
+    - id: {type: TEXT}
+    - report: {fk: report.name}
+    - date: {type: TIMESTAMP}
+    - displayname: {type: TEXT, nullable: true}
+    - description: {type: TEXT, nullable: true}
+    # NOTE: fields listed in orderly_config.yml will also be
+    # included here.
+
 # The extracted data
 #
 # I think that it would be nice to record the number of rows and
@@ -47,6 +58,17 @@ file:
     - hash: {type: TEXT}
     - size: {type: BIGINT}
 
+# Enum table for types of file use
+file_use:
+  columns:
+    - name: {type: TEXT}
+  values:
+    - {name: source}
+    - {name: script}
+    - {name: resource}
+    - {name: orderly_yml}
+    - {name: dependency}
+
 # A realisation of a file requires a filename.  These are scoped by
 # the report version and by the use within the report.
 file_input:
@@ -60,17 +82,6 @@ file_input:
     - file_use: {fk: file_use.name}
     # This would be great to have but seems overkill
     # - mime: {type: TEXT}
-
-# Enum table for types of file use
-file_use:
-  columns:
-    - name: {type: TEXT}
-  values:
-    - {name: source}
-    - {name: script}
-    - {name: resource}
-    - {name: orderly_yml}
-    - {name: dependency}
 
 # Link views into the report
 report_version_view:
@@ -97,15 +108,11 @@ report_version_package:
     - package_name: {type: TEXT}
     - package_version: {type: TEXT}
 
-report_version:
+# Values here will be populated by orderly as we keep a list in the
+# package and we should not repeat that definition.
+artefact_format:
   columns:
-    - id: {type: TEXT}
-    - report: {fk: report.name}
-    - date: {type: TIMESTAMP}
-    - displayname: {type: TEXT, nullable: true}
-    - description: {type: TEXT, nullable: true}
-    # NOTE: fields listed in orderly_config.yml will also be
-    # included here.
+    - name: {type: TEXT}
 
 report_version_artefact:
   columns:
@@ -123,11 +130,6 @@ file_artefact:
     - file_hash: {fk: file.hash}
     - filename: {type: TEXT}
 
-# Values here will be populated by orderly as we keep a list in the
-# package and we should not repeat that definition.
-artefact_format:
-  columns:
-    - name: {type: TEXT}
 
 # We could go more detailed here and get the report name and id but
 # that would duplicate information so I'm not doing that here.  (The
