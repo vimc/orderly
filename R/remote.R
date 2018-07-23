@@ -200,7 +200,7 @@ get_default_remote <- function(config = NULL, locate = TRUE) {
   }
   config <- orderly_config_get(config, locate)
   if (length(config$api_server) > 0L) {
-    return(config$api_server[[1]])
+    return(check_remote_api_server(config$api_server[[1L]]))
   }
   default_remote_path <- Sys.getenv("ORDERLY_DEFAULT_REMOTE_PATH",
                                     NA_character_)
@@ -219,7 +219,7 @@ get_remote <- function(remote, config) {
   } else if (is.character(remote)) {
     assert_scalar(remote)
     if (remote %in% names(config$api_server)) {
-      config$api_server[[remote]]
+      check_remote_api_server(config$api_server[[remote]])
     } else if (file.exists(remote)) {
       orderly_remote_path(remote)
     } else {
@@ -231,4 +231,15 @@ get_remote <- function(remote, config) {
          paste(squote(class(remote)), collapse = " / "),
          call. = FALSE)
   }
+}
+
+
+check_remote_api_server <- function(x) {
+  ## TODO: we should _probably_ generate something other than non-null
+  ## in config_check_api_server but I believe that this is the only
+  ## way that we get named null entries in the api_server list
+  if (is.null(x)) {
+    stop("The 'montagu' package is required to use an api server")
+  }
+  x
 }
