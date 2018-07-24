@@ -235,11 +235,9 @@ get_remote <- function(remote, config) {
 
 
 check_remote_api_server <- function(x) {
-  ## TODO: we should _probably_ generate something other than non-null
-  ## in config_check_api_server but I believe that this is the only
-  ## way that we get named null entries in the api_server list
-  if (is.null(x)) {
+  server <- x$server
+  if (is.null(server)) {
     stop("The 'montagu' package is required to use an api server")
   }
-  x
+  server
 }
