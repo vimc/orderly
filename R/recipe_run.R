@@ -229,8 +229,9 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
   source(info$script, local = envir,
          echo = echo, max.deparse.length = Inf)
   t1 <- Sys.time()
+  elapsed <- t1 - t0
   orderly_log("end", as.character(t1))
-  orderly_log("elapsed", sprintf("Ran report in %s", format(t1 - t0)))
+  orderly_log("elapsed", sprintf("Ran report in %s", format(elapsed)))
 
   recipe_check_device_stack(prep$n_dev)
   hash_artefacts <- recipe_check_artefacts(info)
@@ -263,6 +264,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
                hash_data = as.list(hash_data_rds),
                hash_artefacts = as.list(hash_artefacts),
                depends = depends,
+               elapsed = as.numeric(elapsed, "secs"),
                git = info$git)
 
   session$meta <- meta
