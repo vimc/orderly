@@ -34,6 +34,9 @@
 ##' @param message An optional message explaining why the report was
 ##'   run
 ##'
+##' @param extended_output Return detailed output about the run
+##'   (similar to the contents of \code{orderly_run.rds}).
+##'
 ##' @inheritParams orderly_list
 ##' @param echo Print the result of running the R code to the console
 ##' @param id_file Write the identifier into a file
@@ -41,7 +44,7 @@
 orderly_run <- function(name, parameters = NULL, envir = NULL,
                         config = NULL, locate = TRUE, echo = TRUE,
                         id_file = NULL, fetch = FALSE, ref = NULL,
-                        open = FALSE, message = NULL) {
+                        open = FALSE, message = NULL, extended_output = FALSE) {
   assert_scalar_logical(open)
   envir <- orderly_environment(envir)
   config <- orderly_config_get(config, locate)
@@ -53,17 +56,18 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   info <- recipe_prepare(config, name, id_file, ref, fetch)
   on.exit(recipe_current_run_clear())
 
-  path <- recipe_run(info, parameters, envir, config, echo = echo,
+  info <- recipe_run(info, parameters, envir, config, echo = echo,
                      message = message)
 
-  ## TODO: I might want to give this as <name>/<id> - not sure?
-  ##
-  ## The disadvantage of this is that we need to parse these, check
-  ## them, etc, and they don't deal well with renames.
   if (open) {
-    open_directory(path)
+    open_directory(file.path(config, "drafts", name, info$id))
   }
-  basename(path)
+
+  if (extended_output) {
+    info
+  } else {
+    info$id
+  }
 }
 
 ##' @export
@@ -208,7 +212,7 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
 
 
 recipe_run <- function(info, parameters, envir, config, echo = TRUE,
-                         message = NULL) {
+                       message = NULL) {
   assert_is(config, "orderly_config")
 
   owd <- setwd(info$workdir)
@@ -265,7 +269,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
   saveRDS(session, path_orderly_run_rds(info$workdir))
   writeLines(yaml::as.yaml(meta, column.major = FALSE),
              path_orderly_run_yml(info$workdir))
-  info$workdir
+  meta
 }
 
 

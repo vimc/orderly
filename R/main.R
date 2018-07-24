@@ -124,29 +124,29 @@ main_do_run <- function(x) {
         stop("Can't use --pull with --ref; perhaps you meant --fetch ?")
       }
     }
-    id <- orderly_run(name, parameters, config = config, id_file = id_file,
-                      ref = ref, fetch = fetch)
+    dat <- orderly_run(name, parameters, config = config, id_file = id_file,
+                       ref = ref, fetch = fetch, extended_output = TRUE)
     if (commit) {
-      orderly_commit(id, name, config)
+      orderly_commit(dat$id, name, config)
     }
-    id
+    dat
   }
 
   if (print_log) {
     sink(stderr(), type = "output")
     on.exit(sink(NULL, type = "output"))
-    id <- main_run()
+    dat <- main_run()
   } else {
     log <- tempfile()
     ## we should run this with try() so that we can capture logs there
-    id <- capture_log(main_run(), log, TRUE)
+    dat <- capture_log(main_run(), log, TRUE)
     dest <- (if (commit) path_archive else path_draft)(config$path)
-    file_copy(log, file.path(dest, name, id, "orderly.log"))
+    file_copy(log, file.path(dest, name, dat$id, "orderly.log"))
   }
 
   ## TODO: is it useful to write this to some location (rather than
   ## stderr) to indicate what was done?
-  message("id:", id)
+  message("id:", dat$id)
 }
 
 ## 2. orderly cleanup [--draft]

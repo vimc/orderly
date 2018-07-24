@@ -29,10 +29,9 @@ test_that("run", {
 
   envir <- orderly_environment(NULL)
   info <- recipe_prepare(config, "example")
-  p <- recipe_run(info, parameters, envir, config, echo = FALSE)
+  res <- recipe_run(info, parameters, envir, config, echo = FALSE)
+  p <- file.path(path_draft(config$path), res$name, res$id)
   expect_true(is_directory(p))
-  expect_equal(normalizePath(dirname(dirname(p))),
-               normalizePath(path_draft(path)))
 
   expect_true(file.exists(file.path(p, "mygraph.png")))
   expect_true(file.exists(file.path(p, "script.R")))
@@ -136,14 +135,15 @@ test_that("minimal", {
   envir <- orderly_environment(NULL)
   info <- recipe_prepare(config, "example")
   res <- recipe_run(info, NULL, envir, config, echo = FALSE)
-  files <- dir(res)
-  expect_true(file.exists(file.path(res, "orderly.yml")))
-  expect_true(file.exists(file.path(res, "orderly_run.yml")))
-  expect_true(file.exists(file.path(res, "orderly_run.rds")))
-  expect_true(file.exists(file.path(res, "script.R")))
-  expect_true(file.exists(file.path(res, "mygraph.png")))
+  p <- file.path(path_draft(config$path), res$name, res$id)
+  files <- dir(p)
+  expect_true(file.exists(file.path(p, "orderly.yml")))
+  expect_true(file.exists(file.path(p, "orderly_run.yml")))
+  expect_true(file.exists(file.path(p, "orderly_run.rds")))
+  expect_true(file.exists(file.path(p, "script.R")))
+  expect_true(file.exists(file.path(p, "mygraph.png")))
 
-  recipe_commit(res, config)
+  recipe_commit(p, config)
 })
 
 test_that("orderly_data", {
