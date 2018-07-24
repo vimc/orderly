@@ -1,3 +1,7 @@
+# 0.5.0
+
+* Send a slack message after a report has been run from the commandline tool, and by extension the runner (VIMC-1931)
+
 # 0.4.8
 
 * Fix running reports on montagu servers (VIMC-1911)
