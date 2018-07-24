@@ -290,8 +290,8 @@ report_data_import <- function(con, workdir, config) {
   file_in_hash <- c(list_to_character(dat_rds$meta$hash_resources, FALSE),
                     dat_rds$meta$hash_script,
                     hash_orderly_yml)
-  file_in_use <- rep(names(file_in), lengths(file_in))
-  file_in_use[file_in_name %in% dat_in2$sources] <- "source"
+  file_in_purpose <- rep(names(file_in), lengths(file_in))
+  file_in_purpose[file_in_name %in% dat_in2$sources] <- "source"
 
   ## These might be missing:
   sql <- sprintf("SELECT hash from file WHERE hash IN (%s)",
@@ -308,7 +308,7 @@ report_data_import <- function(con, workdir, config) {
     report_version = id,
     file_hash = file_in_hash,
     filename = file_in_name,
-    file_use = file_in_use)
+    file_purpose = file_in_purpose)
   DBI::dbWriteTable(con, "file_input", file_input, append = TRUE)
 
   ## Then artefacts
