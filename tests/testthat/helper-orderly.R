@@ -54,3 +54,16 @@ with_sqlite <- function(path, fun) {
   on.exit(DBI::dbDisconnect(con))
   fun(con)
 }
+
+
+has_internet <- function() {
+  !is.null(suppressWarnings(utils::nsl("www.google.com")))
+}
+
+
+skip_if_no_internet <- function() {
+  if (has_internet()) {
+    return()
+  }
+  testthat::skip("no internet")
+}
