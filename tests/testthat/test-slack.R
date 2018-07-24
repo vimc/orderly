@@ -18,7 +18,7 @@ test_that("slack payload is correct", {
       icon_emoji = ":ambulance:",
       attachments = list(list(
         title = "Ran report 'example'",
-        text = "On server 'myserver' in 10 secs",
+        text = "on server *myserver* in 10 secs",
         color = "warning",
         fallback = sprintf("Ran '%s' as '%s'; view at %s",
                            dat$name, dat$id, report_url),
@@ -62,6 +62,17 @@ test_that("git information is collected correctly", {
   expect_equal(length(d$attachments[[1]]$fields), 2L)
   expect_equal(d$attachments[[1]]$fields[[2L]],
                list(title = "git", value = "master@abcdefg", short = TRUE))
+
+  dat <- list(elapsed = 10,
+              git = list(branch = "master", sha_short = "abcdefg",
+                         github_url = "https://github.com/vimc/repo"),
+              id = "20181213-123456-fedcba98",
+              name = "example")
+  d <- slack_data(dat, server_name, server_url, server_is_primary)
+  expect_equal(
+    d$attachments[[1]]$fields[[2]]$value,
+    paste0("<https://github.com/vimc/repo/tree/master|master>@",
+           "<https://github.com/vimc/repo/tree/abcdefg|abcdefg>"))
 })
 
 
