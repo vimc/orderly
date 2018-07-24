@@ -54,6 +54,13 @@ orderly_config_read_yaml <- function(filename, path) {
   }
 
   info$path <- normalizePath(path, mustWork = TRUE)
+
+  api_server_identity <- Sys.getenv("ORDERLY_API_SERVER_IDENTITY", "")
+  if (nzchar(api_server_identity)) {
+    info$api_server_identity <-
+      match_value(api_server_identity, names(info$api_server))
+  }
+
   class(info) <- "orderly_config"
   info
 }

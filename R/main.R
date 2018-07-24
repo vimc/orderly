@@ -144,6 +144,10 @@ main_do_run <- function(x) {
     file_copy(log, file.path(dest, name, dat$id, "orderly.log"))
   }
 
+  if (commit) {
+    slack_post_success(dat, config)
+  }
+
   ## TODO: is it useful to write this to some location (rather than
   ## stderr) to indicate what was done?
   message("id:", dat$id)
