@@ -12,7 +12,8 @@ test_that("defaults: null", {
 
 
 test_that("get_remote", {
-  config <- list(api_server = list(foo = "foo", bar = "bar"))
+  config <- list(api_server = list(foo = list(server = "foo"),
+                                   bar = list(server = "bar")))
   class(config) <- "orderly_config"
   expect_equal(get_remote(NULL, config), "foo")
   expect_equal(get_remote("foo", config), "foo")
