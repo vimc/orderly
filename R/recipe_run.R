@@ -239,7 +239,8 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
     depends <- NULL
   } else {
     depends <- info$depends
-    depends <- depends[c("name", "id", "filename", "as", "hash")]
+    depends <- depends[c("name", "id", "filename", "as", "hash",
+                         "id_requested", "is_latest", "is_pinned")]
   }
 
   session <- session_info()

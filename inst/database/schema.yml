@@ -145,3 +145,13 @@ depends:
     - report_version: {fk: report_version.id}
     - use: {fk: file_artefact.id}
     - as: {type: TEXT}
+    - is_pinned:
+        type: BOOLEAN
+        comment: >-
+          Was the requested id a specific id, rather than "latest"?
+    - is_latest:
+        type: BOOLEAN
+        comment: >-
+          Was this the latest version when run? Not necessarily the
+          same as "NOT is_pinned" as a report might have been pinned
+          to the most recent report when it was run.

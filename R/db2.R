@@ -281,8 +281,7 @@ report_data_import <- function(con, workdir, config) {
   ## TODO: patch this back in for the saved rds I think
   hash_orderly_yml <- hash_files(file.path(workdir, "orderly.yml"), FALSE)
 
-  ## A hash for sources seems to be potentially missing!
-  ## dat_rds$meta$hash_sources
+  ## NOTE: the hash from 'sources' comes from the resources field.
   file_in <- list(resource = dat_in2$resources,
                   script = dat_in2$script,
                   orderly_yml = "orderly.yml")
@@ -407,7 +406,9 @@ report_data_find_dependencies <- function(con, meta) {
   depends <- data_frame(
     report_version = meta$id,
     use = depends_use,
-    as = meta$depends$as)
+    as = meta$depends$as,
+    is_latest = meta$depends$is_latest,
+    is_pinned = meta$depends$is_pinned)
 
   i <- is.na(depends_use)
   if (any(i)) {

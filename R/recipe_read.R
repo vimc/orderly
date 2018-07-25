@@ -288,6 +288,7 @@ recipe_read_check_depends <- function(x, filename, config, validate) {
       ## Is this considered to be the "latest" copy of a dependency?
       el$is_latest <- el$id == "latest" ||
         basename(el$path) == latest_id(dir(dirname(el$path)))
+      el$is_pinned <- el$id != "latest"
     }
 
     ## Bit of a faff here to get the format into something that will
