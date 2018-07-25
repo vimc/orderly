@@ -1,0 +1,6 @@
+stopifnot(packageVersion("orderly"), "0.4.8")
+unlink("reference/0.4.8", recursive = TRUE)
+orderly:::prepare_orderly_example("depends", "reference/0.4.8")
+file_copy("reference/0.4.8.yml", "reference/0.4.8/demo.yml")
+file_copy("reference/0.4.8.R", "reference/0.4.8/before.R")
+run_orderly_demo("reference/0.4.8")
