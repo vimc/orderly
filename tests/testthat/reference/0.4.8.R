@@ -7,7 +7,6 @@ patch_yml <- function(...) {
 
 pin_depends <- function(n = 0) {
   txt <- readLines("src/depend/orderly.yml")
-  i <- grepl(": latest", txt)
   ids <- sort(dir("archive/example"))
   txt <- sub("latest$", ids[[length(ids) - n]], txt)
   writeLines(txt, "src/depend/orderly.yml")
