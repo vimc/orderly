@@ -501,3 +501,12 @@ ordered_map_to_list <- function(x) {
   set_names(lapply(x, function(x) x[[1]]),
             vcapply(x, names))
 }
+
+
+source_to_function <- function(filename, name, parent) {
+  e <- new.env(parent = parent)
+  sys.source(filename, e)
+  ret <- e[[name]]
+  assert_is(ret, "function", sprintf("'%s' within '%s'", name, filename))
+  ret
+}

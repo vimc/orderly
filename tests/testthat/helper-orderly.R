@@ -54,3 +54,9 @@ with_sqlite <- function(path, fun) {
   on.exit(DBI::dbDisconnect(con))
   fun(con)
 }
+
+
+unpack_reference <- function(version, path = tempfile()) {
+  unzip(sprintf("reference/%s.zip", version), exdir = path)
+  file.path(path, version)
+}

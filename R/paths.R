@@ -46,6 +46,11 @@ path_runner_id <- function(path) {
 }
 
 
+## Used in migrations
+path_orderly_run_rds_backup <- function(path, version) {
+  file.path(path, sprintf("orderly_run_%s.rds", version))
+}
+
 path_orderly_version <- function(path) {
   file.path(path, "orderly_version")
 }
