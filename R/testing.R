@@ -123,6 +123,7 @@ demo_change_time <- function(id, time, path) {
   dat <- readRDS(rds)
   dat$time <- time
   dat$meta$id <- id_new
+  dat$meta$date <- as.character(time)
   saveRDS(dat, rds)
 
   orderly_commit(id_new, name)
