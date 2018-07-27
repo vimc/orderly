@@ -44,3 +44,8 @@ path_runner_log <- function(path) {
 path_runner_id <- function(path) {
   file.path(path, "runner", "id")
 }
+
+
+path_orderly_version <- function(path) {
+  file.path(path, "orderly_version")
+}

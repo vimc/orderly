@@ -37,6 +37,8 @@ orderly_init <- function(root, doc = TRUE, quiet = FALSE) {
   }
   file_copy(orderly_file("orderly_config_example.yml"),
             path_orderly_config_yml(root))
+  writeLines(as.character(packageVersion("orderly")),
+             file.path(path_orderly_version(root)))
   if (!quiet) {
     message(sprintf("Now, edit the file 'orderly_config.yml' within '%s'",
                     root))
