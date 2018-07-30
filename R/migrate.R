@@ -10,7 +10,7 @@
 ## However, the path will be allowed to come through and in some cases
 ## we might add new files.
 orderly_migrate <- function(config = NULL, locate = TRUE, to = NULL,
-                            dry_run = FALSE) {
+                            verbose = FALSE, dry_run = FALSE) {
   config <- orderly_config_get(config, locate)
   current <- read_orderly_version(config$path)
 
@@ -28,21 +28,23 @@ orderly_migrate <- function(config = NULL, locate = TRUE, to = NULL,
 
   for (v in names(avail)) {
     f <- source_to_function(avail[[v]], "migrate", topenv())
-    migrate_apply(config$path, v, f, dry_run)
+    migrate_apply(config$path, v, f, verbose, dry_run)
   }
 }
 
 
-migrate_apply <- function(root, version, fun, dry_run) {
+migrate_apply <- function(root, version, fun, verbose, dry_run) {
   reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
   previous <- read_orderly_version(root)
   orderly_log("migrate", sprintf("'%s' => '%s'", previous, version))
   withCallingHandlers({
     for (p in reports) {
       changed <- migrate_apply1(p, version, fun, dry_run)
+      nm <- sub(paste0(path_archive(root), "/"), "", p, fixed = TRUE)
       if (changed) {
-        orderly_log("updated",
-                    sub(paste0(path_archive(root), "/"), "", p, fixed = TRUE))
+        orderly_log("updated", nm)
+      } else if (verbose) {
+        orderly_log("ok", nm)
       }
     }
     if (!dry_run) {
