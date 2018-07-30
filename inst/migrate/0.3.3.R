@@ -1,6 +1,6 @@
 migrate <- function(data, path) {
   if (!is.null(data$meta)) {
-    return(list(changed = FALSE, data = data))
+    return(migration_result(FALSE, data))
   }
 
   meta <- yaml_read(path_orderly_run_yml(path))
@@ -13,5 +13,5 @@ migrate <- function(data, path) {
   }
 
   data$meta <- meta
-  list(changed = TRUE, data = data)
+  migration_result(TRUE, data)
 }

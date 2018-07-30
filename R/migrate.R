@@ -100,3 +100,8 @@ migrate_rollback1 <- function(path, version, root) {
 read_orderly_version <- function(root) {
   readlines_if_exists(path_orderly_version(root)) %||% "0.0.0"
 }
+
+
+migration_result <- function(changed, data) {
+  list(changed = result, data = data)
+}
