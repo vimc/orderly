@@ -9,7 +9,8 @@
 ##
 ## However, the path will be allowed to come through and in some cases
 ## we might add new files.
-orderly_migrate <- function(config = NULL, locate = TRUE, to = NULL) {
+orderly_migrate <- function(config = NULL, locate = TRUE, to = NULL,
+                            dry_run = FALSE) {
   config <- orderly_config_get(config, locate)
   current <- read_orderly_version(config$path)
 
@@ -27,24 +28,26 @@ orderly_migrate <- function(config = NULL, locate = TRUE, to = NULL) {
 
   for (v in names(avail)) {
     f <- source_to_function(avail[[v]], "migrate", topenv())
-    migrate_apply(config$path, v, f)
+    migrate_apply(config$path, v, f, dry_run)
   }
 }
 
 
-migrate_apply <- function(root, version, fun) {
+migrate_apply <- function(root, version, fun, dry_run) {
   reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
   previous <- read_orderly_version(root)
   orderly_log("migrate", sprintf("'%s' => '%s'", previous, version))
   withCallingHandlers({
     for (p in reports) {
-      changed <- migrate_apply1(p, version, fun)
+      changed <- migrate_apply1(p, version, fun, dry_run)
       if (changed) {
         orderly_log("updated",
                     sub(paste0(path_archive(root), "/"), "", p, fixed = TRUE))
       }
     }
-    writeLines(version, path_orderly_version(root))
+    if (!dry_run) {
+      writeLines(version, path_orderly_version(root))
+    }
   },
   error = function(e) {
     migrate_rollback(root, version, previous)
@@ -52,7 +55,7 @@ migrate_apply <- function(root, version, fun) {
 }
 
 
-migrate_apply1 <- function(path, version, fun) {
+migrate_apply1 <- function(path, version, fun, dry_run) {
   file <- path_orderly_run_rds_backup(path, version)
   if (file.exists(file)) {
     ## I don't know about this one; we should always roll back a
@@ -63,7 +66,7 @@ migrate_apply1 <- function(path, version, fun) {
 
   file_orig <- path_orderly_run_rds(path)
   res <- fun(readRDS(file_orig), path)
-  if (res$changed) {
+  if (res$changed && !dry_run) {
     ## Start by making the backup
     file_copy(file_orig, file)
     saveRDS(res$data, file_orig)
