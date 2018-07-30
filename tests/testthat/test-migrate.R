@@ -55,3 +55,13 @@ test_that("failed migrations are rolled back", {
   cmp <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
   expect_equal(cmp[basename(names(cmp)) != "orderly_version"], hash)
 })
+
+
+test_that("dry run", {
+  path <- unpack_reference("0.3.2")
+  hash <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
+  orderly_migrate(path, to = "0.3.3", dry_run = TRUE)
+  expect_equal(
+    hash_files(list.files(path, recursive = TRUE, full.names = TRUE)),
+    hash)
+})
