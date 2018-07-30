@@ -12,11 +12,8 @@
 orderly_migrate <- function(config = NULL, locate = TRUE, to = NULL,
                             verbose = FALSE, dry_run = FALSE) {
   config <- orderly_config_get(config, locate)
-  current <- read_orderly_version(config$path)
-
-  avail <- sort(dir(orderly_file("migrate"), pattern = "^([0-9]+\\.){3}R$",
-                    full.names = TRUE))
-  names(avail) <- sub("\\.R$", "", basename(avail))
+  current <- read_orderly_archive_version(config$path)
+  avail <- available_migrations()
 
   if (is.null(to)) {
     to <- names(avail)[[length(avail)]]
@@ -35,7 +32,7 @@ orderly_migrate <- function(config = NULL, locate = TRUE, to = NULL,
 
 migrate_apply <- function(root, version, fun, verbose, dry_run) {
   reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
-  previous <- read_orderly_version(root)
+  previous <- read_orderly_archive_version(root)
   orderly_log("migrate", sprintf("'%s' => '%s'", previous, version))
   withCallingHandlers({
     for (p in reports) {
@@ -48,7 +45,7 @@ migrate_apply <- function(root, version, fun, verbose, dry_run) {
       }
     }
     if (!dry_run) {
-      writeLines(version, path_orderly_version(root))
+      writeLines(version, path_orderly_archive_version(root))
     }
   },
   error = function(e) {
@@ -83,7 +80,7 @@ migrate_rollback <- function(root, version, previous) {
   for (p in reports) {
     migrate_rollback1(p, version, root)
   }
-  writeLines(as.character(previous), path_orderly_version(root))
+  writeLines(as.character(previous), path_orderly_archive_version(root))
 }
 
 
@@ -97,11 +94,30 @@ migrate_rollback1 <- function(path, version, root) {
 }
 
 
-read_orderly_version <- function(root) {
-  readlines_if_exists(path_orderly_version(root)) %||% "0.0.0"
+migration_result <- function(changed, data) {
+  list(changed = changed, data = data)
 }
 
 
-migration_result <- function(changed, data) {
-  list(changed = changed, data = data)
+available_migrations <- function() {
+  avail <- dir(orderly_file("migrate"), pattern = "^([0-9]+\\.){3}R$",
+               full.names = TRUE)
+  names(avail) <- sub("\\.R$", "", basename(avail))
+  avail[order(numeric_version(names(avail)))]
+}
+
+
+read_orderly_archive_version <- function(root) {
+  readlines_if_exists(path_orderly_archive_version(root)) %||% "0.0.0"
+}
+
+
+check_orderly_archive_version <- function(config) {
+  used <- numeric_version(config$archive_version)
+  curr <- cache$current_archive_version
+  if (used < curr) {
+    stop(sprintf("orderly archive needs migrating from %s => %s",
+                 as.character(used), as.character(curr)),
+         call. = FALSE)
+  }
 }

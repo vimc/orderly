@@ -16,7 +16,7 @@ test_that("0.3.2 -> 0.3.3", {
 
   pp <- file.path(path_archive(path), p[[i]])
   expect_true(file.exists(path_orderly_run_rds_backup(pp, "0.3.3")))
-  expect_equal(readLines(path_orderly_version(path)), "0.3.3")
+  expect_equal(readLines(path_orderly_archive_version(path)), "0.3.3")
 })
 
 
@@ -26,8 +26,8 @@ test_that("roll back migration", {
   orderly_migrate(path, to = "0.3.3")
   migrate_rollback(path, "0.3.3", "0.0.0")
 
-  expect_equal(readLines(path_orderly_version(path)), "0.0.0")
-  unlink(path_orderly_version(path))
+  expect_equal(readLines(path_orderly_archive_version(path)), "0.0.0")
+  unlink(path_orderly_archive_version(path))
   expect_equal(
     hash_files(list.files(path, recursive = TRUE, full.names = TRUE)),
     hash)
@@ -53,7 +53,7 @@ test_that("failed migrations are rolled back", {
                "some sort of migration failure")
 
   cmp <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
-  expect_equal(cmp[basename(names(cmp)) != "orderly_version"], hash)
+  expect_equal(cmp[basename(names(cmp)) != "orderly_archive_version"], hash)
 })
 
 
