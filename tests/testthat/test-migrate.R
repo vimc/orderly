@@ -49,7 +49,7 @@ test_that("failed migrations are rolled back", {
     list(changed = TRUE, data = data)
   }
 
-  expect_error(migrate_apply(path, "0.3.3", fun),
+  expect_error(migrate_apply(path, "0.3.3", fun, FALSE, FALSE),
                "some sort of migration failure")
 
   cmp <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
