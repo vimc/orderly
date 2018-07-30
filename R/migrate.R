@@ -103,5 +103,5 @@ read_orderly_version <- function(root) {
 
 
 migration_result <- function(changed, data) {
-  list(changed = result, data = data)
+  list(changed = changed, data = data)
 }
