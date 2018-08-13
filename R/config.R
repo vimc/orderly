@@ -54,6 +54,7 @@ orderly_config_read_yaml <- function(filename, path) {
   }
 
   info$path <- normalizePath(path, mustWork = TRUE)
+  info$archive_version <- read_orderly_archive_version(path)
   class(info) <- "orderly_config"
   info
 }
