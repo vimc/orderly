@@ -82,7 +82,7 @@ recipe_read <- function(path, config, validate = TRUE) {
   for (i in seq_len(nrow(config$fields))) {
     el <- config$fields[i, ]
     x <- info[[el$name]]
-    if (!is.null(x)) {
+    if (!is.null(x) || el$required) {
       assert_type(x, el$type, fieldname(el$name))
     }
   }

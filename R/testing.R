@@ -4,7 +4,11 @@
 ## See inst/demo/demo.yml for more information.
 create_orderly_demo <- function(path = tempfile()) {
   prepare_orderly_example("demo", path)
+  run_orderly_demo(path)
+}
 
+
+run_orderly_demo <- function(path) {
   dat <- read_demo_yml(path)
 
   orderly_default_config_set(orderly_config(path))
@@ -119,6 +123,7 @@ demo_change_time <- function(id, time, path) {
   dat <- readRDS(rds)
   dat$time <- time
   dat$meta$id <- id_new
+  dat$meta$date <- as.character(time)
   saveRDS(dat, rds)
 
   orderly_commit(id_new, name)

@@ -536,3 +536,12 @@ list_to_character <- function(x, named = TRUE) {
 list_to_integer <- function(x, named = TRUE) {
   viapply(x, identity, USE.NAMES = named)
 }
+
+
+source_to_function <- function(filename, name, parent) {
+  e <- new.env(parent = parent)
+  sys.source(filename, e)
+  ret <- e[[name]]
+  assert_is(ret, "function", sprintf("'%s' within '%s'", name, filename))
+  ret
+}

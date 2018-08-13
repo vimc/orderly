@@ -10,6 +10,7 @@
 ##' @export
 orderly_commit <- function(id, name = NULL, config = NULL, locate = TRUE) {
   config <- orderly_config_get(config, locate)
+  check_orderly_archive_version(config)
   if (is.null(name)) {
     name <- orderly_find_name(id, config, draft = TRUE, must_work = TRUE)
   } else {

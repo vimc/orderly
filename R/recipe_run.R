@@ -45,6 +45,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   assert_scalar_logical(open)
   envir <- orderly_environment(envir)
   config <- orderly_config_get(config, locate)
+  check_orderly_archive_version(config)
 
   if (!is.null(message)) {
     assert_scalar_character(message)
