@@ -65,3 +65,37 @@ test_that("dry run", {
     hash_files(list.files(path, recursive = TRUE, full.names = TRUE)),
     hash)
 })
+
+
+test_that("migrate_plan default is used", {
+  path <- unpack_reference("0.3.2")
+  expect_equal(migrate_plan(path), available_migrations())
+  expect_equal(migrate_plan(path, to = "0.0.1"),
+               set_names(character(), character()))
+})
+
+
+test_that("mixed migration", {
+  path <- unpack_reference("0.3.2")
+
+  curr <- as.character(cache$current_archive_version)
+
+  ## Need to work around an intentional assertion
+  writeLines(curr, path_orderly_archive_version(path))
+  id <- orderly_run("example", config = path, echo = FALSE)
+  orderly_commit(id, config = path)
+
+  unlink(path_orderly_archive_version(path))
+
+  msg <- capture_messages(
+    orderly_migrate(path, to = curr, verbose = TRUE, dry_run = TRUE))
+  expect_true(
+    any(grepl(sprintf("[ ok         ]  example/%s", id), msg, fixed = TRUE)))
+})
+
+
+test_that("reqyure migration", {
+  path <- unpack_reference("0.3.2")
+  expect_error(orderly_run("example", config = path, echo = FALSE),
+               "orderly archive needs migrating from 0.0.0 =>", fixed = TRUE)
+})

@@ -11,8 +11,19 @@
 ## we might add new files.
 orderly_migrate <- function(config = NULL, locate = TRUE, to = NULL,
                             verbose = FALSE, dry_run = FALSE) {
-  config <- orderly_config_get(config, locate)
-  current <- read_orderly_archive_version(config$path)
+  root <- orderly_config_get(config, locate)$path
+
+  migrations <- migrate_plan(root, to)
+
+  for (v in names(migrations)) {
+    f <- source_to_function(migrations[[v]], "migrate", topenv())
+    migrate_apply(root, v, f, verbose, dry_run)
+  }
+}
+
+
+migrate_plan <- function(root, to = NULL) {
+  current <- read_orderly_archive_version(root)
   avail <- available_migrations()
 
   if (is.null(to)) {
@@ -21,12 +32,7 @@ orderly_migrate <- function(config = NULL, locate = TRUE, to = NULL,
 
   apply <- numeric_version(current) < numeric_version(names(avail)) &
     numeric_version(to) >= numeric_version(names(avail))
-  avail <- avail[apply]
-
-  for (v in names(avail)) {
-    f <- source_to_function(avail[[v]], "migrate", topenv())
-    migrate_apply(config$path, v, f, verbose, dry_run)
-  }
+  avail[apply]
 }
 
 
