@@ -39,7 +39,7 @@ test_that("failed migrations are rolled back", {
   hash <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
 
   counter <- 0L
-  fun <- function(data, path) {
+  fun <- function(data, path, config) {
     counter <<- counter + 1L
     if (counter >= 3L) {
       stop("some sort of migration failure")
@@ -49,7 +49,8 @@ test_that("failed migrations are rolled back", {
     list(changed = TRUE, data = data)
   }
 
-  expect_error(migrate_apply(path, "0.3.3", fun, FALSE, FALSE),
+  config <- orderly_config(path)
+  expect_error(migrate_apply(path, "0.3.3", fun, config, FALSE, FALSE),
                "some sort of migration failure")
 
   cmp <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
