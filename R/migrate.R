@@ -38,7 +38,12 @@ migrate_plan <- function(root, to = NULL) {
 
 
 migrate_apply <- function(root, version, fun, config, verbose, dry_run) {
-  reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
+  ## This ensures we work through all reports in order of creation
+  ## (based on id).
+  archive <- orderly_list_archive(root, FALSE)
+  archive <- archive[order(archive$id), ]
+  reports <- file.path(path_archive(root), archive$name, archive$id)
+
   previous <- read_orderly_archive_version(root)
   orderly_log("migrate", sprintf("'%s' => '%s'", previous, version))
   withCallingHandlers({
