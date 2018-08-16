@@ -252,7 +252,6 @@ recipe_read_check_depends <- function(x, filename, config, validate) {
     }
 
     assert_named(el$use, TRUE, sprintf("%s:depends:%s:use", filename, name))
-    ## TODO: should check that these are not listed as resources I think
     err <- !vlapply(el$use, function(x) is.character(x) && length(x) == 1)
     if (any(err)) {
       stop(sprintf("%s:depends:%s:use must all be scalar character",
@@ -281,6 +280,20 @@ recipe_read_check_depends <- function(x, filename, config, validate) {
                      el$filename[msg],
                      el$path))
       }
+      el$hash <- hash_files(filename_full, FALSE)
+
+      ## VIMC-2017: check that a file is actually an artefact
+      meta <- readRDS(path_orderly_run_rds(el$path))
+      ok <- el$filename %in% names(meta$meta$hash_artefacts)
+      if (any(!ok)) {
+        stop(sprintf(
+          "Dependency %s not an artefact of %s/%s:\n%s",
+          ngettext(sum(!ok), "file", "files"),
+          el$name, basename(el$path),
+          paste(sprintf("- '%s'", el$filename[!ok]), collapse = "\n")),
+          call. = FALSE)
+      }
+
       el$hash <- hash_files(filename_full, FALSE)
 
       el$time <- readRDS(path_orderly_run_rds(el$path))$time
