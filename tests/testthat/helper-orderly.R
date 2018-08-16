@@ -56,6 +56,19 @@ with_sqlite <- function(path, fun) {
 }
 
 
+has_internet <- function() {
+  !is.null(suppressWarnings(utils::nsl("www.google.com")))
+}
+
+
+skip_if_no_internet <- function() {
+  skip_on_windows()
+  if (has_internet()) {
+    return()
+  }
+  testthat::skip("no internet")
+}
+
 unpack_reference <- function(version, path = tempfile()) {
   unzip(sprintf("reference/%s.zip", version), exdir = path)
   file.path(path, version)

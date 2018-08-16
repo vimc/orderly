@@ -110,5 +110,5 @@ test_that("support declaring api server", {
   cfg <- orderly_config(path)
 
   expect_is(cfg$api_server, "list")
-  expect_is(cfg$api_server$myhost, "montagu_server")
+  expect_is(cfg$api_server$myhost$server, "montagu_server")
 })

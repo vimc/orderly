@@ -309,7 +309,19 @@ git_info <- function(root) {
   if (length(status) == 0L) {
     status <- NULL
   }
-  list(sha_short = sha_short, sha = sha, branch = branch, status = status)
+
+  git_url <- git_info_call(root, c("remote", "get-url", "origin"))
+  if (!is.null(git_url)) {
+    re <- "^git@github.com:"
+    if (grepl(re, git_url)) {
+      git_url <- sub("\\.git$", "", sub(re, "https://github.com/", git_url))
+    } else if (!grepl("^https://github.com/", git_url)) {
+      git_url <- NULL
+    }
+  }
+
+  list(sha_short = sha_short, sha = sha, branch = branch, status = status,
+       github_url = git_url)
 }
 
 system_success <- function(x) is.null(attr(x, "status", exact = TRUE))

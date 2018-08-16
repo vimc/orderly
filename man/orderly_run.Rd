@@ -7,7 +7,7 @@
 \usage{
 orderly_run(name, parameters = NULL, envir = NULL, config = NULL,
   locate = TRUE, echo = TRUE, id_file = NULL, fetch = FALSE,
-  ref = NULL, open = FALSE, message = NULL)
+  ref = NULL, open = FALSE, message = NULL, extended_output = FALSE)
 
 orderly_data(name, parameters = NULL, envir = list(), config = NULL,
   locate = TRUE)
@@ -45,6 +45,9 @@ checking out the reference \code{ref}.}
 
 \item{message}{An optional message explaining why the report was
 run}
+
+\item{extended_output}{Return detailed output about the run
+(similar to the contents of \code{orderly_run.rds}).}
 }
 \description{
 Run a report.  The \code{orderly_data} function is for testing the

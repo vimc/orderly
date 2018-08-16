@@ -1,5 +1,6 @@
 # 0.5.0
 
+* Send a slack message after a report has been run from the commandline tool, and by extension the runner (VIMC-1931)
 * New internal database structure (VIMC-1930)
 
 # 0.4.8

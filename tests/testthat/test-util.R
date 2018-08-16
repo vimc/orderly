@@ -125,8 +125,7 @@ test_that("git", {
   git_info_call(path, c("commit", "-m", "initial"))
 
   info <- git_info(path)
-  expect_true(setequal(names(info),
-                       c("sha_short", "sha", "branch", "status")))
+  expect_true(all(c("sha_short", "sha", "branch", "status") %in% names(info)))
 
   expect_equal(info$branch, "master")
   expect_null(info$status)

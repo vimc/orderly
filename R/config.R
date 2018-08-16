@@ -54,7 +54,15 @@ orderly_config_read_yaml <- function(filename, path) {
   }
 
   info$path <- normalizePath(path, mustWork = TRUE)
+
+  api_server_identity <- Sys.getenv("ORDERLY_API_SERVER_IDENTITY", "")
+  if (nzchar(api_server_identity)) {
+    info$api_server_identity <-
+      match_value(api_server_identity, names(info$api_server))
+  }
+
   info$archive_version <- read_orderly_archive_version(path)
+
   class(info) <- "orderly_config"
   info
 }
@@ -105,7 +113,9 @@ config_check_api_server <- function(dat, filename) {
     check_fields(server,
                  sprintf("%s:api_server:%s", filename, name),
                  c("host", "port"),
-                 c("basic", "username", "password"))
+                 c("basic", "username", "password",
+                   "slack_url", "allow_ref", "primary"))
+
     check_field <- function(nm, required, fn) {
       x <- server[[nm]]
       if (required || !is.null(x)) {
@@ -124,17 +134,28 @@ config_check_api_server <- function(dat, filename) {
     check_field("username", FALSE, assert_scalar_character)
     check_field("password", FALSE, assert_scalar_character)
 
+    check_field("slack_url", FALSE, assert_scalar_character)
+    check_field("allow_ref", FALSE, assert_scalar_logical)
+    check_field("primary", FALSE, assert_scalar_logical)
+
     if (requireNamespace("montagu", quietly = TRUE)) {
-      ret <- montagu::montagu_server(
+      server$server <- montagu::montagu_server(
         name, server$host, server$port, server$basic,
         server$username, server$password)
-    } else {
-      ret <- NULL
     }
-    ret
+
+    server
   }
 
-  set_names(lapply(names(dat), check1), names(dat))
+  ret <- set_names(lapply(names(dat), check1), names(dat))
+  primary <- vlapply(ret, function(x) isTRUE(x$primary))
+  if (sum(primary) > 1L) {
+    stop(sprintf(
+      "At most one api_server can be listed as primary but here %d are: %s",
+      sum(primary), paste(squote(names(which(primary))), collapse = ", ")),
+      call. = FALSE)
+  }
+  ret
 }
 
 sql_type <- function(type, name) {

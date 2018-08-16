@@ -20,6 +20,7 @@ Imports:
     withr,
     yaml
 Suggests:
+    httr,
     knitr,
     montagu (>= 0.2.0),
     png,
