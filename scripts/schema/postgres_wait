@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+POSTGRES_USER=postgres
+POSTGRES_DB=postgres
+
+wait_for()
+{
+    echo "waiting $TIMEOUT seconds for postgres"
+    start_ts=$(date +%s)
+    for i in $(seq $TIMEOUT); do
+        # Using pg_ready as:
+        #
+        #   pg_isready -U $POSTGRES_USER -d $POSTGRES_DB
+        #
+        # seems heaps nicer but does not actually work properly
+        # because it pulls us up to soon.
+        psql -U $POSTGRES_USER -d $POSTGRES_DB -c "select 1;" > /dev/null 2>&1
+        result=$?
+        if [[ $result -eq 0 ]]; then
+            end_ts=$(date +%s)
+            echo "postgres is available after $((end_ts - start_ts)) seconds"
+            break
+        fi
+        sleep 1
+        echo "...still waiting"
+    done
+    return $result
+}
+
+# The variable expansion below is 15s by default, or the argument provided
+# to this script
+TIMEOUT="${1:-15}"
+wait_for
+RESULT=$?
+if [[ $RESULT -ne 0 ]]; then
+  echo "postgres did not become available in time"
+fi
+exit $RESULT

@@ -9,12 +9,11 @@ test_that("custom fields", {
   path <- tempfile()
 
   orderly_init(path)
-  file.copy("example_config.yml", file.path(path, "orderly_config.yml"),
+  file_copy("example_config.yml", file.path(path, "orderly_config.yml"),
             overwrite = TRUE)
   con <- orderly_db("destination", path)
   on.exit(DBI::dbDisconnect(con))
 
-  expect_equal(DBI::dbListTables(con), "orderly")
   expect_true(DBI::dbExistsTable(con, "orderly"))
 
   ## TODO: should the db initialisation here check that the custom
@@ -39,13 +38,13 @@ test_that("custom fields", {
 test_that("rebuild empty database", {
   path <- tempfile()
   orderly_init(path)
-  file.copy("example_config.yml", file.path(path, "orderly_config.yml"),
+  file_copy("example_config.yml", file.path(path, "orderly_config.yml"),
             overwrite = TRUE)
   orderly_rebuild(path)
 
   con <- orderly_db("destination", path)
   on.exit(DBI::dbDisconnect(con))
-  expect_equal(DBI::dbListTables(con), "orderly")
+  expect_true(DBI::dbExistsTable(con, "orderly"))
 })
 
 test_that("rebuild nonempty database", {

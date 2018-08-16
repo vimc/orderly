@@ -11,13 +11,14 @@
 ## we might add new files.
 orderly_migrate <- function(config = NULL, locate = TRUE, to = NULL,
                             verbose = FALSE, dry_run = FALSE) {
-  root <- orderly_config_get(config, locate)$path
+  config <- orderly_config_get(config, locate)
+  root <- config$path
 
   migrations <- migrate_plan(root, to)
 
   for (v in names(migrations)) {
     f <- source_to_function(migrations[[v]], "migrate", topenv())
-    migrate_apply(root, v, f, verbose, dry_run)
+    migrate_apply(root, v, f, config, verbose, dry_run)
   }
 }
 
@@ -36,13 +37,18 @@ migrate_plan <- function(root, to = NULL) {
 }
 
 
-migrate_apply <- function(root, version, fun, verbose, dry_run) {
-  reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
+migrate_apply <- function(root, version, fun, config, verbose, dry_run) {
+  ## This ensures we work through all reports in order of creation
+  ## (based on id).
+  archive <- orderly_list_archive(root, FALSE)
+  archive <- archive[order(archive$id), ]
+  reports <- file.path(path_archive(root), archive$name, archive$id)
+
   previous <- read_orderly_archive_version(root)
   orderly_log("migrate", sprintf("'%s' => '%s'", previous, version))
   withCallingHandlers({
     for (p in reports) {
-      changed <- migrate_apply1(p, version, fun, dry_run)
+      changed <- migrate_apply1(p, version, fun, config, dry_run)
       nm <- sub(paste0(path_archive(root), "/"), "", p, fixed = TRUE)
       if (changed) {
         orderly_log("updated", nm)
@@ -55,12 +61,14 @@ migrate_apply <- function(root, version, fun, verbose, dry_run) {
     }
   },
   error = function(e) {
-    migrate_rollback(root, version, previous)
+    if (!dry_run) {
+      migrate_rollback(root, version, previous)
+    }
   })
 }
 
 
-migrate_apply1 <- function(path, version, fun, dry_run) {
+migrate_apply1 <- function(path, version, fun, config, dry_run) {
   file <- path_orderly_run_rds_backup(path, version)
   if (file.exists(file)) {
     ## I don't know about this one; we should always roll back a
@@ -70,7 +78,7 @@ migrate_apply1 <- function(path, version, fun, dry_run) {
   }
 
   file_orig <- path_orderly_run_rds(path)
-  res <- fun(readRDS(file_orig), path)
+  res <- fun(readRDS(file_orig), path, config)
   if (res$changed && !dry_run) {
     ## Start by making the backup
     file_copy(file_orig, file)

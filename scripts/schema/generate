@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -e
+HERE=${BASH_SOURCE%/*}
+ROOT=$(realpath $HERE/../..)
+echo $ROOT
+
+DB_CONTAINER=orderly-db
+DB_PORT=35432
+DB_PASS=schemaspy
+
+docker build -t vimc/orderly-schemaspy "$HERE"
+
+docker run -d --rm -p $DB_PORT:5432 -e POSTGRES_PASS=$DB_PASS \
+       --name $DB_CONTAINER postgres:10.4
+function cleanup {
+    set +e
+    docker kill $DB_CONTAINER
+}
+trap cleanup EXIT
+docker cp "$HERE/postgres_wait" $DB_CONTAINER:/usr/local/bin
+docker exec -it $DB_CONTAINER postgres_wait
+# By working in the 'orderly' db we'll get nicer named docs
+docker exec -it $DB_CONTAINER createdb -U postgres orderly
+
+$HERE/create_schema $HERE
+
+# With the database up, get the schema installed
+DEST=${ROOT}/docs/schema
+if [ -f $DEST/index.html ]; then
+    rm -rf $DEST
+fi
+mkdir -p $DEST
+
+docker run -it --rm \
+       --user=`id -u` \
+       --name orderly-schemaspy \
+       -v $DEST:/output \
+       --network=host \
+       vimc/orderly-schemaspy \
+       -db orderly -u postgres -host localhost -port $DB_PORT -p 'schemaspy' \
+       -s public -o /output

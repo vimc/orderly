@@ -142,7 +142,7 @@ R6_orderly_runner <- R6::R6Class(
     },
 
     rebuild = function() {
-      orderly_rebuild(self$config, FALSE)
+      orderly_rebuild(self$config, FALSE, FALSE)
     },
 
     kill = function(key) {

@@ -121,3 +121,19 @@ test_that("orderly_test_start failure resets working directory", {
                "nonexistantpackage")
   expect_equal(getwd(), wd)
 })
+
+
+test_that("can't depend on non artefacts", {
+  path <- prepare_orderly_example("depends")
+  id <- orderly_run("example", config = path, echo = FALSE)
+
+  path_yml <- file.path(path, "src", "depend", "orderly.yml")
+  d <- yaml_read(path_yml)
+  d$depends$example$use <- c(d$depends$example$use,
+                             list("other.R" = "script.R"))
+  yaml_write(d, path_yml)
+
+  expect_error(
+    orderly_run("depend", config = path, echo = FALSE),
+    "Dependency file not an artefact of example/.*:\n- 'script.R'")
+})

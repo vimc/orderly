@@ -1,4 +1,4 @@
-migrate <- function(data, path) {
+migrate <- function(data, path, config) {
   if (!is.null(data$meta)) {
     return(migration_result(FALSE, data))
   }

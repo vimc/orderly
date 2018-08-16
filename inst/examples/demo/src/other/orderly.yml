@@ -3,6 +3,8 @@ data:
 parameters:
   nmin
 script: script.R
+sources:
+  - functions.R
 artefacts:
   - data:
       description: A summary table
