@@ -21,7 +21,6 @@ orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
     x <- d[[nm]]
     x$name <- nm
     x$columns <- unlist(x$columns, FALSE)
-    ## x$values <- unlist(x$values, FALSE)
     x
   }
 
@@ -182,22 +181,11 @@ report_db2_rebuild <- function(config, verbose = TRUE) {
 
 
 report_data_import <- function(con, workdir, config) {
-  ## Bunch of places where data we need is scattered over:
   dat_rds <- readRDS(path_orderly_run_rds(workdir))
-  dat_yml <- yaml_read(path_orderly_run_yml(workdir))
-  dat_in1 <- yaml_read(file.path(workdir, "orderly.yml"))
-  dat_in2 <- recipe_read(workdir, config, FALSE)
+  dat_in <- recipe_read(workdir, config, FALSE)
 
-  if (is.null(dat_rds$meta)) {
-    ## VIMC-1958
-    dat_rds$meta <- dat_yml
-    if (!is.null(dat_in2$depends)) {
-      cols <- c("name", "id", "filename", "as", "hash")
-      dat_rds$meta$depends <- as_data_frame(set_names(
-        lapply(cols, function(v) vcapply(dat_yml$depends, "[[", v)),
-        cols))
-    }
-  }
+  ## Was not done before 0.3.3
+  stopifnot(!is.null(dat_rds$meta))
 
   id <- dat_rds$meta$id
   name <- dat_rds$meta$name
@@ -215,7 +203,7 @@ report_data_import <- function(con, workdir, config) {
     description = dat_rds$meta$description %||% NA_character_)
   if (nrow(config$fields) > 0L) {
     extra <- drop_null(set_names(
-      lapply(config$fields$name, function(x) dat_in2[[x]]),
+      lapply(config$fields$name, function(x) dat_in[[x]]),
       config$fields$name))
     if (length(extra) > 0L) {
       report_version <- cbind(report_version, as_data_frame(extra))
@@ -223,11 +211,11 @@ report_data_import <- function(con, workdir, config) {
   }
   DBI::dbWriteTable(con, "report_version", report_version, append = TRUE)
 
-  if (!is.null(dat_in2$views)) {
+  if (!is.null(dat_in$views)) {
     report_version_view <- data_frame(
       report_version = id,
-      name = names(dat_in2$views),
-      sql = unname(dat_in2$views))
+      name = names(dat_in$views),
+      sql = unname(dat_in$views))
     DBI::dbWriteTable(con, "report_version_view", report_version_view,
                       append = TRUE)
   }
@@ -249,13 +237,13 @@ report_data_import <- function(con, workdir, config) {
     report_version_data <- data_frame(
       report_version = id,
       name = names(hash_data),
-      sql = unname(dat_in2$data),
+      sql = unname(dat_in$data),
       hash = unname(hash_data))
     DBI::dbWriteTable(con, "report_version_data", report_version_data,
                       append = TRUE)
   }
 
-  if (length(dat_in2$packages) > 0L) {
+  if (length(dat_in$packages) > 0L) {
     r_version <-
       paste(dat_rds$session_info$R.version[c("major", "minor")], collapse = ".")
     pkgs_base <-
@@ -265,9 +253,9 @@ report_data_import <- function(con, workdir, config) {
       unname(dat_rds$session_info[c("otherPkgs", "loadedOnly")]), FALSE),
       "[[", "Version")
     report_version_package <- data_frame(
-      report_version = rep(id, length(dat_in2$packages)),
-      package_name = dat_in2$packages,
-      package_version = c(pkgs_base, pkgs_other)[dat_in2$packages])
+      report_version = rep(id, length(dat_in$packages)),
+      package_name = dat_in$packages,
+      package_version = c(pkgs_base, pkgs_other)[dat_in$packages])
     rownames(report_version_package) <- NULL
     DBI::dbWriteTable(con, "report_version_package", report_version_package,
                       append = TRUE)
@@ -282,15 +270,15 @@ report_data_import <- function(con, workdir, config) {
   hash_orderly_yml <- hash_files(file.path(workdir, "orderly.yml"), FALSE)
 
   ## NOTE: the hash from 'sources' comes from the resources field.
-  file_in <- list(resource = dat_in2$resources,
-                  script = dat_in2$script,
+  file_in <- list(resource = dat_in$resources,
+                  script = dat_in$script,
                   orderly_yml = "orderly.yml")
   file_in_name <- unlist(file_in, FALSE, FALSE)
   file_in_hash <- c(list_to_character(dat_rds$meta$hash_resources, FALSE),
                     dat_rds$meta$hash_script,
                     hash_orderly_yml)
   file_in_purpose <- rep(names(file_in), lengths(file_in))
-  file_in_purpose[file_in_name %in% dat_in2$sources] <- "source"
+  file_in_purpose[file_in_name %in% dat_in$sources] <- "source"
 
   ## These might be missing:
   sql <- sprintf("SELECT hash from file WHERE hash IN (%s)",
@@ -313,9 +301,9 @@ report_data_import <- function(con, workdir, config) {
   ## Then artefacts
   report_version_artefact <- data_frame(
     report_version = id,
-    format = list_to_character(dat_in2$artefacts[, "format"], FALSE),
-    description = list_to_character(dat_in2$artefacts[, "description"], FALSE),
-    order = seq_len(nrow(dat_in2$artefacts)))
+    format = list_to_character(dat_in$artefacts[, "format"], FALSE),
+    description = list_to_character(dat_in$artefacts[, "description"], FALSE),
+    order = seq_len(nrow(dat_in$artefacts)))
 
   DBI::dbWriteTable(con, "report_version_artefact", report_version_artefact,
                     append = TRUE)
@@ -324,12 +312,12 @@ report_data_import <- function(con, workdir, config) {
   tmp <- DBI::dbGetQuery(con, sql, id)
 
   ## We need to do some faffage here:
-  n <- lengths(dat_in2$artefacts[, "filenames"])
+  n <- lengths(dat_in$artefacts[, "filenames"])
   i <- rep(seq_along(n), n)
 
   ## Not certain this will cope with shiny outputs?  Or other
   ## directory outputs (are there any?)
-  artefact_files <- unlist(dat_in2$artefacts[, "filenames"], use.names = FALSE)
+  artefact_files <- unlist(dat_in$artefacts[, "filenames"], use.names = FALSE)
   artefact_hash <-
     list_to_character(dat_rds$meta$hash_artefacts[artefact_files], FALSE)
   report_data_add_files(con, artefact_hash, artefact_files, workdir)
@@ -355,16 +343,8 @@ report_data_add_files <- function(con, hashes, paths, workdir) {
 }
 
 
-## This section is far too complicated and will get rationalised soon.
-## It's mostly hard because there's a problem with a previous report
-## (just one: native-2015-with-herd-effects/20171101-103805-a636d323)
-## that has a dependency on a file that is dragged in from a previous
-## dependency.
-##
-## There are also issues in native-201710-diagnostics-burden with
-## dependencies on resources.
 report_data_find_dependencies <- function(con, meta) {
-  if (is.null(meta$depends)) {
+  if (is.null(meta$depends) || nrow(meta$depends) == 0L) {
     return(NULL)
   }
 
@@ -381,46 +361,17 @@ report_data_find_dependencies <- function(con, meta) {
   depends_use <- list_to_integer(
     Map(find_depends, meta$depends$id, meta$depends$filename,
         USE.NAMES = FALSE))
+  ## Was not done before 0.5.0
+  stopifnot(all(!is.na(depends_use)))
 
-  i <- is.na(depends_use)
-  if (any(i)) {
-    ## try and find this in the parent.
-    message(sprintf("Invalid dependency for %s/%s", meta$name, meta$id))
-    ## What we really want to see is the contents of "depends" for
-    ## that previous report
-    sql_real_depends <- paste(
-      "SELECT use",
-      "  FROM depends",
-      "  JOIN file_artefact",
-      "    ON file_artefact.id = depends.use",
-      ' WHERE report_version = $1 AND "as" = $2')
-    find_real_depends <- function(id, filename) {
-      res <- DBI::dbGetQuery(con, sql_real_depends, list(id, filename))$use
-      if (length(res) == 0L) NA_integer_ else res
-    }
-    depends_use[i] <- list_to_integer(
-      Map(find_real_depends, meta$depends$id[i],
-          meta$depends$filename[i], USE.NAMES = FALSE))
-  }
-
-  depends <- data_frame(
+  data_frame(
     report_version = meta$id,
     use = depends_use,
     as = meta$depends$as,
     is_latest = meta$depends$is_latest,
     is_pinned = meta$depends$is_pinned)
-
-  i <- is.na(depends_use)
-  if (any(i)) {
-    message(sprintf("...discarding %d unrecoverable dependencies", sum(i)))
-    if (all(i)) {
-      return(NULL)
-    }
-    depends <- depends[!i, ]
-  }
-
-  depends
 }
+
 
 report_db2_destroy <- function(con) {
   if (DBI::dbExistsTable(con, ORDERY_TABLE_LIST)) {
