@@ -81,10 +81,12 @@ report_db_init <- function(con, config, must_create = FALSE) {
                    paste(squote(extra), collapse = ", ")))
     }
   }
+
+  report_db2_init(con, config, must_create)
   orderly_table
 }
 
-report_db_rebuild <- function(config) {
+report_db_rebuild <- function(config, verbose = TRUE) {
   assert_is(config, "orderly_config")
   root <- config$path
   con <- orderly_db("destination", config)
@@ -97,6 +99,8 @@ report_db_rebuild <- function(config) {
     dat <- rbind_df(lapply(reports, report_read_data, config))
     DBI::dbWriteTable(con, tbl, dat, append = TRUE)
   }
+
+  report_db2_rebuild(config, verbose)
 }
 
 report_db_cols <- function() {
@@ -114,7 +118,7 @@ report_db_cols <- function() {
     hash_script = "TEXT",
     ## OUTPUTS
     parameters = "TEXT",     # should be json (dict with values)
-    date = "DATETIME",
+    date = "TIMESTAMP",
     hash_orderly = "TEXT",
     hash_input = "TEXT",
     hash_resources = "TEXT", # should be json (dict)
@@ -128,40 +132,17 @@ report_db_cols <- function() {
 ##' Rebuild the report database
 ##' @title Rebuild the report database
 ##' @inheritParams orderly_list
+##'
+##' @param verbose Logical, indicating if information about the
+##'   rebuild should be printed as it runs
+##'
 ##' @export
-orderly_rebuild <- function(config = NULL, locate = TRUE) {
+orderly_rebuild <- function(config = NULL, locate = TRUE, verbose = TRUE) {
   config <- orderly_config_get(config, locate)
-  report_db_rebuild(config)
+  report_db_rebuild(config, verbose)
   invisible(NULL)
 }
 
-## Need to merge this in with the above bits; need to merge the custom
-## type bits in though
-sqlite_init_table <- function(con, table, cols, must_create = FALSE) {
-  if (!DBI::dbExistsTable(con, table)) {
-    col_types <- sprintf("  %s %s", names(cols), unname(cols))
-    sql <- sprintf("CREATE TABLE %s (\n%s\n)",
-                   table,
-                   paste(col_types, collapse = ",\n"))
-    DBI::dbExecute(con, sql)
-  } else if (must_create) {
-    stop(sprintf("Table '%s' already exists", table))
-  } else {
-    sql <- sprintf("SELECT * FROM %s LIMIT 0", table)
-    d <- DBI::dbGetQuery(con, sql)
-    msg <- setdiff(names(cols), names(d))
-    if (length(msg) > 0L) {
-      stop(sprintf("fields %s not present in existing database",
-                   paste(squote(msg), collapse = ", ")))
-    }
-    extra <- setdiff(names(d), names(cols))
-    if (length(extra) > 0L) {
-      stop(sprintf("fields %s in database not present in config",
-                   paste(squote(extra), collapse = ", ")))
-    }
-  }
-  table
-}
 
 with_connection <- function(con, f, ...) {
   withCallingHandlers(f(con, ...),

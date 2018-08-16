@@ -1,0 +1,11 @@
+- name: example
+  before: patch_yml
+
+- name: depend
+
+- name: depend
+  before: pin_depends
+
+- name: example
+
+- name: depend

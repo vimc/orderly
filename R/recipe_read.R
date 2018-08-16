@@ -1,6 +1,6 @@
 ## The bulk of this is validating the yaml; that turns out to be quite
 ## unpleasant unfortunately.
-recipe_read <- function(path, config) {
+recipe_read <- function(path, config, validate = TRUE) {
   assert_is(config, "orderly_config")
   filename <- file.path(path, "orderly.yml")
   assert_file_exists(path, name = "Report working directory")
@@ -36,7 +36,8 @@ recipe_read <- function(path, config) {
 
   info$artefacts <- recipe_read_check_artefacts(info$artefacts, filename, path)
   info$resources <- recipe_read_check_resources(info$resources, filename, path)
-  info$depends <- recipe_read_check_depends(info$depends, filename, config)
+  info$depends <-
+    recipe_read_check_depends(info$depends, filename, config, validate)
 
   assert_scalar_character(info$script, fieldname("script"))
 
@@ -223,7 +224,7 @@ recipe_read_check_resources <- function(x, filename, path) {
   x
 }
 
-recipe_read_check_depends <- function(x, filename, config) {
+recipe_read_check_depends <- function(x, filename, config, validate) {
   ## TODO: this is going to assume that the artefacts are all in place
   ## - that need not actually be the case here - so we need a flag on
   ## this function that indicates that we're actually going to try and
@@ -249,10 +250,8 @@ recipe_read_check_depends <- function(x, filename, config) {
       assert_scalar_logical(el$draft,
                             sprintf("%s:depends:%s:draft", filename, name))
     }
-    el$path <- orderly_find_report(el$id, name, config, draft = el$draft,
-                                   must_work = TRUE)
+
     assert_named(el$use, TRUE, sprintf("%s:depends:%s:use", filename, name))
-    ## TODO: should check that these are not listed as resources I think
     err <- !vlapply(el$use, function(x) is.character(x) && length(x) == 1)
     if (any(err)) {
       stop(sprintf("%s:depends:%s:use must all be scalar character",
@@ -263,22 +262,47 @@ recipe_read_check_depends <- function(x, filename, config) {
     el$as <- names(el$use)
     el$use <- NULL
 
-    filename_full <- file.path(el$path, el$filename)
+    ## TODO: this is a giant hack that is required until VIMC-506 is
+    ## fixed; we need to be able to load the "processed" version of
+    ## the orderly yaml for import into the database but we _don't_
+    ## want to look up anything about the reports because by the time
+    ## we come to getting them in the database this is not necessarily
+    ## correct!
+    if (validate) {
+      el$path <- orderly_find_report(el$id, name, config, draft = el$draft,
+                                     must_work = TRUE)
+      filename_full <- file.path(el$path, el$filename)
 
-    ## TODO: VIMC-889
-    msg <- !file.exists(filename_full)
-    if (any(msg)) {
-      stop(sprintf("Did not find file %s at %s",
-                   el$filename[msg],
-                   el$path))
+      ## TODO: VIMC-889
+      msg <- !file.exists(filename_full)
+      if (any(msg)) {
+        stop(sprintf("Did not find file %s at %s",
+                     el$filename[msg],
+                     el$path))
+      }
+      el$hash <- hash_files(filename_full, FALSE)
+
+      ## VIMC-2017: check that a file is actually an artefact
+      meta <- readRDS(path_orderly_run_rds(el$path))
+      ok <- el$filename %in% names(meta$meta$hash_artefacts)
+      if (any(!ok)) {
+        stop(sprintf(
+          "Dependency %s not an artefact of %s/%s:\n%s",
+          ngettext(sum(!ok), "file", "files"),
+          el$name, basename(el$path),
+          paste(sprintf("- '%s'", el$filename[!ok]), collapse = "\n")),
+          call. = FALSE)
+      }
+
+      el$hash <- hash_files(filename_full, FALSE)
+
+      el$time <- readRDS(path_orderly_run_rds(el$path))$time
+
+      ## Is this considered to be the "latest" copy of a dependency?
+      el$is_latest <- el$id == "latest" ||
+        basename(el$path) == latest_id(dir(dirname(el$path)))
+      el$is_pinned <- el$id != "latest"
     }
-    el$hash <- hash_files(filename_full, FALSE)
-
-    el$time <- readRDS(path_orderly_run_rds(el$path))$time
-
-    ## Is this considered to be the "latest" copy of a dependency?
-    el$is_latest <- el$id == "latest" ||
-      basename(el$path) == latest_id(dir(dirname(el$path)))
 
     ## Bit of a faff here to get the format into something that will
     ## serialise and interrogate nicely.

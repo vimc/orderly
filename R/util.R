@@ -29,6 +29,13 @@ read_lines <- function(...) {
 vcapply <- function(X, FUN, ...) {
   vapply(X, FUN, character(1), ...)
 }
+
+
+viapply <- function(X, FUN, ...) {
+  vapply(X, FUN, integer(1), ...)
+}
+
+
 vlapply <- function(X, FUN, ...) {
   vapply(X, FUN, logical(1), ...)
 }
@@ -187,6 +194,10 @@ rbind_df <- function(x) {
 
 squote <- function(x) {
   sprintf("'%s'", x)
+}
+
+dquote <- function(x) {
+  sprintf('"%s"', x)
 }
 
 pasteq <- function(x, sep = ", ") {
@@ -368,6 +379,10 @@ data_frame <- function(...) {
   data.frame(..., stringsAsFactors = FALSE)
 }
 
+as_data_frame <- function(...) {
+  as.data.frame(..., stringsAsFactors = FALSE)
+}
+
 readlines_if_exists <- function(path, missing = NULL) {
   if (file.exists(path)) {
     readLines(path)
@@ -512,4 +527,33 @@ ordered_map_to_list <- function(x) {
   }
   set_names(lapply(x, function(x) x[[1]]),
             vcapply(x, names))
+}
+
+
+drop_na <- function(x) {
+  x[!is.na(x)]
+}
+
+
+drop_null <- function(x) {
+  x[!vlapply(x, is.null)]
+}
+
+
+list_to_character <- function(x, named = TRUE) {
+  vcapply(x, identity, USE.NAMES = named)
+}
+
+
+list_to_integer <- function(x, named = TRUE) {
+  viapply(x, identity, USE.NAMES = named)
+}
+
+
+source_to_function <- function(filename, name, parent) {
+  e <- new.env(parent = parent)
+  sys.source(filename, e)
+  ret <- e[[name]]
+  assert_is(ret, "function", sprintf("'%s' within '%s'", name, filename))
+  ret
 }

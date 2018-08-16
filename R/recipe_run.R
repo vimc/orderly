@@ -48,6 +48,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   assert_scalar_logical(open)
   envir <- orderly_environment(envir)
   config <- orderly_config_get(config, locate)
+  check_orderly_archive_version(config)
 
   if (!is.null(message)) {
     assert_scalar_character(message)
@@ -244,7 +245,8 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
     depends <- NULL
   } else {
     depends <- info$depends
-    depends <- depends[c("name", "id", "filename", "as", "hash")]
+    depends <- depends[c("name", "id", "filename", "as", "hash",
+                         "id_requested", "is_latest", "is_pinned")]
   }
 
   session <- session_info()

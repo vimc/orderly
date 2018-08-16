@@ -61,6 +61,8 @@ orderly_config_read_yaml <- function(filename, path) {
       match_value(api_server_identity, names(info$api_server))
   }
 
+  info$archive_version <- read_orderly_archive_version(path)
+
   class(info) <- "orderly_config"
   info
 }

@@ -10,6 +10,7 @@
 ##' @export
 orderly_commit <- function(id, name = NULL, config = NULL, locate = TRUE) {
   config <- orderly_config_get(config, locate)
+  check_orderly_archive_version(config)
   if (is.null(name)) {
     name <- orderly_find_name(id, config, draft = TRUE, must_work = TRUE)
   } else {
@@ -40,6 +41,9 @@ recipe_commit <- function(workdir, config) {
   })
 
   success <- DBI::dbWriteTable(con, tbl, dat, append = TRUE)
+
+  report_data_import(con, workdir, config)
+
   if (success) {
     ## I should do something here if the unlink fails, though I don't
     ## know exactly what.  But because a *second* round of copy here

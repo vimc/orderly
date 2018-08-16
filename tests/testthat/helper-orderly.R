@@ -68,3 +68,8 @@ skip_if_no_internet <- function() {
   }
   testthat::skip("no internet")
 }
+
+unpack_reference <- function(version, path = tempfile()) {
+  unzip(sprintf("reference/%s.zip", version), exdir = path)
+  file.path(path, version)
+}

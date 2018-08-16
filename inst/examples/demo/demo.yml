@@ -36,6 +36,8 @@
   parameters:
     nmin: 0
 
+- name: use_dependency
+
 - name: other
   publish: true
   parameters:
@@ -46,6 +48,8 @@
   before: other_change_script
   parameters:
     nmin: 0
+
+- name: use_dependency
 
 - name: use_resource
   publish: true

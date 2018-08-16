@@ -1,0 +1,157 @@
+# By default first element is primary key, unless `primary_key` is
+# given (may be multiple columns)
+#
+# By default fields are marked not null unless `nullable: true`
+
+# This is just a standalone table with limited schema information.  I
+# don't know what more we really need here.
+orderly_schema:
+  columns:
+    - schema_version: {type: TEXT}
+    - orderly_version: {type: TEXT}
+    - created: {type: TIMESTAMP}
+
+orderly_schema_tables:
+  columns:
+    - name: {type: TEXT}
+
+# It might be more useful to put more information against this, but
+# for now it doesn't really exist because all that information might
+# vary with report version.  However, this could be used in order to
+# support renames (VIMC-881), allowing us to override the previously
+# used report name.
+report:
+  columns:
+    - name: {type: TEXT}
+
+# The core table
+report_version:
+  columns:
+    - id: {type: TEXT}
+    - report: {fk: report.name}
+    - date: {type: TIMESTAMP}
+    - displayname: {type: TEXT, nullable: true}
+    - description: {type: TEXT, nullable: true}
+    # NOTE: fields listed in orderly_config.yml will also be
+    # included here.
+
+# The extracted data
+#
+# I think that it would be nice to record the number of rows and
+# columns here but that's going to require some additional work as
+# that's not been recorded into any of the previous versions of the
+# data.  So we'll have to get that into the rds/yml files and that
+# requires some sort of data migration.  In an effort to simplify
+# this, let's hold off for now.
+data:
+  columns:
+    - hash: {type: TEXT}
+    - size_csv: {type: BIGINT}
+    - size_rds: {type: BIGINT}
+
+# Every time we see a new file it'll end up here.  This would be a
+# useful starting place for deduplicating the orderly archive in a
+# fairly safe way.  I don't think that we want to (necessarily) try
+# and index all files but certainly key inputs and outputs.
+file:
+  columns:
+    - hash: {type: TEXT}
+    - size: {type: BIGINT}
+
+# Enum table for types of file use
+file_purpose:
+  columns:
+    - name: {type: TEXT}
+  values:
+    - {name: source}
+    - {name: script}
+    - {name: resource}
+    - {name: orderly_yml}
+
+# A realisation of a file requires a filename.  These are scoped by
+# the report version and by the use within the report.
+file_input:
+  columns:
+    - id: {type: SERIAL}
+    - report_version: {fk: report_version.id}
+    - file_hash: {fk: file.hash}
+    - filename: {type: TEXT}
+    # In theory 'use' would be derivable from where the other end of
+    # the key goes but that's going to be super annoying to work out
+    - file_purpose: {fk: file_purpose.name}
+    # This would be great to have but seems overkill
+    # - mime: {type: TEXT}
+
+# Link views into the report
+report_version_view:
+  columns:
+    - id: {type: SERIAL}
+    - report_version: {fk: report_version.id}
+    - name: {type: TEXT}
+    - sql: {type: TEXT}
+
+# This is the input to get the data
+report_version_data:
+  columns:
+    - id: {type: SERIAL}
+    - report_version: {fk: report_version.id}
+    - name: {type: TEXT}
+    - sql: {type: TEXT}
+    - hash: {fk: data.hash}
+
+# What versions of packages were loaded?
+report_version_package:
+  columns:
+    - id: {type: SERIAL}
+    - report_version: {fk: report_version.id}
+    - package_name: {type: TEXT}
+    - package_version: {type: TEXT}
+
+# Values here will be populated by orderly as we keep a list in the
+# package and we should not repeat that definition.
+artefact_format:
+  columns:
+    - name: {type: TEXT}
+
+report_version_artefact:
+  columns:
+    - id: {type: SERIAL}
+    - report_version: {fk: report_version.id}
+    - format: {fk: artefact_format.name}
+    - description: {type: TEXT}
+    - order: {type: INTEGER}
+
+# This is _close_ to the same structure as file_input
+file_artefact:
+  columns:
+    - id: {type: SERIAL}
+    - artefact: {fk: report_version_artefact.id}
+    - file_hash: {fk: file.hash}
+    - filename: {type: TEXT}
+
+
+# We could go more detailed here and get the report name and id but
+# that would duplicate information so I'm not doing that here.  (The
+# information redundant in the yml/rds but that's ok I feel).
+#
+# This is a bit of a risk because it is going to assume that the
+# artefact really was included in the upstream report.  But we can
+# depend on _any_ file not just dependencies, so this might fail for
+# montagu-reports which would make this inviable.  That should be
+# tightened up a lot in the recipe_read!
+depends:
+  columns:
+    - id: {type: SERIAL}
+    - report_version: {fk: report_version.id}
+    - use: {fk: file_artefact.id}
+    - as: {type: TEXT}
+    - is_pinned:
+        type: BOOLEAN
+        comment: >-
+          Was the requested id a specific id, rather than "latest"?
+    - is_latest:
+        type: BOOLEAN
+        comment: >-
+          Was this the latest version when run? Not necessarily the
+          same as "NOT is_pinned" as a report might have been pinned
+          to the most recent report when it was run.

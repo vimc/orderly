@@ -4,7 +4,7 @@
 \alias{orderly_rebuild}
 \title{Rebuild the report database}
 \usage{
-orderly_rebuild(config = NULL, locate = TRUE)
+orderly_rebuild(config = NULL, locate = TRUE, verbose = TRUE)
 }
 \arguments{
 \item{config}{An orderly configuration, or the path to one (or
@@ -14,6 +14,9 @@ orderly_rebuild(config = NULL, locate = TRUE)
 searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
+
+\item{verbose}{Logical, indicating if information about the
+rebuild should be printed as it runs}
 }
 \description{
 Rebuild the report database

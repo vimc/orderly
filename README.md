@@ -20,6 +20,10 @@ A research group with a potentially changing SQL database who want to create rep
 * Save a set of metadata
 * Archive the exported data set
 
+## Database schema
+
+`orderly` has a database, which should be the preferred way of querying `orderly` from other programs.  The schema is programmatically described at [`inst/database/schema.yml`](inst/database/schema.yml) and automatically generated database documentation is available [here](https://vimc.github.io/orderly/schema).
+
 ## Installation
 
 ```r

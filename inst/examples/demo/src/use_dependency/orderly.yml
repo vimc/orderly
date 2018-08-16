@@ -1,0 +1,15 @@
+data: ~
+script: script.R
+artefacts:
+  - staticgraph:
+      description: A summary graph
+      filenames: graph.png
+depends:
+  other:
+    id: latest
+    use:
+      incoming.csv: summary.csv
+displayname: Report using a dependency
+author: Dr Very Serious
+requester: ACME
+comment: here's a comment yo
