@@ -64,3 +64,5 @@
 
 - name: html
   publish: true
+
+- name: interactive

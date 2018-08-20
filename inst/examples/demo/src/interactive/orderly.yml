@@ -1,7 +1,8 @@
 script: script.R
+data: ~
 resources:
-  resources/index.html
-  resources/script.js
+  - index.html
+  - script.js
 artefacts:
   interactivehtml:
     description: A demo interactive report
