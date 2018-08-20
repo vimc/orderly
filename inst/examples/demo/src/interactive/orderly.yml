@@ -1,0 +1,13 @@
+script: script.R
+resources:
+  resources/index.html
+  resources/script.js
+artefacts:
+  interactivehtml:
+    description: A demo interactive report
+    filenames: 
+      - index.html
+      - script.js
+author: Dr Fun
+requester: ACME
+comment: This is a comment about the interactive report
