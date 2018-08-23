@@ -95,8 +95,24 @@ test_that("mixed migration", {
 })
 
 
-test_that("reqyure migration", {
+test_that("require migration", {
   path <- unpack_reference("0.3.2")
   expect_error(orderly_run("example", config = path, echo = FALSE),
                "orderly archive needs migrating from 0.0.0 =>", fixed = TRUE)
+})
+
+
+test_that("can't commit old version", {
+  path <- unpack_reference("0.3.2")
+  contents <- orderly_list_archive(path)
+
+  id <- contents$id[contents$name == "depend"][[1L]]
+  file.rename(file.path(path, "archive", "depend", id),
+              file.path(path, "draft", "depend", id))
+  orderly_migrate(path)
+  orderly_rebuild(path)
+  expect_error(
+    orderly_commit(id, config = path),
+    "This report was built with an old version of orderly; please rebuild",
+    fixed = TRUE)
 })
