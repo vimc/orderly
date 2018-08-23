@@ -325,6 +325,36 @@ main_do_deploy_shiny <- function(x) {
   invisible(NULL)
 }
 
+
+## 8. migrate
+main_args_migrate <- function(res) {
+  opts <- list(
+    optparse::make_option("--to",
+                          help = "Version to migrate to",
+                          type = "character",
+                          default = NULL,
+                          dest = "to"),
+    optparse::make_option("--dry-run",
+                          help = "Test run the migration only",
+                          type = "logical",
+                          default = FALSE,
+                          action = "store_true",
+                          dest = "dry_run"))
+  parser <- optparse::OptionParser(
+    option_list = opts,
+    usage = "%prog [--root=ROOT] migrate [options]")
+  opts_subcommand(res, parser, main_do_migrate, 0L)
+}
+
+
+main_do_migrate <- function(x) {
+  config <- orderly_config_get(x$options$root, TRUE)
+  dry_run <- x$options$dry_run
+  to <- x$options$to
+  orderly_migrate(config, to = to, dry_run = dry_run)
+}
+
+
 write_script <- function(path) {
   if (!isTRUE(is_directory(path))) {
     stop("'path' must be a directory")
@@ -373,6 +403,8 @@ main_args_commands <- function() {
                       args = main_args_cleanup),
        rebuild = list(name = "rebuild the database",
                       args = main_args_rebuild),
+       migrate = list(name = "migrate the archive",
+                      args = main_args_migrate),
        "deploy-shiny" = list(name = "deploy shiny apps",
                              args = main_args_deploy_shiny))
 }

@@ -222,3 +222,25 @@ test_that("write_script", {
   expect_equal(basename(bin), "orderly")
   expect_true(file.exists(bin))
 })
+
+
+test_that("migrate", {
+  path <- prepare_orderly_example("minimal")
+  args <- c("--root", path, "migrate")
+  res <- main_args(args)
+  expect_equal(res$command, "migrate")
+  expect_false(res$options$dry_run)
+  expect_null(res$options$to)
+  expect_identical(res$target, main_do_migrate)
+})
+
+
+test_that("migrate: args", {
+  path <- prepare_orderly_example("minimal")
+  args <- c("--root", path, "migrate", "--to", "0.3.3", "--dry-run")
+  res <- main_args(args)
+  expect_equal(res$command, "migrate")
+  expect_true(res$options$dry_run)
+  expect_equal(res$options$to, "0.3.3")
+  expect_identical(res$target, main_do_migrate)
+})
