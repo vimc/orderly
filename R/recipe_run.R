@@ -270,6 +270,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
                git = info$git)
 
   session$meta <- meta
+  session$archive_version <- cache$current_archive_version
   saveRDS(session, path_orderly_run_rds(info$workdir))
   writeLines(yaml::as.yaml(meta, column.major = FALSE),
              path_orderly_run_yml(info$workdir))

@@ -78,12 +78,17 @@ migrate_apply1 <- function(path, version, fun, config, dry_run) {
   }
 
   file_orig <- path_orderly_run_rds(path)
-  res <- fun(readRDS(file_orig), path, config)
-  if (res$changed && !dry_run) {
-    ## Start by making the backup
-    file_copy(file_orig, file)
-    saveRDS(res$data, file_orig)
+  dat <- readRDS(file_orig)
+  version_previous <- get_version(dat$archive_version)
+  if (version_previous < version) {
+    res <- fun(dat, path, config)
+    res$data$archive_version <- numeric_version(version)
+    if (!dry_run) {
+      file_copy(file_orig, file)
+      saveRDS(res$data, file_orig)
+    }
   }
+
   res$changed
 }
 
@@ -122,7 +127,7 @@ available_migrations <- function() {
 
 
 read_orderly_archive_version <- function(root) {
-  readlines_if_exists(path_orderly_archive_version(root)) %||% "0.0.0"
+  get_version(readlines_if_exists(path_orderly_archive_version(root)), FALSE)
 }
 
 
