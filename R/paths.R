@@ -53,5 +53,5 @@ path_orderly_run_rds_backup <- function(path, version) {
 
 
 path_orderly_archive_version <- function(path) {
-  file.path(path, "orderly_archive_version")
+  file.path(path, "archive", ".orderly_archive_version")
 }
