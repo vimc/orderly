@@ -118,9 +118,10 @@ migrate_apply1 <- function(path, version, fun, config, dry_run) {
       file_copy(file_orig, file)
       saveRDS(res$data, file_orig)
     }
+    res$changed
+  } else {
+    FALSE
   }
-
-  res$changed
 }
 
 
