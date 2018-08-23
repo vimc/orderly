@@ -28,6 +28,15 @@ recipe_commit <- function(workdir, config) {
   id <- basename(workdir)
   orderly_log("commit", sprintf("%s/%s", name, id))
 
+  ## At this point we just won't support migrating drafts because it's
+  ## lots easier not to!
+  v <- get_version(readRDS(path_orderly_run_rds(workdir))$archive_version)
+  if (v < cache$current_archive_version) {
+    stop("This report was built with an old version of orderly; please rebuild")
+  }
+
+  ## TODO: this whole section here comes out when deprecating the old
+  ## orderly table
   dat <- report_read_data(workdir, config)
   con <- orderly_db("destination", config)
   ## Ensure that the db is in a reasonable state:

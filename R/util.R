@@ -557,3 +557,9 @@ source_to_function <- function(filename, name, parent) {
   assert_is(ret, "function", sprintf("'%s' within '%s'", name, filename))
   ret
 }
+
+
+get_version <- function(x, numeric = TRUE, default = "0.0.0") {
+  v <- x %||% default
+  if (numeric) numeric_version(v) else as.character(v)
+}

@@ -88,7 +88,7 @@ migrate_apply <- function(root, version, fun, config, verbose, dry_run) {
       }
     }
     if (!dry_run) {
-      writeLines(version, path_orderly_archive_version(root))
+      write_orderly_archive_version(version, root)
     }
   },
   error = function(e) {
@@ -109,13 +109,19 @@ migrate_apply1 <- function(path, version, fun, config, dry_run) {
   }
 
   file_orig <- path_orderly_run_rds(path)
-  res <- fun(readRDS(file_orig), path, config)
-  if (res$changed && !dry_run) {
-    ## Start by making the backup
-    file_copy(file_orig, file)
-    saveRDS(res$data, file_orig)
+  dat <- readRDS(file_orig)
+  version_previous <- get_version(dat$archive_version)
+  if (version_previous < version) {
+    res <- fun(dat, path, config)
+    res$data$archive_version <- numeric_version(version)
+    if (!dry_run) {
+      file_copy(file_orig, file)
+      saveRDS(res$data, file_orig)
+    }
+    res$changed
+  } else {
+    FALSE
   }
-  res$changed
 }
 
 
@@ -125,7 +131,7 @@ migrate_rollback <- function(root, version, previous) {
   for (p in reports) {
     migrate_rollback1(p, version, root)
   }
-  writeLines(as.character(previous), path_orderly_archive_version(root))
+  write_orderly_archive_version(previous, root)
 }
 
 
@@ -153,13 +159,22 @@ available_migrations <- function() {
 
 
 read_orderly_archive_version <- function(root) {
-  readlines_if_exists(path_orderly_archive_version(root)) %||% "0.0.0"
+  get_version(readlines_if_exists(path_orderly_archive_version(root)), FALSE)
+}
+
+
+write_orderly_archive_version <- function(version, root) {
+  writeLines(as.character(version), path_orderly_archive_version(root))
 }
 
 
 check_orderly_archive_version <- function(config) {
   used <- numeric_version(config$archive_version)
   curr <- cache$current_archive_version
+  if (used == "0.0.0" && nrow(orderly_list_archive(config)) == 0L) {
+    write_orderly_archive_version(curr, config$path)
+    used <- curr
+  }
   if (used < curr) {
     stop(sprintf("orderly archive needs migrating from %s => %s",
                  as.character(used), as.character(curr)),
