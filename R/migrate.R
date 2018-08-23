@@ -88,7 +88,7 @@ migrate_apply <- function(root, version, fun, config, verbose, dry_run) {
       }
     }
     if (!dry_run) {
-      writeLines(version, path_orderly_archive_version(root))
+      write_orderly_archive_version(version, root)
     }
   },
   error = function(e) {
@@ -131,7 +131,7 @@ migrate_rollback <- function(root, version, previous) {
   for (p in reports) {
     migrate_rollback1(p, version, root)
   }
-  writeLines(as.character(previous), path_orderly_archive_version(root))
+  write_orderly_archive_version(previous, root)
 }
 
 
@@ -163,9 +163,18 @@ read_orderly_archive_version <- function(root) {
 }
 
 
+write_orderly_archive_version <- function(version, root) {
+  writeLines(as.character(version), path_orderly_archive_version(root))
+}
+
+
 check_orderly_archive_version <- function(config) {
   used <- numeric_version(config$archive_version)
   curr <- cache$current_archive_version
+  if (used == "0.0.0" && nrow(orderly_list_archive(config)) == 0L) {
+    write_orderly_archive_version(curr, config$path)
+    used <- curr
+  }
   if (used < curr) {
     stop(sprintf("orderly archive needs migrating from %s => %s",
                  as.character(used), as.character(curr)),

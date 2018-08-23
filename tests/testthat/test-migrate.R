@@ -116,3 +116,14 @@ test_that("can't commit old version", {
     "This report was built with an old version of orderly; please rebuild",
     fixed = TRUE)
 })
+
+
+test_that("don't migrate new orderly", {
+  path <- prepare_orderly_example("minimal")
+  p <- path_orderly_archive_version(path)
+  unlink(p)
+  check_orderly_archive_version(orderly_config(path))
+  expect_true(file.exists(p))
+  expect_equal(read_orderly_archive_version(path),
+               as.character(cache$current_archive_version))
+})
