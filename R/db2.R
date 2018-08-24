@@ -270,7 +270,7 @@ report_data_import <- function(con, workdir, config) {
   hash_orderly_yml <- hash_files(file.path(workdir, "orderly.yml"), FALSE)
 
   ## NOTE: the hash from 'sources' comes from the resources field.
-  file_in <- list(resource = dat_in$resources,
+  file_in <- list(resource = names(dat_rds$meta$hash_resources),
                   script = dat_in$script,
                   orderly_yml = "orderly.yml")
   file_in_name <- unlist(file_in, FALSE, FALSE)

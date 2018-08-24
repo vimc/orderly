@@ -66,3 +66,5 @@
   publish: true
 
 - name: interactive
+
+- name: use_resource_dir

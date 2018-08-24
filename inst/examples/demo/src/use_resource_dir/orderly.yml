@@ -1,0 +1,12 @@
+data:
+  dat: SELECT name, number FROM thing
+script: script.R
+resources:
+  meta
+artefacts:
+  staticgraph:
+    description: A graph of things
+    filenames: mygraph.png
+author: Dr Serious
+requester: ACME
+comment: This is another comment
