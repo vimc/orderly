@@ -137,3 +137,20 @@ test_that("can't depend on non artefacts", {
     orderly_run("depend", config = path, echo = FALSE),
     "Dependency file not an artefact of example/.*:\n- 'script.R'")
 })
+
+
+test_that("dependency dir can be used", {
+  path <- prepare_orderly_example("demo")
+  id <- orderly_run("use_resource_dir", config = path, echo = FALSE)
+  options(error = recover)
+  p <- orderly_commit(id, config = path)
+  con <- orderly_db("destination", path)
+  on.exit(DBI::dbDisconnect(con))
+
+  tmp <- DBI::dbGetQuery(
+    con,
+    "SELECT * FROM file_input JOIN file ON file_hash = hash")
+  expect_setequal(
+    tmp$filename,
+    c("meta/another.csv", "meta/data.csv", "script.R", "orderly.yml"))
+})
