@@ -4,7 +4,6 @@ slack_post_success <- function(dat, config) {
     server <- config$api_server[[config$api_server_identity]]
     slack_url <- resolve_secrets(server$slack_url, config)[[1L]]
     if (!is.null(slack_url)) {
-      elapsed <- format(as.difftime(dat$elapsed, units = "secs"), digits = 2)
       data <- slack_data(dat, server$server$name, server$server$url_www,
                          isTRUE(server$primary))
       do_slack_post_success(slack_url, data)
@@ -50,6 +49,7 @@ slack_data <- function(dat, server_name, server_url, server_is_primary) {
          fallback = fallback,
          fields = fields,
          actions = list(list(
+           name = "link",
            type = "button",
            text = ":clipboard: View report",
            style = "primary",
