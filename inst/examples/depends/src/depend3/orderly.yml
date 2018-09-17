@@ -1,0 +1,12 @@
+data: ~
+depends:
+  depend:
+    id: latest
+    draft: true
+    use:
+      previous.rds: output.rds
+script: script.R
+artefacts:
+  - data:
+      description: some data
+      filenames: third.rds
