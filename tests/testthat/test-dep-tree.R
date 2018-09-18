@@ -23,21 +23,16 @@ test_that("has dependencies", {
   r2 <- orderly_run("depend", config = path, id_file = tmp, echo = FALSE)
   r3 <- orderly_run("depend3", config = path, id_file = tmp, echo = FALSE)
   
-  print(r1)
-  
   messages <- capture_messages(
     print_dep_tree("example", draft = TRUE, config_path = path)
   )
-  
   exp_message <- c(sprintf("[ depends    ]  - depend [%s]\n", r2),
                    sprintf("[ depends    ]    - depend3 [%s]\n", r3))
-  
   expect_equal(messages, exp_message)
   
   messages <- capture_messages(
     print_dep_tree("depend", draft = TRUE, config_path = path)
   )
-  
   exp_message <- sprintf("[ depends    ]  - depend3 [%s]\n", r3)
   
   expect_equal(messages, exp_message)
