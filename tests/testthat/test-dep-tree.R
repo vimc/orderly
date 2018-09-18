@@ -26,14 +26,14 @@ test_that("has dependencies", {
   messages <- capture_messages(
     print_dep_tree("example", draft = TRUE, config_path = path)
   )
-  exp_message <- c(sprintf("[ depends    ]  - depend [%s]\n", r2),
-                   sprintf("[ depends    ]    - depend3 [%s]\n", r3))
+  exp_message <- c(sprintf("[ dep tree   ]  - depend [%s]\n", r2),
+                   sprintf("[ dep tree   ]    - depend3 [%s]\n", r3))
   expect_equal(messages, exp_message)
   
   messages <- capture_messages(
     print_dep_tree("depend", draft = TRUE, config_path = path)
   )
-  exp_message <- sprintf("[ depends    ]  - depend3 [%s]\n", r3)
+  exp_message <- sprintf("[ dep tree   ]  - depend3 [%s]\n", r3)
   
   expect_equal(messages, exp_message)
 })

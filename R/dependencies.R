@@ -107,6 +107,6 @@ print_dep_tree <- function(report, id = "latest", draft = FALSE,
                        paste(rep("  ", dep$depth), collapse = ""), 
                        dep$name,
                        dep$id)
-    orderly::orderly_log("depends", dep_str)
+    orderly::orderly_log("dep tree", dep_str)
   }
 } 
