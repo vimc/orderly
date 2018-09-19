@@ -7,7 +7,7 @@ test_that("no dependencies", {
   orderly_run("example", config = path, id_file = tmp, echo = FALSE)
 
   messages <- capture_messages(
-    print_dep_tree("example", draft = TRUE, config_path = path)
+    print_dep_tree("example", draft = TRUE, config = path)
   )
   expect_equal(messages, "[ dep tree   ]  Nothing to update.\n")
 })
@@ -24,14 +24,14 @@ test_that("has dependencies", {
   r3 <- orderly_run("depend3", config = path, id_file = tmp, echo = FALSE)
   
   messages <- capture_messages(
-    print_dep_tree("example", draft = TRUE, config_path = path)
+    print_dep_tree("example", draft = TRUE, config = path)
   )
   exp_message <- c(sprintf("[ dep tree   ]  - depend [%s]\n", r2),
                    sprintf("[ dep tree   ]    - depend3 [%s]\n", r3))
   expect_equal(messages, exp_message)
   
   messages <- capture_messages(
-    print_dep_tree("depend", draft = TRUE, config_path = path)
+    print_dep_tree("depend", draft = TRUE, config = path)
   )
   exp_message <- sprintf("[ dep tree   ]  - depend3 [%s]\n", r3)
   
