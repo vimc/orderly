@@ -10,7 +10,7 @@ get_dependencies <- function(name, id = NULL, config_path = NULL, draft = FALSE)
   if (is.null(id)) {
     id <- orderly:::orderly_latest(name, config = config_path, draft = draft)
   }
-  
+
   if (is.null(config_path)) {
     config_path <- "."
   }
@@ -22,13 +22,14 @@ get_dependencies <- function(name, id = NULL, config_path = NULL, draft = FALSE)
   }
 
   if (!file.exists(rds_path)) {
-    warning(sprintf(
+    stop(sprintf(
       "The report %s:%s does not exist or does not have orderly_run.rds",
       name, id))
     return(NULL)
   }
   run_data <- readRDS(rds_path)
-  return(run_data$meta$depends)
+
+  run_data$meta$depends
 }
 
 ##' @title Generate a list of dependencies for a given report
@@ -59,7 +60,7 @@ what_depends_on <- function(report, id = "latest", config_path = NULL,
   if (id == "latest") {
     id <- orderly_latest(report, config = config_path, draft = draft)
   }
-  
+
   # get a list of all local reports - doing this every time is tedious, but
   # it doesn't take long and looks nicer than passing around a vector of names
   if (draft) {
@@ -67,7 +68,7 @@ what_depends_on <- function(report, id = "latest", config_path = NULL,
   } else {
     rep_names <- unique(orderly_list_archive(config = config_path)$name)
   }
-  
+
   # here's the plan - We have a report, A.
   # - We iterate through the list of local reports reading the dependencies from
   # the orderly_run.yml
@@ -89,7 +90,8 @@ what_depends_on <- function(report, id = "latest", config_path = NULL,
                                      dep_reports = dep_reports)
     }
   }
-  return(dep_reports)
+
+  dep_reports
 }
 
 ##' @title Print the dependency tree for a given report using orderly log
@@ -107,7 +109,7 @@ print_dep_tree <- function(report, id = "latest", draft = FALSE,
   if (length(dep_tree) == 0) {
     orderly::orderly_log("dep tree", "Nothing to update.")
   }
-  
+
   for (dep in dep_tree) {
     dep_str <- sprintf("%s- %s [%s]",
                        paste(rep("  ", dep$depth), collapse = ""), 
