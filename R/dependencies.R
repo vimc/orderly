@@ -7,16 +7,19 @@
 ##'
 ##' @export
 get_dependencies <- function(name, id = NULL, config_path = NULL, draft = FALSE) {
-  if (is.null(id))
+  if (is.null(id)) {
     id <- orderly:::orderly_latest(name, config = config_path, draft = draft)
+  }
   
-  if (is.null(config_path))
+  if (is.null(config_path)) {
     config_path <- "."
+  }
 
-  if (draft)
+  if (draft) {
     rds_path <- file.path(config_path, "draft", name, id, "orderly_run.rds")
-  else
+  } else {
     rds_path <- file.path(config_path, "archive", name, id, "orderly_run.rds")
+  }
 
   if (!file.exists(rds_path)) {
     warning(sprintf(
@@ -53,15 +56,17 @@ what_depends_on <- function(report, id = "latest", config_path = NULL,
   }
   
   # we need to go find the latest version of the report
-  if (id == "latest")
+  if (id == "latest") {
     id <- orderly_latest(report, config = config_path, draft = draft)
+  }
   
   # get a list of all local reports - doing this every time is tedious, but
   # it doesn't take long and looks nicer than passing around a vector of names
-  if (draft)
+  if (draft) {
     rep_names <- unique(orderly_list_drafts(config = config_path)$name)
-  else
+  } else {
     rep_names <- unique(orderly_list_archive(config = config_path)$name)
+  }
   
   # here's the plan - We have a report, A.
   # - We iterate through the list of local reports reading the dependencies from
@@ -99,8 +104,9 @@ print_dep_tree <- function(report, id = "latest", draft = FALSE,
                            config_path = NULL) {
   dep_tree <- what_depends_on(report = report, id = id, draft = draft, 
                               config_path = config_path)
-  if (length(dep_tree) == 0)
+  if (length(dep_tree) == 0) {
     orderly::orderly_log("dep tree", "Nothing to update.")
+  }
   
   for (dep in dep_tree) {
     dep_str <- sprintf("%s- %s [%s]",
