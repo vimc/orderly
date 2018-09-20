@@ -13,7 +13,7 @@ test_that("no global folder", {
   path <- prepare_orderly_example("global")
   # now we break the orderly_config.yml
   path_config <- file.path(path, "orderly_config.yml")
-  config_lines = readLines(path_config, -1)
+  config_lines <- readLines(path_config)
   # we know the final line (line six) is the global resource folder
   # so set it to something invalid
   config_lines[6] <- "  invalid_path"
@@ -23,9 +23,8 @@ test_that("no global folder", {
   expect_error(
      orderly_run("example", config = path, id_file = tmp, echo = FALSE),
      paste("Global resource folder does not exist", 
-           "(expected: invalid_path)"),
-     fixed = TRUE
-     )
+           "Expected: invalid_path"),
+     fixed = TRUE)
 })
 
 test_that("missing global file", {
@@ -34,13 +33,12 @@ test_that("missing global file", {
   path_example <- file.path(path, "src", "example")
   path_yaml <- file.path(path_example, "orderly.yml")
   # the final line of the yaml is globa file, so we change that
-  config_lines = readLines(path_yaml, -1)
+  config_lines <- readLines(path_yaml)
   config_lines[11] <- "  - none.csv"
   writeLines(config_lines, path_yaml)
   
   tmp <- tempfile()
   expect_error(
     orderly_run("example", config = path, id_file = tmp, echo = FALSE),
-    "Error copying files", fixed = TRUE
-  )
+                "Missing global resources: none.csv", fixed = TRUE)
 })
