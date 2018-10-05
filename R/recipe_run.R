@@ -54,7 +54,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
     assert_scalar_character(message)
   }
 
-  info <- recipe_prepare(config, name, id_file, ref, fetch)
+  info <- recipe_prepare(config, name, id_file, ref, fetch, message)
   on.exit(recipe_current_run_clear())
 
   info <- recipe_run(info, parameters, envir, config, echo = echo,
@@ -206,14 +206,17 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
   info <- recipe_prepare_workdir(info)
   info$git <- git_info(info$path)
 
+  browser()
+
+  info$changelog <- recipe_read_current_changelog(path)
+
   recipe_current_run_set(info)
 
   info
 }
 
 
-recipe_run <- function(info, parameters, envir, config, echo = TRUE,
-                       message = NULL) {
+recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   assert_is(config, "orderly_config")
 
   owd <- setwd(info$workdir)
@@ -256,7 +259,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
                name = info$name,
                parameters = parameters,
                date = as.character(Sys.time()),
-               message = message,
+               message = info$message,
                ## Don't know what of these two are most useful:
                hash_orderly = info$hash,
                hash_input = hash_files("orderly.yml", FALSE),
