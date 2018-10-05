@@ -183,6 +183,7 @@ report_db2_rebuild <- function(config, verbose = TRUE) {
 report_data_import <- function(con, workdir, config) {
   dat_rds <- readRDS(path_orderly_run_rds(workdir))
   dat_in <- recipe_read(workdir, config, FALSE)
+  published <- report_is_published(workdir)
 
   ## Was not done before 0.3.3
   stopifnot(!is.null(dat_rds$meta))
@@ -200,7 +201,8 @@ report_data_import <- function(con, workdir, config) {
     report = dat_rds$meta$name,
     date = dat_rds$meta$date,
     displayname = dat_rds$meta$displayname %||% NA_character_,
-    description = dat_rds$meta$description %||% NA_character_)
+    description = dat_rds$meta$description %||% NA_character_,
+    published = published)
   if (nrow(config$fields) > 0L) {
     extra <- drop_null(set_names(
       lapply(config$fields$name, function(x) dat_in[[x]]),
@@ -379,4 +381,10 @@ report_db2_destroy <- function(con) {
       DBI::dbRemoveTable(con, t)
     }
   }
+}
+
+
+report_db2_publish <- function(con, id, value) {
+  sql <- "UPDATE report_version SET published = $1 WHERE id = $2"
+  DBI::dbExecute(con, sql, list(value, id))
 }
