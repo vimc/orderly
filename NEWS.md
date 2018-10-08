@@ -1,3 +1,7 @@
+# 0.5.1
+
+* The database schema includes a `published` field (VIMC-2251)
+
 # 0.5.0
 
 * Send a slack message after a report has been run from the commandline tool, and by extension the runner (VIMC-1931)
