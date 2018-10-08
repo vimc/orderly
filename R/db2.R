@@ -111,50 +111,60 @@ orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
 ## Same pattern as existing db.R version but with
 report_db2_init <- function(con, config, must_create = FALSE) {
   if (!DBI::dbExistsTable(con, ORDERLY_SCHEMA_TABLE)) {
-    if (config$destination$driver[[1]] == "RSQLite") {
-      dialect <- "sqlite"
-    } else {
-      dialect <- "postgres"
-    }
-   dat <- orderly_schema_prepare(config$fields, dialect)
-
-    ## This should probably be tuneable:
-    if (dialect == "sqlite") {
-      DBI::dbExecute(con, "PRAGMA foreign_keys = ON")
-    }
-
-    for (s in dat$sql) {
-      DBI::dbExecute(con, s)
-    }
-    for (nm in names(dat$values)) {
-      DBI::dbWriteTable(con, nm, dat$values[[nm]], append = TRUE)
-    }
+    report_db2_init_create(con, config)
   } else if (must_create) {
     stop(sprintf("Table '%s' already exists", ORDERLY_SCHEMA_TABLE))
   } else {
-    sql <- sprintf("SELECT * FROM %s LIMIT 0", ORDERLY_MAIN_TABLE)
-    d <- DBI::dbGetQuery(con, sql)
-    custom_name <- config$fields$name
-    msg <- setdiff(custom_name, names(d))
-    if (length(msg) > 0L) {
-      stop(sprintf("custom fields %s not present in existing database",
-                   paste(squote(msg), collapse = ", ")))
-    }
-
-    ## TODO: this should be dealt with in a more sustainable way; the
-    ## report_db_cols() function duplicates information already
-    ## present in the yml and that should be the source of truth here
-    ## but we shuold only load that once in a session.
-    extra <- setdiff(setdiff(names(d), names(report_db_cols())),
-                     c("report", custom_name))
-    if (length(extra) > 0L) {
-      stop(sprintf("custom fields %s in database not present in config",
-                   paste(squote(extra), collapse = ", ")))
-    }
-
-    ## TODO: check the schema version here but probably not until we
-    ## know how to deal with changes!
+    report_db2_open_existing(con, config)
   }
+}
+
+
+report_db2_init_create <- function(con, config) {
+  if (config$destination$driver[[1]] == "RSQLite") {
+    dialect <- "sqlite"
+  } else {
+    dialect <- "postgres"
+  }
+  dat <- orderly_schema_prepare(config$fields, dialect)
+
+  ## This should probably be tuneable:
+  if (dialect == "sqlite") {
+    DBI::dbExecute(con, "PRAGMA foreign_keys = ON")
+  }
+
+  for (s in dat$sql) {
+    DBI::dbExecute(con, s)
+  }
+  for (nm in names(dat$values)) {
+    DBI::dbWriteTable(con, nm, dat$values[[nm]], append = TRUE)
+  }
+}
+
+
+report_db2_open_existing <- function(con, config) {
+  sql <- sprintf("SELECT * FROM %s LIMIT 0", ORDERLY_MAIN_TABLE)
+  d <- DBI::dbGetQuery(con, sql)
+  custom_name <- config$fields$name
+  msg <- setdiff(custom_name, names(d))
+  if (length(msg) > 0L) {
+    stop(sprintf("custom fields %s not present in existing database",
+                 paste(squote(msg), collapse = ", ")))
+  }
+
+  ## TODO: this should be dealt with in a more sustainable way; the
+  ## report_db_cols() function duplicates information already
+  ## present in the yml and that should be the source of truth here
+  ## but we shuold only load that once in a session.
+  extra <- setdiff(setdiff(names(d), names(report_db_cols())),
+                   c("report", custom_name))
+  if (length(extra) > 0L) {
+    stop(sprintf("custom fields %s in database not present in config",
+                 paste(squote(extra), collapse = ", ")))
+  }
+
+  ## TODO: check the schema version here but probably not until we
+  ## know how to deal with changes!
 }
 
 
