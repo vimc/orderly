@@ -383,23 +383,14 @@ recipe_prepare_workdir <- function(info, config) {
   }
   
   if (!is.null(info$global_resources)) {
-    # check the global resource folder exist
     root_path <- normalizePath(config$path, mustWork = TRUE)
     global_resource_dir <- file.path(root_path, config$global_resources)
-
-    if (!dir.exists(global_resource_dir)) {
-      stop(sprintf("Global resource folder does not exist. Expected: %s",
-                   config$global_resources))
-    }
+    assert_file_exists(x = info$global_resources, check_case = TRUE,
+                       workdir = global_resource_dir,
+                       name = sprintf("Global resources in '%s'",
+                                      global_resource_dir))
 
     path_global_recs <- file.path(global_resource_dir, info$global_resources)
-    # make sure the global resources exist
-    exist_globals <- (file.exists(path_global_recs))
-    if (any(!exist_globals)) { # if any of the global resources don't exist...
-      stop(sprintf("Missing global resources: %s",
-           paste(info$global_resources[!exist_globals])))
-    }
-
     dest_resources_src <- file.path(info$workdir, info$global_resources)
     file_copy(path_global_recs, info$workdir, recursive = TRUE)
   }
