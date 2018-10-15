@@ -1,3 +1,7 @@
+# 0.5.2
+
+* Introduces "global resources" support for assets used in multiple reports that are not themselves dependencies.
+
 # 0.5.0
 
 * Send a slack message after a report has been run from the commandline tool, and by extension the runner (VIMC-1931)
