@@ -1,4 +1,4 @@
-# 0.5.1
+# 0.5.2
 
 * The database schema includes a `published` field (VIMC-2251)
 
