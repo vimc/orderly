@@ -1,5 +1,6 @@
 # 0.5.2
 
+* Introduces "global resources" support for assets used in multiple reports that are not themselves dependencies.
 * The database schema includes a `published` field (VIMC-2251)
 
 # 0.5.0

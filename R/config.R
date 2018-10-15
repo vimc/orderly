@@ -12,7 +12,7 @@ orderly_config_read_yaml <- function(filename, path) {
   info <- yaml_read(filename)
   check_fields(info, filename, "source",
                c("destination", "fields", "minimum_orderly_version",
-                 "api_server", "vault_server"))
+                 "api_server", "vault_server", "global_resources"))
 
   ## There's heaps of really boring validation to do here that I am
   ## going to skip.  The drama that we will have is that there are
@@ -59,6 +59,11 @@ orderly_config_read_yaml <- function(filename, path) {
   if (nzchar(api_server_identity)) {
     info$api_server_identity <-
       match_value(api_server_identity, names(info$api_server))
+  }
+
+  if (!is.null(info$global_resources)) {
+    assert_is_directory(info$global_resources, name = "global resource",
+                        workdir = path)
   }
 
   info$archive_version <- read_orderly_archive_version(path)

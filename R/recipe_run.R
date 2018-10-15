@@ -203,7 +203,7 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
 
   info$id <- id
   info$workdir <- file.path(path_draft(config$path), info$name, id)
-  info <- recipe_prepare_workdir(info)
+  info <- recipe_prepare_workdir(info, config)
   info$git <- git_info(info$path)
 
   recipe_current_run_set(info)
@@ -341,7 +341,7 @@ recipe_data <- function(config, info, parameters, dest) {
   dest
 }
 
-recipe_prepare_workdir <- function(info) {
+recipe_prepare_workdir <- function(info, config) {
   if (file.exists(info$workdir)) {
     stop("'workdir' must not exist")
   }
@@ -380,6 +380,19 @@ recipe_prepare_workdir <- function(info) {
                    info$depends$as)
     orderly_log("depends", str)
     file_copy(src, dst)
+  }
+  
+  if (!is.null(info$global_resources)) {
+    root_path <- normalizePath(config$path, mustWork = TRUE)
+    global_resource_dir <- file.path(root_path, config$global_resources)
+    assert_file_exists(x = info$global_resources, check_case = TRUE,
+                       workdir = global_resource_dir,
+                       name = sprintf("Global resources in '%s'",
+                                      global_resource_dir))
+
+    path_global_recs <- file.path(global_resource_dir, info$global_resources)
+    dest_resources_src <- file.path(info$workdir, info$global_resources)
+    file_copy(path_global_recs, info$workdir, recursive = TRUE)
   }
 
   info$owd <- owd
