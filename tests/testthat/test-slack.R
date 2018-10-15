@@ -25,7 +25,7 @@ test_that("slack payload is correct", {
         fields = list(list(
           title = "id", value = sprintf("`%s`", dat$id), short = TRUE)),
         actions = list(list(
-          type = "button", text = ":clipboard: View report",
+          name = "link", type = "button", text = ":clipboard: View report",
           style = "primary", url = report_url))))))
 
   skip_if_no_internet()
