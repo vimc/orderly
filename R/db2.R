@@ -6,7 +6,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-ORDERLY_SCHEMA_VERSION <- "0.0.1"
+ORDERLY_SCHEMA_VERSION <- "0.0.2"
 
 ## These will be used in a few places and even though they're not
 ## super likely to change it would be good
@@ -109,51 +109,66 @@ orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
 
 
 ## Same pattern as existing db.R version but with
-report_db2_init <- function(con, config, must_create = FALSE) {
+report_db2_init <- function(con, config, must_create = FALSE, validate = TRUE) {
   if (!DBI::dbExistsTable(con, ORDERLY_SCHEMA_TABLE)) {
-    if (config$destination$driver[[1]] == "RSQLite") {
-      dialect <- "sqlite"
-    } else {
-      dialect <- "postgres"
-    }
-   dat <- orderly_schema_prepare(config$fields, dialect)
-
-    ## This should probably be tuneable:
-    if (dialect == "sqlite") {
-      DBI::dbExecute(con, "PRAGMA foreign_keys = ON")
-    }
-
-    for (s in dat$sql) {
-      DBI::dbExecute(con, s)
-    }
-    for (nm in names(dat$values)) {
-      DBI::dbWriteTable(con, nm, dat$values[[nm]], append = TRUE)
-    }
+    report_db2_init_create(con, config)
   } else if (must_create) {
     stop(sprintf("Table '%s' already exists", ORDERLY_SCHEMA_TABLE))
+  } else if (validate) {
+    report_db2_open_existing(con, config)
+  }
+}
+
+
+report_db2_init_create <- function(con, config) {
+  if (config$destination$driver[[1]] == "RSQLite") {
+    dialect <- "sqlite"
   } else {
-    sql <- sprintf("SELECT * FROM %s LIMIT 0", ORDERLY_MAIN_TABLE)
-    d <- DBI::dbGetQuery(con, sql)
-    custom_name <- config$fields$name
-    msg <- setdiff(custom_name, names(d))
-    if (length(msg) > 0L) {
-      stop(sprintf("custom fields %s not present in existing database",
-                   paste(squote(msg), collapse = ", ")))
-    }
+    dialect <- "postgres"
+  }
+  dat <- orderly_schema_prepare(config$fields, dialect)
 
-    ## TODO: this should be dealt with in a more sustainable way; the
-    ## report_db_cols() function duplicates information already
-    ## present in the yml and that should be the source of truth here
-    ## but we shuold only load that once in a session.
-    extra <- setdiff(setdiff(names(d), names(report_db_cols())),
-                     c("report", custom_name))
-    if (length(extra) > 0L) {
-      stop(sprintf("custom fields %s in database not present in config",
-                   paste(squote(extra), collapse = ", ")))
-    }
+  ## This should probably be tuneable:
+  if (dialect == "sqlite") {
+    DBI::dbExecute(con, "PRAGMA foreign_keys = ON")
+  }
 
-    ## TODO: check the schema version here but probably not until we
-    ## know how to deal with changes!
+  for (s in dat$sql) {
+    DBI::dbExecute(con, s)
+  }
+  for (nm in names(dat$values)) {
+    DBI::dbWriteTable(con, nm, dat$values[[nm]], append = TRUE)
+  }
+}
+
+
+report_db2_open_existing <- function(con, config) {
+  sql <- sprintf("SELECT * FROM %s LIMIT 0", ORDERLY_MAIN_TABLE)
+  d <- DBI::dbGetQuery(con, sql)
+  custom_name <- config$fields$name
+  msg <- setdiff(custom_name, names(d))
+  if (length(msg) > 0L) {
+    stop(sprintf("custom fields %s not present in existing database",
+                 paste(squote(msg), collapse = ", ")))
+  }
+
+  ## TODO: this should be dealt with in a more sustainable way; the
+  ## report_db_cols() function duplicates information already
+  ## present in the yml and that should be the source of truth here
+  ## but we shuold only load that once in a session.
+  extra <- setdiff(setdiff(names(d), names(report_db_cols())),
+                   c("report", custom_name))
+  if (length(extra) > 0L) {
+    stop(sprintf("custom fields %s in database not present in config",
+                 paste(squote(extra), collapse = ", ")))
+  }
+
+  d <- DBI::dbReadTable(con, ORDERLY_SCHEMA_TABLE)
+  if (numeric_version(d$schema_version) <
+      numeric_version(ORDERLY_SCHEMA_VERSION)) {
+    ## with this approach we can't ever upgrade, but at least we throw
+    stop("orderly db needs rebuilding with orderly::orderly_rebuild()",
+         call. = FALSE)
   }
 }
 
@@ -161,7 +176,7 @@ report_db2_init <- function(con, config, must_create = FALSE) {
 report_db2_rebuild <- function(config, verbose = TRUE) {
   assert_is(config, "orderly_config")
   root <- config$path
-  con <- orderly_db("destination", config)
+  con <- orderly_db("destination", config, validate = FALSE)
   on.exit(DBI::dbDisconnect(con))
 
   if (DBI::dbExistsTable(con, ORDERY_TABLE_LIST)) {
@@ -183,6 +198,7 @@ report_db2_rebuild <- function(config, verbose = TRUE) {
 report_data_import <- function(con, workdir, config) {
   dat_rds <- readRDS(path_orderly_run_rds(workdir))
   dat_in <- recipe_read(workdir, config, FALSE)
+  published <- report_is_published(workdir)
 
   ## Was not done before 0.3.3
   stopifnot(!is.null(dat_rds$meta))
@@ -200,7 +216,8 @@ report_data_import <- function(con, workdir, config) {
     report = dat_rds$meta$name,
     date = dat_rds$meta$date,
     displayname = dat_rds$meta$displayname %||% NA_character_,
-    description = dat_rds$meta$description %||% NA_character_)
+    description = dat_rds$meta$description %||% NA_character_,
+    published = published)
   if (nrow(config$fields) > 0L) {
     extra <- drop_null(set_names(
       lapply(config$fields$name, function(x) dat_in[[x]]),
@@ -379,4 +396,10 @@ report_db2_destroy <- function(con) {
       DBI::dbRemoveTable(con, t)
     }
   }
+}
+
+
+report_db2_publish <- function(con, id, value) {
+  sql <- "UPDATE report_version SET published = $1 WHERE id = $2"
+  DBI::dbExecute(con, sql, list(value, id))
 }

@@ -127,3 +127,26 @@ test_that("don't migrate new orderly", {
   expect_equal(read_orderly_archive_version(path),
                as.character(cache$current_archive_version))
 })
+
+
+## Here's a test that fails prior to 0.5.1
+test_that("database migrations", {
+  path <- unpack_reference("0.5.1")
+  con <- orderly_db("destination", path, validate = FALSE)
+  dat <- DBI::dbReadTable(con, "report_version")
+  DBI::dbDisconnect(con)
+  expect_false("published" %in% names(dat))
+
+  id <- orderly_run("minimal", config = path, echo = FALSE)
+  expect_error(
+    orderly_commit(id, config = path),
+    "orderly db needs rebuilding with orderly::orderly_rebuild()")
+
+  orderly_rebuild(path)
+
+  con <- orderly_db("destination", path, validate = FALSE)
+  dat <- DBI::dbReadTable(con, "report_version")
+  DBI::dbDisconnect(con)
+
+  expect_error(orderly_commit(id, config = path), NA)
+})

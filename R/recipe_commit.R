@@ -123,12 +123,7 @@ report_read_data <- function(workdir, config) {
                         jsonlite::unbox(artefacts[[i]][[1]]$description)
   }
 
-  published_yml <- path_orderly_published_yml(workdir)
-  if (file.exists(published_yml)) {
-    published <- yaml_read(published_yml)$published
-  } else {
-    published <- FALSE
-  }
+  published <- report_is_published(workdir)
 
   if (!is.null(info$depends)) {
     used <- unique(vcapply(info$depends, "[[", "id"))
@@ -189,4 +184,10 @@ report_read_data <- function(workdir, config) {
     ret <- cbind(ret, as.data.frame(custom, stringsAsFactors = FALSE))
   }
   ret
+}
+
+
+report_is_published <- function(workdir) {
+  published_yml <- path_orderly_published_yml(workdir)
+  file.exists(published_yml) && yaml_read(published_yml)$published
 }

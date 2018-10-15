@@ -32,6 +32,7 @@ report_version:
     - date: {type: TIMESTAMP}
     - displayname: {type: TEXT, nullable: true}
     - description: {type: TEXT, nullable: true}
+    - published: {type: BOOLEAN}
     # NOTE: fields listed in orderly_config.yml will also be
     # included here.
 
