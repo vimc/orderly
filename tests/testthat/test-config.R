@@ -123,9 +123,9 @@ test_that("no global folder", {
   config_lines[6] <- "  invalid_directory"
   writeLines(config_lines, path_config)
 
-  tmp <- tempfile()
-  expect_error(
-    orderly_run("example", config = path, id_file = tmp, echo = FALSE),
-    paste("cannot change working directory"), # the directory doesn't exist!
-    fixed = TRUE)
+  expect_error( 
+    orderly_config(path = path),
+    "global_resource directory does not exist",
+    fixed = TRUE
+  )
 })

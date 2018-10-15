@@ -61,6 +61,13 @@ orderly_config_read_yaml <- function(filename, path) {
       match_value(api_server_identity, names(info$api_server))
   }
 
+  if (!is.null(info$global_resources)) {
+    global_dir <- file.path(path, info$global_resources)
+    if(!dir.exists(global_dir)) {
+      stop("global_resource directory does not exist")
+    }
+  }
+
   info$archive_version <- read_orderly_archive_version(path)
 
   class(info) <- "orderly_config"
