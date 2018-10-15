@@ -63,9 +63,7 @@ orderly_config_read_yaml <- function(filename, path) {
 
   if (!is.null(info$global_resources)) {
     global_dir <- file.path(path, info$global_resources)
-    if(!dir.exists(global_dir)) {
-      stop("global_resource directory does not exist")
-    }
+    assert_is_directory(info$global_resources, name = "global resource", workdir = path)
   }
 
   info$archive_version <- read_orderly_archive_version(path)

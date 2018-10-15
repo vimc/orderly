@@ -125,7 +125,7 @@ test_that("no global folder", {
 
   expect_error( 
     orderly_config(path = path),
-    "global_resource directory does not exist",
+    "global resource does not exist: 'invalid_directory'",
     fixed = TRUE
   )
 })
