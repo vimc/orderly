@@ -27,3 +27,12 @@ local({
 withr::with_dir("reference", zip("0.3.2.zip", "0.3.2"))
 
 unlink("reference/0.3.2", recursive = TRUE)
+
+
+## 0.5.1
+unlink("reference/0.5.1", recursive = TRUE)
+unlink("reference/0.5.1.zip")
+prepare_orderly_example("demo", "reference/0.5.1")
+run_orderly_demo("reference/0.5.1")
+withr::with_dir("reference", zip("0.5.1.zip", "0.5.1"))
+unlink("reference/0.5.1", recursive = TRUE)
