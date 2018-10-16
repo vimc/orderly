@@ -155,6 +155,7 @@ orderly_rebuild <- function(config = NULL, locate = TRUE, verbose = TRUE,
                             if_schema_changed = FALSE) {
   config <- orderly_config_get(config, locate)
   if (!if_schema_changed || report_db2_needs_rebuild(config)) {
+    orderly_log("rebuild", "db")
     report_db_rebuild(config, verbose)
     invisible(TRUE)
   } else {
