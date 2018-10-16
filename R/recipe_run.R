@@ -106,7 +106,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
   config <- orderly_config_get(config, locate)
   ## TODO: support ref here
   info <- recipe_prepare(config, name, id_file = NULL, ref = NULL,
-                         fetch = FALSE)
+                         fetch = FALSE, message = NULL)
   owd <- setwd(info$workdir)
   ## Ensure that if anything goes wrong we'll end up back where we
   ## started (see VIMC-1870)
@@ -179,7 +179,7 @@ orderly_test_check <- function() {
 }
 
 recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
-                           fetch = FALSE) {
+                           fetch = FALSE, message = NULL) {
   assert_is(config, "orderly_config")
   config <- orderly_config_get(config, FALSE)
 
