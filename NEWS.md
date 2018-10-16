@@ -1,3 +1,7 @@
+# 0.5.3
+
+* Null entries are allowed in `orderly_envir.yml`
+
 # 0.5.2
 
 * Introduces "global resources" support for assets used in multiple reports that are not themselves dependencies.
