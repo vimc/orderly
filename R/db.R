@@ -145,11 +145,21 @@ report_db_cols <- function() {
 ##' @param verbose Logical, indicating if information about the
 ##'   rebuild should be printed as it runs
 ##'
+##' @param if_schema_changed Logical, indicating if the rebuild should
+##'   take place only if the schema has changed.  This is designed to
+##'   be safe to use in (say) deployment scripts because it will be
+##'   fast enough to call regularly.
+##'
 ##' @export
-orderly_rebuild <- function(config = NULL, locate = TRUE, verbose = TRUE) {
+orderly_rebuild <- function(config = NULL, locate = TRUE, verbose = TRUE,
+                            if_schema_changed = FALSE) {
   config <- orderly_config_get(config, locate)
-  report_db_rebuild(config, verbose)
-  invisible(NULL)
+  if (!if_schema_changed || report_db2_needs_rebuild(config)) {
+    report_db_rebuild(config, verbose)
+    invisible(TRUE)
+  } else {
+    invisible(FALSE)
+  }
 }
 
 
