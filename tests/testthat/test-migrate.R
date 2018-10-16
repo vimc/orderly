@@ -150,3 +150,16 @@ test_that("database migrations", {
 
   expect_error(orderly_commit(id, config = path), NA)
 })
+
+
+test_that("automatic migrations", {
+  path <- unpack_reference("0.5.1")
+  con <- orderly_db("destination", path, validate = FALSE)
+  dat <- DBI::dbReadTable(con, "report_version")
+  DBI::dbDisconnect(con)
+  expect_false("published" %in% names(dat))
+
+  expect_true(orderly_rebuild(config = path, if_schema_changed = TRUE))
+  expect_false(orderly_rebuild(config = path, if_schema_changed = TRUE))
+  expect_true(orderly_rebuild(config = path, if_schema_changed = FALSE))
+})

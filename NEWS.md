@@ -2,6 +2,7 @@
 
 * Introduces "global resources" support for assets used in multiple reports that are not themselves dependencies.
 * The database schema includes a `published` field (VIMC-2251)
+* New option `if_schema_changed` to rebuild orderly database (`orderly_rebuild`) only on a schema change (VIMC-2280)
 
 # 0.5.0
 
