@@ -49,9 +49,8 @@ recipe_commit <- function(workdir, config) {
     DBI::dbDisconnect(con)
   })
 
-  success <- DBI::dbWriteTable(con, tbl, dat, append = TRUE)
-
   report_data_import(con, workdir, config)
+  success <- DBI::dbWriteTable(con, tbl, dat, append = TRUE)
 
   if (success) {
     ## I should do something here if the unlink fails, though I don't
