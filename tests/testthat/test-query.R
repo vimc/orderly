@@ -128,6 +128,4 @@ test_that("latest", {
   orderly_commit(id2, config = path)
   expect_equal(orderly_latest("example", config = path, draft = TRUE), id1)
   expect_equal(orderly_latest("example", config = path), id2)
-  orderly_commit(id1, config = path)
-  expect_equal(orderly_latest("example", config = path), id2)
 })
