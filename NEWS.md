@@ -1,6 +1,6 @@
 # 0.5.4
 
-* New `latest` column in the `report` table in orderly's database
+* New `latest` column in the `report` table in orderly's database (VIMC-2298)
 
 # 0.5.3
 
