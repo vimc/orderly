@@ -142,7 +142,6 @@ test_that("can't depend on non artefacts", {
 test_that("dependency dir can be used", {
   path <- prepare_orderly_example("demo")
   id <- orderly_run("use_resource_dir", config = path, echo = FALSE)
-  options(error = recover)
   p <- orderly_commit(id, config = path)
   con <- orderly_db("destination", path)
   on.exit(DBI::dbDisconnect(con))
@@ -153,4 +152,22 @@ test_that("dependency dir can be used", {
   expect_setequal(
     tmp$filename,
     c("meta/another.csv", "meta/data.csv", "script.R", "orderly.yml"))
+})
+
+
+test_that("can't commit out of order", {
+  path <- prepare_orderly_example("minimal")
+
+  id1 <- orderly_run("example", config = path, echo = FALSE)
+  id2 <- orderly_run("example", config = path, echo = FALSE)
+
+  orderly_commit(id2, config = path)
+  expect_error(orderly_commit(id1, config = path),
+               "Report id '.+?' is behind existing id '.+?'")
+
+  expect_equal(dir(file.path(path, "archive", "example")), id2)
+  expect_equal(dir(file.path(path, "draft", "example")), id1)
+
+  id3 <- orderly_run("example", config = path, echo = FALSE)
+  expect_error(orderly_commit(id3, config = path), NA)
 })
