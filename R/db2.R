@@ -223,6 +223,14 @@ report_data_import <- function(con, workdir, config) {
   sql_name <- "SELECT name FROM report WHERE name = $1"
   if (nrow(DBI::dbGetQuery(con, sql_name, name)) == 0L) {
     DBI::dbWriteTable(con, "report", data_frame(name = name), append = TRUE)
+  } else {
+    sql <- "SELECT id FROM report_version WHERE report = $1"
+    prev <- max(DBI::dbGetQuery(con, sql, name)$id)
+    if (id < prev) {
+      stop(sprintf(
+        "Report id '%s' is behind existing id '%s'", id, prev),
+        call. = FALSE)
+    }
   }
 
   report_version <- data_frame(
