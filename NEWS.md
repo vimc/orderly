@@ -1,3 +1,7 @@
+# 0.5.4
+
+* New `latest` column in the `report` table in orderly's database
+
 # 0.5.3
 
 * Null entries are allowed in `orderly_envir.yml`
