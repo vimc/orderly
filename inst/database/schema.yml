@@ -23,6 +23,7 @@ orderly_schema_tables:
 report:
   columns:
     - name: {type: TEXT}
+    - latest: {type: TEXT, nullable: true, fk: report_version.id}
 
 # The core table
 report_version:

@@ -6,7 +6,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-ORDERLY_SCHEMA_VERSION <- "0.0.2"
+ORDERLY_SCHEMA_VERSION <- "0.0.3"
 
 ## These will be used in a few places and even though they're not
 ## super likely to change it would be good
@@ -223,6 +223,14 @@ report_data_import <- function(con, workdir, config) {
   sql_name <- "SELECT name FROM report WHERE name = $1"
   if (nrow(DBI::dbGetQuery(con, sql_name, name)) == 0L) {
     DBI::dbWriteTable(con, "report", data_frame(name = name), append = TRUE)
+  } else {
+    sql <- "SELECT id FROM report_version WHERE report = $1"
+    prev <- max(DBI::dbGetQuery(con, sql, name)$id)
+    if (id < prev) {
+      stop(sprintf(
+        "Report id '%s' is behind existing id '%s'", id, prev),
+        call. = FALSE)
+    }
   }
 
   report_version <- data_frame(
@@ -358,6 +366,9 @@ report_data_import <- function(con, workdir, config) {
     file_hash = artefact_hash,
     filename = artefact_files)
   DBI::dbWriteTable(con, "file_artefact", file_artefact, append = TRUE)
+
+  sql <- "UPDATE report SET latest = $1 WHERE name = $2"
+  DBI::dbExecute(con, sql, list(id, name))
 }
 
 
