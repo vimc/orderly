@@ -1,0 +1,6 @@
+source:
+  driver: RSQLite::SQLite
+  dbname: source.sqlite
+  
+global_resources:
+  global

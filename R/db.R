@@ -3,10 +3,16 @@
 ##'
 ##' @title Connect to orderly databases
 ##' @inheritParams orderly_list
+##'
 ##' @param type The type of connection to make (\code{source},
 ##'   \code{destination}, \code{csv} or \code{rds}).
+##'
+##' @param validate Logical, indicating if the database schema should
+##'   be validated on open (currently only applicable with \code{type
+##'   = "destination"}).  This is primarily intended for internal use.
+##'
 ##' @export
-orderly_db <- function(type, config = NULL, locate = TRUE) {
+orderly_db <- function(type, config = NULL, locate = TRUE, validate = TRUE) {
   config <- orderly_config_get(config, locate)
   if (type == "rds") {
     file_store_rds(path_rds(config$path))
@@ -16,7 +22,9 @@ orderly_db <- function(type, config = NULL, locate = TRUE) {
     x <- orderly_db_args(type, config)
     con <- do.call(DBI::dbConnect, c(list(x$driver()), x$args))
     if (type == "destination") {
-      report_db_init(con, config)
+      withCallingHandlers(
+        report_db_init(con, config, validate = validate),
+        error = function(e) DBI::dbDisconnect(con))
     }
     con
   } else {
@@ -46,7 +54,8 @@ orderly_db_args <- function(type, config) {
 }
 
 ## Reports database needs special initialisation:
-report_db_init <- function(con, config, must_create = FALSE) {
+report_db_init <- function(con, config, must_create = FALSE, validate = TRUE) {
+  ## TODO: must_create is never used
   orderly_table <- "orderly"
   if (!DBI::dbExistsTable(con, orderly_table)) {
     ## TODO: we'll need some postgres translation here
@@ -82,14 +91,14 @@ report_db_init <- function(con, config, must_create = FALSE) {
     }
   }
 
-  report_db2_init(con, config, must_create)
+  report_db2_init(con, config, must_create, validate)
   orderly_table
 }
 
 report_db_rebuild <- function(config, verbose = TRUE) {
   assert_is(config, "orderly_config")
   root <- config$path
-  con <- orderly_db("destination", config)
+  con <- orderly_db("destination", config, validate = FALSE)
   on.exit(DBI::dbDisconnect(con))
   ## TODO: this assumes name known
   tbl <- "orderly"
@@ -136,11 +145,22 @@ report_db_cols <- function() {
 ##' @param verbose Logical, indicating if information about the
 ##'   rebuild should be printed as it runs
 ##'
+##' @param if_schema_changed Logical, indicating if the rebuild should
+##'   take place only if the schema has changed.  This is designed to
+##'   be safe to use in (say) deployment scripts because it will be
+##'   fast enough to call regularly.
+##'
 ##' @export
-orderly_rebuild <- function(config = NULL, locate = TRUE, verbose = TRUE) {
+orderly_rebuild <- function(config = NULL, locate = TRUE, verbose = TRUE,
+                            if_schema_changed = FALSE) {
   config <- orderly_config_get(config, locate)
-  report_db_rebuild(config, verbose)
-  invisible(NULL)
+  if (!if_schema_changed || report_db2_needs_rebuild(config)) {
+    orderly_log("rebuild", "db")
+    report_db_rebuild(config, verbose)
+    invisible(TRUE)
+  } else {
+    invisible(FALSE)
+  }
 }
 
 

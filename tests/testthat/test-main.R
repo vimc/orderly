@@ -244,3 +244,15 @@ test_that("migrate: args", {
   expect_equal(res$options$to, "0.3.3")
   expect_identical(res$target, main_do_migrate)
 })
+
+
+test_that("rebuild", {
+  path <- unpack_reference("0.5.1")
+  args <- c("--root", path, "rebuild", "--if-schema-changed")
+  res <- main_args(args)
+  expect_equal(res$command, "rebuild")
+  expect_true(res$options$if_schema_changed)
+  expect_identical(res$target, main_do_rebuild)
+  expect_true(res$target(res))
+  expect_false(res$target(res))
+})

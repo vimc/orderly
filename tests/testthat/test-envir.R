@@ -50,3 +50,13 @@ test_that("non-character data is OK", {
   dat <- orderly_envir_read(path)
   expect_equal(dat, c(foo = "1", bar = "2"))
 })
+
+
+test_that("remove null values", {
+  path <- tempfile()
+  dir.create(path)
+  filename <- path_orderly_envir_yml(path)
+  writeLines(c("foo: ~", "bar: 2"), filename)
+  dat <- orderly_envir_read(path)
+  expect_equal(dat, c(bar = "2"))
+})

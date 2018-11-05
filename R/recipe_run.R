@@ -381,6 +381,19 @@ recipe_prepare_workdir <- function(info, message, config) {
     orderly_log("depends", str)
     file_copy(src, dst)
   }
+  
+  if (!is.null(info$global_resources)) {
+    root_path <- normalizePath(config$path, mustWork = TRUE)
+    global_resource_dir <- file.path(root_path, config$global_resources)
+    assert_file_exists(x = info$global_resources, check_case = TRUE,
+                       workdir = global_resource_dir,
+                       name = sprintf("Global resources in '%s'",
+                                      global_resource_dir))
+
+    path_global_recs <- file.path(global_resource_dir, info$global_resources)
+    dest_resources_src <- file.path(info$workdir, info$global_resources)
+    file_copy(path_global_recs, info$workdir, recursive = TRUE)
+  }
 
   info$message <- message
   info$changelog <- changelog_load(src, info, config)

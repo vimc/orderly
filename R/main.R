@@ -228,7 +228,13 @@ main_do_publish <- function(x) {
 
 ## 4. rebuild
 main_args_rebuild <- function(res) {
-  opts <- list()
+  opts <- list(
+    optparse::make_option("--if-schema-changed",
+                          help = "Only rebuild on schema change",
+                          type = "logical",
+                          default = FALSE,
+                          action = "store_true",
+                          dest = "if_schema_changed"))
   parser <- optparse::OptionParser(
     option_list = opts,
     usage = "%prog [--root=ROOT] rebuild [options]")
@@ -237,7 +243,7 @@ main_args_rebuild <- function(res) {
 
 main_do_rebuild <- function(x) {
   config <- orderly_config_get(x$options$root, TRUE)
-  orderly_rebuild(config)
+  orderly_rebuild(config, if_schema_changed = x$options$if_schema_changed)
 }
 
 ## 5. list

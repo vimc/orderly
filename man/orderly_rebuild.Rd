@@ -4,7 +4,8 @@
 \alias{orderly_rebuild}
 \title{Rebuild the report database}
 \usage{
-orderly_rebuild(config = NULL, locate = TRUE, verbose = TRUE)
+orderly_rebuild(config = NULL, locate = TRUE, verbose = TRUE,
+  if_schema_changed = FALSE)
 }
 \arguments{
 \item{config}{An orderly configuration, or the path to one (or
@@ -17,6 +18,11 @@ parents until it finds an \code{orderly_config.yml} file.}
 
 \item{verbose}{Logical, indicating if information about the
 rebuild should be printed as it runs}
+
+\item{if_schema_changed}{Logical, indicating if the rebuild should
+take place only if the schema has changed.  This is designed to
+be safe to use in (say) deployment scripts because it will be
+fast enough to call regularly.}
 }
 \description{
 Rebuild the report database

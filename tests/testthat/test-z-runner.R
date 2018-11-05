@@ -134,7 +134,7 @@ test_that("rebuild", {
 
   path_db <- file.path(path, "orderly.sqlite")
   file.remove(path_db)
-  expect_silent(runner$rebuild())
+  expect_true(runner$rebuild())
   expect_true(file.exists(path_db))
 })
 

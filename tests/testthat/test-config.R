@@ -112,3 +112,20 @@ test_that("support declaring api server", {
   expect_is(cfg$api_server, "list")
   expect_is(cfg$api_server$myhost$server, "montagu_server")
 })
+
+test_that("no global folder", {
+  path <- prepare_orderly_example("global")
+  # now we break the orderly_config.yml
+  path_config <- file.path(path, "orderly_config.yml")
+  config_lines <- readLines(path_config)
+  # we know the final line (line six) is the global resource folder
+  # so set it to something invalid
+  config_lines[6] <- "  invalid_directory"
+  writeLines(config_lines, path_config)
+
+  expect_error( 
+    orderly_config(path = path),
+    "global resource does not exist: 'invalid_directory'",
+    fixed = TRUE
+  )
+})

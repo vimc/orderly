@@ -1,3 +1,17 @@
+# 0.5.4
+
+* New `latest` column in the `report` table in orderly's database (VIMC-2298)
+
+# 0.5.3
+
+* Null entries are allowed in `orderly_envir.yml`
+
+# 0.5.2
+
+* Introduces "global resources" support for assets used in multiple reports that are not themselves dependencies.
+* The database schema includes a `published` field (VIMC-2251)
+* New option `if_schema_changed` to rebuild orderly database (`orderly_rebuild`) only on a schema change (VIMC-2280)
+
 # 0.5.0
 
 * Send a slack message after a report has been run from the commandline tool, and by extension the runner (VIMC-1931)
