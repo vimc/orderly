@@ -57,8 +57,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   info <- recipe_prepare(config, name, id_file, ref, fetch, message)
   on.exit(recipe_current_run_clear())
 
-  info <- recipe_run(info, parameters, envir, config, echo = echo,
-                     message = message)
+  info <- recipe_run(info, parameters, envir, config, echo = echo)
 
   if (open) {
     open_directory(file.path(config, "drafts", name, info$id))
@@ -203,12 +202,8 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
 
   info$id <- id
   info$workdir <- file.path(path_draft(config$path), info$name, id)
-  info <- recipe_prepare_workdir(info)
+  info <- recipe_prepare_workdir(info, message, config)
   info$git <- git_info(info$path)
-
-  browser()
-
-  info$changelog <- recipe_read_current_changelog(path)
 
   recipe_current_run_set(info)
 
@@ -277,6 +272,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   saveRDS(session, path_orderly_run_rds(info$workdir))
   writeLines(yaml::as.yaml(meta, column.major = FALSE),
              path_orderly_run_yml(info$workdir))
+
   meta
 }
 
@@ -344,7 +340,8 @@ recipe_data <- function(config, info, parameters, dest) {
   dest
 }
 
-recipe_prepare_workdir <- function(info) {
+
+recipe_prepare_workdir <- function(info, message, config) {
   if (file.exists(info$workdir)) {
     stop("'workdir' must not exist")
   }
@@ -384,6 +381,10 @@ recipe_prepare_workdir <- function(info) {
     orderly_log("depends", str)
     file_copy(src, dst)
   }
+
+  info$message <- message
+  info$changelog <- changelog_load(src, info, config)
+  changelog_save_json(info$changelog, info$workdir)
 
   info$owd <- owd
   info

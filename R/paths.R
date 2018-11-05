@@ -55,3 +55,13 @@ path_orderly_run_rds_backup <- function(path, version) {
 path_orderly_archive_version <- function(path) {
   file.path(path, "archive", ".orderly_archive_version")
 }
+
+
+path_changelog_txt <- function(path, type) {
+  file.path(path, "changelog.txt")
+}
+
+
+path_changelog_json <- function(path, type) {
+  file.path(path, "changelog.json")
+}
