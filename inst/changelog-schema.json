@@ -1,0 +1,37 @@
+{
+    "title": "Orderly Changelog",
+    "description": "Changelog for orderly reports",
+
+    "definitions": {
+        "id": {
+            "type": "string",
+            "pattern": "^[0-9]{8}-[0-9]{6}-[0-9a-f]{8}$"
+        },
+
+        "entry": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "$ref": "#/definitions/id"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                },
+                "from_file": {
+                    "type": "boolean"
+                }
+            },
+            "additionalProperties": false,
+            "required": ["id", "label", "value", "from_file"]
+        }
+    },
+
+    "type": "array",
+    "items": {
+        "$ref": "#/definitions/entry"
+    },
+    "uniqueItems": true
+}
