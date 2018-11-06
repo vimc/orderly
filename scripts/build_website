@@ -61,6 +61,7 @@ docker run --rm \
        $ORDERLY_DEV \
        ./create_schema
 
+mkdir -p $DOCS_DIR
 docker run --rm \
        --network=$DB_NW \
        -w /orderly \
