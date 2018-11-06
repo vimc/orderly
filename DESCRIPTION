@@ -1,6 +1,6 @@
 Package: orderly
 Title: R support for montagu-reports
-Version: 0.5.4
+Version: 0.5.5
 Description: Order, create and store reports from R.
 License: MIT + file LICENSE
 Encoding: UTF-8

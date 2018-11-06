@@ -1,3 +1,7 @@
+# 0.5.5
+
+* Support for changelogs (VIMC-1503)
+
 # 0.5.4
 
 * New `latest` column in the `report` table in orderly's database (VIMC-2298)
