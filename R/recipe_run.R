@@ -263,6 +263,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
                parameters = parameters,
                date = as.character(Sys.time()),
                message = message,
+               connection = !is.null(info$connection),
                ## Don't know what of these two are most useful:
                hash_orderly = info$hash,
                hash_input = hash_files("orderly.yml", FALSE),
