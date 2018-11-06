@@ -216,6 +216,8 @@ report_data_import <- function(con, workdir, config) {
 
   ## Was not done before 0.3.3
   stopifnot(!is.null(dat_rds$meta))
+  ## Was not done before 0.5.5
+  stopifnot(!is.null(dat_rds$meta$connection))
 
   id <- dat_rds$meta$id
   name <- dat_rds$meta$name

@@ -154,6 +154,14 @@ report_db_cols <- function() {
 orderly_rebuild <- function(config = NULL, locate = TRUE, verbose = TRUE,
                             if_schema_changed = FALSE) {
   config <- orderly_config_get(config, locate)
+
+  if (length(migrate_plan(config$path, to = NULL)) > 0L) {
+    orderly_log("migrate", "archive")
+    orderly_migrate(config, locate = FALSE, verbose = verbose)
+    ## This should trigger a rebuild, regardless of what anything else thinks
+    if_schema_changed <- FALSE
+  }
+
   if (!if_schema_changed || report_db2_needs_rebuild(config)) {
     orderly_log("rebuild", "db")
     report_db_rebuild(config, verbose)
