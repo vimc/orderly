@@ -1,0 +1,15 @@
+ARG ORDERLY_BASE
+FROM $ORDERLY_BASE
+
+RUN apt-get update && apt-get -y install \
+        libcurl4-openssl-dev \
+        libxml2-dev \
+        zlib1g-dev
+
+RUN install2.r --error \
+        pkgdown
+
+COPY . /orderly
+
+ENTRYPOINT []
+CMD ["/bin/bash"]
