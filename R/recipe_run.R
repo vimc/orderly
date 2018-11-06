@@ -367,9 +367,9 @@ recipe_prepare_workdir <- function(info, message, config) {
   }
 
   if (!is.null(info$depends)) {
-    src <- file.path(info$depends$path, info$depends$filename)
-    dst <- file.path(info$workdir, info$depends$as)
-    dir_create(dirname(dst))
+    dep_src <- file.path(info$depends$path, info$depends$filename)
+    dep_dst <- file.path(info$workdir, info$depends$as)
+    dir_create(dirname(dep_dst))
     info$depends$id_requested <- info$depends$id
     info$depends$id <- basename(info$depends$path)
 
@@ -379,7 +379,7 @@ recipe_prepare_workdir <- function(info, message, config) {
                    info$depends$filename,
                    info$depends$as)
     orderly_log("depends", str)
-    file_copy(src, dst)
+    file_copy(dep_src, dep_dst)
   }
   
   if (!is.null(info$global_resources)) {
