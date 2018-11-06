@@ -6,7 +6,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-ORDERLY_SCHEMA_VERSION <- "0.0.3"
+ORDERLY_SCHEMA_VERSION <- "0.0.4"
 
 ## These will be used in a few places and even though they're not
 ## super likely to change it would be good
@@ -213,6 +213,7 @@ report_data_import <- function(con, workdir, config) {
   dat_rds <- readRDS(path_orderly_run_rds(workdir))
   dat_in <- recipe_read(workdir, config, FALSE)
   published <- report_is_published(workdir)
+  changelog <- changelog_read_json(workdir)
 
   ## Was not done before 0.3.3
   stopifnot(!is.null(dat_rds$meta))
@@ -366,6 +367,14 @@ report_data_import <- function(con, workdir, config) {
     file_hash = artefact_hash,
     filename = artefact_files)
   DBI::dbWriteTable(con, "file_artefact", file_artefact, append = TRUE)
+
+  if (!is.null(changelog)) {
+    changelog <- changelog[changelog$id == id, , drop = FALSE]
+    if (nrow(changelog) > 0L) {
+      names(changelog)[names(changelog) == "id"] <- "report_version"
+      DBI::dbWriteTable(con, "changelog", changelog, append = TRUE)
+    }
+  }
 
   sql <- "UPDATE report SET latest = $1 WHERE name = $2"
   DBI::dbExecute(con, sql, list(id, name))

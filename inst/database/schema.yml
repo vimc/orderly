@@ -157,3 +157,12 @@ depends:
           Was this the latest version when run? Not necessarily the
           same as "NOT is_pinned" as a report might have been pinned
           to the most recent report when it was run.
+
+# Changelog
+changelog:
+  columns:
+    - id: {type: SERIAL}
+    - report_version: {fk: report_version.id}
+    - label: {type: TEXT}
+    - value: {type: TEXT}
+    - from_file: {type: BOOLEAN}
