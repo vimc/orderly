@@ -19,12 +19,10 @@ test_that("missing global file", {
   config_lines[11] <- "  - none.csv"
   writeLines(config_lines, path_yaml)
   
-  expected_error <- paste("Global resources in",
-                          sprintf("'%s/global'", path),
-                          "does not exist: 'none.csv'")
+  expected_error <- "Global resources in '.+/global' does not exist: 'none.csv'"
 
   tmp <- tempfile()
   expect_error(
     orderly_run("example", config = path, id_file = tmp, echo = FALSE),
-                expected_error, fixed = TRUE)
+                expected_error)
 })
