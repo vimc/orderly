@@ -21,5 +21,5 @@ add_changelog <- function() {
     "mechanical helicopter that shakes when you put quarters in it? No?",
     "Well, that's what you see at a toy store. And you must think you're in",
     "a toy store, because you're here shopping for an infant named Jeb.")
-  writeLines(c(new, txt), path)
+  writeLines(c(new, "", txt), path)
 }
