@@ -153,4 +153,9 @@ test_that("append changelog", {
                           value = c("value2", "value"),
                           from_file = TRUE,
                           id = c(id2, id1)))
+
+  id3 <- orderly_run("example", config = path, echo = FALSE)
+  p3 <- orderly_commit(id3, config = path)
+  expect_equal(changelog_read_json(p3),
+               changelog_read_json(p2))
 })
