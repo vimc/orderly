@@ -5,6 +5,7 @@ ROOT=$(realpath $HERE/..)
 
 REGISTRY=docker.montagu.dide.ic.ac.uk:5000
 TAG=$(git symbolic-ref --short HEAD)
+SHA=$(git rev-parse --short=7 HEAD)
 
 ORDERLY_BASE=$REGISTRY/orderly:$TAG
 ORDERLY_DEV=$REGISTRY/orderly-dev:$TAG
@@ -21,6 +22,8 @@ DB_NAME=orderly
 
 SCHEMASPY_NAME=vimc/orderly-schemaspy
 
+DOCS_DIR=$ROOT/docs
+
 docker pull $ORDERLY_BASE
 
 docker build \
@@ -31,7 +34,7 @@ docker build \
 
 docker build -t $SCHEMASPY_NAME "$HERE/schema"
 
-docker network create $DB_NW
+docker network create $DB_NW || true
 
 docker run -d --rm \
        --network=$DB_NW \
@@ -40,6 +43,7 @@ docker run -d --rm \
        --name $DB_CONTAINER \
        $DB_IMAGE
 function cleanup {
+    echo "Cleaning up!"
     set +e
     docker kill $DB_CONTAINER
     docker network rm $DB_NW
@@ -48,6 +52,8 @@ trap cleanup EXIT
 
 docker cp "$HERE/schema/postgres_wait" $DB_CONTAINER:/usr/local/bin
 docker exec -it $DB_CONTAINER postgres_wait
+# I see a further required wait here
+sleep 2
 
 docker run --rm -it \
        --network=$DB_NW \
@@ -58,12 +64,12 @@ docker run --rm -it \
 docker run --rm -it \
        --network=$DB_NW \
        -w /orderly \
-       -v $ROOT/docs:/orderly/docs \
+       -v $DOCS_DIR:/orderly/docs \
        --user "$USER_STR" \
        $ORDERLY_DEV \
        Rscript -e 'pkgdown::build_site()'
 
-SCHEMA_DEST=${ROOT}/docs/schema
+SCHEMA_DEST=${DOCS_DIR}/schema
 if [ -f $DEST/index.html ]; then
     rm -rf $SCHEMA_DEST
 fi
@@ -80,3 +86,15 @@ docker run -it --rm \
        -p $DB_PASS \
        -s public \
        -o /schema
+
+if [ $TAG = "master" ]; then
+    REMOTE_URL=$(git config --get remote.origin.url | \
+                        sed -s 's;https://github.com/;git@github.com:;')
+    rm -rf ${DOCS_DIR}/.git
+    git init ${DOCS_DIR}
+    git -C ${DOCS_DIR} checkout --orphan gh-pages
+    git -C ${DOCS_DIR} add .
+    git -C ${DOCS_DIR} commit --no-verify -m "Update docs for version ${SHA}"
+    git -C ${DOCS_DIR} remote add origin -m "gh-pages" ${REMOTE_URL}
+    git -C ${DOCS_DIR} push --force -u origin gh-pages
+fi
