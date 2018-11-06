@@ -101,7 +101,8 @@ changelog_parse <- function(txt) {
   }
 
   j <- c(i[-1] - 1, length(txt))
-  value <- Map(function(i, j) paste(txt[i:j], collapse = "\n"), i + 1L, j)
+  value <- Map(function(i, j) trimws(paste(txt[i:j], collapse = "\n")),
+               i + 1L, j)
 
   ## The 'from_file' label here is to distinguish between file based
   ## changelog entries and ones that come from elsewhere (like the
