@@ -137,6 +137,8 @@ test_that("database migrations", {
   DBI::dbDisconnect(con)
   expect_false("published" %in% names(dat))
 
+  orderly_migrate(config = path)
+
   id <- orderly_run("minimal", config = path, echo = FALSE)
   expect_error(
     orderly_commit(id, config = path),
