@@ -563,3 +563,13 @@ get_version <- function(x, numeric = TRUE, default = "0.0.0") {
   v <- x %||% default
   if (numeric) numeric_version(v) else as.character(v)
 }
+
+
+abbreviate <- function(x, len = round(getOption("width", 80) * 0.8)) {
+  x <- sub("\n.*", "", x)
+  i <- nchar(x) > len
+  if (any(i)) {
+    x[i] <- paste0(substr(x[i], 1, len - 3L), "...")
+  }
+  x
+}

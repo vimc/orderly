@@ -47,6 +47,83 @@ test_that("parse failures", {
 })
 
 
+test_that("changelog consistency: no new entries", {
+  old <- data_frame(from_file = TRUE, label = "a", value = "x")
+  new <- data_frame(from_file = TRUE, label = "a", value = "x")
+  expect_equal(changelog_compare(old, new), old[integer(0), ])
+})
+
+
+test_that("changelog consistency: all from file", {
+  d <- data_frame(from_file = c(TRUE, TRUE, TRUE),
+                  label = c("a", "b", "c"),
+                  value = c("x", "y", "z"))
+
+  ## All four possible cases here:
+  expect_equal(changelog_compare(d, d), d[integer(0), ])
+  expect_equal(changelog_compare(d, d[2:3, ]), d[1, ])
+  expect_equal(changelog_compare(d, d[3, ]), d[1:2, ])
+  expect_equal(changelog_compare(d, NULL), d)
+})
+
+
+test_that("changelog consistency: incl from file", {
+  d <- data_frame(from_file = c(TRUE, FALSE, TRUE),
+                  label = c("a", "b", "c"),
+                  value = c("x", "y", "z"))
+  e <- d[-2, ]
+
+  ## All four possible cases here:
+  expect_equal(changelog_compare(e, d), d[integer(0), ])
+  expect_equal(changelog_compare(e, d[2:3, ]), d[1, ])
+  ## This can't actully happen
+  expect_equal(changelog_compare(e, d[3, ]), d[1, ])
+  expect_equal(changelog_compare(e, NULL), e)
+})
+
+
+test_that("changelog inconsistency: complete mismatch", {
+  d <- data_frame(from_file = c(TRUE, TRUE, TRUE),
+                  label = c("a", "b", "c"),
+                  value = c("x", "y", "z"))
+  e <- data_frame(from_file = TRUE,
+                  label = "A",
+                  value = "X")
+  expect_error(changelog_compare(e, d),
+               paste("Missing previously existing changelog entries:",
+                     "[a]: x", "[b]: y", "[c]: z", sep = "\n"),
+               fixed = TRUE)
+})
+
+
+test_that("changelog inconsistency: altered past", {
+  d <- data_frame(from_file = TRUE,
+                  label = c("b", "c"),
+                  value = c("y", "z"))
+  e <- data_frame(from_file = TRUE,
+                  label = c("a", "b", "c"),
+                  value = c("x", "y", "Z"))
+  expect_error(changelog_compare(e, d),
+               paste("Missing previously existing changelog entries:",
+                     "[c]: z", sep = "\n"),
+               fixed = TRUE)
+})
+
+
+test_that("changelog inconsistency: inserted past", {
+  d <- data_frame(from_file = TRUE,
+                  label = c("b", "c"),
+                  value = c("y", "z"))
+  e <- data_frame(from_file = TRUE,
+                  label = c("a", "b", "!", "c"),
+                  value = c("x", "y", "@", "z"))
+  expect_error(changelog_compare(e, d),
+               paste("Invalidly added historical changelog entries:",
+                     "[!]: @", sep = "\n"),
+               fixed = TRUE)
+})
+
+
 test_that("append changelog", {
   path <- prepare_orderly_example("minimal")
 

@@ -145,3 +145,14 @@ test_that("canonical case - redundant paths", {
   expect_true(file_has_canonical_case("../..//README.md"))
   expect_true(file_has_canonical_case("../..///README.md"))
 })
+
+
+test_that("abbreviate", {
+  expect_equal(abbreviate("12345678", 5), "12...")
+  expect_equal(abbreviate("12345678", 7), "1234...")
+  expect_equal(abbreviate("12345678", 8), "12345678")
+  expect_equal(abbreviate("12345678", 10), "12345678")
+
+  expect_equal(abbreviate("12345\n678", 10), "12345")
+  expect_equal(abbreviate("12345\n678", 4), "1...")
+})

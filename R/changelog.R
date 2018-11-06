@@ -13,16 +13,28 @@ changelog_load <- function(path, info, config) {
 
 
 changelog_compare <- function(new, old) {
-  old_str <- paste(old$label, old$value, sep = "\r")[old$from_file]
+  old <- old[old$from_file, ]
+  old_str <- paste(old$label, old$value, sep = "\r")
   new_str <- paste(new$label, new$value, sep = "\r")
 
   i <- which(!new_str %in% old_str)
-  j <- seq_len(length(i))
-  ok <- length(i) == length(j) && all(i == j)
+  msg <- old_str %in% new_str
 
-  if (!ok) {
-    ## TODO: better errors here
-    stop("changelog is not consistent with previous")
+  if (!all(msg)) {
+    str <- paste(sprintf("[%s]: %s", old$label[!msg],
+                         abbreviate(old$value[!msg])),
+                 collapse = "\n")
+    stop("Missing previously existing changelog entries:\n", str,
+         call. = FALSE)
+  }
+
+  add <- i[i > length(i)]
+  if (length(add) > 0L) {
+    str <- paste(sprintf("[%s]: %s", new$label[add],
+                         abbreviate(new$value[add])),
+                 collapse = "\n")
+    stop("Invalidly added historical changelog entries:\n", str,
+         call. = FALSE)
   }
 
   new[i, , drop = FALSE]
