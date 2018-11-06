@@ -51,17 +51,17 @@ function cleanup {
 trap cleanup EXIT
 
 docker cp "$HERE/schema/postgres_wait" $DB_CONTAINER:/usr/local/bin
-docker exec -it $DB_CONTAINER postgres_wait
+docker exec $DB_CONTAINER postgres_wait
 # I see a further required wait here
 sleep 2
 
-docker run --rm -it \
+docker run --rm \
        --network=$DB_NW \
        -w /orderly/scripts/schema \
        $ORDERLY_DEV \
        ./create_schema
 
-docker run --rm -it \
+docker run --rm \
        --network=$DB_NW \
        -w /orderly \
        -v $DOCS_DIR:/orderly/docs \
@@ -75,7 +75,7 @@ if [ -f $DEST/index.html ]; then
 fi
 mkdir -p $SCHEMA_DEST
 
-docker run -it --rm \
+docker run --rm \
        --user "$USER_STR" \
        -v $SCHEMA_DEST:/schema \
        --network=$DB_NW \
