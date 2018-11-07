@@ -1,3 +1,7 @@
+# 0.5.6
+
+* The `displayname` and `description` fields are correctly copied into the new orderly database.
+
 # 0.5.5
 
 * New `connection` column in the `report_version` table in orderly's database (VIMC-2327)
