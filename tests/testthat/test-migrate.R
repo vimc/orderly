@@ -137,6 +137,8 @@ test_that("database migrations", {
   DBI::dbDisconnect(con)
   expect_false("published" %in% names(dat))
 
+  orderly_migrate(config = path)
+
   id <- orderly_run("minimal", config = path, echo = FALSE)
   expect_error(
     orderly_commit(id, config = path),
@@ -162,4 +164,18 @@ test_that("automatic migrations", {
   expect_true(orderly_rebuild(config = path, if_schema_changed = TRUE))
   expect_false(orderly_rebuild(config = path, if_schema_changed = TRUE))
   expect_true(orderly_rebuild(config = path, if_schema_changed = FALSE))
+})
+
+
+test_that("migrate 0.5.4 -> 0.5.5", {
+  path <- unpack_reference("0.5.4")
+  orderly_migrate(path, to = "0.5.5")
+  orderly_rebuild(path)
+
+  con <- orderly_db("destination", path, validate = FALSE)
+  dat <- DBI::dbReadTable(con, "report_version")
+  DBI::dbDisconnect(con)
+
+  expect_equal(dat$connection == 1,
+               dat$report == "connection")
 })

@@ -36,3 +36,12 @@ prepare_orderly_example("demo", "reference/0.5.1")
 run_orderly_demo("reference/0.5.1")
 withr::with_dir("reference", zip("0.5.1.zip", "0.5.1"))
 unlink("reference/0.5.1", recursive = TRUE)
+
+
+## 0.5.4
+unlink("reference/0.5.4", recursive = TRUE)
+unlink("reference/0.5.4.zip")
+prepare_orderly_example("demo", "reference/0.5.4")
+run_orderly_demo("reference/0.5.4")
+withr::with_dir("reference", zip("0.5.4.zip", "0.5.4"))
+unlink("reference/0.5.4", recursive = TRUE)

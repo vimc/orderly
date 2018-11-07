@@ -6,7 +6,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-ORDERLY_SCHEMA_VERSION <- "0.0.3"
+ORDERLY_SCHEMA_VERSION <- "0.0.4"
 
 ## These will be used in a few places and even though they're not
 ## super likely to change it would be good
@@ -157,7 +157,7 @@ report_db2_open_existing <- function(con, config) {
   ## present in the yml and that should be the source of truth here
   ## but we shuold only load that once in a session.
   extra <- setdiff(setdiff(names(d), names(report_db_cols())),
-                   c("report", custom_name))
+                   c("report", "connection", custom_name))
   if (length(extra) > 0L) {
     stop(sprintf("custom fields %s in database not present in config",
                  paste(squote(extra), collapse = ", ")))
@@ -216,6 +216,8 @@ report_data_import <- function(con, workdir, config) {
 
   ## Was not done before 0.3.3
   stopifnot(!is.null(dat_rds$meta))
+  ## Was not done before 0.5.5
+  stopifnot(!is.null(dat_rds$meta$connection))
 
   id <- dat_rds$meta$id
   name <- dat_rds$meta$name
@@ -239,7 +241,8 @@ report_data_import <- function(con, workdir, config) {
     date = dat_rds$meta$date,
     displayname = dat_rds$meta$displayname %||% NA_character_,
     description = dat_rds$meta$description %||% NA_character_,
-    published = published)
+    published = published,
+    connection = dat_rds$meta$connection)
   if (nrow(config$fields) > 0L) {
     extra <- drop_null(set_names(
       lapply(config$fields$name, function(x) dat_in[[x]]),

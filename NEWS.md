@@ -1,3 +1,7 @@
+# 0.5.5
+
+* New `connection` column in the `report_version` table in orderly's database (VIMC-2327)
+
 # 0.5.4
 
 * New `latest` column in the `report` table in orderly's database (VIMC-2298)
