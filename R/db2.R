@@ -239,8 +239,8 @@ report_data_import <- function(con, workdir, config) {
     id = id,
     report = dat_rds$meta$name,
     date = dat_rds$meta$date,
-    displayname = dat_rds$meta$displayname %||% NA_character_,
-    description = dat_rds$meta$description %||% NA_character_,
+    displayname = dat_in$displayname %||% NA_character_,
+    description = dat_in$description %||% NA_character_,
     published = published,
     connection = dat_rds$meta$connection)
   if (nrow(config$fields) > 0L) {
