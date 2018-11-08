@@ -189,3 +189,29 @@ test_that("append changelog", {
   expect_equal(changelog_read_json(p3),
                changelog_read_json(p2))
 })
+
+
+test_that("label change requires rebuild", {
+  path <- prepare_orderly_example("changelog")
+
+  tmp <- tempfile()
+  path_example <- file.path(path, "src", "example")
+  path_cl <- path_changelog_txt(path_example)
+
+  writeLines(c("[label1]", "value1"), path_cl)
+  id1 <- orderly_run("example", config = path, echo = FALSE)
+  p1 <- orderly_commit(id1, config = path)
+
+  d <- yaml_read(file.path(path, "orderly_config.yml"))
+  d$changelog <- d$changelog[1]
+  yaml_write(d, file.path(path, "orderly_config.yml"))
+
+  writeLines(c("[label1]", "value2", "[label1]", "value1"), path_cl)
+  id2 <- orderly_run("example", config = path, echo = FALSE)
+  expect_error(
+    orderly_commit(id2, config = path),
+    "changelog labels have changed: rebuild with orderly::orderly_rebuild")
+
+  orderly_rebuild(config = path)
+  p2 <- orderly_commit(id2, config = path)
+})
