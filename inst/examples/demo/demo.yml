@@ -73,3 +73,5 @@
 - name: interactive
 
 - name: use_resource_dir
+
+- name: connection

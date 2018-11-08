@@ -30,13 +30,4 @@ vignettes: vignettes/orderly.Rmd
 	mkdir -p inst/doc
 	cp vignettes/*.html vignettes/*.Rmd inst/doc
 
-pkgdown:
-	${RSCRIPT} -e "library(methods); pkgdown::build_site()"
-
-schema:
-	./scripts/schema/generate
-
-website: pkgdown schema
-	./update_web.sh
-
-.PHONY: test roxygen install build check check_all vignettes schema pkgdown website
+.PHONY: test roxygen install build check check_all vignettes

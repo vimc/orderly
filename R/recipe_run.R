@@ -228,6 +228,12 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   orderly_log("end", as.character(t1))
   orderly_log("elapsed", sprintf("Ran report in %s", format(elapsed)))
 
+  if (!is.null(info$connection)) {
+    tryCatch(DBI::dbDisconnect(prep$con),
+             error = identity,
+             warning = identity)
+  }
+
   recipe_check_device_stack(prep$n_dev)
   hash_artefacts <- recipe_check_artefacts(info)
 
@@ -250,6 +256,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                name = info$name,
                parameters = parameters,
                date = as.character(Sys.time()),
+               connection = !is.null(info$connection),
                ## Don't know what of these two are most useful:
                hash_orderly = info$hash,
                hash_input = hash_files("orderly.yml", FALSE),
@@ -538,6 +545,13 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
     stop(paste("Missing packages:", 
                paste(squote(missing_packages), collapse = ", ")))
   }
+
+  ret <- list(data = ldata, hash_resources = hash_resources, n_dev = n_dev)
+
+  if (!is.null(info$connection)) {
+    ret$con <- data[[info$connection]]
+  }
+
   for (p in info$packages) {
     library(p, character.only = TRUE)
   }
@@ -545,7 +559,7 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
     source(s, envir)
   }
 
-  list(data = ldata, hash_resources = hash_resources, n_dev = n_dev)
+  ret
 }
 
 

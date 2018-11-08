@@ -1,5 +1,3 @@
 #!/usr/bin/env Rscript
-path <- commandArgs(TRUE)[[1L]]
-config <- orderly:::orderly_config(path)
-con <- orderly::orderly_db("destination", config)
+con <- orderly::orderly_db("destination")
 DBI::dbRemoveTable(con, "orderly")

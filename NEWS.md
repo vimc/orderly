@@ -1,6 +1,14 @@
-# 0.5.5
+# 0.5.7
 
 * Support for changelogs (VIMC-1503)
+
+# 0.5.6
+
+* The `displayname` and `description` fields are correctly copied into the new orderly database.
+
+# 0.5.5
+
+* New `connection` column in the `report_version` table in orderly's database (VIMC-2327)
 
 # 0.5.4
 

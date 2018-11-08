@@ -249,6 +249,29 @@ test_that("connection", {
   DBI::dbDisconnect(data$con)
 })
 
+
+test_that("connection is saved to db", {
+  path <- prepare_orderly_example("minimal")
+
+  id1 <- orderly_run("example", config = path, echo = FALSE)
+  orderly_commit(id1, config = path)
+
+  path_example <- file.path(path, "src", "example")
+  yml <- file.path(path_example, "orderly.yml")
+  txt <- readLines(yml)
+  writeLines(c(txt, "connection: con"), yml)
+
+  id2 <- orderly_run("example", config = path, echo = FALSE)
+  orderly_commit(id2, config = path)
+
+  con <- orderly_db("destination", config = path)
+  on.exit(DBI::dbDisconnect(con))
+  d <- DBI::dbGetQuery(con, "SELECT id, connection FROM report_version")
+  expect_equal(d$connection[d$id == id1], 0L)
+  expect_equal(d$connection[d$id == id2], 1L)
+})
+
+
 test_that("no data", {
   path <- prepare_orderly_example("minimal")
   yml <- c("data: ~",

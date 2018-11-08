@@ -1,8 +1,8 @@
 # This is what we'll set up via docker
 destination:
   driver: RPostgres::Postgres
-  host: 127.0.0.1
-  port: 35432
+  host: orderly-db
+  port: 5432
   user: postgres
   dbname: orderly
   password: schemaspy
