@@ -111,10 +111,7 @@ orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
 
 ## Same pattern as existing db.R version but with
 report_db2_init <- function(con, config, must_create = FALSE, validate = TRUE) {
-  ## This should probably be tuneable:
-  if (config$destination$driver[[1]] == "RSQLite") {
-    DBI::dbExecute(con, "PRAGMA foreign_keys = ON")
-  }
+  sqlite_pragma_fk(con, TRUE)
 
   if (!DBI::dbExistsTable(con, ORDERLY_SCHEMA_TABLE)) {
     report_db2_init_create(con, config)
@@ -445,9 +442,8 @@ report_db2_destroy <- function(con) {
   if (DBI::dbExistsTable(con, ORDERY_TABLE_LIST)) {
     ## We have to disable the FK check here, otherwise it's a bit of a
     ## pain to delete all tables.
-    reset <- sqlite_pragma_fk(con, FALSE)
-    on.exit(reset())
-
+    sqlite_pragma_fk(con, FALSE)
+    on.exit(sqlite_pragma_fk(con, TRUE))
     for (t in DBI::dbReadTable(con, ORDERY_TABLE_LIST)[[1L]]) {
       DBI::dbRemoveTable(con, t)
     }
@@ -467,7 +463,5 @@ sqlite_pragma_fk <- function(con, enable = TRUE) {
     function() {
       DBI::dbExecute(con, sprintf("PRAGMA foreign_keys = %d", !enable))
     }
-  } else {
-    function() {}
   }
 }
