@@ -124,6 +124,28 @@ test_that("changelog inconsistency: inserted past", {
 })
 
 
+test_that("test badly formed messages", {
+  expect_error(changelog_message_parse("test message"),
+               "message must be of the form '[<label>] <message>'",
+               fixed = TRUE)
+  expect_error(changelog_message_parse(c("[a] test message", "b")),
+               "message must be of the form '[<label>] <message>'",
+               fixed = TRUE)
+})
+
+
+test_that("parse messages", {
+  expect_equal(changelog_message_parse("[a] x"),
+               data_frame(label = "a", value = "x", from_file = FALSE))
+  expect_equal(changelog_message_parse(c("[a] x", "[b] y")),
+               data_frame(label = c("a", "b"), value = c("x", "y"),
+                          from_file = FALSE))
+  expect_equal(changelog_message_parse(c("[a ] x  ", "[b]   y")),
+               data_frame(label = c("a", "b"), value = c("x", "y"),
+                          from_file = FALSE))
+})
+
+
 test_that("append changelog", {
   path <- prepare_orderly_example("changelog")
 

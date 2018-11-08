@@ -1,10 +1,8 @@
-changelog_load <- function(path, info, config) {
+changelog_load <- function(path, message, info, config) {
   changelog <- changelog_read(path)
-  if (!is.null(info$message)) {
+  if (!is.null(message)) {
     changelog <- rbind(
-      data_frame(label = "[message]",
-                 value = info$message,
-                 from_file = FALSE),
+      changelog_message_parse(message),
       changelog)
   }
   if (!is.null(changelog) && is.null(config$changelog)) {
@@ -14,9 +12,10 @@ changelog_load <- function(path, info, config) {
   }
   unk <- setdiff(changelog$label, config$changelog$id)
   if (length(unk)) {
-    stop(sprintf("Unknown changelog %s: %s",
+    stop(sprintf("Unknown changelog %s: %s. Use one of %s",
                  ngettext(length(unk), "label", "labels"),
-                 paste(squote(unk), collapse = ", ")),
+                 paste(squote(unk), collapse = ", "),
+                 paste(squote(config$changelog$id), collapse = ", ")),
          call. = FALSE)
   }
   prev <- changelog_read_previous(info$name, config)
@@ -122,6 +121,22 @@ changelog_parse <- function(txt) {
   data_frame(label = label,
              value = list_to_character(value),
              from_file = TRUE)
+}
+
+
+changelog_message_parse <- function(txt) {
+  re <- "^\\[(.+?)\\]\\s+(.+)$"
+  i <- grepl(re, txt)
+  if (any(!i)) {
+    stop("message must be of the form '[<label>] <message>' failed on:\n",
+         paste(squote(txt[!i]), collapse = "\n"),
+         call. = FALSE)
+  }
+  label <- trimws(sub(re, "\\1", txt))
+  value <- trimws(sub(re, "\\2", txt))
+  data_frame(label = label,
+             value = value,
+             from_file = FALSE)
 }
 
 

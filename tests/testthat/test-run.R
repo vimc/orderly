@@ -60,7 +60,6 @@ test_that("run", {
   run <- yaml_read(file.path(p, "orderly_run.yml"))
   expect_equal(run$id, basename(p))
   expect_equal(run$name, info$name)
-  expect_null(run$message)
   expect_identical(unname(unlist(run$hash_artefacts, use.names = FALSE)),
                    hash_files(file.path(p, "mygraph.png"), FALSE))
   expect_identical(run$hash_resources, list())
@@ -416,72 +415,20 @@ test_that("test mode artefacts", {
   expect_true(orderly_test_check())
 })
 
+
 test_that("run with message", {
-  path <- prepare_orderly_example("example")
-  test_message <- "test"
-  id <- orderly_run("example", list(cyl = 4), config = path, echo = FALSE,
+  path <- prepare_orderly_example("changelog")
+  test_message <- "[label1] test"
+  id <- orderly_run("example", config = path, echo = FALSE,
                     message = test_message)
   p <- orderly_commit(id, config = path)
-  run <- yaml_read(file.path(p, "orderly_run.yml"))
-  expect_equal(run$message, test_message)
-  
-  # test with bad messages
-  test_message <- c("bad", "message")
-  expect_error(orderly_run("example", list(cyl = 4), config = path,
-               echo = FALSE,  message = test_message),
-               "'message' must be a scalar")
-               
-  test_message <- 123.456
-  expect_error(orderly_run("example", list(cyl = 4), config = path,
-               echo = FALSE,  message = test_message),
-               "'message' must be character")
+
+  expect_equal(changelog_read_json(p),
+               data_frame(
+                 label = "label1", value = "test", from_file = FALSE,
+                 report_version = id))
 })
 
-test_that("unexpected artefact", {
-  # produce a file that we weren't expecting, this should produce an
-  # "unexpected" message
-  path <- prepare_orderly_example("minimal")
-  tmp <- tempfile()
-  path_example <- file.path(path, "src", "example")
-  write(sprintf("file.create('%s')", "bad_file"), 
-        file = file.path(path_example, "script.R"), append = TRUE)
-  expect_message(orderly_run("example", config = path, id_file = tmp,
-                             echo = FALSE),
-                 "unexpected")
-})
-
-test_that("two unexpected artefacts", {
-  # produce multiple files that we weren't expecting, including one in a
-  # subdirectory this should produce an "unexpected" message
-  path <- prepare_orderly_example("minimal")
-  tmp <- tempfile()
-  path_example <- file.path(path, "src", "example")
-  write(sprintf("file.create('%s')", "bad_file_1"),
-        file = file.path(path_example, "script.R"), append = TRUE)
-  write("dir.create('subdir')",
-        file = file.path(path_example, "script.R"), append = TRUE)
-  write(sprintf("file.create('%s', recursive=TRUE)",
-                file.path("subdir", "bad_file_2")),
-        file = file.path(path_example, "script.R"), append = TRUE)
-  expect_message(orderly_run("example", config = path, id_file = tmp,
-                             echo = FALSE),
-                 "unexpected")
-})
-
-test_that("readme is expected", {
-  path <- prepare_orderly_example("minimal")
-  tmp <- tempfile()
-  path_example <- file.path(path, "src", "example")
-  # create a file called README.md, this shouldn't produce an error
-  write(sprintf("file.create('%s')", "README.md"),
-        file = file.path(path_example, "script.R"), append = TRUE)
-  # we're not expecting an 'unexpected' message at this point
-  # grab all messages...
-  messages <- capture_messages(orderly_run("example", config = path,
-                                           id_file = tmp, echo = FALSE))
-  # ...make sure none of the messages contain "unexpected"
-  expect_false(any(grep("unexpected", messages)))
-})
 
 test_that("no unexpected artefact", {
   path <- prepare_orderly_example("minimal")

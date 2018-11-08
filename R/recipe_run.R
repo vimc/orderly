@@ -50,10 +50,6 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   config <- orderly_config_get(config, locate)
   check_orderly_archive_version(config)
 
-  if (!is.null(message)) {
-    assert_scalar_character(message)
-  }
-
   info <- recipe_prepare(config, name, id_file, ref, fetch, message)
   on.exit(recipe_current_run_clear())
 
@@ -254,7 +250,6 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                name = info$name,
                parameters = parameters,
                date = as.character(Sys.time()),
-               message = info$message,
                ## Don't know what of these two are most useful:
                hash_orderly = info$hash,
                hash_input = hash_files("orderly.yml", FALSE),
@@ -395,8 +390,7 @@ recipe_prepare_workdir <- function(info, message, config) {
     file_copy(path_global_recs, info$workdir, recursive = TRUE)
   }
 
-  info$message <- message
-  info$changelog <- changelog_load(src, info, config)
+  info$changelog <- changelog_load(src, message, info, config)
   changelog_save_json(info$changelog, info$workdir)
 
   info$owd <- owd

@@ -443,6 +443,11 @@ report_data_find_dependencies <- function(con, meta) {
 
 report_db2_destroy <- function(con) {
   if (DBI::dbExistsTable(con, ORDERY_TABLE_LIST)) {
+    ## We have to disable the FK check here, otherwise it's a bit of a
+    ## pain to delete all tables.
+    reset <- sqlite_pragma_fk(con, FALSE)
+    on.exit(reset())
+
     for (t in DBI::dbReadTable(con, ORDERY_TABLE_LIST)[[1L]]) {
       DBI::dbRemoveTable(con, t)
     }
@@ -453,4 +458,16 @@ report_db2_destroy <- function(con) {
 report_db2_publish <- function(con, id, value) {
   sql <- "UPDATE report_version SET published = $1 WHERE id = $2"
   DBI::dbExecute(con, sql, list(value, id))
+}
+
+
+sqlite_pragma_fk <- function(con, enable = TRUE) {
+  if (inherits(con, "SQLiteConnection")) {
+    DBI::dbExecute(con, sprintf("PRAGMA foreign_keys = %d", enable))
+    function() {
+      DBI::dbExecute(con, sprintf("PRAGMA foreign_keys = %d", !enable))
+    }
+  } else {
+    function() {}
+  }
 }
