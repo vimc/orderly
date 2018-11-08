@@ -463,8 +463,5 @@ report_db2_publish <- function(con, id, value) {
 sqlite_pragma_fk <- function(con, enable = TRUE) {
   if (inherits(con, "SQLiteConnection")) {
     DBI::dbExecute(con, sprintf("PRAGMA foreign_keys = %d", enable))
-    function() {
-      DBI::dbExecute(con, sprintf("PRAGMA foreign_keys = %d", !enable))
-    }
   }
 }
