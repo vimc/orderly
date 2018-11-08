@@ -102,6 +102,7 @@ orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
     sql <- c(sql, unlist(lapply(tables, "[[", "sql_fk"), FALSE, FALSE))
   }
   values <- drop_null(lapply(tables, "[[", "values"))
+
   list(tables = tables,
        sql = sql,
        values = values)
@@ -110,6 +111,8 @@ orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
 
 ## Same pattern as existing db.R version but with
 report_db2_init <- function(con, config, must_create = FALSE, validate = TRUE) {
+  sqlite_pragma_fk(con, TRUE)
+
   if (!DBI::dbExistsTable(con, ORDERLY_SCHEMA_TABLE)) {
     report_db2_init_create(con, config)
   } else if (must_create) {
@@ -127,11 +130,7 @@ report_db2_init_create <- function(con, config) {
     dialect <- "postgres"
   }
   dat <- orderly_schema_prepare(config$fields, dialect)
-
-  ## This should probably be tuneable:
-  if (dialect == "sqlite") {
-    DBI::dbExecute(con, "PRAGMA foreign_keys = ON")
-  }
+  dat$values$changelog_label <- config$changelog
 
   for (s in dat$sql) {
     DBI::dbExecute(con, s)
@@ -161,6 +160,22 @@ report_db2_open_existing <- function(con, config) {
   if (length(extra) > 0L) {
     stop(sprintf("custom fields %s in database not present in config",
                  paste(squote(extra), collapse = ", ")))
+  }
+
+  if (!DBI::dbExistsTable(con, "changelog_label")) {
+    ## This DB needs rebuilding, but this at least will give a
+    ## sensible error message:
+    label <- data_frame(label = character(0), public = logical(0))
+  } else {
+    label <- DBI::dbReadTable(con, "changelog_label")
+    label$public <- as.logical(label$public)
+  }
+  ok <- setequal(label$id, config$changelog$id) &&
+    identical(label$public[match(label$id, config$changelog$id)],
+              config$changelog$public %||% logical(0))
+  if (!ok) {
+    stop("changelog labels have changed: rebuild with orderly::orderly_rebuild",
+         call. = FALSE)
   }
 
   d <- DBI::dbReadTable(con, ORDERLY_SCHEMA_TABLE)
@@ -213,6 +228,7 @@ report_data_import <- function(con, workdir, config) {
   dat_rds <- readRDS(path_orderly_run_rds(workdir))
   dat_in <- recipe_read(workdir, config, FALSE)
   published <- report_is_published(workdir)
+  changelog <- changelog_read_json(workdir)
 
   ## Was not done before 0.3.3
   stopifnot(!is.null(dat_rds$meta))
@@ -370,6 +386,13 @@ report_data_import <- function(con, workdir, config) {
     filename = artefact_files)
   DBI::dbWriteTable(con, "file_artefact", file_artefact, append = TRUE)
 
+  if (!is.null(changelog)) {
+    changelog <- changelog[changelog$report_version == id, , drop = FALSE]
+    if (nrow(changelog) > 0L) {
+      DBI::dbWriteTable(con, "changelog", changelog, append = TRUE)
+    }
+  }
+
   sql <- "UPDATE report SET latest = $1 WHERE name = $2"
   DBI::dbExecute(con, sql, list(id, name))
 }
@@ -420,6 +443,10 @@ report_data_find_dependencies <- function(con, meta) {
 
 report_db2_destroy <- function(con) {
   if (DBI::dbExistsTable(con, ORDERY_TABLE_LIST)) {
+    ## We have to disable the FK check here, otherwise it's a bit of a
+    ## pain to delete all tables.
+    sqlite_pragma_fk(con, FALSE)
+    on.exit(sqlite_pragma_fk(con, TRUE))
     for (t in DBI::dbReadTable(con, ORDERY_TABLE_LIST)[[1L]]) {
       DBI::dbRemoveTable(con, t)
     }
@@ -430,4 +457,11 @@ report_db2_destroy <- function(con) {
 report_db2_publish <- function(con, id, value) {
   sql <- "UPDATE report_version SET published = $1 WHERE id = $2"
   DBI::dbExecute(con, sql, list(value, id))
+}
+
+
+sqlite_pragma_fk <- function(con, enable = TRUE) {
+  if (inherits(con, "SQLiteConnection")) {
+    DBI::dbExecute(con, sprintf("PRAGMA foreign_keys = %d", enable))
+  }
 }

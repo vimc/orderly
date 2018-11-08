@@ -49,6 +49,8 @@
   parameters:
     nmin: 0
 
+- name: changelog
+
 - name: use_dependency
 
 - name: use_resource
@@ -61,6 +63,9 @@
   publish: true
 
 - name: shiny
+
+- name: changelog
+  before: add_changelog
 
 - name: html
   publish: true

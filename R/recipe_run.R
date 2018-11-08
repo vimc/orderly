@@ -50,15 +50,10 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   config <- orderly_config_get(config, locate)
   check_orderly_archive_version(config)
 
-  if (!is.null(message)) {
-    assert_scalar_character(message)
-  }
-
-  info <- recipe_prepare(config, name, id_file, ref, fetch)
+  info <- recipe_prepare(config, name, id_file, ref, fetch, message)
   on.exit(recipe_current_run_clear())
 
-  info <- recipe_run(info, parameters, envir, config, echo = echo,
-                     message = message)
+  info <- recipe_run(info, parameters, envir, config, echo = echo)
 
   if (open) {
     open_directory(file.path(config, "drafts", name, info$id))
@@ -106,7 +101,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
   config <- orderly_config_get(config, locate)
   ## TODO: support ref here
   info <- recipe_prepare(config, name, id_file = NULL, ref = NULL,
-                         fetch = FALSE)
+                         fetch = FALSE, message = NULL)
   owd <- setwd(info$workdir)
   ## Ensure that if anything goes wrong we'll end up back where we
   ## started (see VIMC-1870)
@@ -179,7 +174,7 @@ orderly_test_check <- function() {
 }
 
 recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
-                           fetch = FALSE) {
+                           fetch = FALSE, message = NULL) {
   assert_is(config, "orderly_config")
   config <- orderly_config_get(config, FALSE)
 
@@ -203,7 +198,7 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
 
   info$id <- id
   info$workdir <- file.path(path_draft(config$path), info$name, id)
-  info <- recipe_prepare_workdir(info, config)
+  info <- recipe_prepare_workdir(info, message, config)
   info$git <- git_info(info$path)
 
   recipe_current_run_set(info)
@@ -212,8 +207,7 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
 }
 
 
-recipe_run <- function(info, parameters, envir, config, echo = TRUE,
-                       message = NULL) {
+recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   assert_is(config, "orderly_config")
 
   owd <- setwd(info$workdir)
@@ -262,7 +256,6 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
                name = info$name,
                parameters = parameters,
                date = as.character(Sys.time()),
-               message = message,
                connection = !is.null(info$connection),
                ## Don't know what of these two are most useful:
                hash_orderly = info$hash,
@@ -281,6 +274,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
   saveRDS(session, path_orderly_run_rds(info$workdir))
   writeLines(yaml::as.yaml(meta, column.major = FALSE),
              path_orderly_run_yml(info$workdir))
+
   meta
 }
 
@@ -348,7 +342,8 @@ recipe_data <- function(config, info, parameters, dest) {
   dest
 }
 
-recipe_prepare_workdir <- function(info, config) {
+
+recipe_prepare_workdir <- function(info, message, config) {
   if (file.exists(info$workdir)) {
     stop("'workdir' must not exist")
   }
@@ -374,9 +369,9 @@ recipe_prepare_workdir <- function(info, config) {
   }
 
   if (!is.null(info$depends)) {
-    src <- file.path(info$depends$path, info$depends$filename)
-    dst <- file.path(info$workdir, info$depends$as)
-    dir_create(dirname(dst))
+    dep_src <- file.path(info$depends$path, info$depends$filename)
+    dep_dst <- file.path(info$workdir, info$depends$as)
+    dir_create(dirname(dep_dst))
     info$depends$id_requested <- info$depends$id
     info$depends$id <- basename(info$depends$path)
 
@@ -386,7 +381,7 @@ recipe_prepare_workdir <- function(info, config) {
                    info$depends$filename,
                    info$depends$as)
     orderly_log("depends", str)
-    file_copy(src, dst)
+    file_copy(dep_src, dep_dst)
   }
   
   if (!is.null(info$global_resources)) {
@@ -401,6 +396,9 @@ recipe_prepare_workdir <- function(info, config) {
     dest_resources_src <- file.path(info$workdir, info$global_resources)
     file_copy(path_global_recs, info$workdir, recursive = TRUE)
   }
+
+  info$changelog <- changelog_load(src, message, info, config)
+  changelog_save_json(info$changelog, info$workdir)
 
   info$owd <- owd
   info

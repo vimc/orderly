@@ -1,3 +1,7 @@
+# 0.5.7
+
+* Support for changelogs (VIMC-1503)
+
 # 0.5.6
 
 * The `displayname` and `description` fields are correctly copied into the new orderly database.

@@ -11,3 +11,9 @@ fields:
   comment:
     required: false
     type: character
+
+changelog:
+  internal:
+    public: false
+  public:
+    public: true
