@@ -237,7 +237,6 @@ test_that("reports can't use changelogs if not enabled", {
   path_example <- file.path(path, "src", "example")
   path_cl <- path_changelog_txt(path_example)
   writeLines(c("[label1]", "value1"), path_cl)
-  orderly_run("example", config = path, echo = FALSE)
   expect_error(
     orderly_run("example", config = path, echo = FALSE),
     "report 'example' uses changelog, but this is not enabled",
