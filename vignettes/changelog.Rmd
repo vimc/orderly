@@ -39,6 +39,8 @@ Over time, the changelog is **prepended**, i.e., new information is
 added to the _top_ of the changelog.  Existing entries must be left
 unaltered.
 
+Messages can be provided to orderly run and these are required to be in the format `[label] value`.
+
 Once a report is run (via `orderly::orderly_run()`, or via `orderly
 run` on the command line), the given changelog, along with any
 message, is compared with the last commited version of this report,
@@ -49,19 +51,19 @@ the report id to the entries and end up with a
 ```json
 [
   {
-    "id": "20181105-152224-a42aaa47",
+    "report_version": "20181105-152224-a42aaa47",
     "from_file": false,
-    "label": "message",
+    "label": "public",
     "value": "Rerunning as requested"
   },
   {
-    "id": "20181105-152224-a42aaa47",
+    "report_version": "20181105-152224-a42aaa47",
     "from_file": true,
     "label": "public",
     "value": "Started working with new version of the data.  This includes everything sent up to 2018-10-10"
   },
   {
-    "id": "20181105-100427-ef29376c",
+    "report_version": "20181105-100427-ef29376c",
     "from_file": true,
     "label": "internal",
     "value": "Fixed incorrect plotting"
@@ -84,7 +86,7 @@ This section documents the logic involved in making this work.
 When preparing to run an orderly report:
 
 1. we read in the plaintext changelog if it exists
-1. append any given `message` argument as a pseudo changelog entry, with `label` of `message` and `from_file` of `FALSE`
+1. parse all messages provided and add as if they were a changelog entry `from_file` of `FALSE`
 1. we look for the "latest" archived version of this report and read a `changelog.json` file if it exists.  Alternatively we can use a remote copy of orderly via the api here (not implemented yet).
 1. filter the previous previous changelog to remove any `from_file = FALSE` entries and confirm that our new changelog can be prepended to the previous
 1. add the `id` to the "new" entries and prepend this - save the resulting data as `changelog.json`
