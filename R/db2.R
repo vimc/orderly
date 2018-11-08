@@ -102,6 +102,7 @@ orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
     sql <- c(sql, unlist(lapply(tables, "[[", "sql_fk"), FALSE, FALSE))
   }
   values <- drop_null(lapply(tables, "[[", "values"))
+
   list(tables = tables,
        sql = sql,
        values = values)
@@ -110,6 +111,11 @@ orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
 
 ## Same pattern as existing db.R version but with
 report_db2_init <- function(con, config, must_create = FALSE, validate = TRUE) {
+  ## This should probably be tuneable:
+  if (config$destination$driver[[1]] == "RSQLite") {
+    DBI::dbExecute(con, "PRAGMA foreign_keys = ON")
+  }
+
   if (!DBI::dbExistsTable(con, ORDERLY_SCHEMA_TABLE)) {
     report_db2_init_create(con, config)
   } else if (must_create) {
@@ -127,11 +133,7 @@ report_db2_init_create <- function(con, config) {
     dialect <- "postgres"
   }
   dat <- orderly_schema_prepare(config$fields, dialect)
-
-  ## This should probably be tuneable:
-  if (dialect == "sqlite") {
-    DBI::dbExecute(con, "PRAGMA foreign_keys = ON")
-  }
+  dat$values$changelog_label <- config$changelog
 
   for (s in dat$sql) {
     DBI::dbExecute(con, s)
@@ -161,6 +163,22 @@ report_db2_open_existing <- function(con, config) {
   if (length(extra) > 0L) {
     stop(sprintf("custom fields %s in database not present in config",
                  paste(squote(extra), collapse = ", ")))
+  }
+
+  if (!DBI::dbExistsTable(con, "changelog_label")) {
+    ## This DB needs rebuilding, but this at least will give a
+    ## sensible error message:
+    label <- data_frame(label = character(0), public = logical(0))
+  } else {
+    label <- DBI::dbReadTable(con, "changelog_label")
+    label$public <- as.logical(label$public)
+  }
+  ok <- setequal(label$id, config$changelog$id) &&
+    identical(label$public[match(label$id, config$changelog$id)],
+              config$changelog$public %||% logical(0))
+  if (!ok) {
+    stop("changelog labels have changed: rebuild with orderly::orderly_rebuild",
+         call. = FALSE)
   }
 
   d <- DBI::dbReadTable(con, ORDERLY_SCHEMA_TABLE)
@@ -369,9 +387,8 @@ report_data_import <- function(con, workdir, config) {
   DBI::dbWriteTable(con, "file_artefact", file_artefact, append = TRUE)
 
   if (!is.null(changelog)) {
-    changelog <- changelog[changelog$id == id, , drop = FALSE]
+    changelog <- changelog[changelog$report_version == id, , drop = FALSE]
     if (nrow(changelog) > 0L) {
-      names(changelog)[names(changelog) == "id"] <- "report_version"
       DBI::dbWriteTable(con, "changelog", changelog, append = TRUE)
     }
   }

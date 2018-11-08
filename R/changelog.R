@@ -7,6 +7,18 @@ changelog_load <- function(path, info, config) {
                  from_file = FALSE),
       changelog)
   }
+  if (!is.null(changelog) && is.null(config$changelog)) {
+    stop(sprintf("report '%s' uses changelog, ", info$name),
+         "but this is not enabled in orderly_config.yml",
+         call. = FALSE)
+  }
+  unk <- setdiff(changelog$label, config$changelog$id)
+  if (length(unk)) {
+    stop(sprintf("Unknown changelog %s: %s",
+                 ngettext(length(unk), "label", "labels"),
+                 paste(squote(unk), collapse = ", ")),
+         call. = FALSE)
+  }
   prev <- changelog_read_previous(info$name, config)
   changelog_update(info$id, changelog, prev)
 }
@@ -58,7 +70,7 @@ changelog_update <- function(id, new, old) {
 
   new <- changelog_compare(new, old)
   if (nrow(new) > 0L) {
-    new$id <- id
+    new$report_version <- id
     ret <- rbind(new, old)
   } else {
     ret <- old

@@ -12,7 +12,8 @@ orderly_config_read_yaml <- function(filename, path) {
   info <- yaml_read(filename)
   check_fields(info, filename, "source",
                c("destination", "fields", "minimum_orderly_version",
-                 "api_server", "vault_server", "global_resources"))
+                 "api_server", "vault_server", "global_resources",
+                 "changelog"))
 
   ## There's heaps of really boring validation to do here that I am
   ## going to skip.  The drama that we will have is that there are
@@ -35,6 +36,10 @@ orderly_config_read_yaml <- function(filename, path) {
   info$fields <- config_check_fields(info$fields, filename)
   info$source <- driver_config("source")
   info$destination <- driver_config("destination")
+
+  if (!is.null(info$changelog)) {
+    info$changelog <- config_check_changelog(info$changelog, filename)
+  }
 
   v <- info$minimum_orderly_version
   if (!is.null(v) && utils::packageVersion("orderly") < v) {
@@ -161,6 +166,18 @@ config_check_api_server <- function(dat, filename) {
       call. = FALSE)
   }
   ret
+}
+
+config_check_changelog <- function(x, filename) {
+  assert_named(x, unique = TRUE, sprintf("%s:changelog", filename))
+  for (i in names(x)) {
+    assert_scalar_logical(
+      x[[i]]$public,
+      sprintf("%s:changelog:%s:public", filename, i))
+  }
+
+  data_frame(id = names(x),
+             public = vlapply(x, function(x) x$public, USE.NAMES = FALSE))
 }
 
 sql_type <- function(type, name) {

@@ -3,7 +3,7 @@
     "description": "Changelog for orderly reports",
 
     "definitions": {
-        "id": {
+        "report_version": {
             "type": "string",
             "pattern": "^[0-9]{8}-[0-9]{6}-[0-9a-f]{8}$"
         },
@@ -11,8 +11,8 @@
         "entry": {
             "type": "object",
             "properties": {
-                "id": {
-                    "$ref": "#/definitions/id"
+                "report_version": {
+                    "$ref": "#/definitions/report_version"
                 },
                 "label": {
                     "type": "string"
@@ -25,7 +25,7 @@
                 }
             },
             "additionalProperties": false,
-            "required": ["id", "label", "value", "from_file"]
+            "required": ["report_version", "label", "value", "from_file"]
         }
     },
 

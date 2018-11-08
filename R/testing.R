@@ -128,7 +128,7 @@ demo_change_time <- function(id, time, path) {
 
   changelog <- changelog_read_json(p)
   if (!is.null(changelog)) {
-    changelog$id[changelog$id == id] <- id_new
+    changelog$report_version[changelog$report_version == id] <- id_new
     changelog_save_json(changelog, p)
   }
 

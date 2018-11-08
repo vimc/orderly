@@ -125,22 +125,29 @@ test_that("changelog inconsistency: inserted past", {
 
 
 test_that("append changelog", {
-  path <- prepare_orderly_example("minimal")
+  path <- prepare_orderly_example("changelog")
 
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
   path_cl <- path_changelog_txt(path_example)
 
-  writeLines(c("[label]", "value"), path_cl)
+  writeLines(c("[label1]", "value1"), path_cl)
 
   id1 <- orderly_run("example", config = path, echo = FALSE)
   p1 <- orderly_commit(id1, config = path)
 
-  expect_equal(changelog_read_json(p1),
-               data_frame(label = "label",
-                          value = "value",
+  l1 <- changelog_read_json(p1)
+  expect_equal(l1,
+               data_frame(label = "label1",
+                          value = "value1",
                           from_file = TRUE,
-                          id = id1))
+                          report_version = id1))
+
+  con <- orderly_db("destination", config = path)
+  d <- DBI::dbReadTable(con, "changelog")
+  d$from_file <- as.logical(d$from_file)
+  expect_equal(d[names(l1)], l1)
+  expect_setequal(names(d), c(names(l1), "id"))
 
   txt <- c("[label2]", "value2", readLines(path_cl))
   writeLines(txt, path_cl)
@@ -148,11 +155,12 @@ test_that("append changelog", {
   id2 <- orderly_run("example", config = path, echo = FALSE)
   p2 <- orderly_commit(id2, config = path)
 
+  l2 <- changelog_read_json(p2)
   expect_equal(changelog_read_json(p2),
-               data_frame(label = c("label2", "label"),
-                          value = c("value2", "value"),
+               data_frame(label = c("label2", "label1"),
+                          value = c("value2", "value1"),
                           from_file = TRUE,
-                          id = c(id2, id1)))
+                          report_version = c(id2, id1)))
 
   id3 <- orderly_run("example", config = path, echo = FALSE)
   p3 <- orderly_commit(id3, config = path)
