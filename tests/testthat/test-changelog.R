@@ -215,3 +215,31 @@ test_that("label change requires rebuild", {
   orderly_rebuild(config = path)
   p2 <- orderly_commit(id2, config = path)
 })
+
+
+test_that("label values are checked", {
+  path <- prepare_orderly_example("changelog")
+
+  tmp <- tempfile()
+  path_example <- file.path(path, "src", "example")
+  path_cl <- path_changelog_txt(path_example)
+
+  writeLines(c("[label]", "value1"), path_cl)
+  expect_error(
+    orderly_run("example", config = path, echo = FALSE),
+    "Unknown changelog label: 'label'. Use one of 'label1', 'label2'")
+})
+
+
+test_that("reports can't use changelogs if not enabled", {
+  path <- prepare_orderly_example("minimal")
+  tmp <- tempfile()
+  path_example <- file.path(path, "src", "example")
+  path_cl <- path_changelog_txt(path_example)
+  writeLines(c("[label1]", "value1"), path_cl)
+  orderly_run("example", config = path, echo = FALSE)
+  expect_error(
+    orderly_run("example", config = path, echo = FALSE),
+    "report 'example' uses changelog, but this is not enabled",
+    fixed = TRUE)
+})
