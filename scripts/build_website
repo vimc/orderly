@@ -61,6 +61,7 @@ docker run --rm \
        $ORDERLY_DEV \
        ./create_schema
 
+rm -rf $DOCS_DIR
 mkdir -p $DOCS_DIR
 docker run --rm \
        --network=$DB_NW \
@@ -68,7 +69,7 @@ docker run --rm \
        -v $DOCS_DIR:/orderly/docs \
        --user "$USER_STR" \
        $ORDERLY_DEV \
-       Rscript -e 'pkgdown::build_site()'
+       Rscript -e 'pkgdown::build_site(document = FALSE)'
 
 SCHEMA_DEST=${DOCS_DIR}/schema
 if [ -f $DEST/index.html ]; then
