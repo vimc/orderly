@@ -4,9 +4,9 @@
 \alias{orderly_run_remote}
 \title{Run a report on montagu}
 \usage{
-orderly_run_remote(name, parameters = NULL, ref = NULL, timeout = 3600,
-  poll = 1, open = TRUE, stop_on_error = TRUE, progress = TRUE,
-  config = NULL, locate = TRUE, remote = NULL)
+orderly_run_remote(name, parameters = NULL, ref = NULL,
+  timeout = 3600, poll = 1, open = TRUE, stop_on_error = TRUE,
+  progress = TRUE, config = NULL, locate = TRUE, remote = NULL)
 }
 \arguments{
 \item{name}{Name of the report}
