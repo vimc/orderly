@@ -16,7 +16,8 @@
 ##' @param name Name of the report to run (see
 ##'   \code{\link{orderly_list}}).
 ##'
-##' @param parameters Parameters passed to the report
+##' @param parameters Parameters passed to the report. A named list of
+##'   parameters declared in the orderly.yml.
 ##'
 ##' @param envir The parent of environment to evalute the report in;
 ##'   by default a new environment will be made with the global
@@ -31,8 +32,8 @@
 ##'
 ##' @param open Open the directory after running?
 ##'
-##' @param message An optional message explaining why the report was
-##'   run
+##' @param message An optional character string containing a message
+##'   explaining why the report was run
 ##'
 ##' @param extended_output Return detailed output about the run
 ##'   (similar to the contents of \code{orderly_run.rds}).

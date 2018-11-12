@@ -7,7 +7,8 @@
 \usage{
 orderly_run(name, parameters = NULL, envir = NULL, config = NULL,
   locate = TRUE, echo = TRUE, id_file = NULL, fetch = FALSE,
-  ref = NULL, open = FALSE, message = NULL, extended_output = FALSE)
+  ref = NULL, open = FALSE, message = NULL,
+  extended_output = FALSE)
 
 orderly_data(name, parameters = NULL, envir = list(), config = NULL,
   locate = TRUE)
@@ -16,7 +17,8 @@ orderly_data(name, parameters = NULL, envir = list(), config = NULL,
 \item{name}{Name of the report to run (see
 \code{\link{orderly_list}}).}
 
-\item{parameters}{Parameters passed to the report}
+\item{parameters}{Parameters passed to the report. A named list of
+parameters declared in the orderly.yml.}
 
 \item{envir}{The parent of environment to evalute the report in;
 by default a new environment will be made with the global
@@ -43,8 +45,8 @@ checking out the reference \code{ref}.}
 
 \item{open}{Open the directory after running?}
 
-\item{message}{An optional message explaining why the report was
-run}
+\item{message}{An optional character string containing a message
+explaining why the report was run}
 
 \item{extended_output}{Return detailed output about the run
 (similar to the contents of \code{orderly_run.rds}).}

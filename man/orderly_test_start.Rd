@@ -20,7 +20,8 @@ orderly_test_check()
 \item{name}{Name of the report to run (see
 \code{\link{orderly_list}}).}
 
-\item{parameters}{Parameters passed to the report}
+\item{parameters}{Parameters passed to the report. A named list of
+parameters declared in the orderly.yml.}
 
 \item{envir}{The parent of environment to evalute the report in;
 by default a new environment will be made with the global
