@@ -393,6 +393,16 @@ report_data_import <- function(con, workdir, config) {
     }
   }
 
+  if (!is.null(dat_rds$meta$parameters)) {
+    p <- dat_rds$meta$parameters
+    parameters <-
+      data_frame(report_version = id,
+                 name = names(p),
+                 type = report_db2_parameter_type(p),
+                 value = vcapply(p, as.character, USE.NAMES = FALSE))
+    DBI::dbWriteTable(con, "parameters", parameters, append = TRUE)
+  }
+
   sql <- "UPDATE report SET latest = $1 WHERE name = $2"
   DBI::dbExecute(con, sql, list(id, name))
 }
@@ -464,4 +474,19 @@ sqlite_pragma_fk <- function(con, enable = TRUE) {
   if (inherits(con, "SQLiteConnection")) {
     DBI::dbExecute(con, sprintf("PRAGMA foreign_keys = %d", enable))
   }
+}
+
+
+report_db2_parameter_type <- function(x) {
+  vcapply(x, function(el) {
+    if (is.character(el)) {
+      "text"
+    } else if (is.numeric(el)) {
+      "number"
+    } else if (is.logical(el)) {
+      "logical"
+    } else {
+      stop("Unsupported parameter type")
+    }
+  }, USE.NAMES = FALSE)
 }

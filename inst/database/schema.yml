@@ -172,3 +172,27 @@ changelog:
     - label: {type: TEXT, fk: changelog_label.id}
     - value: {type: TEXT}
     - from_file: {type: BOOLEAN}
+
+parameters_type:
+  columns:
+    - name: {type: TEXT}
+  values:
+    - {name: text}
+    - {name: number}
+    - {name: boolean}
+
+parameters:
+  columns:
+    - report_version: {fk: report_version.id}
+    - name: {type: TEXT}
+    - type: {fk: parameters_type.name}
+    - value:
+        type: TEXT
+        comment: >-
+          The value is always stored as text but might represent a
+          number or a boolean.  If so then we store the text
+          representation of the number or boolean.  Like JSON (and R
+          in the way tyhat these are being used) we don't distinguish
+          between integers and floating pointe numbers, instead using
+          just "number" for both.  When storing booleans, we store
+          lower case "true"/"false", like in JSON, and not like R.

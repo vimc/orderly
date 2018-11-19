@@ -1,3 +1,7 @@
+# 0.5.8
+
+* Include parameters used in the orderly database (VIMC-2397)
+
 # 0.5.7
 
 * Support for changelogs (VIMC-1503)
