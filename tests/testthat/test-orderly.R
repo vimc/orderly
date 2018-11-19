@@ -171,3 +171,11 @@ test_that("can't commit out of order", {
   id3 <- orderly_run("example", config = path, echo = FALSE)
   expect_error(orderly_commit(id3, config = path), NA)
 })
+
+
+test_that("archive directory is created when needed", {
+  path <- prepare_orderly_example("minimal")
+  unlink(file.path(path, "archive"), recursive = TRUE)
+  orderly_run("example", config = path, echo = FALSE)
+  expect_true(file.exists(path_orderly_archive_version(path)))
+})

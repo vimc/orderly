@@ -1,0 +1,14 @@
+script: script.R
+
+data: ~
+
+artefacts:
+  - data:
+      filenames: out.rds
+      description: plot of displacement vs weight
+
+global_resources:
+  - data.csv
+
+author: Researcher McResearcherface
+requester: Funder McFunderface
