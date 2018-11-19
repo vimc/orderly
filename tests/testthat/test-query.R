@@ -94,6 +94,10 @@ test_that("latest_ids", {
   id_all <- c(id_both, id_same)
   expect_identical(latest_id(id_all), sort_c(id_same))
   expect_identical(latest_id(sample(id_all)), sort_c(id_same))
+
+  ## Unexpected inputs
+  expect_error(latest_id(c(id, "other")),
+               "Invalid report id: 'other'")
 })
 
 test_that("latest", {
@@ -128,4 +132,20 @@ test_that("latest", {
   orderly_commit(id2, config = path)
   expect_equal(orderly_latest("example", config = path, draft = TRUE), id1)
   expect_equal(orderly_latest("example", config = path), id2)
+})
+
+
+test_that("Behaviour with rogue files", {
+  path <- prepare_orderly_example("minimal")
+  id1 <- orderly_run("example", config = path, echo = FALSE)
+  id2 <- orderly_run("example", config = path, echo = FALSE)
+  p1 <- orderly_commit(id1, config = path)
+  p2 <- orderly_commit(id2, config = path)
+  expect_equal(orderly_latest("example", config = path), id2)
+
+  zip_dir(file.path(path, "archive", "example", id2))
+
+  expect_error(
+    orderly_latest("example", config = path),
+    "Unexpected files within orderly directory '.*archive/example': '.*\\.zip'")
 })

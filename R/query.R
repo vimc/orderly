@@ -1,3 +1,5 @@
+VERSION_ID_RE <- "^([0-9]{8}-[0-9]{6})-([[:xdigit:]]{4})([[:xdigit:]]{4})$"
+
 ## This gives a list of the source report names known to the system.
 ## This will not include things that have been deleted in source but
 ## are present in the database, because I want this to be useful for
@@ -64,7 +66,7 @@ orderly_latest <- function(name = NULL, config = NULL, locate = TRUE,
   } else {
     path <-
       file.path((if (draft) path_draft else path_archive)(config$path), name)
-    ids <- dir(path)
+    ids <- orderly_list_dir(path)
   }
 
   if (length(ids) == 0L) {
@@ -131,7 +133,7 @@ orderly_list2 <- function(draft, config = NULL, locate = TRUE) {
   config <- orderly_config_get(config, locate)
   path <- if (draft) path_draft else path_archive
   check <- list_dirs(path(config$path))
-  res <- lapply(check, dir)
+  res <- lapply(check, orderly_list_dir)
   data.frame(name = rep(basename(check), lengths(res)),
              id = as.character(unlist(res)),
              stringsAsFactors = FALSE)
@@ -189,14 +191,18 @@ latest_id <- function(ids) {
 
   ids <- sort_c(unique(ids))
 
-  re <- "^([0-9]{8}-[0-9]{6})-([[:xdigit:]]{4})([[:xdigit:]]{4})$"
-  stopifnot(all(grepl(re, ids)))
+  err <- !grepl(VERSION_ID_RE, ids)
+  if (any(err)) {
+    stop(sprintf("Invalid report id: %s",
+                 paste(squote(ids[err]), collapse = ", ")),
+         call. = FALSE)
+  }
 
-  isodate <- sub(re, "\\1", ids)
+  isodate <- sub(VERSION_ID_RE, "\\1", ids)
   ids <- ids[isodate == last(isodate)]
 
   if (length(ids) > 1L) {
-    ms <- sub(re, "\\2", ids)
+    ms <- sub(VERSION_ID_RE, "\\2", ids)
     ids <- ids[ms == last(ms)]
   }
 
@@ -236,4 +242,16 @@ orderly_locate <- function(id, name, config = NULL, locate = TRUE,
     path <- (if (draft) path_draft else path_archive)(config$path)
     file.path(path, name, id)
   }
+}
+
+
+orderly_list_dir <- function(path) {
+  files <- dir(path)
+  err <- !grepl(VERSION_ID_RE, files)
+  if (any(err)) {
+    stop(sprintf("Unexpected files within orderly directory '%s': %s",
+                 path, paste(squote(files[err]), collapse = ", ")),
+         call. = FALSE)
+  }
+  files
 }

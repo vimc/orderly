@@ -1,3 +1,7 @@
+# 0.5.8
+
+* Better error messages when unexpected files are found in the orderly archive (VIMC-1761)
+
 # 0.5.7
 
 * Support for changelogs (VIMC-1503)
