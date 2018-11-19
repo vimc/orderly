@@ -1,3 +1,7 @@
+# 0.5.8
+
+* orderly works with report repository clones that lack an `archive` directory (VIMC-2383)
+
 # 0.5.7
 
 * Support for changelogs (VIMC-1503)
