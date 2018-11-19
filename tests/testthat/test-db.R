@@ -67,3 +67,16 @@ test_that("no transient db", {
   expect_error(orderly_db_args("destination", config = config),
                "Cannot use a transient SQLite database with orderly")
 })
+
+
+test_that("db includes parameters", {
+  path <- prepare_orderly_example("example")
+  id <- orderly_run("example", parameters = list(cyl = 4), config = path)
+  orderly_commit(id, config = path)
+  con <- orderly_db("destination", config = path)
+  d <- DBI::dbReadTable(con, "parameters")
+  expect_equal(d, data_frame(report_version = id,
+                             name = "cyl",
+                             type = "number",
+                             value = "4"))
+})
