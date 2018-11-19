@@ -329,10 +329,12 @@ report_data_import <- function(con, workdir, config) {
 
   ## NOTE: the hash from 'sources' comes from the resources field.
   file_in <- list(resource = names(dat_rds$meta$hash_resources),
+                  global = names(dat_rds$meta$hash_global),
                   script = dat_in$script,
                   orderly_yml = "orderly.yml")
   file_in_name <- unlist(file_in, FALSE, FALSE)
   file_in_hash <- c(list_to_character(dat_rds$meta$hash_resources, FALSE),
+                    list_to_character(dat_rds$meta$hash_global, FALSE),
                     dat_rds$meta$hash_script,
                     hash_orderly_yml)
   file_in_purpose <- rep(names(file_in), lengths(file_in))

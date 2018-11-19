@@ -164,7 +164,9 @@ read_orderly_archive_version <- function(root) {
 
 
 write_orderly_archive_version <- function(version, root) {
-  writeLines(as.character(version), path_orderly_archive_version(root))
+  path <- path_orderly_archive_version(root)
+  dir.create(dirname(path), FALSE, TRUE)
+  writeLines(as.character(version), path)
 }
 
 
@@ -176,8 +178,9 @@ check_orderly_archive_version <- function(config) {
     used <- curr
   }
   if (used < curr) {
-    stop(sprintf("orderly archive needs migrating from %s => %s",
+    stop(sprintf("orderly archive needs migrating from %s => %s\n",
                  as.character(used), as.character(curr)),
+         "Run orderly::orderly_migrate() to fix",
          call. = FALSE)
   }
 }

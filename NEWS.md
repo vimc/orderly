@@ -1,6 +1,8 @@
 # 0.5.8
 
 * Include parameters used in the orderly database (VIMC-2397)
+* Better error message when migration is needed (VIMC-2392)
+* Orderly works with report repository clones that lack an `archive` directory (VIMC-2383)
 
 # 0.5.7
 
