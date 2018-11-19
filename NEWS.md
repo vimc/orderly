@@ -1,5 +1,6 @@
 # 0.5.8
 
+* Better error messages when unexpected files are found in the orderly archive (VIMC-1761)
 * Include parameters used in the orderly database (VIMC-2397)
 * Better error message when migration is needed (VIMC-2392)
 * Orderly works with report repository clones that lack an `archive` directory (VIMC-2383)
