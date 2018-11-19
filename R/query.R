@@ -77,20 +77,7 @@ orderly_latest <- function(name = NULL, config = NULL, locate = TRUE,
     }
   }
 
-  id <- latest_id(ids)
-  if (length(id) > 1L) {
-    ## We have no choice here but to look at the actual times to
-    ## determine which is the most recent report.
-    if (is.null(name)) {
-      p <- file.path(path[ids == id], id)
-    } else {
-      p <- file.path(path, id)
-    }
-    times <- lapply(path_orderly_run_rds(p), function(x) readRDS(x)$time)
-    id <- id[[which_max_time(times)]]
-  }
-
-  id
+  latest_id(ids)
 }
 
 ##' Open the directory for a completed orderly report
@@ -137,10 +124,7 @@ orderly_last_id <- function(config = NULL, locate = TRUE, draft = TRUE) {
   check <- list_dirs(path(config$path))
 
   d <- orderly_list2(draft, config, FALSE)
-  id <- latest_id(d$id)
-  if (length(id) > 1L) {
-    stop("tie break not implemented")
-  }
+  latest_id(d$id)
 }
 
 orderly_list2 <- function(draft, config = NULL, locate = TRUE) {
