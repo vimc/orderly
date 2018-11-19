@@ -99,6 +99,10 @@ test_that("require migration", {
   path <- unpack_reference("0.3.2")
   expect_error(orderly_run("example", config = path, echo = FALSE),
                "orderly archive needs migrating from 0.0.0 =>", fixed = TRUE)
+  expect_error(orderly_run("example", config = path, echo = FALSE),
+               "Run orderly::orderly_migrate() to fix", fixed = TRUE)
+  orderly_migrate(path)
+  expect_error(orderly_run("example", config = path, echo = FALSE), NA)
 })
 
 

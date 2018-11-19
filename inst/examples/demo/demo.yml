@@ -36,6 +36,8 @@
   parameters:
     nmin: 0
 
+- name: global
+
 - name: use_dependency
 
 - name: other

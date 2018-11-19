@@ -26,3 +26,22 @@ test_that("missing global file", {
     orderly_run("example", config = path, id_file = tmp, echo = FALSE),
                 expected_error)
 })
+
+
+test_that("global resources end up in db", {
+  path <- prepare_orderly_example("global")
+  tmp <- tempfile()
+  id <- orderly_run("example", config = path, id_file = tmp, echo = FALSE)
+  orderly_commit(id, config = path)
+  con <- orderly_db("destination", config = path)
+  d <- DBI::dbReadTable(con, "file_input")
+  DBI::dbDisconnect(con)
+  i <- d$file_purpose == "global"
+  expect_equal(sum(i), 1)
+
+  tmp <- d[i, ]
+  expect_equal(d$report_version[i], id)
+  expect_equal(d$file_hash[i],
+               hash_files(file.path(path, "global", "data.csv"), FALSE))
+  expect_equal(d$filename[i], "data.csv")
+})

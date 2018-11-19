@@ -17,3 +17,6 @@ changelog:
     public: false
   public:
     public: true
+
+global_resources:
+  global

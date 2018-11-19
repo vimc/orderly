@@ -329,10 +329,12 @@ report_data_import <- function(con, workdir, config) {
 
   ## NOTE: the hash from 'sources' comes from the resources field.
   file_in <- list(resource = names(dat_rds$meta$hash_resources),
+                  global = names(dat_rds$meta$hash_global),
                   script = dat_in$script,
                   orderly_yml = "orderly.yml")
   file_in_name <- unlist(file_in, FALSE, FALSE)
   file_in_hash <- c(list_to_character(dat_rds$meta$hash_resources, FALSE),
+                    list_to_character(dat_rds$meta$hash_global, FALSE),
                     dat_rds$meta$hash_script,
                     hash_orderly_yml)
   file_in_purpose <- rep(names(file_in), lengths(file_in))
@@ -391,6 +393,16 @@ report_data_import <- function(con, workdir, config) {
     if (nrow(changelog) > 0L) {
       DBI::dbWriteTable(con, "changelog", changelog, append = TRUE)
     }
+  }
+
+  if (!is.null(dat_rds$meta$parameters)) {
+    p <- dat_rds$meta$parameters
+    parameters <-
+      data_frame(report_version = id,
+                 name = names(p),
+                 type = report_db2_parameter_type(p),
+                 value = vcapply(p, as.character, USE.NAMES = FALSE))
+    DBI::dbWriteTable(con, "parameters", parameters, append = TRUE)
   }
 
   sql <- "UPDATE report SET latest = $1 WHERE name = $2"
@@ -464,4 +476,19 @@ sqlite_pragma_fk <- function(con, enable = TRUE) {
   if (inherits(con, "SQLiteConnection")) {
     DBI::dbExecute(con, sprintf("PRAGMA foreign_keys = %d", enable))
   }
+}
+
+
+report_db2_parameter_type <- function(x) {
+  vcapply(x, function(el) {
+    if (is.character(el)) {
+      "text"
+    } else if (is.numeric(el)) {
+      "number"
+    } else if (is.logical(el)) {
+      "logical"
+    } else {
+      stop("Unsupported parameter type")
+    }
+  }, USE.NAMES = FALSE)
 }
