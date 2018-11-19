@@ -1,5 +1,6 @@
 # 0.5.8
 
+* Better error message when migration is needed (VIMC-2392)
 * orderly works with report repository clones that lack an `archive` directory (VIMC-2383)
 
 # 0.5.7
