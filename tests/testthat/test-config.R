@@ -111,6 +111,18 @@ test_that("support declaring api server", {
 
   expect_is(cfg$api_server, "list")
   expect_is(cfg$api_server$myhost$server, "montagu_server")
+
+  withr::with_envvar(
+    c("ORDERLY_API_SERVER_IDENTITY" = NA),
+    expect_null(orderly_config(path)$api_server_identity))
+  withr::with_envvar(
+    c("ORDERLY_API_SERVER_IDENTITY" = "myhost"),
+    expect_equal(orderly_config(path)$api_server_identity, "myhost"))
+  withr::with_envvar(
+    c("ORDERLY_API_SERVER_IDENTITY" = "other"),
+    expect_error(
+      orderly_config(path)$api_server_identity,
+      "api_server_identity must be one of 'myhost'"))
 })
 
 test_that("no global folder", {

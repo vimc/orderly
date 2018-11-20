@@ -53,10 +53,7 @@ orderly_config_read_yaml <- function(filename, path) {
                             sprintf("%s:vault_server", filename))
   }
 
-  api_server <- info$api_server
-  if (!is.null(api_server)) {
-    info$api_server <- config_check_api_server(api_server, filename)
-  }
+  info$api_server <- config_check_api_server(info$api_server, filename)
 
   info$path <- normalizePath(path, mustWork = TRUE)
 
