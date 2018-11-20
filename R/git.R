@@ -3,13 +3,6 @@
 ## horror show.  It might be somewhat eased by working in detached
 ## head mode because then it's easy enough to move around the tree
 ## without doing a whole heap of resets.
-
-with_branch <- function(name, expr, remote = "origin", root = NULL) {
-  prev <- git_checkout_remote_branch(name, remote, root)
-  on.exit(git_checkout_branch(prev, force = force, root = root))
-  force(expr)
-}
-
 git_run <- function(args, root = NULL, check = FALSE) {
   git <- sys_which("git")
   if (!is.null(root)) {
