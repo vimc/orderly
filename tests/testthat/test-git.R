@@ -40,6 +40,20 @@ test_that("detch head & restore", {
                git_ref_to_sha("master", path))
 })
 
+
+test_that("detach head checks", {
+  path <- unzip_git_demo()
+  filename <- file.path(path, "dirty")
+  file.create(filename)
+  expect_error(git_detach_head_at_ref("other", path),
+               "working directory must be clean")
+  unlink(filename)
+  prev <- git_detach_head_at_ref("other", path)
+  expect_error(git_detach_head_at_ref("other", path),
+               "HEAD is already detached")
+})
+
+
 test_that("fetch / detach / pull", {
   path <- prepare_orderly_git_example()
   path1 <- path[["origin"]]
@@ -63,6 +77,16 @@ test_that("fetch / detach / pull", {
   git_pull(path2)
   expect_true(file.exists(file.path(path2, "new")))
 })
+
+
+test_that("checkout_branch checks", {
+  path <- unzip_git_demo()
+  filename <- file.path(path, "dirty")
+  file.create(filename)
+  expect_error(git_checkout_branch("other", root = path),
+               "working directory must be clean")
+})
+
 
 test_that("detect missing ref", {
   path <- prepare_orderly_git_example()
@@ -168,4 +192,14 @@ test_that("fetch before run", {
 
   expect_equal(d1$git$sha, sha2)
   expect_equal(d2$git$sha, sha1)
+})
+
+
+test_that("handle failure", {
+  path <- prepare_orderly_git_example()
+  r <- git_run("unknown-command", root = path[["origin"]])
+  expect_false(r$success)
+  expect_error(
+    git_run("unknown-command", root = path[["origin"]], check = TRUE),
+    r$output, fixed = TRUE)
 })
