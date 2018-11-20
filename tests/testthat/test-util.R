@@ -181,3 +181,18 @@ test_that("Sys_getenv", {
                        NA_character_)
     })
 })
+
+
+## I'm not sure there's anything super safe to run this with in
+## general...
+test_that("sys_which", {
+  prog <- "a-path-that-does-not-exist"
+  expect_error(sys_which(prog),
+               "Did not find 'a-path-that-does-not-exist'")
+})
+
+
+test_that("zip_dir", {
+  path <- tempfile()
+  expect_error(zip_dir(path), "error running zip")
+})

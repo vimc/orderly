@@ -409,7 +409,7 @@ system3 <- function(command, args) {
 sys_which <- function(name) {
   path <- Sys.which(name)
   if (!nzchar(path)) {
-    stop(sprintf("Did not find '%s'", name))
+    stop(sprintf("Did not find '%s'", name), call. = FALSE)
   }
   unname(path)
 }
