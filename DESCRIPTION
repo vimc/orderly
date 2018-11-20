@@ -1,6 +1,6 @@
 Package: orderly
 Title: R support for montagu-reports
-Version: 0.5.8
+Version: 0.5.9
 Description: Order, create and store reports from R.
 License: MIT + file LICENSE
 Encoding: UTF-8
@@ -8,7 +8,7 @@ Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
     email = "rich.fitzjohn@gmail.com"))
 URL: https://github.com/vimc/orderly
 BugReports: https://github.com/vimc/orderly/issues
-SystemRequirements: exiftool, git
+SystemRequirements: git
 Imports:
     DBI,
     R6,

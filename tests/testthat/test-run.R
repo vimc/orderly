@@ -358,13 +358,6 @@ test_that("resources", {
   expect_true(file.exists(file.path(p, "meta/data.csv")))
 })
 
-test_that("watermarking", {
-  skip("watermarking currenty disabled")
-  path <- prepare_orderly_example("minimal")
-  id <- orderly_run("example", config = path, echo = FALSE)
-  file <- file.path(path, "draft", "example", id, "mygraph.png")
-  expect_equal(watermark_read(file), id)
-})
 
 test_that("markdown", {
   skip_if_not_installed("rmarkdown")
