@@ -139,6 +139,14 @@ test_that("git", {
                info[c("sha_short", "sha", "branch")])
 })
 
+
+test_that("git_clean_url", {
+  expect_null(git_clean_url(NULL))
+  expect_equal(git_clean_url("git@github.com:foo/bar.git"),
+               "https://github.com/foo/bar")
+})
+
+
 test_that("canonical case - redundant paths", {
   skip("flakey")
   expect_true(file_has_canonical_case("../../README.md"))
@@ -146,6 +154,11 @@ test_that("canonical case - redundant paths", {
   expect_true(file_has_canonical_case("../..///README.md"))
 })
 
+
+test_that("platform detection", {
+  expect_equal(is_windows(), Sys.info()[["sysname"]] == "Windows")
+  expect_equal(is_linux(), Sys.info()[["sysname"]] == "Linux")
+})
 
 test_that("abbreviate", {
   expect_equal(abbreviate("12345678", 5), "12...")
@@ -155,4 +168,16 @@ test_that("abbreviate", {
 
   expect_equal(abbreviate("12345\n678", 10), "12345")
   expect_equal(abbreviate("12345\n678", 4), "1...")
+})
+
+
+test_that("Sys_getenv", {
+  withr::with_envvar(
+    c("SOME_VAR" = NA_character_), {
+      expect_error(Sys_getenv("SOME_VAR"),
+                   "Environment variable 'SOME_VAR' is not set")
+      expect_null(Sys_getenv("SOME_VAR", FALSE))
+      expect_identical(Sys_getenv("SOME_VAR", FALSE, NA_character_),
+                       NA_character_)
+    })
 })
