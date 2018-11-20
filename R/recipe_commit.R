@@ -28,6 +28,11 @@ recipe_commit <- function(workdir, config) {
   id <- basename(workdir)
   orderly_log("commit", sprintf("%s/%s", name, id))
 
+  if (!file.exists(path_orderly_run_rds(workdir))) {
+    stop(sprintf("Did not find run metadata file for %s/%s", name, id),
+         call. = FALSE)
+  }
+
   ## At this point we just won't support migrating drafts because it's
   ## lots easier not to!
   v <- get_version(readRDS(path_orderly_run_rds(workdir))$archive_version)
@@ -89,7 +94,9 @@ copy_report <- function(workdir, name, config) {
     ## This situation probably needs help to resolve but I don't know
     ## what conditions might trigger it.  The most obvious one is that
     ## windows file-locking has prevented deletion of a draft report
-    stop("Already been copied?")
+    stop(sprintf(
+      "Report %s/%s appears to have already been copied!", name, id),
+      call. = FALSE)
   }
   dir_create(parent)
   orderly_log("copy", "")
@@ -100,16 +107,11 @@ copy_report <- function(workdir, name, config) {
 report_read_data <- function(workdir, config) {
   assert_is(config, "orderly_config")
   yml <- path_orderly_run_yml(workdir)
-  if (!file.exists(yml)) {
-    stop("Did not find run metadata file!")
-  }
+
   ## This does *not* go through the read_recipe bits because we want
   ## the unmodified yml contents here.
   info <- modify_list(yaml_read(file.path(workdir, "orderly.yml")),
                       yaml_read(yml))
-  if (info$id != basename(workdir)) {
-    stop("Unexpected path") # should never happen
-  }
 
   artefacts <- info$artefacts
   ## TODO: when dealing with VIMC-506, sort this out; this is due to

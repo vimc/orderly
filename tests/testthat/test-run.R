@@ -634,3 +634,35 @@ test_that("required field wrong type", {
 })
 
 
+test_that("commit failure", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+  expect_error(orderly_commit(new_report_id(), "example", path),
+               "Did not find draft report example/")
+})
+
+
+test_that("can't commit failed run", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+
+  append_lines('stop("some error")',
+               file.path(path, "src", "example", "script.R"))
+  expect_error(orderly_run("example", config = path, echo = FALSE),
+               "some error")
+  id <- dir(file.path(path, "draft", "example"))
+
+  expect_error(orderly_commit(id, config = path),
+               "Did not find run metadata file for example/")
+})
+
+
+test_that("can't commit report twice", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+
+  id <- orderly_run("example", config = path, echo = FALSE)
+  dir.create(file.path(path, "archive", "example", id), FALSE, TRUE)
+  expect_error(orderly_commit(id, config = path),
+               "Report example/.* appears to have already been copied")
+})

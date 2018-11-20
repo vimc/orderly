@@ -40,4 +40,9 @@ runner_start_interactive <- function(runner) {
   dat
 }
 
+append_lines <- function(text, filename) {
+  prev <- readLines(filename)
+  writeLines(c(prev, text), filename)
+}
+
 Sys.setenv(R_TESTS = "")
