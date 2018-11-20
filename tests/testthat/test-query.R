@@ -187,3 +187,39 @@ test_that("orderly_find_report", {
                         must_work = TRUE, draft = FALSE),
     "Did not find archived report example:")
 })
+
+
+test_that("orderly_locate", {
+  path <- prepare_orderly_example("minimal")
+  id1 <- orderly_run("example", config = path, echo = FALSE)
+  id2 <- orderly_run("example", config = path, echo = FALSE)
+
+  expect_equal(
+    normalizePath(orderly_locate("latest", "example", path, draft = TRUE)),
+    normalizePath(file.path(path, "draft", "example", id2)))
+
+  expect_error(orderly_locate("latest", NULL, path),
+               "name must be given for id = 'latest'")
+  expect_error(orderly_locate("latest", "example", path),
+               "draft must be given for id = 'latest'")
+
+  ## It's not clear that anyone is relying on this yet, and it's not
+  ## clear why this differs from orderly_find_report
+  expect_null(
+    orderly_locate(new_report_id(), "example", path, must_work = FALSE))
+  expect_error(
+    orderly_locate(new_report_id(), "example", path, must_work = TRUE),
+    "Did not find report .*draft or archive")
+
+  expect_null(
+    orderly_locate(new_report_id(), "example", path, draft = FALSE,
+                   must_work = FALSE))
+  expect_error(
+    orderly_locate(new_report_id(), "example", path, draft = FALSE,
+                   must_work = TRUE),
+    "Did not find archive report")
+
+  expect_equal(
+    normalizePath(orderly_locate(id2, "example", path, draft = TRUE)),
+    normalizePath(file.path(path, "draft", "example", id2)))
+})

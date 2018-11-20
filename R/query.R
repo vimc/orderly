@@ -209,7 +209,9 @@ latest_id <- function(ids) {
   ids
 }
 
-## This is annoyingly similar to the above:
+## This is annoyingly similar to orderly_find_report, but allows for
+## draft and name to be NULL.  It's used only in tests and in the
+## orderly_open function
 orderly_locate <- function(id, name, config = NULL, locate = TRUE,
                            draft = NULL, must_work = TRUE) {
   config <- orderly_config_get(config, locate)
@@ -229,14 +231,14 @@ orderly_locate <- function(id, name, config = NULL, locate = TRUE,
           break
         }
       }
-      if (is.null(id) && must_work) {
+      if (is.null(name) && must_work) {
         stop(sprintf("Did not find report %s (draft or archive)", id))
       }
     } else {
       name <- orderly_find_name(id, config, locate, draft, must_work)
     }
   }
-  if (is.null(id)) {
+  if (is.null(id) || is.null(name)) {
     NULL
   } else {
     path <- (if (draft) path_draft else path_archive)(config$path)
