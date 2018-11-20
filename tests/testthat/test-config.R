@@ -141,3 +141,21 @@ test_that("no global folder", {
     fixed = TRUE
   )
 })
+
+
+test_that("vault configuration", {
+  path <- prepare_orderly_example("minimal")
+  path_config <- file.path(path, "orderly_config.yml")
+  text <- readLines(path_config)
+
+  expect_null(orderly_config(path = path)$vault_server)
+
+  url <- "https://vault.example.com"
+  writeLines(c(text, sprintf("vault_server: %s", url)), path_config)
+  expect_equal(orderly_config(path = path)$vault_server, url)
+
+  writeLines(c(text, sprintf("vault_server: %s", TRUE)), path_config)
+  expect_error(orderly_config(path = path),
+               "orderly_config.yml:vault_server' must be character",
+               fixed = TRUE)
+})
