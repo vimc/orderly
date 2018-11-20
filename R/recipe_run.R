@@ -117,10 +117,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
                      info = info,
                      prompt = getOption("prompt"))
   options(prompt = "[orderly test] > ")
-  makeActiveBinding(quote("Q"), function() {
-    rm(list = "Q", envir = .GlobalEnv)
-    orderly_test_end()
-  }, .GlobalEnv)
+  makeActiveBinding(quote("Q"), test_mode_end, .GlobalEnv)
   orderly_log("setwd", "running in test draft directory")
   on.exit()
 }
@@ -588,4 +585,10 @@ orderly_run_info <- function() {
     stop("Not currently running an orderly report")
   }
   info
+}
+
+
+test_mode_end <- function(env = .GlobalEnv) {
+  suppressWarnings(rm(list = "Q", envir = env))
+  tryCatch(orderly_test_end(), error = function(e) NULL)
 }

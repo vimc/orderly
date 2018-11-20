@@ -344,6 +344,15 @@ test_that("use artefact", {
   p4 <- orderly_commit(id4, config = path)
 })
 
+test_that("Can't commit report using nonexistant id", {
+  path <- prepare_orderly_example("depends")
+  id1 <- orderly_run("example", config = path, echo = FALSE)
+  id2 <- orderly_run("depend", config = path, echo = FALSE)
+  unlink(file.path(path, "draft", "example", id1), recursive = TRUE)
+  expect_error(orderly_commit(id2, config = path),
+               "Report uses nonexistant id")
+})
+
 test_that("resources", {
   path <- prepare_orderly_example("resources")
   id <- orderly_run("use_resource", config = path, echo = FALSE)
@@ -429,6 +438,19 @@ test_that("test mode artefacts", {
 
   writeLines(character(0), "mygraph.png")
   expect_true(orderly_test_check())
+})
+
+
+test_that("orderly_test_check requires test mode", {
+  expect_error(orderly_test_check(), "Not running in test mode")
+})
+
+
+test_that("test mode end", {
+  env <- new.env()
+  env$Q <- TRUE
+  test_mode_end(env)
+  expect_null(env$Q)
 })
 
 
