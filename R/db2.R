@@ -12,7 +12,7 @@ ORDERLY_SCHEMA_VERSION <- "0.0.4"
 ## super likely to change it would be good
 ORDERLY_SCHEMA_TABLE <- "orderly_schema"
 ORDERLY_MAIN_TABLE <- "report_version"
-ORDERY_TABLE_LIST <- "orderly_schema_tables"
+ORDERLY_TABLE_LIST <- "orderly_schema_tables"
 
 orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
   d <- yaml_read(orderly_file("database/schema.yml"))
@@ -194,7 +194,7 @@ report_db2_rebuild <- function(config, verbose = TRUE) {
   con <- orderly_db("destination", config, validate = FALSE)
   on.exit(DBI::dbDisconnect(con))
 
-  if (DBI::dbExistsTable(con, ORDERY_TABLE_LIST)) {
+  if (DBI::dbExistsTable(con, ORDERLY_TABLE_LIST)) {
     report_db2_destroy(con)
   }
   report_db2_init(con, config)
@@ -454,12 +454,12 @@ report_data_find_dependencies <- function(con, meta) {
 
 
 report_db2_destroy <- function(con) {
-  if (DBI::dbExistsTable(con, ORDERY_TABLE_LIST)) {
+  if (DBI::dbExistsTable(con, ORDERLY_TABLE_LIST)) {
     ## We have to disable the FK check here, otherwise it's a bit of a
     ## pain to delete all tables.
     sqlite_pragma_fk(con, FALSE)
     on.exit(sqlite_pragma_fk(con, TRUE))
-    for (t in DBI::dbReadTable(con, ORDERY_TABLE_LIST)[[1L]]) {
+    for (t in DBI::dbReadTable(con, ORDERLY_TABLE_LIST)[[1L]]) {
       DBI::dbRemoveTable(con, t)
     }
   }
