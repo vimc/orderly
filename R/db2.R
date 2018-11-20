@@ -214,13 +214,8 @@ report_db2_needs_rebuild <- function(config) {
   con <- orderly_db("destination", config, FALSE, FALSE)
   on.exit(DBI::dbDisconnect(con))
 
-  if (!DBI::dbExistsTable(con, ORDERLY_SCHEMA_TABLE)) {
-    ## No schema table: should rebuild
-    TRUE
-  } else {
-    d <- DBI::dbReadTable(con, ORDERLY_SCHEMA_TABLE)
-    numeric_version(d$schema_version) < numeric_version(ORDERLY_SCHEMA_VERSION)
-  }
+  d <- DBI::dbReadTable(con, ORDERLY_SCHEMA_TABLE)
+  numeric_version(d$schema_version) < numeric_version(ORDERLY_SCHEMA_VERSION)
 }
 
 
