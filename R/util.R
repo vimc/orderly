@@ -536,11 +536,6 @@ ordered_map_to_list <- function(x) {
 }
 
 
-drop_na <- function(x) {
-  x[!is.na(x)]
-}
-
-
 drop_null <- function(x) {
   x[!vlapply(x, is.null)]
 }
