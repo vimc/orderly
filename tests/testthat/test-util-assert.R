@@ -59,3 +59,12 @@ test_that("assert_file_exists", {
   writeLines(character(0), path)
   expect_silent(assert_file_exists(path))
 })
+
+
+test_that("assert_is_directory", {
+  path <- tempfile()
+  expect_error(assert_is_directory(path), "File does not exist")
+  file.create(path)
+  expect_error(assert_is_directory(path), "File exists but is not a directory")
+  expect_silent(assert_is_directory("."))
+})
