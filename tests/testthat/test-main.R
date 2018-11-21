@@ -193,12 +193,20 @@ test_that("list", {
 })
 
 test_that("deploy-shiny", {
-  path <- prepare_orderly_example("minimal")
+  path <- prepare_orderly_example("shiny")
+  id <- orderly_run("example", config = path, echo = FALSE)
+  orderly_commit(id, config = path)
 
-  args <- c("--root", path, "deploy-shiny", "shiny")
+  path_shiny <- file.path(path, "shiny")
+  args <- c("--root", path, "deploy-shiny", path_shiny)
   res <- main_args(args)
-  expect_equal(res$args, "shiny")
+  expect_equal(res$args, path_shiny)
   expect_equal(res$options$info, "shiny.yml")
+
+  expect_message(res$target(res), "Copying example")
+  expect_true(file.exists(path_shiny))
+  expect_true(file.exists(file.path(path_shiny, "index.html")))
+  expect_true(file.exists(file.path(path_shiny, "example-shiny-app")))
 
   args <- c("--root", path, "deploy-shiny", "shiny-path", "--info", "foo.yml")
   res <- main_args(args)
@@ -315,4 +323,8 @@ test_that("list", {
 
   expect_match(out1[[2]], sprintf("1\\s+example\\s+%s", id1))
   expect_match(out2[[2]], sprintf("1\\s+example\\s+%s", id2))
+
+  res <- main_args(c("--root", path, "list", "names"))
+  res$args <- "other"
+  expect_error(res$target(res), "orderly bug")
 })
