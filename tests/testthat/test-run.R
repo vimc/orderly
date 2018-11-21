@@ -714,3 +714,12 @@ test_that("missing parameters throws an error", {
   expect_error(orderly_run("example", list(cl = 2), config = path),
                "Missing parameters: 'cyl'")
 })
+
+
+test_that("orderly_environment", {
+  expect_identical(orderly_environment(.GlobalEnv), .GlobalEnv)
+  e <- orderly_environment(NULL)
+  expect_identical(parent.env(e), .GlobalEnv)
+  expect_identical(orderly_environment(e), e)
+  expect_error(orderly_environment(list()), "'envir' must be an environment")
+})

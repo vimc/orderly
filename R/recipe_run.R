@@ -493,14 +493,13 @@ recipe_check_device_stack <- function(expected) {
   }
 }
 
-orderly_environment <- function(envir, list_ok = FALSE) {
+orderly_environment <- function(envir) {
   if (is.null(envir)) {
     new.env(parent = .GlobalEnv)
-  } else if (is.environment(envir) || (is.list(envir) && list_ok)) {
+  } else if (is.environment(envir)) {
     envir
   } else {
-    stop("'envir' must be an ",
-         if (list_ok) "environment or list" else "environment")
+    stop("'envir' must be an environment")
   }
 }
 
