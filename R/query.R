@@ -112,7 +112,8 @@ orderly_open <- function(id, name = NULL, config = NULL, locate = TRUE,
 orderly_open_latest <- function(name = NULL, config = NULL, locate = TRUE,
                                 draft = FALSE) {
   id <- orderly_latest(name, config, locate, draft, TRUE)
-  orderly_open(id, name, config, locate, draft)
+  path <- orderly_locate(id, name, config, locate, draft, TRUE)
+  open_directory(path)
 }
 
 ##' Find the last id that was run

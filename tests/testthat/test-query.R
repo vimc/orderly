@@ -237,7 +237,7 @@ test_that("orderly_open", {
 
 
 test_that("orderly_open_latest", {
-  mockery::stub(orderly_open_latest, "open_directory", identity, depth = 2)
+  mockery::stub(orderly_open_latest, "open_directory", identity)
 
   path <- prepare_orderly_example("minimal")
   id <- orderly_run("example", config = path, echo = FALSE)
