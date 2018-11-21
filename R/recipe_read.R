@@ -134,7 +134,7 @@ recipe_read_check_artefacts <- function(x, filename, path) {
     for (j in v) {
       assert_character(el[[j]], sprintf("artefacts:%s:%s", i, j))
     }
-    if (identical(format, "shiny")) {
+    if (identical(format, "shinyapp")) {
       nm <- sprintf("artefacts:%s:filenames", i)
       assert_scalar(el$filenames, nm)
       assert_is_directory(el$filenames, workdir = path, name = nm)
