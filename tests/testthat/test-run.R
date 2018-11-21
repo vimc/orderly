@@ -688,3 +688,18 @@ test_that("can't commit report twice", {
   expect_error(orderly_commit(id, config = path),
                "Report example/.* appears to have already been copied")
 })
+
+
+test_that("open after run", {
+  mock <- mockery::mock(TRUE)
+  mockery::stub(orderly_run, "open_directory", mock)
+
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("example", config = path, echo = FALSE, open = TRUE)
+
+  expect_equal(length(mock), 1)
+  args <- mockery::mock_args(mock)[[1]]
+  expect_equal(length(args)[[1]], 1)
+  expect_equal(normalizePath(args[[1]]),
+               normalizePath(file.path(path, "draft", "example", id)))
+})

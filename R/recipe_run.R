@@ -57,7 +57,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   info <- recipe_run(info, parameters, envir, config, echo = echo)
 
   if (open) {
-    open_directory(file.path(config, "drafts", name, info$id))
+    open_directory(file.path(config$path, "draft", name, info$id))
   }
 
   if (extended_output) {
