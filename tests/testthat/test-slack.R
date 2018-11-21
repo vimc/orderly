@@ -126,3 +126,13 @@ test_that("main interface", {
   r <- slack_post_success(dat, config)
   expect_equal(r$status_code, 200L)
 })
+
+
+test_that("exit on no httr", {
+  dat <- list(elapsed = 10,
+              id = "20181213-123456-fedcba98",
+              name = "example")
+  url <- "https://httpbin.org/post"
+  mockery::stub(do_slack_post_success, "requireNamespace", FALSE)
+  expect_null(do_slack_post_success(url, dat))
+})
