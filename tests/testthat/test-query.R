@@ -223,3 +223,25 @@ test_that("orderly_locate", {
     normalizePath(orderly_locate(id2, "example", path, draft = TRUE)),
     normalizePath(file.path(path, "draft", "example", id2)))
 })
+
+
+test_that("orderly_open", {
+  mockery::stub(orderly_open, "open_directory", identity)
+
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("example", config = path, echo = FALSE)
+  res <- orderly_open(id, config = path)
+  expect_equal(normalizePath(res),
+               normalizePath(file.path(path, "draft", "example", id)))
+})
+
+
+test_that("orderly_open_latest", {
+  mockery::stub(orderly_open_latest, "open_directory", identity, depth = 2)
+
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("example", config = path, echo = FALSE)
+  res <- orderly_open_latest(config = path, draft = TRUE)
+  expect_equal(normalizePath(res),
+               normalizePath(file.path(path, "draft", "example", id)))
+})
