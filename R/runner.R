@@ -77,6 +77,8 @@ R6_orderly_runner <- R6::R6Class(
       }
       if (!is.null(ref) && !git_ref_exists(ref, self$path)) {
         stop(sprintf("Did not find git reference '%s'", ref))
+      }
+      if (!is.null(ref)) {
         ## Lock down the reference at this point in time (so that
         ## subsequent builds will not affect where we find the source).
         ref <- git_ref_to_sha(ref)
