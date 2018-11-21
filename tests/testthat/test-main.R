@@ -238,13 +238,19 @@ test_that("write script can be versioned", {
 
 
 test_that("migrate", {
-  path <- prepare_orderly_example("minimal")
+  path <- unpack_reference("0.3.2")
+  expect_equal(orderly_config(path)$archive_version, "0.0.0")
+
   args <- c("--root", path, "migrate")
   res <- main_args(args)
   expect_equal(res$command, "migrate")
   expect_false(res$options$dry_run)
   expect_null(res$options$to)
   expect_identical(res$target, main_do_migrate)
+
+  res$target(res)
+  expect_equal(orderly_config(path)$archive_version,
+               as.character(cache$current_archive_version))
 })
 
 
@@ -268,4 +274,45 @@ test_that("rebuild", {
   expect_identical(res$target, main_do_rebuild)
   expect_true(res$target(res))
   expect_false(res$target(res))
+})
+
+
+test_that("cleanup", {
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("example", config = path, echo = FALSE)
+
+  res <- main_args(c("--root", path, "cleanup"))
+  expect_equal(res$command, "cleanup")
+  expect_false(res$options$no_data)
+  expect_false(res$options$no_draft)
+  expect_false(res$options$failed_only)
+  expect_identical(res$target, main_do_cleanup)
+
+  expect_equal(nrow(orderly_list2(config = path, draft = TRUE)), 1)
+  expect_true(main_do_cleanup(res))
+  expect_equal(nrow(orderly_list2(config = path, draft = TRUE)), 0)
+  expect_null(main_do_cleanup(res))
+})
+
+
+test_that("list", {
+  path <- prepare_orderly_example("minimal")
+  id1 <- orderly_run("example", config = path, echo = FALSE)
+  id2 <- orderly_run("example", config = path, echo = FALSE)
+  orderly_commit(id2, config = path)
+
+  res <- main_args(c("--root", path, "list", "names"))
+  expect_equal(capture.output(res$target(res)), "example")
+
+  res <- main_args(c("--root", path, "list", "drafts"))
+  out1 <- capture.output(res$target(res))
+
+  res <- main_args(c("--root", path, "list", "archive"))
+  out2 <- capture.output(res$target(res))
+
+  expect_match(out1[[1]], "name\\s+id")
+  expect_match(out2[[1]], "name\\s+id")
+
+  expect_match(out1[[2]], sprintf("1\\s+example\\s+%s", id1))
+  expect_match(out2[[2]], sprintf("1\\s+example\\s+%s", id2))
 })
