@@ -1,4 +1,5 @@
-wait_while <- function(continue, timeout = 2, poll = 0.02) {
+wait_while <- function(continue, timeout = NULL, poll = 0.02) {
+  timeout <- timeout %||% (if (nzchar(Sys.getenv("R_COVR", ""))) 10 else 2)
   t_quit <- Sys.time() + timeout
   while (continue()) {
     Sys.sleep(poll)
