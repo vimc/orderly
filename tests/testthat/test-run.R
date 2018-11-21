@@ -703,3 +703,14 @@ test_that("open after run", {
   expect_equal(normalizePath(args[[1]]),
                normalizePath(file.path(path, "draft", "example", id)))
 })
+
+
+test_that("missing parameters throws an error", {
+  path <- prepare_orderly_example("example")
+  on.exit(unlink(path, recursive = TRUE))
+
+  expect_error(orderly_run("example", config = path),
+               "Missing parameters: 'cyl'")
+  expect_error(orderly_run("example", list(cl = 2), config = path),
+               "Missing parameters: 'cyl'")
+})
