@@ -28,3 +28,11 @@ test_that("git demo", {
   expect_equal(
     nrow(orderly_list2(config = path2[["local"]], draft = FALSE)), 1)
 })
+
+
+test_that("demo infrastructure", {
+  path <- prepare_orderly_example("demo")
+  file.remove(file.path(path, "before.R"))
+  expect_error(run_orderly_demo(path),
+               "function .* not found in before\\.R")
+})
