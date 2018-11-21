@@ -162,9 +162,7 @@ recipe_read_check_artefacts <- function(x, filename, path) {
   ## This converts the latter into the former:
   if (!is.null(names(x)) && length(x) != 1L) {
     if (any(names(x) %in% valid_formats())) {
-      if (length(x) > 3) {
-        x <- x[1:3] # keep things reasonable
-      }
+      x <- utils::tail(x, 3)
       correct <- list(artefacts = lapply(seq_along(x), function(i) x[i]))
       msg <- c("Your artefacts look incorrectly formatted; they must be",
                "an _ordered map_.  Currently you have something like",
@@ -200,7 +198,7 @@ recipe_read_check_artefacts <- function(x, filename, path) {
   dups <- unique(filenames[duplicated(filenames)])
   if (length(dups) > 0L) {
     stop("Duplicate artefact filenames are not allowed: ",
-         paste(dups, collapse = ", "))
+         paste(squote(dups), collapse = ", "))
   }
 
   res

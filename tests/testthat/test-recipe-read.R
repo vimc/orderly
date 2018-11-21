@@ -125,6 +125,34 @@ test_that("unknown artefact type", {
                "Unknown artefact type: 'unknown'")
 })
 
+test_that("duplicate artefact filenames; within artefact", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path))
+  config <- orderly_config(path)
+  path_example <- file.path(path, "src", "example")
+  yml <- file.path(path_example, "orderly.yml")
+  dat <- yaml_read(yml)
+  dat$artefacts[[1]]$filenames <- c("mygraph.png", "mygraph.png")
+  writeLines(yaml::as.yaml(dat), yml)
+  expect_error(recipe_read(path_example, config),
+               "Duplicate artefact filenames are not allowed: 'mygraph.png'")
+})
+
+
+test_that("duplicate artefact filenames; between artefacts", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path))
+  config <- orderly_config(path)
+  path_example <- file.path(path, "src", "example")
+  yml <- file.path(path_example, "orderly.yml")
+  dat <- yaml_read(yml)
+  dat$artefacts <- list(dat$artefacts, dat$artefacts)
+  writeLines(yaml::as.yaml(dat), yml)
+  expect_error(recipe_read(path_example, config),
+               "Duplicate artefact filenames are not allowed: 'mygraph.png'")
+})
+
+
 test_that("resource case matters", {
   path <- prepare_orderly_example("minimal")
   file.rename(file.path(path, "src", "example", "script.R"),
@@ -140,4 +168,32 @@ test_that("shiny app", {
   config <- orderly_config_get(path, FALSE)
   dat <- recipe_read(file.path(path, "src", "example"), config)
   expect_equal(dat$resources, "shiny")
+})
+
+
+test_that("dependencies must be scalar", {
+  path <- prepare_orderly_example("depends")
+  id <- orderly_run("example", config = path, echo = FALSE)
+
+  filename <- file.path(path, "src", "depend", "orderly.yml")
+  dat <- yaml_read(filename)
+  dat$depends$example$use$previous.rds <- character(0)
+  yaml_write(dat, filename)
+
+  expect_error(orderly_run("depend", config = path, echo = FALSE),
+               "depends:example:use must all be scalar character")
+})
+
+
+test_that("dependencies must exist", {
+  path <- prepare_orderly_example("depends")
+  id <- orderly_run("example", config = path, echo = FALSE)
+
+  filename <- file.path(path, "src", "depend", "orderly.yml")
+  dat <- yaml_read(filename)
+  dat$depends$example$use$previous.rds <- "unknown.file"
+  yaml_write(dat, filename)
+
+  expect_error(orderly_run("depend", config = path, echo = FALSE),
+               "Did not find file unknown.file at")
 })
