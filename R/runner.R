@@ -49,7 +49,7 @@ R6_orderly_runner <- R6::R6Class(
 
       bin <- tempfile()
       dir.create(bin)
-      self$orderly_bin <- write_script(bin)
+      self$orderly_bin <- write_script(bin, versioned = TRUE)
 
       ## This ensures that the index will be present, which will be
       ## useful if something else wants to access the database!

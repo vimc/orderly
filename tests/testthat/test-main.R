@@ -213,14 +213,27 @@ test_that("unknown", {
                "unknown command 'foo'")
 })
 
-test_that("write_script", {
+test_that("write_script requires directory", {
   expect_error(write_script(tempfile()),
                "'path' must be a directory")
+})
+
+
+test_that("write script produces sensible script", {
   path <- tempfile()
   dir.create(path, FALSE, TRUE)
   bin <- write_script(path)
   expect_equal(basename(bin), "orderly")
   expect_true(file.exists(bin))
+  expect_equal(readLines(bin)[[1]], "#!/usr/bin/env Rscript")
+})
+
+
+test_that("write script can be versioned", {
+  path <- tempfile()
+  dir.create(path, FALSE, TRUE)
+  bin <- write_script(path, TRUE)
+  expect_match(readLines(bin)[[1]], R.home(), fixed = TRUE)
 })
 
 

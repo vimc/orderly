@@ -361,11 +361,17 @@ main_do_migrate <- function(x) {
 }
 
 
-write_script <- function(path) {
+write_script <- function(path, versioned = FALSE) {
   if (!isTRUE(is_directory(path))) {
     stop("'path' must be a directory")
   }
-  code <- c("#!/usr/bin/env Rscript", "orderly:::main()")
+  if (versioned) {
+    Rscript <- file.path(R.home(), "bin", "Rscript")
+  } else {
+    Rscript <- "/usr/bin/env Rscript"
+  }
+  code <- c(sprintf("#!%s", Rscript),
+            "orderly:::main()")
   path_bin <- file.path(path, "orderly")
   writeLines(code, path_bin)
   Sys.chmod(path_bin, "755")
