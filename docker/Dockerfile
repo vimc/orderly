@@ -2,7 +2,6 @@ FROM rocker/r-ver:3.5.0
 
 RUN apt-get update && apt-get -y install \
   git \
-  libimage-exiftool-perl \
   libssl-dev \
   libpq-dev \
   wget

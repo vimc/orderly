@@ -418,16 +418,6 @@ recipe_check_artefacts <- function(info) {
     orderly_log("unexpected", sprintf("%s", unexpected))
   }
   
-  ## TODO: we should watermark the images here but there are some
-  ## issues to resolve first:
-  ##
-  ## * installation on windows/mac is nontrivial
-  ## * deal with "_original" files that are being left behind *sometimes*
-  ## * general fragility of using system()
-  ##
-  ## for (filename in artefacts) {
-  ##   watermark_write(filename, id)
-  ## }
   h <- hash_artefacts(artefacts)
   orderly_log("artefact", sprintf("%s: %s", artefacts, h))
   h

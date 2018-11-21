@@ -22,6 +22,5 @@ addons:
     sources:
       - sourceline: 'ppa:chris-lea/libsodium'
     packages:
-      - libimage-exiftool-perl
       - libsodium-dev
       - libssl-dev
