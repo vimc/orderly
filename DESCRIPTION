@@ -23,7 +23,6 @@ Suggests:
     httr,
     knitr,
     montagu (>= 0.2.0),
-    png,
     processx,
     rmarkdown,
     testthat,
