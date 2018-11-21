@@ -150,7 +150,7 @@ test_that("orderly_data", {
   on.exit(unlink(path, recursive = TRUE))
 
   d <- orderly_data("example", config = path)
-  expect_is(d, "list")
+  expect_is(d, "environment")
   expect_is(d$dat, "data.frame")
 
   e1 <- new.env(parent = baseenv())
@@ -383,7 +383,7 @@ test_that("database is not loaded unless needed", {
   vars <- c(SOME_ENVVAR = "source.sqlite")
   path <- withr::with_envvar(vars, prepare_orderly_example("nodb"))
 
-  expect_identical(orderly_data("example", config = path), list())
+  expect_identical(as.list(orderly_data("example", config = path)), list())
   id <- orderly_run("example", config = path, echo = FALSE)
   expect_true(
     file.exists(file.path(path, "draft", "example", id, "mygraph.png")))
