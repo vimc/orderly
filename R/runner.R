@@ -234,13 +234,12 @@ R6_orderly_runner <- R6::R6Class(
         p <- file.path(base(self$path), process$name, id)
         if (file.exists(p)) {
           file_copy(process$stderr, file.path(p, "orderly.log"))
-          ## This should be empty if the redirection works as expected
-          if (file.size(process$stdout) > 0L) {
-            file_copy(process$stdout, file.path(p, "orderly.log.stdout"))
+          ## This should be empty if the redirection works as expected:
+          file_copy(process$stdout, file.path(p, "orderly.log.stdout"))
+          if (file.size(process$stdout) == 0L) {
+            file.remove(file.path(p, "orderly.log.stdout"))
           }
         }
-      } else {
-        id <- NA_character_
       }
 
       self$data$set_state(key, state, id)

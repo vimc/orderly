@@ -250,6 +250,31 @@ test_that("copy_directory failure", {
 })
 
 
+test_that("copy_directory rollback", {
+  a <- tempfile()
+  b <- tempfile()
+  dir.create(a, FALSE, TRUE)
+  file.create(file.path(a, "file1"))
+  file.create(file.path(a, "file2"))
+
+  mockery::stub(copy_directory, "file.copy", c(TRUE, FALSE))
+  expect_error(copy_directory(a, b, TRUE), "Error copying files")
+  expect_false(file.exists(b))
+})
+
+
+test_that("copy_directory rollback needs missing destination", {
+  a <- tempfile()
+  b <- tempfile()
+  dir.create(a, FALSE, TRUE)
+  file.create(file.path(a, "file1"))
+  file.create(file.path(a, "file2"))
+  dir.create(b, FALSE, TRUE)
+  expect_error(copy_directory(a, b, TRUE),
+               "Destination cannot already exist")
+})
+
+
 test_that("ordered_map_to_list", {
   expect_equal(ordered_map_to_list(yaml_load("- a: 1\n- b: 2")),
                list(a = 1, b = 2))

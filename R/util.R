@@ -496,12 +496,21 @@ file_canonical_case <- function(filename) {
  base
 }
 
-copy_directory <- function(src, as) {
+copy_directory <- function(src, as, rollback_on_error = FALSE) {
   files <- dir(src, all.files = TRUE, no.. = TRUE, full.names = TRUE)
+  if (rollback_on_error) {
+    if (file.exists(as)) {
+      stop("Destination cannot already exist")
+    }
+    on.exit(unlink(as, recursive = TRUE))
+  }
   dir.create(as, FALSE, TRUE)
   res <- file.copy(files, as, recursive = TRUE)
   if (!all(res)) {
     stop("Error copying files")
+  }
+  if (rollback_on_error) {
+    on.exit()
   }
 }
 

@@ -60,15 +60,6 @@ push_archive_path <- function(name, id, config, remote, overwrite = FALSE) {
     orderly_log("push", sprintf("%s:%s already exists, skipping", name, id))
   } else {
     orderly_log("push", sprintf("%s:%s", name, id))
-    dest_dir <- dirname(dest)
-    dir.create(dest_dir, FALSE, TRUE)
-    ## This little dance means that in the event of a failure we don't
-    ## get partial copies.
-    on.exit(unlink(dest, recursive = TRUE))
-    ok <- file.copy(src, dest_dir, recursive = TRUE)
-    if (!ok) {
-      stop("Some sort of error copying %s => %s", src, dest)
-    }
-    on.exit()
+    copy_directory(src, dest, rollback_on_error = TRUE)
   }
 }

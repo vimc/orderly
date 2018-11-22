@@ -43,20 +43,6 @@ test_that("defaults: envvar", {
 })
 
 
-test_that("pull report", {
-  path1 <- create_orderly_demo()
-  path2 <- prepare_orderly_example("demo")
-
-  remote <- orderly_remote_path(path1)
-
-  pull_archive("multifile-artefact", "latest", path2, remote = remote)
-
-  d <- orderly_list_archive(path2)
-  expect_equal(d$name, "multifile-artefact")
-  expect_true(d$id %in% orderly_list_archive(path1)$id)
-})
-
-
 test_that("unpack report failure: corrupt download", {
   skip_on_cran()
   bytes <- as.raw(c(0x50, 0x4b, 0x05, 0x06, rep(0x00, 18L)))
