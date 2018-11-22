@@ -40,6 +40,8 @@ test_that("runner queue", {
   expect_true(queue$set_state(key4, "running", new_report_id()))
 
   expect_null(queue$next_queued())
+
+  expect_false(queue$set_state("unknown", "running", new_report_id()))
 })
 
 test_that("run: success", {
@@ -199,6 +201,27 @@ test_that("Can't git change", {
   expect_error(runner$queue("other", ref = "other"),
                "Reference switching is disabled in this runner")
 })
+
+
+test_that("cleanup", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+
+  id <- orderly_run("example", config = path, echo = FALSE)
+  orderly_commit(id, config = path)
+
+  writeLines("1 + 1", file.path(path, "src/example/script.R"))
+  expect_error(orderly_run("example", config = path, echo = FALSE),
+               "Script did not produce")
+
+  runner <- orderly_runner(path)
+  expect_message(runner$cleanup(), "clean.+draft/example")
+  expect_silent(runner$cleanup())
+
+  expect_equal(nrow(orderly_list2(TRUE, config = path)), 0L)
+  expect_equal(orderly_list2(FALSE, config = path)$id, id)
+})
+
 
 test_that("kill", {
   skip_on_windows()
