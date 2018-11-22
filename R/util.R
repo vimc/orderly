@@ -209,7 +209,7 @@ set_mode <- function(x, mode) {
   x
 }
 
-capture_log <- function(expr, filename, suppress_messages = FALSE) {
+capture_log <- function(expr, filename) {
   con <- file(filename, "w")
   sink(con, split = FALSE)
   on.exit({
@@ -217,11 +217,7 @@ capture_log <- function(expr, filename, suppress_messages = FALSE) {
     close(con)
   })
   handle_message <- function(e) cat(e$message, file = stdout())
-  if (suppress_messages) {
-    suppressMessages(withCallingHandlers(force(expr), message = handle_message))
-  } else {
-    withCallingHandlers(force(expr), message = handle_message)
-  }
+  suppressMessages(withCallingHandlers(force(expr), message = handle_message))
 }
 
 last <- function(x) {

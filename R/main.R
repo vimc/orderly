@@ -139,7 +139,7 @@ main_do_run <- function(x) {
   } else {
     log <- tempfile()
     ## we should run this with try() so that we can capture logs there
-    dat <- capture_log(main_run(), log, TRUE)
+    dat <- capture_log(main_run(), log)
     dest <- (if (commit) path_archive else path_draft)(config$path)
     file_copy(log, file.path(dest, name, dat$id, "orderly.log"))
   }
