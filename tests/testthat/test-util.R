@@ -196,3 +196,70 @@ test_that("zip_dir", {
   path <- tempfile()
   expect_error(zip_dir(path), "error running zip")
 })
+
+
+test_that("open_directory: windows", {
+  mockery::stub(open_directory, "system2", list)
+  mockery::stub(open_directory, "is_windows", TRUE)
+
+  expect_equal(open_directory("."),
+               list("cmd", c("/c", "start", "explorer", ".")))
+  p <- normalizePath(".")
+  expect_equal(open_directory(normalizePath(p)),
+               list("cmd", c("/c", "start", "explorer", p)))
+})
+
+
+test_that("open_directory: linux", {
+  mockery::stub(open_directory, "system2", list)
+  mockery::stub(open_directory, "is_windows", FALSE)
+  mockery::stub(open_directory, "is_linux", TRUE)
+
+  expect_equal(open_directory("."), list("xdg-open", "."))
+  p <- normalizePath(".")
+  expect_equal(open_directory(normalizePath(p)), list("xdg-open", p))
+})
+
+
+test_that("open_directory: mac", {
+  mockery::stub(open_directory, "system2", list)
+  mockery::stub(open_directory, "is_windows", FALSE)
+  mockery::stub(open_directory, "is_linux", FALSE)
+
+  expect_equal(open_directory("."), list("open", "."))
+  p <- normalizePath(".")
+  expect_equal(open_directory(normalizePath(p)), list("open", p))
+})
+
+
+test_that("open_directory: error", {
+  expect_error(open_directory(tempfile()), "Expected a directory")
+  expect_error(open_directory("test-util.R"), "Expected a directory")
+})
+
+
+test_that("copy_directory failure", {
+  a <- tempfile()
+  b <- tempfile()
+  dir.create(a, FALSE, TRUE)
+  file.create(file.path(a, "file1"))
+  file.create(file.path(a, "file2"))
+
+  mockery::stub(copy_directory, "file.copy", c(TRUE, FALSE))
+  expect_error(copy_directory(a, b), "Error copying files")
+})
+
+
+test_that("ordered_map_to_list", {
+  expect_equal(ordered_map_to_list(yaml_load("- a: 1\n- b: 2")),
+               list(a = 1, b = 2))
+
+  ## The yaml parser will catch this sort of thing
+  expect_error(yaml_load("- a: 1\n- b: 2\n c: 3"))
+
+  ## but if it came through it would be as
+  d <- list(list(a = 1), list(b = 2, c = 3))
+  expect_error(ordered_map_to_list(d),
+               "Corrupt ordered map (this should never happen)",
+               fixed = TRUE)
+})

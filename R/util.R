@@ -350,24 +350,27 @@ resolve_env <- function(x, error = TRUE, default = NULL) {
 is_windows <- function() {
   Sys.info()[["sysname"]] == "Windows"
 }
+
+
 is_linux <- function() {
   Sys.info()[["sysname"]] == "Linux"
 }
+
 
 open_directory <- function(path) {
   if (!isTRUE(is_directory(path))) {
     stop("Expected a directory")
   }
-  sysname <- Sys.info()[["sysname"]]
-  if (sysname == "Windows") {
-    system2("cmd", c("/c", "start", "explorer", path))
+
+  if (is_windows()) {
+    cmd <- "cmd"
+    args <- c("/c", "start", "explorer", path)
   } else {
-    cmd <- switch(sysname,
-                  "Darwin" = "open",
-                  "Linux" = "xdg-open",
-                  stop("Unsupported system ", sysname))
-    system2(cmd, path)
+    args <- path
+    cmd <- if (is_linux()) "xdg-open" else "open"
   }
+
+  system2(cmd, args)
 }
 
 ## rename is atomic
@@ -519,14 +522,13 @@ list_all_files <- function(path) {
 
 ordered_map_to_list <- function(x) {
   ## This should not happen, but this is what would happen if we had
-  ## a corrupted ordered map.  I think that the yaml parrsers will
+  ## a corrupted ordered map.  I think that the yaml parsers will
   ## fix that for us though.  See similar faff in
   ## recipe_read_check_artefacts.
-  stopifnot(all(lengths(x) == 1L),
-            vlapply(x, function(el) !is.null(names(el))))
   if (!all(lengths(x) == 1L)) {
-    stop("I am confused here")
+    stop("Corrupt ordered map (this should never happen)")
   }
+  stopifnot(vlapply(x, function(el) !is.null(names(el))))
   set_names(lapply(x, function(x) x[[1]]),
             vcapply(x, names))
 }
