@@ -184,6 +184,7 @@ parameters_type:
 
 parameters:
   columns:
+    - id: {type: SERIAL}
     - report_version: {fk: report_version.id}
     - name: {type: TEXT}
     - type: {fk: parameters_type.name}

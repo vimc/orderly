@@ -392,11 +392,11 @@ report_data_import <- function(con, workdir, config) {
 
   if (!is.null(dat_rds$meta$parameters)) {
     p <- dat_rds$meta$parameters
-    parameters <-
-      data_frame(report_version = id,
-                 name = names(p),
-                 type = report_db2_parameter_type(p),
-                 value = vcapply(p, as.character, USE.NAMES = FALSE))
+    parameters <- data_frame(
+      report_version = id,
+      name = names(p),
+      type = report_db2_parameter_type(p),
+      value = report_db2_parameter_serialise(p))
     DBI::dbWriteTable(con, "parameters", parameters, append = TRUE)
   }
 
@@ -481,7 +481,22 @@ report_db2_parameter_type <- function(x) {
     } else if (is.numeric(el)) {
       "number"
     } else if (is.logical(el)) {
-      "logical"
+      "boolean"
+    } else {
+      stop("Unsupported parameter type")
+    }
+  }, USE.NAMES = FALSE)
+}
+
+
+report_db2_parameter_serialise <- function(x) {
+  vcapply(x, function(el) {
+    if (is.character(el)) {
+      el
+    } else if (is.numeric(el)) {
+      as.character(el)
+    } else if (is.logical(el)) {
+      tolower(as.character(el))
     } else {
       stop("Unsupported parameter type")
     }

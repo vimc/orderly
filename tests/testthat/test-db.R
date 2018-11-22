@@ -89,8 +89,37 @@ test_that("db includes parameters", {
   con <- orderly_db("destination", config = path)
   d <- DBI::dbReadTable(con, "parameters")
   DBI::dbDisconnect(con)
-  expect_equal(d, data_frame(report_version = id,
+  expect_equal(d, data_frame(id = 1,
+                             report_version = id,
                              name = "cyl",
                              type = "number",
                              value = "4"))
+})
+
+
+test_that("different parameter types are stored correctly", {
+  path <- prepare_orderly_example("parameters")
+  id <- orderly_run("example", parameters = list(a = 1, b = TRUE, c = "one"),
+                    config = path, echo = FALSE)
+  orderly_commit(id, config = path)
+  con <- orderly_db("destination", config = path)
+  d <- DBI::dbReadTable(con, "parameters")
+  DBI::dbDisconnect(con)
+  expect_equal(d, data_frame(id = 1:3,
+                             report_version = id,
+                             name = c("a", "b", "c"),
+                             type = c("number", "boolean", "text"),
+                             value = c("1", "true", "one")))
+})
+
+
+test_that("avoid unserialisable parameters", {
+  path <- prepare_orderly_example("parameters")
+  t <- Sys.Date()
+  id <- orderly_run("example", parameters = list(a = t, b = TRUE, c = "one"),
+                    config = path, echo = FALSE)
+  expect_error(orderly_commit(id, config = path),
+               "Unsupported parameter type")
+  expect_error(report_db2_parameter_type(t), "Unsupported parameter type")
+  expect_error(report_db2_parameter_serialise(t), "Unsupported parameter type")
 })
