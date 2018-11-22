@@ -12,12 +12,17 @@ test_that("defaults: null", {
 
 
 test_that("get_remote", {
-  config <- list(api_server = list(foo = list(server = "foo"),
-                                   bar = list(server = "bar")))
+  fake_server <- function(name) {
+    list(name = name,
+         server = list(is_authorised = function() TRUE))
+  }
+
+  config <- list(api_server = list(foo = fake_server("foo"),
+                                   bar = fake_server("bar")))
   class(config) <- "orderly_config"
-  expect_equal(get_remote(NULL, config), "foo")
-  expect_equal(get_remote("foo", config), "foo")
-  expect_equal(get_remote("bar", config), "bar")
+  expect_equal(get_remote(NULL, config), config$api_server$foo$server)
+  expect_equal(get_remote("foo", config), config$api_server$foo$server)
+  expect_equal(get_remote("bar", config), config$api_server$bar$server)
   expect_error(get_remote("other", config),
                "Unknown remote 'other'",
                fixed = TRUE)
@@ -104,16 +109,4 @@ test_that("unpack failure: missing files", {
   expect_error(unzip_archive(zip, tempfile(), NULL, id),
                "Invalid orderly archive: missing files orderly_run.yml",
                fixed = TRUE)
-})
-          
-test_that("push report (path)", {
-  ours <- create_orderly_demo()
-  theirs <- prepare_orderly_example("demo")
-
-  remote <- orderly_remote_path(theirs)
-  push_archive("multifile-artefact", "latest", ours, remote = remote)
-
-  d <- orderly_list_archive(theirs)
-  expect_equal(d$name, "multifile-artefact")
-  expect_true(d$id %in% orderly_list_archive(ours)$id)
 })

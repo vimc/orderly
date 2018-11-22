@@ -63,12 +63,38 @@ pull_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
                          remote = NULL) {
   config <- orderly_config_get(config, locate)
   remote <- get_remote(remote, config)
-  if (inherits(remote, "montagu_server")) {
-    pull_archive_api(name, id, config, remote)
-  } else if (inherits(remote, "orderly_remote_path")) {
-    pull_archive_path(name, id, config, remote)
+
+  v <- remote_report_versions(name, config, FALSE, remote)
+  if (length(v) == 0L) {
+    stop("Unknown report")
+  }
+
+  if (id == "latest") {
+    id <- latest_id(v)
+  }
+
+  if (!(id %in% v)) {
+    ## Confirm that the report does actually exist, working around
+    ## VIMC-1281:
+    stop(sprintf(
+      "Version '%s' not found at '%s': valid versions are:\n%s",
+      id, remote$name, paste(sprintf("  - %s", v), collapse = "\n")),
+      call. = FALSE)
+  }
+
+  dest <- file.path(path_archive(config$path), name, id)
+
+  if (file.exists(file.path(dest, "orderly_run.yml"))) {
+    orderly_log("pull", sprintf("%s:%s already exists, skipping", name, id))
   } else {
-    stop("Unknown remote type ", paste(squote(class(remote)), collapse = " / "))
+    orderly_log("pull", sprintf("%s:%s", name, id))
+
+    check_remote_type(remote)
+    if (inherits(remote, "montagu_server")) {
+      remote_report_pull_archive_api(name, id, config, remote)
+    } else if (inherits(remote, "orderly_remote_path")) {
+      remote_report_pull_archive_path(name, id, config, remote)
+    }
   }
 }
 
@@ -89,12 +115,23 @@ push_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
                          remote = NULL) {
   config <- orderly_config_get(config, locate)
   remote <- get_remote(remote, config)
-  if (inherits(remote, "montagu_server")) {
-    stop("'montagu_server' remotes do not support push (yet)")
-  } else if (inherits(remote, "orderly_remote_path")) {
-    push_archive_path(name, id, config, remote)
+
+  if (id == "latest") {
+    id <- orderly_latest(name, config, FALSE)
+  }
+
+  dest <- file.path(path_archive(remote), name, id)
+  if (file.exists(dest)) {
+    orderly_log("push", sprintf("%s:%s already exists, skipping", name, id))
   } else {
-    stop("Unknown remote type ", paste(squote(class(remote)), collapse = " / "))
+    orderly_log("push", sprintf("%s:%s", name, id))
+
+    check_remote_type(remote)
+    if (inherits(remote, "montagu_server")) {
+      stop("'montagu_server' remotes do not support push (yet)")
+    } else if (inherits(remote, "orderly_remote_path")) {
+      push_archive_path(name, id, config, remote)
+    }
   }
 }
 
@@ -137,6 +174,8 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
                                config = NULL, locate = TRUE, remote = NULL) {
   config <- orderly_config_get(config, locate)
   remote <- get_remote(remote, config)
+
+  check_remote_type(remote)
   if (inherits(remote, "montagu_server")) {
     orderly_run_remote_api(name = name, parameters = parameters, ref = ref,
                            timeout = timeout, poll = poll, open = open,
@@ -144,8 +183,8 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
                            progress = progress,
                            config = config, remote = remote)
   } else if (inherits(remote, "orderly_remote_path")) {
-    stop("Can't run reports with remote type ",
-         paste(squote(class(remote)), collapse = " / "))
+    ## This is actually really easy
+    stop("'orderly_remote_path' remotes do not run (yet)")
   }
 }
 
@@ -164,16 +203,22 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
 ##' @inheritParams orderly_run_remote
 ##' @export
 orderly_publish_remote <- function(name, id, value = TRUE,
-                                   config = NULL, locate = TRUE, remote = NULL) {
+                                   config = NULL, locate = TRUE,
+                                   remote = NULL) {
   config <- orderly_config_get(config, locate)
   remote <- get_remote(remote, config)
+
+  assert_scalar_character(name)
+  assert_scalar_character(id)
+  assert_scalar_logical(value)
+
+  check_remote_type(remote)
   if (inherits(remote, "montagu_server")) {
     orderly_publish_remote_api(name = name, id = id, config = config,
                                value = value, remote = remote)
   } else if (inherits(remote, "orderly_remote_path")) {
     ## This one can actually be done over disk too
-    stop("Can't publish reports with remote type ",
-         paste(squote(class(remote)), collapse = " / "))
+    stop("'orderly_remote_path' remotes do not publish (yet)")
   }
 }
 
@@ -200,7 +245,7 @@ get_default_remote <- function(config = NULL, locate = TRUE) {
   }
   config <- orderly_config_get(config, locate)
   if (length(config$api_server) > 0L) {
-    return(check_remote_api_server(config$api_server[[1L]]))
+    return(check_remote_api_server(config, config$api_server[[1L]]))
   }
   default_remote_path <- Sys.getenv("ORDERLY_DEFAULT_REMOTE_PATH",
                                     NA_character_)
@@ -219,7 +264,7 @@ get_remote <- function(remote, config) {
   } else if (is.character(remote)) {
     assert_scalar(remote)
     if (remote %in% names(config$api_server)) {
-      check_remote_api_server(config$api_server[[remote]])
+      check_remote_api_server(config, config$api_server[[remote]])
     } else if (file.exists(remote)) {
       orderly_remote_path(remote)
     } else {
@@ -234,10 +279,38 @@ get_remote <- function(remote, config) {
 }
 
 
-check_remote_api_server <- function(x) {
-  server <- x$server
-  if (is.null(server)) {
-    stop("The 'montagu' package is required to use an api server")
+remote_report_names <- function(config = NULL, locate = TRUE, remote = NULL) {
+  config <- orderly_config_get(config, locate)
+  remote <- get_remote(remote, config)
+
+  check_remote_type(remote)
+  if (inherits(remote, "montagu_server")) {
+    remote_report_names_api(remote)
+  } else if (inherits(remote, "orderly_remote_path")) {
+    remote_report_names_path(remote)
   }
-  server
+}
+
+
+remote_report_versions <- function(name, config = NULL, locate = TRUE,
+                                   remote = NULL) {
+  config <- orderly_config_get(config, locate)
+  remote <- get_remote(remote, config)
+
+  check_remote_type(remote)
+  if (inherits(remote, "montagu_server")) {
+    remote_report_versions_api(name, remote)
+  } else if (inherits(remote, "orderly_remote_path")) {
+    remote_report_versions_path(name, remote)
+  }
+}
+
+
+check_remote_type <- function(remote) {
+  if (inherits(remote, "montagu_server") ||
+      inherits(remote, "orderly_remote_path")) {
+    return(NULL)
+  }
+  stop("Unknown remote type ",
+       paste(squote(class(remote)), collapse = " / "))
 }
