@@ -312,21 +312,6 @@ path_stdout <- function(path, key) {
   file.path(path, paste0(key, ".stdout"))
 }
 
-process_wait <- function(px, filename, timeout = 1, poll = 0.02) {
-  t_stop <- Sys.time() + timeout
-  while (px$is_alive()) {
-    if (file.exists(filename)) {
-      break
-    }
-    if (Sys.time() > t_stop) {
-      stop("did not start in time")
-    }
-    Sys.sleep(poll)
-    message(".", appendLF = FALSE)
-  }
-  message("started")
-  id <- readLines(filename)
-}
 
 runner_queue <- function() {
   cols <- c("key", "state", "name", "parameters", "ref", "id", "timeout")
