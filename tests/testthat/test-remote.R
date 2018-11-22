@@ -43,6 +43,22 @@ test_that("defaults: envvar", {
 })
 
 
+test_that("unpack archive", {
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("example", config = path, echo = FALSE)
+  p <- orderly_commit(id, config = path)
+
+  zip <- zip_dir(p)
+
+  root <- tempfile()
+  unzip_archive(zip, root, "example", id)
+  res <- file.path(root, "archive", "example")
+  expect_equal(dir(res), id)
+  expect_equal(sort(dir(file.path(res, id), recursive = TRUE)),
+               sort(dir(p, recursive = TRUE)))
+})
+
+
 test_that("unpack report failure: corrupt download", {
   skip_on_cran()
   bytes <- as.raw(c(0x50, 0x4b, 0x05, 0x06, rep(0x00, 18L)))
