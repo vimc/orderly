@@ -69,7 +69,7 @@ pull_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
     ## VIMC-1281:
     stop(sprintf(
       "Version '%s' not found at '%s': valid versions are:\n%s",
-      id, remote$name, paste(sprintf("  - %s", v), collapse = "\n")),
+      id, remote_name(remote), paste(sprintf("  - %s", v), collapse = "\n")),
       call. = FALSE)
   }
 
@@ -304,4 +304,14 @@ check_remote_type <- function(remote) {
   }
   stop("Unknown remote type ",
        paste(squote(class(remote)), collapse = " / "))
+}
+
+
+remote_name <- function(remote) {
+  check_remote_type(remote)
+  if (inherits(remote, "montagu_server")) {
+    remote$name
+  } else if (inherits(remote, "orderly_remote_path")) {
+    as.character(remote)
+  }
 }

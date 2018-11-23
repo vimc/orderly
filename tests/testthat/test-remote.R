@@ -14,7 +14,9 @@ test_that("defaults: null", {
 test_that("get_remote", {
   fake_server <- function(name) {
     list(name = name,
-         server = list(is_authorised = function() TRUE))
+         server = structure(list(is_authorised = function() TRUE,
+                                 name = name),
+                            class = "montagu_server"))
   }
 
   config <- list(api_server = list(foo = fake_server("foo"),
@@ -33,6 +35,8 @@ test_that("get_remote", {
   expect_error(get_remote(TRUE, config),
                "Unknown remote type 'logical'",
                fixed = TRUE)
+
+  expect_equal(remote_name(get_remote("foo", config)), "foo")
 })
 
 

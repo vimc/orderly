@@ -8,6 +8,12 @@ test_that("Reject impossible remotes", {
 })
 
 
+test_that("remote_name", {
+  path <- prepare_orderly_example("minimal")
+  expect_identical(remote_name(orderly_remote_path(path)), path)
+})
+
+
 test_that("pull report", {
   path1 <- create_orderly_demo()
   path2 <- prepare_orderly_example("demo")
