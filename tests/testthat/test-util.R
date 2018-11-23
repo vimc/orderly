@@ -228,8 +228,13 @@ test_that("canonical case: absolute path", {
   path <- file.path(tempfile(), "a", "b", "c")
   dir.create(dirname(path), FALSE, TRUE)
   file.create(path)
-  path <- normalizePath(path)
+  path <- normalizePath(path, "/")
   PATH <- toupper(path)
+  if (is_windows()) {
+    ## On windows, use upper case drive letters here:
+    path <- paste0(toupper(substr(path, 1, 1)),
+                   substr(path, 2, nchar(path)))
+  }
 
   expect_true(file_has_canonical_case(path))
   expect_equal(file_canonical_case(path), path)
@@ -257,11 +262,15 @@ test_that("canonical case: absolute path", {
 
 test_that("canonical case: path splitting", {
   expect_equal(file_split_base("a/b/c"),
-               list(path = c("a", "b", "c"), base = "."))
+               list(path = c("a", "b", "c"), base = ".", absolute = FALSE))
   expect_equal(file_split_base("/a/b/c"),
-               list(path = c("a", "b", "c"), base = "/"))
+               list(path = c("a", "b", "c"), base = "/", absolute = TRUE))
   expect_equal(file_split_base("c:/a/b/c"),
-               list(path = c("a", "b", "c"), base = "c:/"))
+               list(path = c("a", "b", "c"), base = "c:/", absolute = TRUE))
+  expect_equal(file_split_base("C:/a/b/c"),
+               list(path = c("a", "b", "c"), base = "C:/", absolute = TRUE))
+  expect_equal(file_split_base("C:/A/B/C", TRUE),
+               list(path = c("a", "b", "c"), base = "C:/", absolute = TRUE))
 })
 
 

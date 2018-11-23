@@ -452,28 +452,36 @@ file_exists <- function(..., check_case = FALSE, workdir = NULL,
 }
 
 
-file_split_base <- function(filename) {
- path <- strsplit(filename, "[/\\\\]")[[1L]]
- if (!nzchar(path[[1]])) {
-   base <- "/"
-   path <- path[-1L]
- } else if (grepl("^[A-Za-z]:", path[[1]])) {
-   base <- paste0(path[[1L]], "/")
-   path <- path[-1L]
- } else {
-   base <- "."
- }
- list(path = path[nzchar(path)], base = base)
+file_split_base <- function(filename, lowercase = FALSE) {
+  path <- strsplit(filename, "[/\\\\]")[[1L]]
+  if (!nzchar(path[[1]])) {
+    base <- "/"
+    path <- path[-1L]
+    absolute <- TRUE
+  } else if (grepl("^[A-Za-z]:", path[[1]])) {
+    base <- paste0(path[[1L]], "/")
+    path <- path[-1L]
+    absolute <- TRUE
+  } else {
+    base <- "."
+    absolute <- FALSE
+  }
+  if (lowercase) {
+    path <- tolower(path)
+  }
+  list(path = path[nzchar(path)], base = base, absolute = absolute)
 }
 
 
 file_has_canonical_case <- function(filename) {
   dat <- file_split_base(filename)
   base <- dat$base
+  absolute <- dat$absolute
 
   for (p in dat$path) {
     if (p %in% dir(base, all.files = TRUE)) {
-      base <- paste(if (base == "/") "" else base, p, sep = "/")
+      base <- paste(base, p, sep = if (absolute) "" else "/")
+      absolute <- FALSE
     } else {
       return(FALSE)
     }
@@ -485,9 +493,10 @@ file_has_canonical_case <- function(filename) {
 ## files called Foo and foo next to each other (but not on
 ## windows/mac)
 file_canonical_case <- function(filename) {
-  dat <- file_split_base(tolower(filename))
+  dat <- file_split_base(filename, TRUE)
   base <- dat$base
   path <- dat$path
+  absolute <- dat$absolute
 
   for (p in dat$path) {
     pos <- dir(base, all.files = TRUE)
@@ -495,7 +504,8 @@ file_canonical_case <- function(filename) {
     if (is.na(i)) {
       return(NA_character_)
     } else {
-      base <- paste(if (base == "/") "" else base, pos[[i]], sep = "/")
+      base <- paste(base, pos[[i]], sep = if (absolute) "" else "/")
+      absolute <- FALSE
     }
   }
 
