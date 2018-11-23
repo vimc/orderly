@@ -148,7 +148,6 @@ test_that("git_clean_url", {
 
 
 test_that("canonical case - redundant paths", {
-  skip("flakey")
   expect_true(file_has_canonical_case("../../README.md"))
   expect_true(file_has_canonical_case("../..//README.md"))
   expect_true(file_has_canonical_case("../..///README.md"))
@@ -159,6 +158,97 @@ test_that("platform detection", {
   expect_equal(is_windows(), Sys.info()[["sysname"]] == "Windows")
   expect_equal(is_linux(), Sys.info()[["sysname"]] == "Linux")
 })
+
+test_that("canonical case: single file", {
+  root <- tempfile()
+  dir.create(root)
+  path <- "a"
+  PATH <- toupper(path)
+  full <- file.path(root, path)
+
+  dir.create(dirname(full), FALSE, TRUE)
+  file.create(full)
+
+  withr::with_dir(root, {
+    expect_true(file_has_canonical_case(path))
+    expect_equal(file_canonical_case(path), path)
+    expect_true(file_exists(path))
+    expect_true(file_exists(path, check_case = TRUE))
+
+    expect_false(file_has_canonical_case(PATH))
+    expect_equal(file_canonical_case(PATH), path)
+  })
+
+  expect_true(file_exists(path, check_case = FALSE, workdir = root))
+  expect_true(file_exists(path, check_case = TRUE, workdir = root))
+
+  expect_true(file_exists(PATH, check_case = FALSE, workdir = root))
+  expect_false(file_exists(PATH, check_case = TRUE, workdir = root))
+
+  v <- file_exists(PATH, check_case = TRUE, workdir = root)
+  expect_identical(attr(v, "incorrect_case"), TRUE)
+  expect_equal(attr(v, "correct_case"), set_names(path, PATH))
+})
+
+
+test_that("canonical case: relative path", {
+  root <- tempfile()
+  dir.create(root)
+  path <- file.path("a", "b", "c")
+  PATH <- toupper(path)
+  full <- file.path(root, path)
+
+  dir.create(dirname(full), FALSE, TRUE)
+  file.create(full)
+
+  withr::with_dir(root, {
+    expect_true(file_has_canonical_case(path))
+    expect_equal(file_canonical_case(path), path)
+    expect_true(file_exists(path))
+    expect_true(file_exists(path, check_case = TRUE))
+
+    expect_false(file_has_canonical_case(PATH))
+    expect_equal(file_canonical_case(PATH), path)
+  })
+
+  expect_true(file_exists(path, check_case = FALSE, workdir = root))
+  expect_true(file_exists(path, check_case = TRUE, workdir = root))
+
+  expect_true(file_exists(PATH, check_case = FALSE, workdir = root))
+  expect_false(file_exists(PATH, check_case = TRUE, workdir = root))
+
+  v <- file_exists(PATH, check_case = TRUE, workdir = root)
+  expect_identical(attr(v, "incorrect_case"), TRUE)
+  expect_equal(attr(v, "correct_case"), set_names(path, PATH))
+})
+
+
+test_that("canonical case: absolute path", {
+  path <- file.path(tempfile(), "a", "b", "c")
+  dir.create(dirname(path), FALSE, TRUE)
+  file.create(path)
+  path <- normalizePath(path)
+  PATH <- toupper(path)
+
+  expect_true(file_has_canonical_case(path))
+  expect_equal(file_canonical_case(path), path)
+  expect_true(file_exists(path))
+  expect_true(file_exists(path, check_case = TRUE))
+
+  expect_false(file_has_canonical_case(PATH))
+  expect_equal(file_canonical_case(PATH), path)
+
+  expect_true(file_exists(path, check_case = FALSE))
+  expect_true(file_exists(path, check_case = TRUE))
+
+  expect_true(file_exists(PATH, check_case = FALSE))
+  expect_false(file_exists(PATH, check_case = TRUE))
+
+  v <- file_exists(PATH, check_case = TRUE)
+  expect_identical(attr(v, "incorrect_case"), TRUE)
+  expect_equal(attr(v, "correct_case"), set_names(path, PATH))
+})
+
 
 test_that("abbreviate", {
   expect_equal(abbreviate("12345678", 5), "12...")

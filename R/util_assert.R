@@ -67,10 +67,10 @@ assert_file_exists <- function(x, check_case = TRUE, workdir = NULL,
       i <- attr(err, "incorrect_case")
       msg_case <- x[i]
       msg_totally <- x[err & !i]
-
       if (length(msg_case) > 0L) {
-        msg_case_correct <- vcapply(msg_case, file_canonical_case)
-        msg_case <- sprintf("'%s' (should be '%s')", msg_case, msg_case_correct)
+        correct_case <- attr(err, "correct_case")
+        msg_case <- sprintf("'%s' (should be '%s')",
+                            names(correct_case), correct_case)
       }
       msg <- c(msg_case, squote(msg_totally))
     } else {
