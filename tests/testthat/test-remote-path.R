@@ -89,3 +89,37 @@ test_that("push report: already done", {
     push_archive("example", id, path1, remote = remote),
     sprintf("\\[ push\\s+ \\]  example:%s already exists", id))
 })
+
+
+test_that("remote_report_names", {
+  dat <- prepare_orderly_remote_example(FALSE)
+  remote_path <- orderly_remote_path(dat$path_remote)
+  expect_equal(remote_report_names(dat$config, remote = dat$remote),
+               c("depend", "depend2", "example"))
+})
+
+
+test_that("orderly_run", {
+  dat <- prepare_orderly_remote_example(FALSE)
+  expect_error(
+    orderly_run_remote("example", config = dat$config, remote = dat$remote),
+    "'orderly_remote_path' remotes do not run")
+})
+
+
+test_that("orderly_publish", {
+  dat <- prepare_orderly_remote_example(FALSE)
+  expect_error(
+    orderly_publish_remote("example", dat$id1,
+                           config = dat$config, remote = dat$remote),
+    "'orderly_remote_path' remotes do not publish")
+})
+
+
+test_that("set_default", {
+  dat <- prepare_orderly_remote_example(FALSE)
+  v <- set_default_remote(dat$path_remote, dat$config)
+  expect_is(v, "orderly_remote_path")
+  expect_identical(v, dat$remote)
+  expect_identical(get_default_remote(dat$config), v)
+})

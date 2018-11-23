@@ -3,7 +3,7 @@ context("remote")
 
 test_that("defaults: null", {
   path <- prepare_orderly_example("minimal")
-  expect_null(set_default_remote(NULL))
+  expect_null(set_default_remote(NULL, path))
   expect_error(get_default_remote(path, FALSE),
                "default remote has not been set yet")
   expect_error(get_remote(NULL, path),
@@ -20,7 +20,8 @@ test_that("get_remote", {
   }
 
   config <- list(api_server = list(foo = fake_server("foo"),
-                                   bar = fake_server("bar")))
+                                   bar = fake_server("bar")),
+                 path = normalizePath("."))
   class(config) <- "orderly_config"
   expect_equal(get_remote(NULL, config), config$api_server$foo$server)
   expect_equal(get_remote("foo", config), config$api_server$foo$server)
@@ -144,4 +145,9 @@ test_that("pull dependencies", {
     "\\[ pull\\s+ \\]  example:")
   expect_equal(orderly_list_archive(dat$config),
                data_frame(name = "example", id = c(dat$id2, id3)))
+})
+
+
+test_that("check_remote_type prevents unknown remotes", {
+  expect_error(check_remote_type(NULL), "Unknown remote type")
 })

@@ -111,8 +111,8 @@ push_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
     id <- orderly_latest(name, config, FALSE)
   }
 
-  dest <- file.path(path_archive(remote), name, id)
-  if (file.exists(dest)) {
+  v <- remote_report_versions(name, config, FALSE, remote)
+  if (id %in% v) {
     orderly_log("push", sprintf("%s:%s already exists, skipping", name, id))
   } else {
     orderly_log("push", sprintf("%s:%s", name, id))
@@ -217,24 +217,31 @@ orderly_publish_remote <- function(name, id, value = TRUE,
 ##' Set and get default remote locations
 ##'
 ##' @title Set default remote location
-##' @param value An \code{orderly_remote_location} object.
+##' @param value A string describing a remote, or \code{NULL} to clear
+##' @inheritParams orderly_list
 ##' @export
 ##' @rdname default_remote
-set_default_remote <- function(value) {
-  if (!is.null(value)) {
-    assert_is(value, "orderly_remote_location")
+set_default_remote <- function(value, config = NULL, locate = TRUE) {
+  config <- orderly_config_get(config, locate)
+
+  if (is.null(value)) {
+    remote <- NULL
+  } else {
+    assert_scalar_character(value)
+    remote <- get_remote(value, config)
   }
-  cache$default_remote <- value
+
+  cache$default_remote[[config$path]] <- remote
+  invisible(remote)
 }
 
 
 ##' @rdname default_remote
-##' @inheritParams orderly_list
 get_default_remote <- function(config = NULL, locate = TRUE) {
-  if (!is.null(cache$default_remote)) {
-    return(cache$default_remote)
-  }
   config <- orderly_config_get(config, locate)
+  if (!is.null(cache$default_remote[[config$path]])) {
+    return(cache$default_remote[[config$path]])
+  }
   if (length(config$api_server) > 0L) {
     return(check_remote_api_server(config, config$api_server[[1L]]))
   }
