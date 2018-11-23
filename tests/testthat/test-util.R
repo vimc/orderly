@@ -182,10 +182,14 @@ test_that("canonical case: single file", {
   expect_true(file_exists(path, check_case = FALSE, workdir = root))
   expect_true(file_exists(path, check_case = TRUE, workdir = root))
 
-  expect_true(file_exists(PATH, check_case = FALSE, workdir = root))
   expect_false(file_exists(PATH, check_case = TRUE, workdir = root))
 
-  v <- file_exists(PATH, check_case = TRUE, workdir = root)
+  if (is_linux()) {
+    mockery::stub(file_exists, "file.exists", TRUE)
+  }
+  expect_true(file_exists(PATH, check_case = FALSE, workdir = root))
+  v <- file_exists(PATH, check_case = TRUE, workdir = root,
+                   force_case_check = TRUE)
   expect_identical(attr(v, "incorrect_case"), TRUE)
   expect_equal(attr(v, "correct_case"), set_names(path, PATH))
 })
@@ -214,10 +218,15 @@ test_that("canonical case: relative path", {
   expect_true(file_exists(path, check_case = FALSE, workdir = root))
   expect_true(file_exists(path, check_case = TRUE, workdir = root))
 
-  expect_true(file_exists(PATH, check_case = FALSE, workdir = root))
   expect_false(file_exists(PATH, check_case = TRUE, workdir = root))
 
-  v <- file_exists(PATH, check_case = TRUE, workdir = root)
+  if (is_linux()) {
+    mockery::stub(file_exists, "file.exists", TRUE)
+  }
+
+  expect_true(file_exists(PATH, check_case = FALSE, workdir = root))
+  v <- file_exists(PATH, check_case = TRUE, workdir = root,
+                   force_case_check = TRUE)
   expect_identical(attr(v, "incorrect_case"), TRUE)
   expect_equal(attr(v, "correct_case"), set_names(path, PATH))
 })
@@ -241,10 +250,14 @@ test_that("canonical case: absolute path", {
   expect_true(file_exists(path, check_case = FALSE))
   expect_true(file_exists(path, check_case = TRUE))
 
-  expect_true(file_exists(PATH, check_case = FALSE))
   expect_false(file_exists(PATH, check_case = TRUE))
 
-  v <- file_exists(PATH, check_case = TRUE)
+  if (is_linux()) {
+    mockery::stub(file_exists, "file.exists", TRUE)
+  }
+  expect_true(file_exists(PATH, check_case = FALSE))
+
+  v <- file_exists(PATH, check_case = TRUE, force_case_check = TRUE)
   expect_identical(attr(v, "incorrect_case"), TRUE)
   expect_equal(attr(v, "correct_case"), set_names(path, PATH))
 })
