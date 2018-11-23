@@ -114,7 +114,7 @@ report_db2_init <- function(con, config, must_create = FALSE, validate = TRUE) {
   sqlite_pragma_fk(con, TRUE)
 
   if (!DBI::dbExistsTable(con, ORDERLY_SCHEMA_TABLE)) {
-    report_db2_init_create(con, config)
+    report_db2_init_create(con, config, report_db2_dialect(con))
   } else if (must_create) {
     stop(sprintf("Table '%s' already exists", ORDERLY_SCHEMA_TABLE))
   } else if (validate) {
@@ -123,21 +123,21 @@ report_db2_init <- function(con, config, must_create = FALSE, validate = TRUE) {
 }
 
 
-report_db2_init_create <- function(con, config) {
-  if (config$destination$driver[[1]] == "RSQLite") {
-    dialect <- "sqlite"
-  } else {
-    dialect <- "postgres"
-  }
+report_db2_init_create <- function(con, config, dialect) {
   dat <- orderly_schema_prepare(config$fields, dialect)
   dat$values$changelog_label <- config$changelog
 
+  DBI::dbBegin(con)
+  on.exit(DBI::dbRollback(con))
   for (s in dat$sql) {
     DBI::dbExecute(con, s)
   }
   for (nm in names(dat$values)) {
     DBI::dbWriteTable(con, nm, dat$values[[nm]], append = TRUE)
   }
+
+  DBI::dbCommit(con)
+  on.exit()
 }
 
 
@@ -468,7 +468,7 @@ report_db2_publish <- function(con, id, value) {
 
 
 sqlite_pragma_fk <- function(con, enable = TRUE) {
-  if (inherits(con, "SQLiteConnection")) {
+  if (report_db2_dialect(con) == "sqlite") {
     DBI::dbExecute(con, sprintf("PRAGMA foreign_keys = %d", enable))
   }
 }
@@ -501,4 +501,17 @@ report_db2_parameter_serialise <- function(x) {
       stop("Unsupported parameter type")
     }
   }, USE.NAMES = FALSE)
+}
+
+
+report_db2_dialect <- function(con) {
+  if (inherits(con, "SQLiteConnection")) {
+    "sqlite"
+  } else if (inherits(con, "PqConnection")) {
+    "postgres"
+  } else {
+    ## It's possible that RPostgreSQL might work, but it's unlikely to
+    ## throw all the errors that we need.
+    stop("Can't determine SQL dialect")
+  }
 }
