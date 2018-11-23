@@ -101,12 +101,11 @@ migrate_apply <- function(root, version, fun, config, verbose, dry_run) {
 
 migrate_apply1 <- function(path, version, fun, config, dry_run) {
   file <- path_orderly_run_rds_backup(path, version)
-  if (file.exists(file)) {
-    ## I don't know about this one; we should always roll back a
-    ## failed migration so this should never happen...
-    message(sprintf("Already migrated '%s'", path))
-    return(invisible(FALSE))
-  }
+
+  ## This should never happen, and the behaviour if it does is not
+  ## well defined.  So let's assert here and if it turns out to matter
+  ## we'll find out soon enough.
+  stopifnot(!file.exists(file))
 
   file_orig <- path_orderly_run_rds(path)
   dat <- readRDS(file_orig)
