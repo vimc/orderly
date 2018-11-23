@@ -114,3 +114,34 @@ test_that("unpack failure: missing files", {
                "Invalid orderly archive: missing files orderly_run.yml",
                fixed = TRUE)
 })
+
+
+test_that("pull_archive with wrong version", {
+  dat <- prepare_orderly_remote_example(FALSE)
+
+  expect_error(
+    pull_archive("example", new_report_id(), config = dat$config,
+                 remote = dat$remote),
+    paste0("Version '.+?' not found at '.+?': valid versions are:.+",
+           dat$id1))
+})
+
+
+test_that("pull dependencies", {
+  dat <- prepare_orderly_remote_example(FALSE)
+
+  expect_message(
+    pull_dependencies("depend", config = dat$config, remote = dat$remote),
+    "\\[ pull\\s+ \\]  example:")
+  expect_equal(orderly_list_archive(dat$config),
+               data_frame(name = "example", id = dat$id2))
+
+  ## and update
+  id3 <- orderly_run("example", config = dat$path_remote, echo = FALSE)
+  orderly_commit(id3, config = dat$path_remote)
+  expect_message(
+    pull_dependencies("depend", config = dat$config, remote = dat$remote),
+    "\\[ pull\\s+ \\]  example:")
+  expect_equal(orderly_list_archive(dat$config),
+               data_frame(name = "example", id = c(dat$id2, id3)))
+})
