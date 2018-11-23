@@ -34,21 +34,12 @@ pull_dependencies <- function(name, config = NULL, locate = TRUE,
                               remote = NULL) {
   config <- orderly_config_get(config, locate)
 
-  ## For now, we need to assume that this is valid formatted orderly
-  ## yaml, until I resolve VIMC-506 I have to read everything
-  ## manually:
   path <- file.path(path_src(config$path), name)
-  filename <- file.path(path, "orderly.yml")
-  if (!file.exists(filename)) {
-    stop("Did not find file 'orderly.yml' at path ", path)
-  }
-  info <- yaml_read(filename)
+  depends <- recipe_read(path, config, FALSE)$depends
 
-  depends <- info$depends
-  for (i in seq_along(depends)) {
-    if (!isTRUE(depends[[i]]$draft)) {
-      pull_archive(names(depends)[[i]], depends[[i]]$id, config,
-                   remote = remote)
+  for (i in seq_len(nrow(depends))) {
+    if (!isTRUE(depends$draft[[i]])) {
+      pull_archive(depends$name[[i]], depends$id[[i]], config, remote = remote)
     }
   }
 }
