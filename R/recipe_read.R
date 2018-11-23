@@ -85,6 +85,7 @@ recipe_read <- function(path, config, validate = TRUE) {
     x <- info[[el$name]]
     if (!is.null(x) || el$required) {
       assert_type(x, el$type, fieldname(el$name))
+      assert_scalar(x, fieldname(el$name))
     }
   }
 

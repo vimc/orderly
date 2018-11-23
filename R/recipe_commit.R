@@ -58,26 +58,7 @@ recipe_commit <- function(workdir, config) {
   success <- DBI::dbWriteTable(con, tbl, dat, append = TRUE)
 
   if (success) {
-    ## I should do something here if the unlink fails, though I don't
-    ## know exactly what.  But because a *second* round of copy here
-    ## would be pretty catastophic we need to flag the draft here as
-    ## being stale.  Perhaps write into it a file that indicates that
-    ## it is done just before deletion?
     unlink(workdir, recursive = TRUE)
-    if (file.exists(workdir)) {
-      ## For now we just issue a warning which is pretty lame and
-      ## can't really be acted on.  This will at least hopefully let
-      ## me know how common an issue this is so that I can work out
-      ## how much we should try and anticipate and handle this
-      ## situation.
-      warning(sprintf("Failed to delete workdir %s!", workdir)) # nocov
-    }
-  } else {
-    ## Really not sure about this, and until the error handling is
-    ## done this will be a worry; not sure what dbWriteTable can fail
-    ## on.  One option would be a network failure between
-    ## report_db_init and this point which is extremely unlikely.
-    stop("Failed to add entry to database [orderly bug]") # nocov
   }
   orderly_log("success", ":)")
   dest
@@ -175,12 +156,6 @@ report_read_data <- function(workdir, config) {
       names(custom) <- config$fields$name
       custom[config$fields$name[len == 0]] <-
         lapply(config$fields$type[len == 0], set_mode, x = NA)
-    }
-    if (any(len > 1)) {
-      ## TODO: Thus currently implies that all custom fields are
-      ## scalar; non-scalar fields will require turning into json but
-      ## we don't have support for that yet
-      stop("FIXME [orderly bug]") # nocov
     }
     ret <- cbind(ret, as.data.frame(custom, stringsAsFactors = FALSE))
   }
