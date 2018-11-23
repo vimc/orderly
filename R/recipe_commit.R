@@ -44,15 +44,14 @@ recipe_commit <- function(workdir, config) {
   ## orderly table
   dat <- report_read_data(workdir, config)
   con <- orderly_db("destination", config)
+  on.exit(DBI::dbDisconnect(con))
+
   ## Ensure that the db is in a reasonable state:
   tbl <- report_db_init(con, config)
   ## Copy the _files_ over, but we'll roll this back if anything fails
   success <- FALSE
   dest <- copy_report(workdir, dat$name, config)
-  on.exit({
-    if (!success) unlink(dest, recursive = TRUE)
-    DBI::dbDisconnect(con)
-  })
+  on.exit(if (!success) unlink(dest, recursive = TRUE), add = TRUE)
 
   report_data_import(con, workdir, config)
   success <- DBI::dbWriteTable(con, tbl, dat, append = TRUE)

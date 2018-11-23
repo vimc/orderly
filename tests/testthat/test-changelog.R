@@ -166,6 +166,7 @@ test_that("append changelog", {
                           report_version = id1))
 
   con <- orderly_db("destination", config = path)
+  on.exit(DBI::dbDisconnect(con))
   d <- DBI::dbReadTable(con, "changelog")
   d$from_file <- as.logical(d$from_file)
   expect_equal(d[names(l1)], l1)
