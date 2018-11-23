@@ -14,7 +14,7 @@ test_that("defaults: null", {
 test_that("get_remote", {
   fake_server <- function(name) {
     list(name = name,
-         server = structure(list(is_authorised = function() TRUE,
+         server = structure(list(is_authorised = function() FALSE,
                                  name = name),
                             class = "montagu_server"))
   }
@@ -38,6 +38,11 @@ test_that("get_remote", {
                fixed = TRUE)
 
   expect_equal(remote_name(get_remote("foo", config)), "foo")
+
+  config$api_server$foo$server <- NULL
+  ## This will come out once VIMC-2416 is done
+  expect_error(get_remote("foo", config),
+               "The 'montagu' package is required to use an api server")
 })
 
 
