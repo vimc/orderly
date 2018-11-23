@@ -25,7 +25,7 @@ test_that("remote_report_versions", {
 
   mockery::stub(remote_report_versions_api,
                 "montagu::montagu_reports_report_versions",
-                function(name, remote)
+                function(name, error_if_missing, location)
                   remote_report_versions_path(name, remote_path))
   expect_equal(remote_report_versions_api("example", dat$path_remote),
                versions)
@@ -35,6 +35,8 @@ test_that("remote_report_versions", {
                 function(name, remote)
                   remote_report_versions_path(name, remote_path))
   expect_equal(remote_report_versions("example", dat$config), versions)
+
+  expect_equal(remote_report_versions("unknown", dat$config), character(0))
 })
 
 

@@ -99,6 +99,19 @@ test_that("remote_report_names", {
 })
 
 
+test_that("remote_report_versions", {
+  dat <- prepare_orderly_remote_example(FALSE)
+  remote_path <- orderly_remote_path(dat$path_remote)
+
+  expect_equal(
+    remote_report_versions("example", dat$config, remote = dat$remote),
+    c(dat$id1, dat$id2))
+  expect_equal(
+    remote_report_versions("unknown", dat$config, remote = dat$remote),
+    character(0))
+})
+
+
 test_that("orderly_run", {
   dat <- prepare_orderly_remote_example(FALSE)
   expect_error(

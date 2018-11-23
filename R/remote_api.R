@@ -38,18 +38,8 @@ remote_report_names_api <- function(remote) {
 
 
 remote_report_versions_api <- function(name, remote) {
-  res <- tryCatch(montagu::montagu_reports_report_versions(name, remote),
-                  error = function(e) e)
-
-  if (inherits(res, "character")) {
-    return(res)
-  } else if (inherits(res, "montagu_api_error") &&
-             length(res$errors) == 1L &&
-             res$errors[[1]]$code == "unknown-report") {
-    return(character(0))
-  } else {
-    stop(res)
-  }
+  montagu::montagu_reports_report_versions(name, error_if_missing = FALSE,
+                                           location = remote)
 }
 
 
