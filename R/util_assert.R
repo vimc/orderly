@@ -63,8 +63,8 @@ assert_file_exists <- function(x, check_case = TRUE, workdir = NULL,
                                name = "File") {
   err <- !file_exists(x, check_case = check_case, workdir = workdir)
   if (any(err)) {
-    if (check_case) {
-      i <- attr(err, "incorrect_case")
+    i <- attr(err, "incorrect_case")
+    if (!is.null(i)) {
       msg_case <- x[i]
       msg_totally <- x[err & !i]
       if (length(msg_case) > 0L) {
