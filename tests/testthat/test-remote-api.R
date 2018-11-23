@@ -2,13 +2,13 @@ context("remote: api")
 
 test_that("remote_report_names", {
   dat <- prepare_orderly_remote_example(TRUE)
-  remote_path <- orderly_remote_path(dat$remote)
+  remote_path <- orderly_remote_path(dat$path_remote)
 
   mockery::stub(remote_report_names_api,
                 "montagu::montagu_reports_list",
                 function(remote)
                   list(name = remote_report_names_path(remote_path)))
-  expect_equal(remote_report_names_api(dat$remote), "example")
+  expect_equal(remote_report_names_api(dat$path_remote), "example")
 
   mockery::stub(remote_report_names,
                 "remote_report_names_api",
@@ -19,14 +19,14 @@ test_that("remote_report_names", {
 
 test_that("remote_report_versions", {
   dat <- prepare_orderly_remote_example(TRUE)
-  remote_path <- orderly_remote_path(dat$remote)
+  remote_path <- orderly_remote_path(dat$path_remote)
   versions <- c(dat$id1, dat$id2)
 
   mockery::stub(remote_report_versions_api,
                 "montagu::montagu_reports_report_versions",
                 function(name, remote)
                   remote_report_versions_path(name, remote_path))
-  expect_equal(remote_report_versions_api("example", dat$remote),
+  expect_equal(remote_report_versions_api("example", dat$path_remote),
                versions)
 
   mockery::stub(remote_report_versions,
@@ -39,16 +39,16 @@ test_that("remote_report_versions", {
 
 test_that("pull_archive", {
   dat <- prepare_orderly_remote_example(TRUE)
-  remote_path <- orderly_remote_path(dat$remote)
+  remote_path <- orderly_remote_path(dat$path_remote)
 
   mockery::stub(remote_report_pull_archive_api,
                 "montagu::montagu_reports_report_download",
                 function(name, id, ..., location)
-                  zip_dir(file.path(dat$remote, "archive", name, id)))
+                  zip_dir(file.path(dat$path_remote, "archive", name, id)))
 
   capture.output(
     remote_report_pull_archive_api("example", dat$id1, dat$config, NULL))
-  dest <- file.path(dat$local, "archive", "example", dat$id1)
+  dest <- file.path(dat$path_local, "archive", "example", dat$id1)
   expect_true(file.exists(dest))
 
   ## Then the level above:
