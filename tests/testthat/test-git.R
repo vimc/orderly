@@ -25,6 +25,11 @@ test_that("branches", {
 
   expect_equal(git_ref_to_sha("HEAD", path), sha1)
   expect_equal(git_branch_name(path), "master")
+
+  expect_identical(git_ref_to_sha("unknown", path),
+                   NA_character_)
+  expect_error(git_ref_to_sha("unknown", path, TRUE),
+               "Git reference 'unknown' not found")
 })
 
 test_that("detch head & restore", {

@@ -29,11 +29,13 @@ git_detach_head_at_ref <- function(ref, root = NULL) {
   prev
 }
 
-git_ref_to_sha <- function(ref, root = NULL) {
+git_ref_to_sha <- function(ref, root = NULL, check = FALSE) {
   assert_scalar_character(ref)
   res <- git_run(c("rev-parse", ref), root = root, check = FALSE)
   if (res$success) {
     res$output
+  } else if (check) {
+    stop(sprintf("Git reference '%s' not found", ref), call. = FALSE)
   } else {
     NA_character_
   }
