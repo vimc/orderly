@@ -7,7 +7,7 @@ remote_report_pull_archive_path <- function(name, id, config, remote) {
 
 orderly_remote_path <- function(path) {
   assert_file_exists(path)
-  path <- normalizePath(path, mustWork = TRUE)
+  path <- normalizePath(path, "/", mustWork = TRUE)
   if (!file.exists(path_orderly_config_yml(path))) {
     stop("Does not look like an orderly repository: ", squote(path))
   }
