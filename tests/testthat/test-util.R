@@ -304,8 +304,8 @@ test_that("sys_which", {
 
 
 test_that("zip_dir", {
-  path <- tempfile()
-  expect_error(zip_dir(path), "error running zip")
+  mockery::stub(zip_dir, "utils::zip", function(...) -1)
+  expect_error(zip_dir(tempfile()), "error running zip")
 })
 
 
