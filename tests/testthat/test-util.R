@@ -146,14 +146,6 @@ test_that("git_clean_url", {
                "https://github.com/foo/bar")
 })
 
-
-test_that("canonical case - redundant paths", {
-  expect_true(file_has_canonical_case("../../README.md"))
-  expect_true(file_has_canonical_case("../..//README.md"))
-  expect_true(file_has_canonical_case("../..///README.md"))
-})
-
-
 test_that("platform detection", {
   expect_equal(is_windows(), Sys.info()[["sysname"]] == "Windows")
   expect_equal(is_linux(), Sys.info()[["sysname"]] == "Linux")
@@ -260,6 +252,22 @@ test_that("canonical case: absolute path", {
   v <- file_exists(PATH, check_case = TRUE, force_case_check = TRUE)
   expect_identical(attr(v, "incorrect_case"), TRUE)
   expect_equal(attr(v, "correct_case"), set_names(path, PATH))
+})
+
+
+test_that("canonical case: path splitting", {
+  expect_equal(file_split_base("a/b/c"),
+               list(path = c("a", "b", "c"), base = "."))
+  expect_equal(file_split_base("/a/b/c"),
+               list(path = c("a", "b", "c"), base = "/"))
+  expect_equal(file_split_base("c:/a/b/c"),
+               list(path = c("a", "b", "c"), base = "c:/"))
+})
+
+
+test_that("canonical case: on missing file", {
+  expect_equal(file_canonical_case("test-util.R"), "test-util.R")
+  expect_identical(file_canonical_case("another file"), NA_character_)
 })
 
 
