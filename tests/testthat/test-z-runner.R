@@ -140,7 +140,6 @@ test_that("rebuild", {
 
 test_that("run in branch (local)", {
   skip_on_appveyor()
-  skip("currently broken")
   path <- unzip_git_demo()
   runner <- orderly_runner(path)
 

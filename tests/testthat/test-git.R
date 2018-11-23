@@ -153,10 +153,10 @@ test_that("run missing ref", {
 
   runner <- orderly_runner(path2)
 
-  expect_false(git_ref_exists(sha1, path2))
+  expect_false(git_ref_exists("unknown", path2))
 
-  expect_error(runner$queue("minimal", ref = sha1),
-               "Did not find git reference")
+  expect_error(runner$queue("minimal", ref = "unknown"),
+               "Git reference 'unknown' not found")
   expect_equal(runner$data$length(), 0)
 
   id <- runner$queue("minimal", ref = sha1, update = TRUE)

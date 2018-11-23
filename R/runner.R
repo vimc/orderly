@@ -75,13 +75,10 @@ R6_orderly_runner <- R6::R6Class(
           self$git_fetch()
         }
       }
-      if (!is.null(ref) && !git_ref_exists(ref, self$path)) {
-        stop(sprintf("Did not find git reference '%s'", ref))
-      }
       if (!is.null(ref)) {
         ## Lock down the reference at this point in time (so that
         ## subsequent builds will not affect where we find the source).
-        ref <- git_ref_to_sha(ref)
+        ref <- git_ref_to_sha(ref, self$path, TRUE)
       }
       assert_scalar_numeric(timeout)
       key <- self$data$insert(name, parameters, ref, timeout)
