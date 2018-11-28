@@ -73,3 +73,47 @@ unpack_reference <- function(version, path = tempfile()) {
   unzip(sprintf("reference/%s.zip", version), exdir = path)
   file.path(path, version)
 }
+
+
+prepare_orderly_remote_example <- function(api, path = tempfile()) {
+  path_remote <- file.path(path, "remote")
+  path_local <- file.path(path, "local")
+
+  prepare_orderly_example("depends", path_remote)
+
+  id1 <- orderly_run("example", config = path_remote, echo = FALSE)
+  id2 <- orderly_run("example", config = path_remote, echo = FALSE)
+  orderly_commit(id1, config = path_remote)
+  orderly_commit(id2, config = path_remote)
+  remote_path <- orderly_remote_path(path_remote)
+
+  path_local <- prepare_orderly_example("depends")
+
+  ## Patch the report to use non-draft dependencies:
+  p <- file.path(path_local, "src", "depend", "orderly.yml")
+  d <- sub("draft: true", "draft: false", readLines(p))
+  writeLines(d, p)
+
+  if (api) {
+    append_lines(c("api_server:",
+                   "  default:",
+                   "    host: example.com",
+                   "    port: 443",
+                   "    username: me",
+                   "    password: password"),
+                 file.path(path_local, "orderly_config.yml"))
+    config <- orderly_config(path_local)
+    config$api_server$default$server$token <- "123"
+    remote <- get_remote(NULL, config)
+  } else {
+    remote <- orderly_remote_path(path_remote)
+    config <- orderly_config(path_local)
+  }
+
+  list(path_remote = path_remote,
+       path_local = path_local,
+       config = config,
+       remote = remote,
+       id1 = id1,
+       id2 = id2)
+}

@@ -150,7 +150,7 @@ test_that("orderly_data", {
   on.exit(unlink(path, recursive = TRUE))
 
   d <- orderly_data("example", config = path)
-  expect_is(d, "list")
+  expect_is(d, "environment")
   expect_is(d$dat, "data.frame")
 
   e1 <- new.env(parent = baseenv())
@@ -344,6 +344,15 @@ test_that("use artefact", {
   p4 <- orderly_commit(id4, config = path)
 })
 
+test_that("Can't commit report using nonexistant id", {
+  path <- prepare_orderly_example("depends")
+  id1 <- orderly_run("example", config = path, echo = FALSE)
+  id2 <- orderly_run("depend", config = path, echo = FALSE)
+  unlink(file.path(path, "draft", "example", id1), recursive = TRUE)
+  expect_error(orderly_commit(id2, config = path),
+               "Report uses nonexistant id")
+})
+
 test_that("resources", {
   path <- prepare_orderly_example("resources")
   id <- orderly_run("use_resource", config = path, echo = FALSE)
@@ -374,7 +383,7 @@ test_that("database is not loaded unless needed", {
   vars <- c(SOME_ENVVAR = "source.sqlite")
   path <- withr::with_envvar(vars, prepare_orderly_example("nodb"))
 
-  expect_identical(orderly_data("example", config = path), list())
+  expect_identical(as.list(orderly_data("example", config = path)), list())
   id <- orderly_run("example", config = path, echo = FALSE)
   expect_true(
     file.exists(file.path(path, "draft", "example", id, "mygraph.png")))
@@ -432,6 +441,19 @@ test_that("test mode artefacts", {
 })
 
 
+test_that("orderly_test_check requires test mode", {
+  expect_error(orderly_test_check(), "Not running in test mode")
+})
+
+
+test_that("test mode end", {
+  env <- new.env()
+  env$Q <- TRUE
+  test_mode_end(env)
+  expect_null(env$Q)
+})
+
+
 test_that("run with message", {
   path <- prepare_orderly_example("changelog")
   test_message <- "[label1] test"
@@ -467,33 +489,6 @@ test_that("renamed dependencies are expected", {
   expect_false(any(grep("unexpected", messages)))
 })
 
-
-test_that("shiny app", {
-  path <- prepare_orderly_example("shiny")
-  id <- orderly_run("example", config = path, echo = FALSE)
-  p_shiny <- file.path(path, "draft", "example", id, "shiny")
-  expect_true(file.exists(p_shiny))
-  expect_true(file.exists(file.path(p_shiny, "app.R")))
-  expect_true(file.exists(file.path(p_shiny, "data.RData")))
-
-  dest <- file.path(path, "shiny")
-  expect_error(orderly_deploy_shiny(dest, config = path),
-               "Did not find any archive reports for example")
-  orderly_commit(id, config = path)
-  orderly_deploy_shiny(dest, config = path)
-
-  expect_true(file.exists(file.path(dest, "index.html")))
-  expect_true(file.exists(file.path(dest, "example-shiny-app")))
-
-  p <- file.path(dest, "example-shiny-app")
-  q <- file.path(path, "archive", "example", id, "shiny")
-  expect_true(file.exists(file.path(p, "orderly_id")))
-  expect_equal(readLines(file.path(p, "orderly_id")), id)
-
-  expect_true(all(dir(q) %in% dir(p)))
-  expect_equal(hash_files(file.path(p, dir(q)), FALSE),
-               hash_files(file.path(q, dir(q)), FALSE))
-})
 
 test_that("non-existent package", {
   path <- prepare_orderly_example("minimal")
@@ -634,3 +629,70 @@ test_that("required field wrong type", {
 })
 
 
+test_that("commit failure", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+  expect_error(orderly_commit(new_report_id(), "example", path),
+               "Did not find draft report example/")
+})
+
+
+test_that("can't commit failed run", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+
+  append_lines('stop("some error")',
+               file.path(path, "src", "example", "script.R"))
+  expect_error(orderly_run("example", config = path, echo = FALSE),
+               "some error")
+  id <- dir(file.path(path, "draft", "example"))
+
+  expect_error(orderly_commit(id, config = path),
+               "Did not find run metadata file for example/")
+})
+
+
+test_that("can't commit report twice", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+
+  id <- orderly_run("example", config = path, echo = FALSE)
+  dir.create(file.path(path, "archive", "example", id), FALSE, TRUE)
+  expect_error(orderly_commit(id, config = path),
+               "Report example/.* appears to have already been copied")
+})
+
+
+test_that("open after run", {
+  mock <- mockery::mock(TRUE)
+  mockery::stub(orderly_run, "open_directory", mock)
+
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("example", config = path, echo = FALSE, open = TRUE)
+
+  expect_equal(length(mock), 1)
+  args <- mockery::mock_args(mock)[[1]]
+  expect_equal(length(args)[[1]], 1)
+  expect_equal(normalizePath(args[[1]]),
+               normalizePath(file.path(path, "draft", "example", id)))
+})
+
+
+test_that("missing parameters throws an error", {
+  path <- prepare_orderly_example("example")
+  on.exit(unlink(path, recursive = TRUE))
+
+  expect_error(orderly_run("example", config = path),
+               "Missing parameters: 'cyl'")
+  expect_error(orderly_run("example", list(cl = 2), config = path),
+               "Missing parameters: 'cyl'")
+})
+
+
+test_that("orderly_environment", {
+  expect_identical(orderly_environment(.GlobalEnv), .GlobalEnv)
+  e <- orderly_environment(NULL)
+  expect_identical(parent.env(e), .GlobalEnv)
+  expect_identical(orderly_environment(e), e)
+  expect_error(orderly_environment(list()), "'envir' must be an environment")
+})

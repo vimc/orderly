@@ -149,3 +149,99 @@ test_that("Behaviour with rogue files", {
     orderly_latest("example", config = path),
     "Unexpected files within orderly directory '.*archive/example': '.*\\.zip'")
 })
+
+
+test_that("orderly_last_id", {
+  path <- prepare_orderly_example("minimal")
+  id1 <- orderly_run("example", config = path, echo = FALSE)
+  id2 <- orderly_run("example", config = path, echo = FALSE)
+  expect_equal(orderly_last_id(config = path), id2)
+  expect_identical(orderly_last_id(config = path, draft = FALSE),
+                   NA_character_)
+  orderly_commit(id2, config = path)
+  expect_equal(orderly_last_id(config = path), id1)
+  expect_equal(orderly_last_id(config = path, draft = FALSE), id2)
+})
+
+
+test_that("orderly_find_report", {
+  path <- prepare_orderly_example("minimal")
+  id1 <- orderly_run("example", config = path, echo = FALSE)
+  id2 <- orderly_run("example", config = path, echo = FALSE)
+
+  p <- orderly_find_report("latest", "example", config = path)
+  expect_equal(normalizePath(p),
+               normalizePath(file.path(path, "draft", "example", id2)))
+  p <- orderly_find_report(id1, "example", config = path)
+  expect_equal(normalizePath(p),
+               normalizePath(file.path(path, "draft", "example", id1)))
+
+  expect_null(
+    orderly_find_report(new_report_id(), "example", config = path))
+  expect_error(
+    orderly_find_report(new_report_id(), "example", config = path,
+                        must_work = TRUE),
+    "Did not find draft report example:")
+  expect_error(
+    orderly_find_report(new_report_id(), "example", config = path,
+                        must_work = TRUE, draft = FALSE),
+    "Did not find archived report example:")
+})
+
+
+test_that("orderly_locate", {
+  path <- prepare_orderly_example("minimal")
+  id1 <- orderly_run("example", config = path, echo = FALSE)
+  id2 <- orderly_run("example", config = path, echo = FALSE)
+
+  expect_equal(
+    normalizePath(orderly_locate("latest", "example", path, draft = TRUE)),
+    normalizePath(file.path(path, "draft", "example", id2)))
+
+  expect_error(orderly_locate("latest", NULL, path),
+               "name must be given for id = 'latest'")
+  expect_error(orderly_locate("latest", "example", path),
+               "draft must be given for id = 'latest'")
+
+  ## It's not clear that anyone is relying on this yet, and it's not
+  ## clear why this differs from orderly_find_report
+  expect_null(
+    orderly_locate(new_report_id(), "example", path, must_work = FALSE))
+  expect_error(
+    orderly_locate(new_report_id(), "example", path, must_work = TRUE),
+    "Did not find report .*draft or archive")
+
+  expect_null(
+    orderly_locate(new_report_id(), "example", path, draft = FALSE,
+                   must_work = FALSE))
+  expect_error(
+    orderly_locate(new_report_id(), "example", path, draft = FALSE,
+                   must_work = TRUE),
+    "Did not find archive report")
+
+  expect_equal(
+    normalizePath(orderly_locate(id2, "example", path, draft = TRUE)),
+    normalizePath(file.path(path, "draft", "example", id2)))
+})
+
+
+test_that("orderly_open", {
+  mockery::stub(orderly_open, "open_directory", identity)
+
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("example", config = path, echo = FALSE)
+  res <- orderly_open(id, config = path)
+  expect_equal(normalizePath(res),
+               normalizePath(file.path(path, "draft", "example", id)))
+})
+
+
+test_that("orderly_open_latest", {
+  mockery::stub(orderly_open_latest, "open_directory", identity)
+
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("example", config = path, echo = FALSE)
+  res <- orderly_open_latest(config = path, draft = TRUE)
+  expect_equal(normalizePath(res),
+               normalizePath(file.path(path, "draft", "example", id)))
+})

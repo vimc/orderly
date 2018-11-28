@@ -22,7 +22,8 @@ Imports:
 Suggests:
     httr,
     knitr,
-    montagu (>= 0.2.0),
+    mockery,
+    montagu (>= 0.2.4),
     processx,
     rmarkdown,
     testthat,

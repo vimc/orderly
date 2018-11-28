@@ -49,7 +49,7 @@ R6_orderly_runner <- R6::R6Class(
 
       bin <- tempfile()
       dir.create(bin)
-      self$orderly_bin <- write_script(bin)
+      self$orderly_bin <- write_script(bin, versioned = TRUE)
 
       ## This ensures that the index will be present, which will be
       ## useful if something else wants to access the database!
@@ -75,11 +75,10 @@ R6_orderly_runner <- R6::R6Class(
           self$git_fetch()
         }
       }
-      if (!is.null(ref) && !git_ref_exists(ref, self$path)) {
-        stop(sprintf("Did not find git reference '%s'", ref))
+      if (!is.null(ref)) {
         ## Lock down the reference at this point in time (so that
         ## subsequent builds will not affect where we find the source).
-        ref <- git_ref_to_sha(ref)
+        ref <- git_ref_to_sha(ref, self$path, TRUE)
       }
       assert_scalar_numeric(timeout)
       key <- self$data$insert(name, parameters, ref, timeout)
@@ -232,13 +231,12 @@ R6_orderly_runner <- R6::R6Class(
         p <- file.path(base(self$path), process$name, id)
         if (file.exists(p)) {
           file_copy(process$stderr, file.path(p, "orderly.log"))
-          ## This should be empty if the redirection works as expected
-          if (file.size(process$stdout) > 0L) {
-            file_copy(process$stdout, file.path(p, "orderly.log.stdout"))
+          ## This should be empty if the redirection works as expected:
+          file_copy(process$stdout, file.path(p, "orderly.log.stdout"))
+          if (file.size(process$stdout) == 0L) {
+            file.remove(file.path(p, "orderly.log.stdout"))
           }
         }
-      } else {
-        id <- NA_character_
       }
 
       self$data$set_state(key, state, id)
@@ -310,21 +308,6 @@ path_stdout <- function(path, key) {
   file.path(path, paste0(key, ".stdout"))
 }
 
-process_wait <- function(px, filename, timeout = 1, poll = 0.02) {
-  t_stop <- Sys.time() + timeout
-  while (px$is_alive()) {
-    if (file.exists(filename)) {
-      break
-    }
-    if (Sys.time() > t_stop) {
-      stop("did not start in time")
-    }
-    Sys.sleep(poll)
-    message(".", appendLF = FALSE)
-  }
-  message("started")
-  id <- readLines(filename)
-}
 
 runner_queue <- function() {
   cols <- c("key", "state", "name", "parameters", "ref", "id", "timeout")

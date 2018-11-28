@@ -12,7 +12,7 @@ ORDERLY_SCHEMA_VERSION <- "0.0.4"
 ## super likely to change it would be good
 ORDERLY_SCHEMA_TABLE <- "orderly_schema"
 ORDERLY_MAIN_TABLE <- "report_version"
-ORDERY_TABLE_LIST <- "orderly_schema_tables"
+ORDERLY_TABLE_LIST <- "orderly_schema_tables"
 
 orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
   d <- yaml_read(orderly_file("database/schema.yml"))
@@ -114,7 +114,7 @@ report_db2_init <- function(con, config, must_create = FALSE, validate = TRUE) {
   sqlite_pragma_fk(con, TRUE)
 
   if (!DBI::dbExistsTable(con, ORDERLY_SCHEMA_TABLE)) {
-    report_db2_init_create(con, config)
+    report_db2_init_create(con, config, report_db2_dialect(con))
   } else if (must_create) {
     stop(sprintf("Table '%s' already exists", ORDERLY_SCHEMA_TABLE))
   } else if (validate) {
@@ -123,21 +123,21 @@ report_db2_init <- function(con, config, must_create = FALSE, validate = TRUE) {
 }
 
 
-report_db2_init_create <- function(con, config) {
-  if (config$destination$driver[[1]] == "RSQLite") {
-    dialect <- "sqlite"
-  } else {
-    dialect <- "postgres"
-  }
+report_db2_init_create <- function(con, config, dialect) {
   dat <- orderly_schema_prepare(config$fields, dialect)
   dat$values$changelog_label <- config$changelog
 
+  DBI::dbBegin(con)
+  on.exit(DBI::dbRollback(con))
   for (s in dat$sql) {
     DBI::dbExecute(con, s)
   }
   for (nm in names(dat$values)) {
     DBI::dbWriteTable(con, nm, dat$values[[nm]], append = TRUE)
   }
+
+  DBI::dbCommit(con)
+  on.exit()
 }
 
 
@@ -194,7 +194,7 @@ report_db2_rebuild <- function(config, verbose = TRUE) {
   con <- orderly_db("destination", config, validate = FALSE)
   on.exit(DBI::dbDisconnect(con))
 
-  if (DBI::dbExistsTable(con, ORDERY_TABLE_LIST)) {
+  if (DBI::dbExistsTable(con, ORDERLY_TABLE_LIST)) {
     report_db2_destroy(con)
   }
   report_db2_init(con, config)
@@ -214,13 +214,8 @@ report_db2_needs_rebuild <- function(config) {
   con <- orderly_db("destination", config, FALSE, FALSE)
   on.exit(DBI::dbDisconnect(con))
 
-  if (!DBI::dbExistsTable(con, ORDERLY_SCHEMA_TABLE)) {
-    ## No schema table: should rebuild
-    TRUE
-  } else {
-    d <- DBI::dbReadTable(con, ORDERLY_SCHEMA_TABLE)
-    numeric_version(d$schema_version) < numeric_version(ORDERLY_SCHEMA_VERSION)
-  }
+  d <- DBI::dbReadTable(con, ORDERLY_SCHEMA_TABLE)
+  numeric_version(d$schema_version) < numeric_version(ORDERLY_SCHEMA_VERSION)
 }
 
 
@@ -397,11 +392,11 @@ report_data_import <- function(con, workdir, config) {
 
   if (!is.null(dat_rds$meta$parameters)) {
     p <- dat_rds$meta$parameters
-    parameters <-
-      data_frame(report_version = id,
-                 name = names(p),
-                 type = report_db2_parameter_type(p),
-                 value = vcapply(p, as.character, USE.NAMES = FALSE))
+    parameters <- data_frame(
+      report_version = id,
+      name = names(p),
+      type = report_db2_parameter_type(p),
+      value = report_db2_parameter_serialise(p))
     DBI::dbWriteTable(con, "parameters", parameters, append = TRUE)
   }
 
@@ -454,12 +449,12 @@ report_data_find_dependencies <- function(con, meta) {
 
 
 report_db2_destroy <- function(con) {
-  if (DBI::dbExistsTable(con, ORDERY_TABLE_LIST)) {
+  if (DBI::dbExistsTable(con, ORDERLY_TABLE_LIST)) {
     ## We have to disable the FK check here, otherwise it's a bit of a
     ## pain to delete all tables.
     sqlite_pragma_fk(con, FALSE)
     on.exit(sqlite_pragma_fk(con, TRUE))
-    for (t in DBI::dbReadTable(con, ORDERY_TABLE_LIST)[[1L]]) {
+    for (t in DBI::dbReadTable(con, ORDERLY_TABLE_LIST)[[1L]]) {
       DBI::dbRemoveTable(con, t)
     }
   }
@@ -473,7 +468,7 @@ report_db2_publish <- function(con, id, value) {
 
 
 sqlite_pragma_fk <- function(con, enable = TRUE) {
-  if (inherits(con, "SQLiteConnection")) {
+  if (report_db2_dialect(con) == "sqlite") {
     DBI::dbExecute(con, sprintf("PRAGMA foreign_keys = %d", enable))
   }
 }
@@ -486,9 +481,37 @@ report_db2_parameter_type <- function(x) {
     } else if (is.numeric(el)) {
       "number"
     } else if (is.logical(el)) {
-      "logical"
+      "boolean"
     } else {
       stop("Unsupported parameter type")
     }
   }, USE.NAMES = FALSE)
+}
+
+
+report_db2_parameter_serialise <- function(x) {
+  vcapply(x, function(el) {
+    if (is.character(el)) {
+      el
+    } else if (is.numeric(el)) {
+      as.character(el)
+    } else if (is.logical(el)) {
+      tolower(as.character(el))
+    } else {
+      stop("Unsupported parameter type")
+    }
+  }, USE.NAMES = FALSE)
+}
+
+
+report_db2_dialect <- function(con) {
+  if (inherits(con, "SQLiteConnection")) {
+    "sqlite"
+  } else if (inherits(con, "PqConnection")) {
+    "postgres"
+  } else {
+    ## It's possible that RPostgreSQL might work, but it's unlikely to
+    ## throw all the errors that we need.
+    stop("Can't determine SQL dialect")
+  }
 }

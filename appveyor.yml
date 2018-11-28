@@ -26,7 +26,7 @@ before_test:
 build_script:
   - travis-tool.sh install_deps
   - travis-tool.sh install_github ropensci/cyphr
-  - travis-tool.sh install_github vimc/vaultr@i600
+  - travis-tool.sh install_github vimc/vaultr
   - travis-tool.sh install_github vimc/montagu-r
 
 test_script:

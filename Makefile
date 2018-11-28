@@ -30,4 +30,7 @@ vignettes: vignettes/orderly.Rmd
 	mkdir -p inst/doc
 	cp vignettes/*.html vignettes/*.Rmd inst/doc
 
+tests/testthat/montagu-reports:
+	git clone git@github.com:vimc/montagu-reports $@
+
 .PHONY: test roxygen install build check check_all vignettes

@@ -111,6 +111,63 @@ test_that("support declaring api server", {
 
   expect_is(cfg$api_server, "list")
   expect_is(cfg$api_server$myhost$server, "montagu_server")
+
+  withr::with_envvar(
+    c("ORDERLY_API_SERVER_IDENTITY" = NA),
+    expect_null(orderly_config(path)$api_server_identity))
+  withr::with_envvar(
+    c("ORDERLY_API_SERVER_IDENTITY" = "myhost"),
+    expect_equal(orderly_config(path)$api_server_identity, "myhost"))
+  withr::with_envvar(
+    c("ORDERLY_API_SERVER_IDENTITY" = "other"),
+    expect_error(
+      orderly_config(path)$api_server_identity,
+      "api_server_identity must be one of 'myhost'"))
+})
+
+test_that("api server basic auth switch", {
+  path <- tempfile()
+  dir.create(path)
+  dat <- list(source = list(driver = "RSQLite::SQLite"),
+              api_server = list(
+                myhost = list(
+                  host = "myhost.com",
+                  port = 443,
+                  username = "orderly",
+                  password = "secert")))
+
+  writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
+  cfg <- orderly_config(path)
+  expect_false(cfg$api_server$myhost$basic)
+})
+
+test_that("api server has only one primary", {
+  path <- tempfile()
+  dir.create(path)
+  dat <- list(source = list(driver = "RSQLite::SQLite"),
+              api_server = list(
+                myhost = list(
+                  host = "myhost.com",
+                  port = 443,
+                  primary = TRUE,
+                  username = "orderly",
+                  password = "secert"),
+                other = list(
+                  host = "example.com",
+                  port = 443,
+                  primary = TRUE,
+                  username = "orderly",
+                  password = "secert")))
+
+  writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
+  expect_error(
+    orderly_config(path),
+    "At most one api_server can be listed as primary but here 2 are")
+  dat$api_server$other$primary <- FALSE
+  writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
+  cfg <- orderly_config(path)
+  expect_true(cfg$api_server$myhost$primary)
+  expect_false(cfg$api_server$other$primary)
 })
 
 test_that("no global folder", {
@@ -128,4 +185,22 @@ test_that("no global folder", {
     "global resource does not exist: 'invalid_directory'",
     fixed = TRUE
   )
+})
+
+
+test_that("vault configuration", {
+  path <- prepare_orderly_example("minimal")
+  path_config <- file.path(path, "orderly_config.yml")
+  text <- readLines(path_config)
+
+  expect_null(orderly_config(path = path)$vault_server)
+
+  url <- "https://vault.example.com"
+  writeLines(c(text, sprintf("vault_server: %s", url)), path_config)
+  expect_equal(orderly_config(path = path)$vault_server, url)
+
+  writeLines(c(text, sprintf("vault_server: %s", TRUE)), path_config)
+  expect_error(orderly_config(path = path),
+               "orderly_config.yml:vault_server' must be character",
+               fixed = TRUE)
 })

@@ -21,9 +21,7 @@
 ##'
 ##' @param envir The parent of environment to evalute the report in;
 ##'   by default a new environment will be made with the global
-##'   environment as the parent.  For \code{orderly_data}, this may be
-##'   \code{list()} in which case a list will be returned (rather than
-##'   an environment).
+##'   environment as the parent.
 ##'
 ##' @param ref A git reference to use for this run (see Details)
 ##'
@@ -57,7 +55,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   info <- recipe_run(info, parameters, envir, config, echo = echo)
 
   if (open) {
-    open_directory(file.path(config, "drafts", name, info$id))
+    open_directory(file.path(config$path, "draft", name, info$id))
   }
 
   if (extended_output) {
@@ -69,11 +67,11 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
 
 ##' @export
 ##' @rdname orderly_run
-orderly_data <- function(name, parameters = NULL, envir = list(),
+orderly_data <- function(name, parameters = NULL, envir = NULL,
                          config = NULL, locate = TRUE) {
   config <- orderly_config_get(config, locate)
   info <- recipe_read(file.path(path_src(config$path), name), config)
-  envir <- orderly_environment(envir, TRUE)
+  envir <- orderly_environment(envir)
   recipe_data(config, info, parameters, envir)
 }
 
@@ -117,10 +115,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
                      info = info,
                      prompt = getOption("prompt"))
   options(prompt = "[orderly test] > ")
-  makeActiveBinding(quote("Q"), function() {
-    rm(list = "Q", envir = .GlobalEnv)
-    orderly_test_end()
-  }, .GlobalEnv)
+  makeActiveBinding(quote("Q"), test_mode_end, .GlobalEnv)
   orderly_log("setwd", "running in test draft directory")
   on.exit()
 }
@@ -304,17 +299,13 @@ recipe_substitute <- function(info, parameters) {
 
 recipe_data <- function(config, info, parameters, dest) {
   assert_is(config, "orderly_config")
-  if (!(is.environment(dest) || is.list(dest))) {
+  if (!is.environment(dest)) {
     stop("Invalid input for 'dest'")
   }
 
   info <- recipe_substitute(info, parameters)
   if (!is.null(parameters)) {
-    if (is.environment(dest)) {
-      list2env(parameters, dest)
-    } else {
-      dest <- modify_list(dest, parameters)
-    }
+    list2env(parameters, dest)
   }
 
   if (length(info$data) == 0 && is.null(info$connection)) {
@@ -502,14 +493,13 @@ recipe_check_device_stack <- function(expected) {
   }
 }
 
-orderly_environment <- function(envir, list_ok = FALSE) {
+orderly_environment <- function(envir) {
   if (is.null(envir)) {
     new.env(parent = .GlobalEnv)
-  } else if (is.environment(envir) || (is.list(envir) && list_ok)) {
+  } else if (is.environment(envir)) {
     envir
   } else {
-    stop("'envir' must be an ",
-         if (list_ok) "environment or list" else "environment")
+    stop("'envir' must be an environment")
   }
 }
 
@@ -588,4 +578,10 @@ orderly_run_info <- function() {
     stop("Not currently running an orderly report")
   }
   info
+}
+
+
+test_mode_end <- function(env = .GlobalEnv) {
+  suppressWarnings(rm(list = "Q", envir = env))
+  tryCatch(orderly_test_end(), error = function(e) NULL)
 }

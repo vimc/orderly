@@ -12,3 +12,4 @@
 ^appveyor\.yml$
 ^docs$
 ^update_web\.sh$
+^tests/testthat/montagu-reports$

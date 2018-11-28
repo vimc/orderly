@@ -9,3 +9,4 @@ demo.tar.gz
 vignettes/*.html
 build
 docs
+tests/testthat/montagu-reports

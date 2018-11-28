@@ -17,3 +17,22 @@ test_that("orderly_demo", {
   expect_true(all(is.na(d$displayname[d$report == "minimal"])))
   expect_true(all(is.na(d$description[d$report == "minimal"])))
 })
+
+
+test_that("git demo", {
+  path1 <- prepare_orderly_git_example(run_report = FALSE)
+  capture.output(path2 <- prepare_orderly_git_example(run_report = TRUE))
+
+  expect_equal(
+    nrow(orderly_list2(config = path1[["local"]], draft = FALSE)), 0)
+  expect_equal(
+    nrow(orderly_list2(config = path2[["local"]], draft = FALSE)), 1)
+})
+
+
+test_that("demo infrastructure", {
+  path <- prepare_orderly_example("demo")
+  file.remove(file.path(path, "before.R"))
+  expect_error(run_orderly_demo(path),
+               "function .* not found in before\\.R")
+})

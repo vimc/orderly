@@ -1,4 +1,5 @@
-wait_while <- function(continue, timeout = 2, poll = 0.02) {
+wait_while <- function(continue, timeout = NULL, poll = 0.02) {
+  timeout <- timeout %||% (if (nzchar(Sys.getenv("R_COVR", ""))) 10 else 2)
   t_quit <- Sys.time() + timeout
   while (continue()) {
     Sys.sleep(poll)
@@ -38,6 +39,11 @@ runner_start_interactive <- function(runner) {
   dat <- runner_start(runner, "interactive")
   wait_for_path(file.path(runner$path, "draft", dat$name, dat$id, "started"))
   dat
+}
+
+append_lines <- function(text, filename) {
+  prev <- readLines(filename)
+  writeLines(c(prev, text), filename)
 }
 
 Sys.setenv(R_TESTS = "")

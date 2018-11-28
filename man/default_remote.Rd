@@ -5,12 +5,12 @@
 \alias{get_default_remote}
 \title{Set default remote location}
 \usage{
-set_default_remote(value)
+set_default_remote(value, config = NULL, locate = TRUE)
 
 get_default_remote(config = NULL, locate = TRUE)
 }
 \arguments{
-\item{value}{An \code{orderly_remote_location} object.}
+\item{value}{A string describing a remote, or \code{NULL} to clear}
 
 \item{config}{An orderly configuration, or the path to one (or
 \code{NULL} to locate one if \code{locate} is \code{TRUE}).}

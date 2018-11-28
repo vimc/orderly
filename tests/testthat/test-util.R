@@ -139,11 +139,144 @@ test_that("git", {
                info[c("sha_short", "sha", "branch")])
 })
 
-test_that("canonical case - redundant paths", {
-  skip("flakey")
-  expect_true(file_has_canonical_case("../../README.md"))
-  expect_true(file_has_canonical_case("../..//README.md"))
-  expect_true(file_has_canonical_case("../..///README.md"))
+
+test_that("git_clean_url", {
+  expect_null(git_clean_url(NULL))
+  expect_equal(git_clean_url("git@github.com:foo/bar.git"),
+               "https://github.com/foo/bar")
+})
+
+test_that("platform detection", {
+  expect_equal(is_windows(), Sys.info()[["sysname"]] == "Windows")
+  expect_equal(is_linux(), Sys.info()[["sysname"]] == "Linux")
+})
+
+test_that("canonical case: single file", {
+  root <- tempfile()
+  dir.create(root)
+  path <- "a"
+  PATH <- toupper(path)
+  full <- file.path(root, path)
+
+  dir.create(dirname(full), FALSE, TRUE)
+  file.create(full)
+
+  withr::with_dir(root, {
+    expect_true(file_has_canonical_case(path))
+    expect_equal(file_canonical_case(path), path)
+    expect_true(file_exists(path))
+    expect_true(file_exists(path, check_case = TRUE))
+
+    expect_false(file_has_canonical_case(PATH))
+    expect_equal(file_canonical_case(PATH), path)
+  })
+
+  expect_true(file_exists(path, check_case = FALSE, workdir = root))
+  expect_true(file_exists(path, check_case = TRUE, workdir = root))
+
+  expect_false(file_exists(PATH, check_case = TRUE, workdir = root))
+
+  if (is_linux()) {
+    mockery::stub(file_exists, "file.exists", TRUE)
+  }
+  expect_true(file_exists(PATH, check_case = FALSE, workdir = root))
+  v <- file_exists(PATH, check_case = TRUE, workdir = root,
+                   force_case_check = TRUE)
+  expect_identical(attr(v, "incorrect_case"), TRUE)
+  expect_equal(attr(v, "correct_case"), set_names(path, PATH))
+})
+
+
+test_that("canonical case: relative path", {
+  root <- tempfile()
+  dir.create(root)
+  path <- file.path("a", "b", "c")
+  PATH <- toupper(path)
+  full <- file.path(root, path)
+
+  dir.create(dirname(full), FALSE, TRUE)
+  file.create(full)
+
+  withr::with_dir(root, {
+    expect_true(file_has_canonical_case(path))
+    expect_equal(file_canonical_case(path), path)
+    expect_true(file_exists(path))
+    expect_true(file_exists(path, check_case = TRUE))
+
+    expect_false(file_has_canonical_case(PATH))
+    expect_equal(file_canonical_case(PATH), path)
+  })
+
+  expect_true(file_exists(path, check_case = FALSE, workdir = root))
+  expect_true(file_exists(path, check_case = TRUE, workdir = root))
+
+  expect_false(file_exists(PATH, check_case = TRUE, workdir = root))
+
+  if (is_linux()) {
+    mockery::stub(file_exists, "file.exists", TRUE)
+  }
+
+  expect_true(file_exists(PATH, check_case = FALSE, workdir = root))
+  v <- file_exists(PATH, check_case = TRUE, workdir = root,
+                   force_case_check = TRUE)
+  expect_identical(attr(v, "incorrect_case"), TRUE)
+  expect_equal(attr(v, "correct_case"), set_names(path, PATH))
+})
+
+
+test_that("canonical case: absolute path", {
+  path <- file.path(tempfile(), "a", "b", "c")
+  dir.create(dirname(path), FALSE, TRUE)
+  file.create(path)
+  path <- normalizePath(path, "/")
+  PATH <- toupper(path)
+  if (is_windows()) {
+    ## On windows, use upper case drive letters here:
+    path <- paste0(toupper(substr(path, 1, 1)),
+                   substr(path, 2, nchar(path)))
+  }
+
+  expect_true(file_has_canonical_case(path))
+  expect_equal(file_canonical_case(path), path)
+  expect_true(file_exists(path))
+  expect_true(file_exists(path, check_case = TRUE))
+
+  expect_false(file_has_canonical_case(PATH))
+  expect_equal(file_canonical_case(PATH), path)
+
+  expect_true(file_exists(path, check_case = FALSE))
+  expect_true(file_exists(path, check_case = TRUE))
+
+  expect_false(file_exists(PATH, check_case = TRUE))
+
+  if (is_linux()) {
+    mockery::stub(file_exists, "file.exists", TRUE)
+  }
+  expect_true(file_exists(PATH, check_case = FALSE))
+
+  v <- file_exists(PATH, check_case = TRUE, force_case_check = TRUE)
+  expect_identical(attr(v, "incorrect_case"), TRUE)
+  expect_equal(attr(v, "correct_case"), set_names(path, PATH))
+})
+
+
+test_that("canonical case: path splitting", {
+  expect_equal(file_split_base("a/b/c"),
+               list(path = c("a", "b", "c"), base = ".", absolute = FALSE))
+  expect_equal(file_split_base("/a/b/c"),
+               list(path = c("a", "b", "c"), base = "/", absolute = TRUE))
+  expect_equal(file_split_base("c:/a/b/c"),
+               list(path = c("a", "b", "c"), base = "c:/", absolute = TRUE))
+  expect_equal(file_split_base("C:/a/b/c"),
+               list(path = c("a", "b", "c"), base = "C:/", absolute = TRUE))
+  expect_equal(file_split_base("C:/A/B/C", TRUE),
+               list(path = c("a", "b", "c"), base = "C:/", absolute = TRUE))
+})
+
+
+test_that("canonical case: on missing file", {
+  expect_equal(file_canonical_case("test-util.R"), "test-util.R")
+  expect_identical(file_canonical_case("another file"), NA_character_)
 })
 
 
@@ -155,4 +288,123 @@ test_that("abbreviate", {
 
   expect_equal(abbreviate("12345\n678", 10), "12345")
   expect_equal(abbreviate("12345\n678", 4), "1...")
+})
+
+
+test_that("Sys_getenv", {
+  withr::with_envvar(
+    c("SOME_VAR" = NA_character_), {
+      expect_error(Sys_getenv("SOME_VAR"),
+                   "Environment variable 'SOME_VAR' is not set")
+      expect_null(Sys_getenv("SOME_VAR", FALSE))
+      expect_identical(Sys_getenv("SOME_VAR", FALSE, NA_character_),
+                       NA_character_)
+    })
+})
+
+
+## I'm not sure there's anything super safe to run this with in
+## general...
+test_that("sys_which", {
+  prog <- "a-path-that-does-not-exist"
+  expect_error(sys_which(prog),
+               "Did not find 'a-path-that-does-not-exist'")
+})
+
+
+test_that("zip_dir", {
+  mockery::stub(zip_dir, "utils::zip", function(...) -1)
+  expect_error(zip_dir(tempfile()), "error running zip")
+})
+
+
+test_that("open_directory: windows", {
+  mockery::stub(open_directory, "system2", list)
+  mockery::stub(open_directory, "is_windows", TRUE)
+
+  expect_equal(open_directory("."),
+               list("cmd", c("/c", "start", "explorer", ".")))
+  p <- normalizePath(".")
+  expect_equal(open_directory(normalizePath(p)),
+               list("cmd", c("/c", "start", "explorer", p)))
+})
+
+
+test_that("open_directory: linux", {
+  mockery::stub(open_directory, "system2", list)
+  mockery::stub(open_directory, "is_windows", FALSE)
+  mockery::stub(open_directory, "is_linux", TRUE)
+
+  expect_equal(open_directory("."), list("xdg-open", "."))
+  p <- normalizePath(".")
+  expect_equal(open_directory(normalizePath(p)), list("xdg-open", p))
+})
+
+
+test_that("open_directory: mac", {
+  mockery::stub(open_directory, "system2", list)
+  mockery::stub(open_directory, "is_windows", FALSE)
+  mockery::stub(open_directory, "is_linux", FALSE)
+
+  expect_equal(open_directory("."), list("open", "."))
+  p <- normalizePath(".")
+  expect_equal(open_directory(normalizePath(p)), list("open", p))
+})
+
+
+test_that("open_directory: error", {
+  expect_error(open_directory(tempfile()), "Expected a directory")
+  expect_error(open_directory("test-util.R"), "Expected a directory")
+})
+
+
+test_that("copy_directory failure", {
+  a <- tempfile()
+  b <- tempfile()
+  dir.create(a, FALSE, TRUE)
+  file.create(file.path(a, "file1"))
+  file.create(file.path(a, "file2"))
+
+  mockery::stub(copy_directory, "file.copy", c(TRUE, FALSE))
+  expect_error(copy_directory(a, b), "Error copying files")
+})
+
+
+test_that("copy_directory rollback", {
+  a <- tempfile()
+  b <- tempfile()
+  dir.create(a, FALSE, TRUE)
+  file.create(file.path(a, "file1"))
+  file.create(file.path(a, "file2"))
+
+  mockery::stub(copy_directory, "file.copy", c(TRUE, FALSE))
+  expect_error(copy_directory(a, b, TRUE), "Error copying files")
+  expect_false(file.exists(b))
+})
+
+
+test_that("copy_directory rollback needs missing destination", {
+  a <- tempfile()
+  b <- tempfile()
+  dir.create(a, FALSE, TRUE)
+  file.create(file.path(a, "file1"))
+  file.create(file.path(a, "file2"))
+  dir.create(b, FALSE, TRUE)
+  expect_error(copy_directory(a, b, TRUE),
+               "Destination cannot already exist")
+})
+
+
+test_that("ordered_map_to_list", {
+  expect_equal(ordered_map_to_list(yaml_load("- a: 1\n- b: 2")),
+               list(a = 1, b = 2))
+
+  ## The yaml parser will catch this sort of thing
+  expect_error(yaml_load("- a: 1\n- b: 2\n c: 3"))
+
+  ## but if it came through it would be as
+  d <- list(list(a = 1), list(b = 2, c = 3))
+  expect_error(ordered_map_to_list(d),
+               "Corrupt ordered map (this should never happen)",
+               fixed = TRUE)
 })

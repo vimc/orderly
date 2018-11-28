@@ -40,11 +40,12 @@ test_that("runner queue", {
   expect_true(queue$set_state(key4, "running", new_report_id()))
 
   expect_null(queue$next_queued())
+
+  expect_false(queue$set_state("unknown", "running", new_report_id()))
 })
 
 test_that("run: success", {
   skip_on_appveyor()
-  skip_on_travis() # TODO: these need fixing
   path <- prepare_orderly_example("interactive")
 
   expect_false(file.exists(file.path(path, "orderly.sqlite")))
@@ -89,7 +90,6 @@ test_that("run: success", {
 
 test_that("run: error", {
   skip_on_appveyor()
-  skip_on_travis() # TODO: these need fixing
 
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
@@ -140,7 +140,6 @@ test_that("rebuild", {
 
 test_that("run in branch (local)", {
   skip_on_appveyor()
-  skip_on_travis() # TODO: this should be able to work
   path <- unzip_git_demo()
   runner <- orderly_runner(path)
 
@@ -202,10 +201,30 @@ test_that("Can't git change", {
                "Reference switching is disabled in this runner")
 })
 
+
+test_that("cleanup", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+
+  id <- orderly_run("example", config = path, echo = FALSE)
+  orderly_commit(id, config = path)
+
+  writeLines("1 + 1", file.path(path, "src/example/script.R"))
+  expect_error(orderly_run("example", config = path, echo = FALSE),
+               "Script did not produce")
+
+  runner <- orderly_runner(path)
+  expect_message(runner$cleanup(), "clean.+draft/example")
+  expect_silent(runner$cleanup())
+
+  expect_equal(nrow(orderly_list2(TRUE, config = path)), 0L)
+  expect_equal(orderly_list2(FALSE, config = path)$id, id)
+})
+
+
 test_that("kill", {
   skip_on_windows()
   skip_on_appveyor()
-  skip_on_travis() # TODO: these need fixing
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
   name <- "interactive"
@@ -221,7 +240,6 @@ test_that("kill", {
 test_that("kill - wrong process", {
   skip_on_windows()
   skip_on_appveyor()
-  skip_on_travis() # TODO: these need fixing
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
   name <- "interactive"
@@ -246,7 +264,6 @@ test_that("kill - no process", {
 test_that("timeout", {
   skip_on_windows()
   skip_on_appveyor()
-  skip_on_travis() # TODO: these need fixing
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
   name <- "interactive"
@@ -298,7 +315,6 @@ test_that("queue_status", {
 
 test_that("queue status", {
   skip_on_windows()
-  skip_on_travis()
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
 

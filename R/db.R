@@ -170,9 +170,3 @@ orderly_rebuild <- function(config = NULL, locate = TRUE, verbose = TRUE,
     invisible(FALSE)
   }
 }
-
-
-with_connection <- function(con, f, ...) {
-  withCallingHandlers(f(con, ...),
-                      finally = function() DBI::dbDisconnect(con))
-}

@@ -2,43 +2,11 @@
 ## without a working copy of the montagu reporting api.  I guess the
 ## simplest solution will be to have a copy running on support that we
 ## can point this at.
-pull_archive_api <- function(name, id, config, remote) {
-  loadNamespace("montagu")
-  assert_is(config, "orderly_config")
-  orderly_remote_resolve_secrets(config, remote)
-
-  v <- withCallingHandlers(
-    montagu::montagu_reports_report_versions(name, remote),
-    error = function(e) {
-      valid <- montagu::montagu_reports_list(remote)
-      if (!(name %in% valid$name)) {
-        stop(sprintf("No versions of report '%s' found at '%s'",
-                     name, remote$name),
-             call. = FALSE)
-      }
-    })
-
-  if (id == "latest") {
-    id <- latest_id(v)
-  } else if (!(id %in% v)) {
-    ## Confirm that the report does actually exist, working around
-    ## VIMC-1281:
-    stop(sprintf(
-      "Version '%s' not found at '%s': valid versions are:\n%s",
-      id, remote$name, paste(sprintf("  - %s", v), collapse = "\n")),
-      call. = FALSE)
-  }
-  dest <- file.path(path_archive(config$path), name, id)
-  if (file.exists(file.path(dest, "orderly_run.yml"))) {
-    orderly_log("pull", sprintf("%s:%s already exists, skipping", name, id))
-  } else {
-    orderly_log("pull", sprintf("%s:%s", name, id))
-    tmp <- montagu::montagu_reports_report_download(name, id,
-                                                    location = remote)
-    cat("\n") # httr's progress bar is rubbish
-    on.exit(file.remove(tmp))
-    unzip_archive(tmp, config$path, name, id)
-  }
+remote_report_pull_archive_api <- function(name, id, config, remote) {
+  tmp <- montagu::montagu_reports_report_download(name, id, location = remote)
+  cat("\n") # httr's progress bar is rubbish
+  on.exit(file.remove(tmp))
+  unzip_archive(tmp, config$path, name, id)
 }
 
 
@@ -46,10 +14,6 @@ orderly_run_remote_api <- function(name, config, parameters = NULL, ref = NULL,
                                    timeout = 3600, poll = 1,
                                    open = TRUE, stop_on_error = TRUE,
                                    progress = TRUE, remote = NULL) {
-  assert_is(config, "orderly_config")
-  loadNamespace("montagu")
-  orderly_remote_resolve_secrets(config, remote)
-
   ## TODO: this should come out and be replaced by control at the
   ## level of the *server*.
   if (remote$name == "production" && !is.null(ref)) {
@@ -64,30 +28,18 @@ orderly_run_remote_api <- function(name, config, parameters = NULL, ref = NULL,
 
 orderly_publish_remote_api <- function(name, id, config, value = TRUE,
                                        remote = NULL) {
-  assert_is(config, "orderly_config")
-  ## This one can actually be done over disk too
-  loadNamespace("montagu")
-  orderly_remote_resolve_secrets(config, remote)
-  assert_scalar_character(name)
-  assert_scalar_character(id)
-  assert_scalar_logical(value)
   montagu::montagu_reports_publish(name, id, value, remote)
 }
 
 
-orderly_remote_resolve_secrets <- function(config, remote) {
-  ## Look up the secrets in the vault: this might move into montagu,
-  ## because then this gets heaps easier
-  if (!remote$is_authorised()) {
-    ## TODO: this used to cache the vault client; that was the job of
-    ## the vault package I think, but it doesn't matter here because
-    ## we rewrite the values.
-    auth <- resolve_secrets(list(username = remote$username,
-                                 password = remote$password),
-                            config)
-    remote$username <- resolve_secrets(auth$username, config)
-    remote$password <- resolve_secrets(auth$password, config)
-  }
+remote_report_names_api <- function(remote) {
+  montagu::montagu_reports_list(remote)$name
+}
+
+
+remote_report_versions_api <- function(name, remote) {
+  montagu::montagu_reports_report_versions(name, error_if_missing = FALSE,
+                                           location = remote)
 }
 
 
@@ -121,4 +73,31 @@ unzip_archive <- function(zip, root, name, id) {
   dest <- file.path(root, "archive", name)
   dir.create(dest, FALSE, TRUE)
   file_copy(file.path(tmp, id), dest, recursive = TRUE)
+}
+
+
+check_remote_api_server <- function(config, remote) {
+  server <- remote$server
+  if (is.null(server)) {
+    stop("The 'montagu' package is required to use an api server")
+  }
+
+  loadNamespace("montagu")
+  assert_is(config, "orderly_config")
+
+  if (!server$is_authorised()) {
+    ## TODO: this used to cache the vault client; that was the job of
+    ## the vault package I think, but it doesn't matter here because
+    ## we rewrite the values.
+    ##
+    ## TODO: This looks confised to me - why do we go through
+    ## resolve_secrets 3 times?
+    auth <- resolve_secrets(
+      list(username = server$username, password = server$password),
+      config)
+    server$username <- resolve_secrets(auth$username, config)
+    server$password <- resolve_secrets(auth$password, config)
+  }
+
+  server
 }

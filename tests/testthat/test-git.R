@@ -25,6 +25,11 @@ test_that("branches", {
 
   expect_equal(git_ref_to_sha("HEAD", path), sha1)
   expect_equal(git_branch_name(path), "master")
+
+  expect_identical(git_ref_to_sha("unknown", path),
+                   NA_character_)
+  expect_error(git_ref_to_sha("unknown", path, TRUE),
+               "Git reference 'unknown' not found")
 })
 
 test_that("detch head & restore", {
@@ -39,6 +44,20 @@ test_that("detch head & restore", {
   expect_equal(git_ref_to_sha("HEAD", path),
                git_ref_to_sha("master", path))
 })
+
+
+test_that("detach head checks", {
+  path <- unzip_git_demo()
+  filename <- file.path(path, "dirty")
+  file.create(filename)
+  expect_error(git_detach_head_at_ref("other", path),
+               "working directory must be clean")
+  unlink(filename)
+  prev <- git_detach_head_at_ref("other", path)
+  expect_error(git_detach_head_at_ref("other", path),
+               "HEAD is already detached")
+})
+
 
 test_that("fetch / detach / pull", {
   path <- prepare_orderly_git_example()
@@ -63,6 +82,16 @@ test_that("fetch / detach / pull", {
   git_pull(path2)
   expect_true(file.exists(file.path(path2, "new")))
 })
+
+
+test_that("checkout_branch checks", {
+  path <- unzip_git_demo()
+  filename <- file.path(path, "dirty")
+  file.create(filename)
+  expect_error(git_checkout_branch("other", root = path),
+               "working directory must be clean")
+})
+
 
 test_that("detect missing ref", {
   path <- prepare_orderly_git_example()
@@ -124,10 +153,10 @@ test_that("run missing ref", {
 
   runner <- orderly_runner(path2)
 
-  expect_false(git_ref_exists(sha1, path2))
+  expect_false(git_ref_exists("unknown", path2))
 
-  expect_error(runner$queue("minimal", ref = sha1),
-               "Did not find git reference")
+  expect_error(runner$queue("minimal", ref = "unknown"),
+               "Git reference 'unknown' not found")
   expect_equal(runner$data$length(), 0)
 
   id <- runner$queue("minimal", ref = sha1, update = TRUE)
@@ -168,4 +197,14 @@ test_that("fetch before run", {
 
   expect_equal(d1$git$sha, sha2)
   expect_equal(d2$git$sha, sha1)
+})
+
+
+test_that("handle failure", {
+  path <- prepare_orderly_git_example()
+  r <- git_run("unknown-command", root = path[["origin"]])
+  expect_false(r$success)
+  expect_error(
+    git_run("unknown-command", root = path[["origin"]], check = TRUE),
+    r$output, fixed = TRUE)
 })

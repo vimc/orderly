@@ -25,9 +25,7 @@ parameters declared in the orderly.yml.}
 
 \item{envir}{The parent of environment to evalute the report in;
 by default a new environment will be made with the global
-environment as the parent.  For \code{orderly_data}, this may be
-\code{list()} in which case a list will be returned (rather than
-an environment).}
+environment as the parent.}
 
 \item{config}{An orderly configuration, or the path to one (or
 \code{NULL} to locate one if \code{locate} is \code{TRUE}).}

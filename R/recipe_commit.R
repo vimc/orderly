@@ -28,6 +28,11 @@ recipe_commit <- function(workdir, config) {
   id <- basename(workdir)
   orderly_log("commit", sprintf("%s/%s", name, id))
 
+  if (!file.exists(path_orderly_run_rds(workdir))) {
+    stop(sprintf("Did not find run metadata file for %s/%s", name, id),
+         call. = FALSE)
+  }
+
   ## At this point we just won't support migrating drafts because it's
   ## lots easier not to!
   v <- get_version(readRDS(path_orderly_run_rds(workdir))$archive_version)
@@ -39,40 +44,20 @@ recipe_commit <- function(workdir, config) {
   ## orderly table
   dat <- report_read_data(workdir, config)
   con <- orderly_db("destination", config)
+  on.exit(DBI::dbDisconnect(con))
+
   ## Ensure that the db is in a reasonable state:
   tbl <- report_db_init(con, config)
   ## Copy the _files_ over, but we'll roll this back if anything fails
   success <- FALSE
   dest <- copy_report(workdir, dat$name, config)
-  on.exit({
-    if (!success) unlink(dest, recursive = TRUE)
-    DBI::dbDisconnect(con)
-  })
+  on.exit(if (!success) unlink(dest, recursive = TRUE), add = TRUE)
 
   report_data_import(con, workdir, config)
   success <- DBI::dbWriteTable(con, tbl, dat, append = TRUE)
 
   if (success) {
-    ## I should do something here if the unlink fails, though I don't
-    ## know exactly what.  But because a *second* round of copy here
-    ## would be pretty catastophic we need to flag the draft here as
-    ## being stale.  Perhaps write into it a file that indicates that
-    ## it is done just before deletion?
     unlink(workdir, recursive = TRUE)
-    if (file.exists(workdir)) {
-      ## For now we just issue a warning which is pretty lame and
-      ## can't really be acted on.  This will at least hopefully let
-      ## me know how common an issue this is so that I can work out
-      ## how much we should try and anticipate and handle this
-      ## situation.
-      warning(sprintf("Failed to delete workdir %s!", workdir)) # nocov
-    }
-  } else {
-    ## Really not sure about this, and until the error handling is
-    ## done this will be a worry; not sure what dbWriteTable can fail
-    ## on.  One option would be a network failure between
-    ## report_db_init and this point which is extremely unlikely.
-    stop("Failed to add entry to database [orderly bug]") # nocov
   }
   orderly_log("success", ":)")
   dest
@@ -89,7 +74,9 @@ copy_report <- function(workdir, name, config) {
     ## This situation probably needs help to resolve but I don't know
     ## what conditions might trigger it.  The most obvious one is that
     ## windows file-locking has prevented deletion of a draft report
-    stop("Already been copied?")
+    stop(sprintf(
+      "Report %s/%s appears to have already been copied!", name, id),
+      call. = FALSE)
   }
   dir_create(parent)
   orderly_log("copy", "")
@@ -100,16 +87,11 @@ copy_report <- function(workdir, name, config) {
 report_read_data <- function(workdir, config) {
   assert_is(config, "orderly_config")
   yml <- path_orderly_run_yml(workdir)
-  if (!file.exists(yml)) {
-    stop("Did not find run metadata file!")
-  }
+
   ## This does *not* go through the read_recipe bits because we want
   ## the unmodified yml contents here.
   info <- modify_list(yaml_read(file.path(workdir, "orderly.yml")),
                       yaml_read(yml))
-  if (info$id != basename(workdir)) {
-    stop("Unexpected path") # should never happen
-  }
 
   artefacts <- info$artefacts
   ## TODO: when dealing with VIMC-506, sort this out; this is due to
@@ -173,12 +155,6 @@ report_read_data <- function(workdir, config) {
       names(custom) <- config$fields$name
       custom[config$fields$name[len == 0]] <-
         lapply(config$fields$type[len == 0], set_mode, x = NA)
-    }
-    if (any(len > 1)) {
-      ## TODO: Thus currently implies that all custom fields are
-      ## scalar; non-scalar fields will require turning into json but
-      ## we don't have support for that yet
-      stop("FIXME [orderly bug]") # nocov
     }
     ret <- cbind(ret, as.data.frame(custom, stringsAsFactors = FALSE))
   }

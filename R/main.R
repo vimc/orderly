@@ -139,7 +139,7 @@ main_do_run <- function(x) {
   } else {
     log <- tempfile()
     ## we should run this with try() so that we can capture logs there
-    dat <- capture_log(main_run(), log, TRUE)
+    dat <- capture_log(main_run(), log)
     dest <- (if (commit) path_archive else path_draft)(config$path)
     file_copy(log, file.path(dest, name, dat$id, "orderly.log"))
   }
@@ -361,11 +361,17 @@ main_do_migrate <- function(x) {
 }
 
 
-write_script <- function(path) {
+write_script <- function(path, versioned = FALSE) {
   if (!isTRUE(is_directory(path))) {
     stop("'path' must be a directory")
   }
-  code <- c("#!/usr/bin/env Rscript", "orderly:::main()")
+  if (versioned) {
+    Rscript <- file.path(R.home(), "bin", "Rscript")
+  } else {
+    Rscript <- "/usr/bin/env Rscript"
+  }
+  code <- c(sprintf("#!%s", Rscript),
+            "orderly:::main()")
   path_bin <- file.path(path, "orderly")
   writeLines(code, path_bin)
   Sys.chmod(path_bin, "755")

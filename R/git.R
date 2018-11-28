@@ -3,13 +3,6 @@
 ## horror show.  It might be somewhat eased by working in detached
 ## head mode because then it's easy enough to move around the tree
 ## without doing a whole heap of resets.
-
-with_branch <- function(name, expr, remote = "origin", root = NULL) {
-  prev <- git_checkout_remote_branch(name, remote, root)
-  on.exit(git_checkout_branch(prev, force = force, root = root))
-  force(expr)
-}
-
 git_run <- function(args, root = NULL, check = FALSE) {
   git <- sys_which("git")
   if (!is.null(root)) {
@@ -36,11 +29,13 @@ git_detach_head_at_ref <- function(ref, root = NULL) {
   prev
 }
 
-git_ref_to_sha <- function(ref, root = NULL) {
+git_ref_to_sha <- function(ref, root = NULL, check = FALSE) {
   assert_scalar_character(ref)
   res <- git_run(c("rev-parse", ref), root = root, check = FALSE)
   if (res$success) {
     res$output
+  } else if (check) {
+    stop(sprintf("Git reference '%s' not found", ref), call. = FALSE)
   } else {
     NA_character_
   }
@@ -69,18 +64,6 @@ git_is_clean <- function(root, ignore_untracked = FALSE) {
   git_status(root, ignore_untracked)$clean
 }
 
-git_checkout_remote_branch <- function(name, remote = "origin", root = NULL) {
-  if (!git_is_clean(root)) {
-    stop("working directory must be clean")
-  }
-  prev <- git_branch_name(root)
-  args <- c("checkout", "-B", name, sprintf("%s/%s", remote, name))
-  orderly_log("checkout",
-              sprintf("%s (%s/%s); was %s", name, remote, name, prev))
-  git_run(args, root = root, check = TRUE)
-  prev
-}
-
 git_checkout_branch <- function(name, force = FALSE, root = NULL,
                                 create = FALSE) {
   if (!force && !git_is_clean(root)) {
@@ -104,16 +87,4 @@ git_fetch <- function(root = NULL) {
 git_pull <- function(root = NULL) {
   orderly_log("git", "fetch")
   git_run("pull", root = root, check = TRUE)
-}
-
-git_show_ref <- function(sha, root = NULL) {
-  dat <- git_run("show-ref", root = root, check = TRUE)
-  re <- "^([[:xdigit:]]+) (.+)$"
-  stopifnot(all(grepl(re, dat$output)))
-  i <- sub(re, "\\1", dat$output) == sha
-  sub(re, "\\2", dat$output[i])
-}
-
-is_sha <- function(x) {
-  grepl("^[[:xdigit:]]{40}", x)
 }
