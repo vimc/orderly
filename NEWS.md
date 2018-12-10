@@ -1,3 +1,7 @@
+# 0.5.10
+
+* Requires `vaultr` 0.2.0, which is a major overhaul of that package.
+
 # 0.5.8
 
 * Better error messages when unexpected files are found in the orderly archive (VIMC-1761)
