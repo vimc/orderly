@@ -1,6 +1,6 @@
 Package: orderly
 Title: R support for montagu-reports
-Version: 0.5.9
+Version: 0.5.10
 Description: Order, create and store reports from R.
 License: MIT + file LICENSE
 Encoding: UTF-8
@@ -27,6 +27,6 @@ Suggests:
     processx,
     rmarkdown,
     testthat,
-    vaultr (>= 0.0.3)
+    vaultr (>= 0.2.0)
 RoxygenNote: 6.1.1
 VignetteBuilder: knitr

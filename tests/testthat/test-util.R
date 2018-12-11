@@ -60,43 +60,53 @@ test_that("new_report_id", {
 })
 
 test_that("secrets", {
-  skip_if_no_vault_server()
+  srv <- vaultr::vault_test_server()
+  cl <- srv$client()
+  cl$write("/secret/users/alice", list(password = "ALICE"))
+  cl$write("/secret/users/bob", list(password = "BOB"))
+
   config <- list(path = tempfile(),
-                 vault_server = vaultr::vault_test_server()$url)
+                 vault_server = srv$addr)
 
   x <- list(name = "alice",
             password = "VAULT:/secret/users/alice:password")
-  vaultr::vault_clear_token_cache()
   withr::with_envvar(c(VAULTR_AUTH_METHOD = NA_character_), {
     expect_error(resolve_secrets(x, config),
-                 "Have not authenticated against vault")
+                 "Default login method not set in 'VAULTR_AUTH_METHOD'")
   })
   withr::with_envvar(c(VAULTR_AUTH_METHOD = "token", VAULT_TOKEN = NA), {
-    expect_error(resolve_secrets(x, config), "token not found")
+    expect_error(resolve_secrets(x, config), "Vault token was not found")
   })
   withr::with_envvar(c(VAULTR_AUTH_METHOD = "token", VAULT_TOKEN = "fake"), {
     expect_error(resolve_secrets(x, config),
-                 "Token verification failed with code")
+                 "Token login failed with error")
   })
-  expect_equal(resolve_secrets(x, config),
-               list(name = "alice", password = "ALICE"))
-  expect_equal(resolve_secrets(unlist(x), config),
-               list(name = "alice", password = "ALICE"))
+
+  withr::with_envvar(c(VAULTR_AUTH_METHOD = "token", VAULT_TOKEN = srv$token), {
+    expect_equal(resolve_secrets(x, config),
+                 list(name = "alice", password = "ALICE"))
+    expect_equal(resolve_secrets(unlist(x), config),
+                 list(name = "alice", password = "ALICE"))
+  })
 })
 
 test_that("resolve secret env", {
-  ## This the pattern that we have during startup
-  skip_if_no_vault_server()
-  vaultr::vault_clear_token_cache()
+  srv <- vaultr::vault_test_server()
+  cl <- srv$client()
+  cl$write("/secret/users/alice", list(password = "ALICE"))
+  cl$write("/secret/users/bob", list(password = "BOB"))
+
   config <- list(path = tempfile(),
-                 vault_server = vaultr::vault_test_server()$url)
+                 vault_server = srv$addr)
 
   x <- list(user = "$ORDERLY_USER",
             password = "$ORDERLY_PASSWORD",
             other = "string")
 
-  vars <- c("ORDERLY_PASSWORD"="VAULT:/secret/users/alice:password",
-            "ORDERLY_USER"="alice")
+  vars <- c("ORDERLY_PASSWORD" = "VAULT:/secret/users/alice:password",
+            "ORDERLY_USER" = "alice",
+            "VAULTR_AUTH_METHOD" = "token",
+            "VAULT_TOKEN" = srv$token)
 
   res <- withr::with_envvar(vars, resolve_driver_config(x, config))
   expect_equal(res,
