@@ -1,3 +1,7 @@
+# 0.5.11
+
+* Improvements to archive migration when local archive directories contain invalid files (VIMC-2449). `orderly` now indicates the version that failed to run, and can move failed versions aside to complete migration of the rest of an archive.
+
 # 0.5.10
 
 * Requires `vaultr` 0.2.0, which is a major overhaul of that package.
