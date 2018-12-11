@@ -20,6 +20,13 @@ path_archive <- function(root, name = NULL) {
     file.path(root, "archive", name)
   }
 }
+
+
+path_archive_broken <- function() {
+  "archive_broken"
+}
+
+
 path_orderly_config_yml <- function(root) {
   file.path(root, "orderly_config.yml")
 }

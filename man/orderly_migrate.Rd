@@ -5,7 +5,7 @@
 \title{Migrate an orderly archive}
 \usage{
 orderly_migrate(config = NULL, locate = TRUE, to = NULL,
-  verbose = FALSE, dry_run = FALSE)
+  verbose = FALSE, dry_run = FALSE, skip_failed = FALSE)
 }
 \arguments{
 \item{config}{An orderly configuration, or the path to one (or
@@ -26,6 +26,13 @@ migration should be given.}
 migration but not actually applying it.  This is intended
 primarily for developing new migrations and will probably not
 work if you are multiple archive versions behind.}
+
+\item{skip_failed}{Logical, where \code{TRUE} we will skip over
+entries that failed to be migrated.  This is expected to be
+useful on local archives only because it violates the
+append-only nature of orderly.  However, if a local archive
+contains unusual copies of orderly archives that can't be
+migrated this might come in helpful.}
 }
 \description{
 Migrate an orderly archive.  This is needed periodically when the
