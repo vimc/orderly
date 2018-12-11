@@ -184,6 +184,16 @@ file_copy <- function(..., overwrite = TRUE) {
   ok
 }
 
+
+file_move <- function(from, to) {
+  ok <- file.rename(from, to)
+  if (any(!ok)) {
+    stop("Error moving files")
+  }
+  ok
+}
+
+
 is_directory <- function(x) {
   file.info(x, extra_cols = FALSE)$isdir
 }
