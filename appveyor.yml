@@ -3,6 +3,7 @@
 environment:
   global:
     R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+    USE_RTOOLS: true
 
 # Download script file from GitHub
 init:
