@@ -50,11 +50,61 @@ test_that("failed migrations are rolled back", {
   }
 
   config <- orderly_config(path)
-  expect_error(migrate_apply(path, "0.3.3", fun, config, FALSE, FALSE),
+  expect_error(migrate_apply(path, "0.3.3", fun, config, FALSE, FALSE, FALSE),
                "some sort of migration failure")
-
   cmp <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
   expect_equal(cmp[basename(names(cmp)) != "orderly_archive_version"], hash)
+})
+
+
+test_that("failed migrations can be skipped", {
+  path <- unpack_reference("0.3.2")
+  hash <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
+
+  counter <- 0L
+  fun <- function(data, path, config) {
+    counter <<- counter + 1L
+    if (counter >= 5L) {
+      stop("some sort of migration failure")
+    }
+    ## any old bit to indicate a change:
+    data$updated <- TRUE
+    list(changed = TRUE, data = data)
+  }
+
+  config <- orderly_config(path)
+  migrate_apply(path, "0.3.3", fun, config, FALSE, FALSE, TRUE)
+
+  id <- "20170805-220525-1dc8fb81"
+
+  expect_equal(dir(file.path(path, path_archive_broken())), "depend")
+  expect_equal(dir(file.path(path, path_archive_broken(), "depend")), id)
+  p <- file.path(path, path_archive_broken(), "depend", id)
+  expect_true(is_directory(p))
+  expect_true(is_directory(file.path(path_archive(path), "depend")))
+  expect_false(file.exists(file.path(path_archive(path), "depend", id)))
+})
+
+
+test_that("failed migrations warned in dry run", {
+  path <- unpack_reference("0.3.2")
+  hash <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
+
+  counter <- 0L
+  fun <- function(data, path, config) {
+    counter <<- counter + 1L
+    if (counter >= 5L) {
+      stop("some sort of migration failure")
+    }
+    ## any old bit to indicate a change:
+    data$updated <- TRUE
+    list(changed = TRUE, data = data)
+  }
+
+  config <- orderly_config(path)
+  expect_message(
+    migrate_apply(path, "0.3.3", fun, config, FALSE, TRUE, TRUE),
+    "this report would be moved to")
 })
 
 

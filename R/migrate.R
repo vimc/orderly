@@ -39,9 +39,17 @@
 ##'   primarily for developing new migrations and will probably not
 ##'   work if you are multiple archive versions behind.
 ##'
+##' @param skip_failed Logical, where \code{TRUE} we will skip over
+##'   entries that failed to be migrated.  This is expected to be
+##'   useful on local archives only because it violates the
+##'   append-only nature of orderly.  However, if a local archive
+##'   contains unusual copies of orderly archives that can't be
+##'   migrated this might come in helpful.
+##'
 ##' @export
 orderly_migrate <- function(config = NULL, locate = TRUE, to = NULL,
-                            verbose = FALSE, dry_run = FALSE) {
+                            verbose = FALSE, dry_run = FALSE,
+                            skip_failed = FALSE) {
   config <- orderly_config_get(config, locate)
   root <- config$path
 
@@ -49,7 +57,7 @@ orderly_migrate <- function(config = NULL, locate = TRUE, to = NULL,
 
   for (v in names(migrations)) {
     f <- source_to_function(migrations[[v]], "migrate", topenv())
-    migrate_apply(root, v, f, config, verbose, dry_run)
+    migrate_apply(root, v, f, config, verbose, dry_run, skip_failed)
   }
 }
 
@@ -68,7 +76,8 @@ migrate_plan <- function(root, to = NULL) {
 }
 
 
-migrate_apply <- function(root, version, fun, config, verbose, dry_run) {
+migrate_apply <- function(root, version, fun, config, verbose, dry_run,
+                          skip_failed) {
   ## This ensures we work through all reports in order of creation
   ## (based on id).
   archive <- orderly_list_archive(root, FALSE)
@@ -79,19 +88,18 @@ migrate_apply <- function(root, version, fun, config, verbose, dry_run) {
   orderly_log("migrate", sprintf("'%s' => '%s'", previous, version))
   withCallingHandlers({
     for (p in reports) {
-      changed <- migrate_apply1(p, version, fun, config, dry_run)
-      nm <- sub(paste0(path_archive(root), "/"), "", p, fixed = TRUE)
-      if (changed) {
-        orderly_log("updated", nm)
-      } else if (verbose) {
-        orderly_log("ok", nm)
-      }
+      name <- basename(dirname(p))
+      id <- basename(p)
+      nm <- file.path(name, id)
+      status <- migrate_apply1(p, version, fun, config, dry_run, skip_failed)
+      orderly_log(status, nm)
     }
     if (!dry_run) {
       write_orderly_archive_version(version, root)
     }
   },
   error = function(e) {
+    migrate_fail_message(name, id, e)
     if (!dry_run) {
       migrate_rollback(root, version, previous)
     }
@@ -99,7 +107,12 @@ migrate_apply <- function(root, version, fun, config, verbose, dry_run) {
 }
 
 
-migrate_apply1 <- function(path, version, fun, config, dry_run) {
+migrate_apply1 <- function(path, version, fun, config, dry_run, skip_failed) {
+  if (skip_failed) {
+    return(tryCatch(
+      migrate_apply1(path, version, fun, config, dry_run, FALSE),
+      error = function(e) migrate_skip(e, path, version, config, dry_run)))
+  }
   file <- path_orderly_run_rds_backup(path, version)
 
   ## This should never happen, and the behaviour if it does is not
@@ -117,10 +130,36 @@ migrate_apply1 <- function(path, version, fun, config, dry_run) {
       file_copy(file_orig, file)
       saveRDS(res$data, file_orig)
     }
-    res$changed
+    if (res$changed) "updated" else "ok"
   } else {
-    FALSE
+    "ok"
   }
+}
+
+
+migrate_fail_message <- function(name, id, error) {
+  orderly_log("ERROR", c(sprintf("%s/%s", name, id),
+                         "migration failed with error:",
+                         error$message))
+}
+
+
+migrate_skip <- function(error, path, version, config, dry_run) {
+  name <- basename(dirname(path))
+  id <- basename(path)
+  migrate_fail_message(name, id, error)
+  dest_rel <- file.path(path_archive_broken(), name, id)
+  dest <- file.path(config$path, dest_rel)
+  if (dry_run) {
+    action <- "would be"
+  } else {
+    dir.create(dirname(dest), FALSE, TRUE)
+    file_move(path, dest)
+    action <- "has been"
+  }
+  message(sprintf("...this report %s moved to\n\t'%s'",
+                  action, dest_rel))
+  "failed"
 }
 
 
