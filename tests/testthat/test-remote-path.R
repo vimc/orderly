@@ -10,18 +10,28 @@ test_that("Reject impossible remotes", {
 
 test_that("remote_name", {
   path <- prepare_orderly_example("minimal")
-  expect_identical(remote_name(orderly_remote_path(path)),
+  expect_identical(orderly_remote_path(path)$name,
                    normalizePath(path, "/"))
 })
 
 
+test_that("get remote", {
+  path1 <- prepare_orderly_example("minimal")
+  path2 <- prepare_orderly_example("minimal")
+
+  obj <- get_remote(path1, orderly_config(path2))
+  expect_is(obj, "orderly_remote_path")
+  expect_equal(obj$name, path1)
+})
+
+
 test_that("pull report", {
-  path1 <- create_orderly_demo()
+  path1 <- prepare_orderly_example("demo")
+  id <- orderly_run("multifile-artefact", config = path1, echo = FALSE)
+  orderly_commit(id, config = path1)
+
   path2 <- prepare_orderly_example("demo")
-
-  remote <- orderly_remote_path(path1)
-
-  pull_archive("multifile-artefact", "latest", path2, remote = remote)
+  pull_archive("multifile-artefact", "latest", path2, remote = path1)
 
   d <- orderly_list_archive(path2)
   expect_equal(d$name, "multifile-artefact")
@@ -61,7 +71,10 @@ test_that("pull report: already done", {
 
 
 test_that("push report (path)", {
-  ours <- create_orderly_demo()
+  ours <- prepare_orderly_example("demo")
+  id <- orderly_run("multifile-artefact", config = ours, echo = FALSE)
+  orderly_commit(id, config = ours)
+
   theirs <- prepare_orderly_example("demo")
 
   remote <- orderly_remote_path(theirs)
@@ -122,11 +135,14 @@ test_that("orderly_run", {
 
 
 test_that("orderly_publish", {
-  dat <- prepare_orderly_remote_example(FALSE)
-  expect_error(
-    orderly_publish_remote("example", dat$id1,
-                           config = dat$config, remote = dat$remote),
-    "'orderly_remote_path' remotes do not publish")
+  remote <- prepare_orderly_example("minimal")
+  id <- orderly_run("example", config = remote, echo = FALSE)
+  p <- orderly_commit(id, config = remote)
+
+  local <- prepare_orderly_example("minimal")
+  orderly_publish_remote("example", id, config = local, remote = remote)
+  expect_equal(yaml_read(path_orderly_published_yml(p)),
+               list(published = TRUE))
 })
 
 
@@ -134,6 +150,7 @@ test_that("set_default", {
   dat <- prepare_orderly_remote_example(FALSE)
   v <- set_default_remote(dat$path_remote, dat$config)
   expect_is(v, "orderly_remote_path")
-  expect_identical(v, dat$remote)
+  expect_equal(v, dat$remote)
+  expect_identical(v$name, dat$remote$name)
   expect_identical(get_default_remote(dat$config), v)
 })
