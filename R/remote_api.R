@@ -46,34 +46,6 @@ remote_report_versions_api <- function(name, remote) {
 ## This works around a series of failure modes in unpacking an archive
 ## that tries to minimise the chance that an invalid archive is
 ## unpacked.
-unzip_archive <- function(zip, root, name, id) {
-  tmp <- tempfile()
-  on.exit(unlink(tmp, recursive = TRUE))
-  res <- utils::unzip(zip, exdir = tmp)
-
-  files <- dir(tmp, all.files = TRUE, no.. = TRUE)
-  if (length(files) == 0L) {
-    stop("Corrupt zip file? No files extracted")
-  } else if (length(files) > 1L) {
-    stop("Invalid orderly archive", call. = FALSE)
-  }
-  if (files != id) {
-    stop(sprintf("This is archive '%s' but expected '%s'",
-                 files, id), call. = FALSE)
-  }
-
-  expected <- c("orderly.yml", "orderly_run.yml", "orderly_run.rds")
-  msg <- !file.exists(file.path(tmp, id, expected))
-  if (any(msg)) {
-    stop(sprintf("Invalid orderly archive: missing files %s",
-                 paste(expected[msg], collapse = ", ")), call. = FALSE)
-  }
-
-  ## R's file.copy is exceedingly rubbish
-  dest <- file.path(root, "archive", name)
-  dir.create(dest, FALSE, TRUE)
-  file_copy(file.path(tmp, id), dest, recursive = TRUE)
-}
 
 
 check_remote_api_server <- function(config, remote) {

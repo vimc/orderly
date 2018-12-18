@@ -13,7 +13,7 @@ orderly_config_read_yaml <- function(filename, path) {
   check_fields(info, filename, "source",
                c("destination", "fields", "minimum_orderly_version",
                  "api_server", "vault_server", "global_resources",
-                 "changelog"))
+                 "changelog", "remote"))
 
   ## There's heaps of really boring validation to do here that I am
   ## going to skip.  The drama that we will have is that there are
@@ -107,6 +107,51 @@ config_check_fields <- function(x, filename) {
              description = vcapply(dat, "[[", "description"),
              stringsAsFactors = FALSE)
 }
+
+
+config_check_remote <- function(dat, filename) {
+  if (is.null(dat)) {
+    return(NULL)
+  }
+  assert_named(dat, unique = TRUE)
+
+  check1 <- function(name) {
+    remote <- dat[[name]]
+    check_fields(remote, sprintf("%s:remote:%s", filename, name),
+                 c("driver", "args"), "primary")
+    field_name <- function(nm) {
+      sprintf("%s:remote:%s:%s", filename, name, nm)
+    }
+    assert_scalar_character(remote$driver, field_name("driver"))
+    assert_named(remote$args, name = field_name("args"))
+    if (!is.null(remote$primary)) {
+      assert_scalar_logical(remote$primary, field_name("primary"))
+    }
+
+    if (remote$driver == "orderly_remote_path") {
+      remote$driver <- "orderly_remote_path"
+    } else if (grepl("::", remote$driver)) {
+      remote$driver <-
+        check_symbol_from_str(remote$driver, field_name("driver"))
+    } else {
+      stop("invalid driver")
+    }
+    remote$args <- c(remote$args, list(name = name))
+    remote$name <- name
+    remote
+  }
+
+  ret <- set_names(lapply(names(dat), check1), names(dat))
+  primary <- vlapply(ret, function(x) isTRUE(x$primary))
+  if (sum(primary) > 1L) {
+    stop(sprintf(
+      "At most one remote can be listed as primary but here %d are: %s",
+      sum(primary), paste(squote(names(which(primary))), collapse = ", ")),
+      call. = FALSE)
+  }
+  ret
+}
+
 
 config_check_api_server <- function(dat, filename) {
   if (is.null(dat)) {

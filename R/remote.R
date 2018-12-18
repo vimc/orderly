@@ -237,13 +237,30 @@ get_remote <- function(remote, config) {
   }
 
   assert_scalar(remote)
-  if (remote %in% names(config$api_server)) {
-    check_remote_api_server(config, config$api_server[[remote]])
+  if (remote %in% names(config$remote)) {
+    load_remote(remote, config)
   } else if (file.exists(remote)) {
     orderly_remote_path(remote)
   } else {
     stop(sprintf("Unknown remote '%s'", remote), call. = FALSE)
   }
+}
+
+
+load_remote <- function(name, config) {
+  remote <- config$remote[[name]]
+  hash <- hash_object(remote)
+  if (is.null(cache$remotes[[hash]])) {
+    if (length(remote$driver) == 2L) {
+      driver <- getExportedValue(remote$driver[[1L]], remote$driver[[2L]])
+    } else {
+      driver <- remote$driver[[1L]]
+    }
+    ## TODO: do this with the orderly envir loaded
+    ## TODO: give more information on invalid calls
+    cache$remotes[[hash]] <- do.call(driver, remote$args)
+  }
+  cache$remotes[[hash]]
 }
 
 

@@ -1,5 +1,5 @@
 orderly_remote_path <- function(path, name = NULL) {
-  R6_orderly_remote_path$new(path)
+  R6_orderly_remote_path$new(path, name)
 }
 
 
@@ -10,7 +10,7 @@ R6_orderly_remote_path <- R6::R6Class(
     config = NULL,
     name = NULL,
 
-    initialize = function(path, name = NULL) {
+    initialize = function(path, name) {
       assert_file_exists(path)
       path <- normalizePath(path, "/", mustWork = TRUE)
       if (!file.exists(path_orderly_config_yml(path))) {
