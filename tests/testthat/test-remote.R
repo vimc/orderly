@@ -11,7 +11,6 @@ test_that("defaults: null", {
 })
 
 
-
 test_that("get_remote", {
   fake_server <- function(name) {
     list(name = name,

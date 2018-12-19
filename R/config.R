@@ -57,10 +57,10 @@ orderly_config_read_yaml <- function(filename, path) {
 
   info$path <- normalizePath(path, mustWork = TRUE)
 
-  api_server_identity <- Sys.getenv("ORDERLY_API_SERVER_IDENTITY", "")
-  if (nzchar(api_server_identity)) {
-    info$api_server_identity <-
-      match_value(api_server_identity, names(info$api_server))
+  remote_identity <- Sys.getenv("ORDERLY_API_SERVER_IDENTITY", "")
+  if (nzchar(remote_identity)) {
+    info$remote_identity <-
+      match_value(remote_identity, names(info$remote))
   }
 
   if (!is.null(info$global_resources)) {
@@ -118,13 +118,33 @@ config_check_remote <- function(dat, filename) {
   check1 <- function(name) {
     remote <- dat[[name]]
     check_fields(remote, sprintf("%s:remote:%s", filename, name),
-                 c("driver", "args"), NULL)
+                 c("driver", "args"),
+                 c("url", "slack_url", "primary", "master_only"))
     field_name <- function(nm) {
       sprintf("%s:remote:%s:%s", filename, name, nm)
     }
     assert_scalar_character(remote$driver, field_name("driver"))
     assert_named(remote$args, name = field_name("args"))
     remote$args <- resolve_env(remote$args, error = FALSE, default = NULL)
+
+    ## optionals:
+    if (!is.null(remote$url)) {
+      assert_scalar_character(remote$url, field_name("url"))
+      remote$url <- sub("/$", "", remote$url)
+    }
+    if (!is.null(remote$slack_url)) {
+      assert_scalar_character(remote$slack_url, field_name("slack_url"))
+    }
+    if (is.null(remote$primary)) {
+      remote$primary <- FALSE
+    } else {
+      assert_scalar_logical(remote$primary, field_name("primary"))
+    }
+    if (is.null(remote$master_only)) {
+      remote$master_only <- FALSE
+    } else {
+      assert_scalar_logical(remote$master_only, field_name("master_only"))
+    }
 
     if (remote$driver == "orderly_remote_path") {
       remote$driver <- "orderly_remote_path"
