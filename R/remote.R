@@ -211,14 +211,17 @@ get_default_remote <- function(config = NULL, locate = TRUE) {
   if (!is.null(cache$default_remote[[config$path]])) {
     return(cache$default_remote[[config$path]])
   }
-  if (length(config$api_server) > 0L) {
-    return(check_remote_api_server(config, config$api_server[[1L]]))
+  if (length(config$remote) > 0L) {
+    browser()
+    stop("needs porting")
+    return(get_remote(names(remote)[[1L]], config))
   }
-  default_remote_path <- Sys.getenv("ORDERLY_DEFAULT_REMOTE_PATH",
-                                    NA_character_)
-  if (!is.na(default_remote_path)) {
-    return(orderly_remote_path(default_remote_path))
-  }
+  ## TODO: all this comes out too
+  ## default_remote_path <- Sys.getenv("ORDERLY_DEFAULT_REMOTE_PATH",
+  ##                                   NA_character_)
+  ## if (!is.na(default_remote_path)) {
+  ##   return(orderly_remote_path(default_remote_path))
+  ## }
   stop("default remote has not been set yet: use 'orderly::set_default_remote'")
 }
 
@@ -256,14 +259,14 @@ load_remote <- function(name, config) {
     } else {
       driver <- remote$driver[[1L]]
     }
-    ## TODO: do this with the orderly envir loaded
-    ## TODO: give more information on invalid calls
-    cache$remotes[[hash]] <- do.call(driver, remote$args)
+    args <- resolve_secrets(remote$args, config)
+    cache$remotes[[hash]] <- do.call(driver, args)
   }
   cache$remotes[[hash]]
 }
 
 
+## Most of these functions can really shrink now?
 remote_report_names <- function(config = NULL, locate = TRUE, remote = NULL) {
   remote <- get_remote(remote, orderly_config_get(config, locate))
   remote$list()

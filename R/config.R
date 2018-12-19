@@ -12,8 +12,8 @@ orderly_config_read_yaml <- function(filename, path) {
   info <- yaml_read(filename)
   check_fields(info, filename, "source",
                c("destination", "fields", "minimum_orderly_version",
-                 "api_server", "vault_server", "global_resources",
-                 "changelog", "remote"))
+                 "remote", "vault_server", "global_resources",
+                 "changelog"))
 
   ## There's heaps of really boring validation to do here that I am
   ## going to skip.  The drama that we will have is that there are
@@ -53,7 +53,7 @@ orderly_config_read_yaml <- function(filename, path) {
                             sprintf("%s:vault_server", filename))
   }
 
-  info$api_server <- config_check_api_server(info$api_server, filename)
+  info$remote <- config_check_remote(info$remote, filename)
 
   info$path <- normalizePath(path, mustWork = TRUE)
 
@@ -118,15 +118,13 @@ config_check_remote <- function(dat, filename) {
   check1 <- function(name) {
     remote <- dat[[name]]
     check_fields(remote, sprintf("%s:remote:%s", filename, name),
-                 c("driver", "args"), "primary")
+                 c("driver", "args"), NULL)
     field_name <- function(nm) {
       sprintf("%s:remote:%s:%s", filename, name, nm)
     }
     assert_scalar_character(remote$driver, field_name("driver"))
     assert_named(remote$args, name = field_name("args"))
-    if (!is.null(remote$primary)) {
-      assert_scalar_logical(remote$primary, field_name("primary"))
-    }
+    remote$args <- resolve_env(remote$args, error = FALSE, default = NULL)
 
     if (remote$driver == "orderly_remote_path") {
       remote$driver <- "orderly_remote_path"
@@ -141,73 +139,7 @@ config_check_remote <- function(dat, filename) {
     remote
   }
 
-  ret <- set_names(lapply(names(dat), check1), names(dat))
-  primary <- vlapply(ret, function(x) isTRUE(x$primary))
-  if (sum(primary) > 1L) {
-    stop(sprintf(
-      "At most one remote can be listed as primary but here %d are: %s",
-      sum(primary), paste(squote(names(which(primary))), collapse = ", ")),
-      call. = FALSE)
-  }
-  ret
-}
-
-
-config_check_api_server <- function(dat, filename) {
-  if (is.null(dat)) {
-    return(NULL)
-  }
-
-  assert_named(dat, unique = TRUE)
-
-  check1 <- function(name) {
-    server <- dat[[name]]
-    check_fields(server,
-                 sprintf("%s:api_server:%s", filename, name),
-                 c("host", "port"),
-                 c("basic", "username", "password",
-                   "slack_url", "allow_ref", "primary"))
-
-    check_field <- function(nm, required, fn) {
-      x <- server[[nm]]
-      if (required || !is.null(x)) {
-        fn(x, sprintf("%s:api_server:%s:%s", filename, name, nm))
-      }
-    }
-
-    server <- resolve_env(server, error = FALSE)
-    if (is.null(server$basic)) {
-      server$basic <- FALSE
-    } else {
-      check_field("basic", TRUE, assert_scalar_logical)
-    }
-    ## check_field("port", TRUE, assert_scalar_integer)
-    check_field("host", TRUE, assert_scalar_character)
-    check_field("username", FALSE, assert_scalar_character)
-    check_field("password", FALSE, assert_scalar_character)
-
-    check_field("slack_url", FALSE, assert_scalar_character)
-    check_field("allow_ref", FALSE, assert_scalar_logical)
-    check_field("primary", FALSE, assert_scalar_logical)
-
-    if (requireNamespace("montagu", quietly = TRUE)) {
-      server$server <- montagu::montagu_server(
-        name, server$host, server$port, server$basic,
-        server$username, server$password)
-    }
-
-    server
-  }
-
-  ret <- set_names(lapply(names(dat), check1), names(dat))
-  primary <- vlapply(ret, function(x) isTRUE(x$primary))
-  if (sum(primary) > 1L) {
-    stop(sprintf(
-      "At most one api_server can be listed as primary but here %d are: %s",
-      sum(primary), paste(squote(names(which(primary))), collapse = ", ")),
-      call. = FALSE)
-  }
-  ret
+  set_names(lapply(names(dat), check1), names(dat))
 }
 
 config_check_changelog <- function(x, filename) {
