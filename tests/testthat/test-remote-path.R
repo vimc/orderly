@@ -106,49 +106,49 @@ test_that("push report: already done", {
 
 
 test_that("remote_report_names", {
-  dat <- prepare_orderly_remote_example(FALSE)
-  remote_path <- orderly_remote_path(dat$path_remote)
-  expect_equal(remote_report_names(dat$config, remote = dat$remote),
+  dat <- prepare_orderly_remote_example()
+  expect_equal(remote_report_names(dat$config),
                c("depend", "depend2", "example"))
 })
 
 
 test_that("remote_report_versions", {
-  dat <- prepare_orderly_remote_example(FALSE)
-  remote_path <- orderly_remote_path(dat$path_remote)
+  dat <- prepare_orderly_remote_example()
 
   expect_equal(
-    remote_report_versions("example", dat$config, remote = dat$remote),
+    remote_report_versions("example", dat$config),
     c(dat$id1, dat$id2))
   expect_equal(
-    remote_report_versions("unknown", dat$config, remote = dat$remote),
+    remote_report_versions("unknown", dat$config),
     character(0))
 })
 
 
 test_that("orderly_run", {
-  dat <- prepare_orderly_remote_example(FALSE)
+  dat <- prepare_orderly_remote_example()
   expect_error(
-    orderly_run_remote("example", config = dat$config, remote = dat$remote),
+    orderly_run_remote("example", config = dat$config),
     "'orderly_remote_path' remotes do not run")
 })
 
 
 test_that("orderly_publish", {
-  remote <- prepare_orderly_example("minimal")
-  id <- orderly_run("example", config = remote, echo = FALSE)
-  p <- orderly_commit(id, config = remote)
+  dat <- prepare_orderly_remote_example()
 
-  local <- prepare_orderly_example("minimal")
-  orderly_publish_remote("example", id, config = local, remote = remote)
+  p <- file.path(dat$path_remote, "archive", "example", dat$id1)
+  orderly_publish_remote("example", dat$id1, config = dat$config)
   expect_equal(yaml_read(path_orderly_published_yml(p)),
                list(published = TRUE))
+  orderly_publish_remote("example", dat$id1, FALSE, config = dat$config)
+  expect_equal(yaml_read(path_orderly_published_yml(p)),
+               list(published = FALSE))
 })
 
 
+## TODO: this doesn't make much sense without a second remote too.
 test_that("set_default", {
-  dat <- prepare_orderly_remote_example(FALSE)
-  v <- set_default_remote(dat$path_remote, dat$config)
+  dat <- prepare_orderly_remote_example()
+  v <- set_default_remote("default", dat$config)
   expect_is(v, "orderly_remote_path")
   expect_equal(v, dat$remote)
   expect_identical(v$name, dat$remote$name)
@@ -157,7 +157,7 @@ test_that("set_default", {
 
 
 test_that("pull dependencies", {
-  dat <- prepare_orderly_remote_example(FALSE)
+  dat <- prepare_orderly_remote_example()
 
   expect_message(
     pull_dependencies("depend", config = dat$config, remote = dat$remote),

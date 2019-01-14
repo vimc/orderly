@@ -100,32 +100,31 @@ test_that("support declaring api server", {
   dir.create(path)
   dat <- list(source = list(driver = "RSQLite::SQLite"),
               remote = list(
-                myhost = list(
-                  driver = "list",
-                  args = list(
-                    host = "myhost.com",
-                    port = 443,
-                    basic = TRUE,
-                    username = "orderly",
-                    password = "secert"))))
+                main = list(
+                  driver = "orderly::orderly_remote_path",
+                  primary = TRUE,
+                  args = list(path = path)),
+                other = list(
+                  driver = "orderly::orderly_remote_path",
+                  args = list(path = path))))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
   cfg <- orderly_config(path)
 
   expect_is(cfg$remote, "list")
-  expect_equal(cfg$remote$myhost$args,
-               c(dat$remote$myhost$args, list(name = "myhost")))
+  expect_equal(cfg$remote$main$args,
+               list(path = path, name = "main"))
 
   withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = NA),
     expect_null(orderly_config(path)$remote_identity))
   withr::with_envvar(
-    c("ORDERLY_API_SERVER_IDENTITY" = "myhost"),
-    expect_equal(orderly_config(path)$remote_identity, "myhost"))
+    c("ORDERLY_API_SERVER_IDENTITY" = "main"),
+    expect_equal(orderly_config(path)$remote_identity, "main"))
   withr::with_envvar(
-    c("ORDERLY_API_SERVER_IDENTITY" = "other"),
+    c("ORDERLY_API_SERVER_IDENTITY" = "something-else"),
     expect_error(
       orderly_config(path)$remote_identity,
-      "remote_identity must be one of 'myhost'"))
+      "remote_identity must be one of 'main', 'other'"))
 })
 
 
@@ -134,22 +133,14 @@ test_that("api server has only one primary", {
   dir.create(path)
   dat <- list(source = list(driver = "RSQLite::SQLite"),
               remote = list(
-                myhost = list(
-                  driver = "list",
+                main = list(
+                  driver = "orderly::orderly_remote_path",
                   primary = TRUE,
-                  args = list(
-                    host = "myhost.com",
-                    port = 443,
-                    username = "orderly",
-                    password = "secert")),
+                  args = list(path = path)),
                 other = list(
-                  driver = "list",
+                  driver = "orderly::orderly_remote_path",
                   primary = TRUE,
-                  args = list(
-                    host = "example.com",
-                    port = 443,
-                    username = "orderly",
-                    password = "secert"))))
+                  args = list(path = path))))
 
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
   expect_error(
@@ -158,8 +149,23 @@ test_that("api server has only one primary", {
   dat$remote$other$primary <- FALSE
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
   cfg <- orderly_config(path)
-  expect_true(cfg$remote$myhost$primary)
+  expect_true(cfg$remote$main$primary)
   expect_false(cfg$remote$other$primary)
+})
+
+test_that("remote parse check", {
+  path <- tempfile()
+  dir.create(path)
+  dat <- list(source = list(driver = "RSQLite::SQLite"),
+              remote = list(
+                myhost = list(
+                  driver = "orderly::orderly_remote_path",
+                  primary = TRUE,
+                  args = list(path = path),
+                  master_only = "yeah")))
+  writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
+  expect_error(orderly_config(path),
+               "'.+/orderly_config.yml:remote:myhost:master_only' must be logical")
 })
 
 test_that("no global folder", {

@@ -146,17 +146,7 @@ config_check_remote <- function(dat, filename) {
       assert_scalar_logical(remote$master_only, field_name("master_only"))
     }
 
-    if (grepl("::", remote$driver)) {
-      remote$driver <-
-        check_symbol_from_str(remote$driver, field_name("driver"))
-    } else {
-      assert_scalar_character(remote$driver)
-      tryCatch(
-        match.fun(remote$driver),
-        error = function(e)
-          stop(sprintf("Did not find orderly remote driver '%s' (%s)",
-                       remote$driver, field_name("driver")), call. = FALSE))
-    }
+    remote$driver <- check_symbol_from_str(remote$driver, field_name("driver"))
     remote$args <- c(remote$args, list(name = name))
     remote$name <- name
     remote

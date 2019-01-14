@@ -1,3 +1,7 @@
+##' @title Orderly remote at a different path
+##' @param path Path to the orderly store
+##' @param name Name of the remote
+##' @export
 orderly_remote_path <- function(path, name = NULL) {
   R6_orderly_remote_path$new(path, name)
 }

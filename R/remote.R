@@ -214,12 +214,6 @@ get_default_remote <- function(config = NULL, locate = TRUE) {
   if (length(config$remote) > 0L) {
     return(get_remote(names(config$remote)[[1L]], config))
   }
-  ## TODO: all this comes out too
-  ## default_remote_path <- Sys.getenv("ORDERLY_DEFAULT_REMOTE_PATH",
-  ##                                   NA_character_)
-  ## if (!is.na(default_remote_path)) {
-  ##   return(orderly_remote_path(default_remote_path))
-  ## }
   stop("default remote has not been set yet: use 'orderly::set_default_remote'")
 }
 
@@ -252,11 +246,7 @@ load_remote <- function(name, config) {
   remote <- config$remote[[name]]
   hash <- hash_object(remote)
   if (is.null(cache$remotes[[hash]])) {
-    if (length(remote$driver) == 2L) {
-      driver <- getExportedValue(remote$driver[[1L]], remote$driver[[2L]])
-    } else {
-      driver <- remote$driver[[1L]]
-    }
+    driver <- getExportedValue(remote$driver[[1L]], remote$driver[[2L]])
     args <- resolve_secrets(remote$args, config)
     cache$remotes[[hash]] <- do.call(driver, args)
   }
