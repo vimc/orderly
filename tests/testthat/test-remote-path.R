@@ -180,3 +180,23 @@ test_that("use configuration", {
   pull_archive("example", config = path_local, remote = "example")
   expect_true(is_directory(file.path(path_local, "archive", "example", id)))
 })
+
+
+test_that("pull dependencies", {
+  dat <- prepare_orderly_remote_example(FALSE)
+
+  expect_message(
+    pull_dependencies("depend", config = dat$config, remote = dat$remote),
+    "\\[ pull\\s+ \\]  example:")
+  expect_equal(orderly_list_archive(dat$config),
+               data_frame(name = "example", id = dat$id2))
+
+  ## and update
+  id3 <- orderly_run("example", config = dat$path_remote, echo = FALSE)
+  orderly_commit(id3, config = dat$path_remote)
+  expect_message(
+    pull_dependencies("depend", config = dat$config, remote = dat$remote),
+    "\\[ pull\\s+ \\]  example:")
+  expect_equal(orderly_list_archive(dat$config),
+               data_frame(name = "example", id = c(dat$id2, id3)))
+})
