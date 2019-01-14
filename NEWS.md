@@ -1,3 +1,7 @@
+# 0.5.11
+
+* The `montagu` package is no longer used directly by `orderly` (VIMC-2453) - instead we use a similar "driver" approach to the database connections.  This paves the way for an eventual CRAN release (VIMC-2421).
+
 # 0.5.10
 
 * Requires `vaultr` 0.2.0, which is a major overhaul of that package.
