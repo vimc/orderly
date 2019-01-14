@@ -156,32 +156,6 @@ test_that("set_default", {
 })
 
 
-test_that("use configuration", {
-  skip("failing in covr?")
-  path_remote <- prepare_orderly_example("minimal")
-  id <- orderly_run("example", config = path_remote, echo = FALSE)
-  orderly_commit(id, config = path_remote)
-
-  path_local <- prepare_orderly_example("minimal")
-
-  cfg <- yaml_read(path_orderly_config_yml(path_local))
-  cfg$remote <- list(
-    example = list(
-      driver = "orderly_remote_path",
-      args = list(path = path_remote)))
-  yaml_write(cfg, path_orderly_config_yml(path_local))
-
-  config <- orderly_config(path_local)
-  remote <- get_remote("example", config)
-  expect_is(remote, "orderly_remote_path")
-  expect_equal(remote$name, "example")
-  expect_equal(remote$config$path, path_remote)
-
-  pull_archive("example", config = path_local, remote = "example")
-  expect_true(is_directory(file.path(path_local, "archive", "example", id)))
-})
-
-
 test_that("pull dependencies", {
   dat <- prepare_orderly_remote_example(FALSE)
 
