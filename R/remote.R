@@ -212,9 +212,7 @@ get_default_remote <- function(config = NULL, locate = TRUE) {
     return(cache$default_remote[[config$path]])
   }
   if (length(config$remote) > 0L) {
-    browser()
-    stop("needs porting")
-    return(get_remote(names(remote)[[1L]], config))
+    return(get_remote(names(config$remote)[[1L]], config))
   }
   ## TODO: all this comes out too
   ## default_remote_path <- Sys.getenv("ORDERLY_DEFAULT_REMOTE_PATH",

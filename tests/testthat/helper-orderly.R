@@ -71,15 +71,17 @@ prepare_orderly_remote_example <- function(api, path = tempfile()) {
   writeLines(d, p)
 
   if (api) {
-    append_lines(c("api_server:",
+    ## this will need work...
+    append_lines(c("remote:",
                    "  default:",
-                   "    host: example.com",
-                   "    port: 443",
-                   "    username: me",
-                   "    password: password"),
+                   "    driver: list",
+                   "    args:",
+                   "      host: example.com",
+                   "      port: 443",
+                   "      username: me",
+                   "      password: password"),
                  file.path(path_local, "orderly_config.yml"))
     config <- orderly_config(path_local)
-    config$api_server$default$server$token <- "123"
     remote <- get_remote(NULL, config)
   } else {
     remote <- orderly_remote_path(path_remote)

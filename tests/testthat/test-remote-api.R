@@ -1,6 +1,7 @@
 context("remote: api")
 
 test_that("remote_report_names", {
+  skip("api")
   dat <- prepare_orderly_remote_example(TRUE)
   remote_path <- orderly_remote_path(dat$path_remote)
   reports <- c("depend", "depend2", "example")
@@ -19,6 +20,7 @@ test_that("remote_report_names", {
 
 
 test_that("remote_report_versions", {
+  skip("api")
   dat <- prepare_orderly_remote_example(TRUE)
   remote_path <- orderly_remote_path(dat$path_remote)
   versions <- c(dat$id1, dat$id2)
@@ -41,6 +43,7 @@ test_that("remote_report_versions", {
 
 
 test_that("pull_archive", {
+  skip("api")
   dat <- prepare_orderly_remote_example(TRUE)
   remote_path <- orderly_remote_path(dat$path_remote)
 
@@ -68,6 +71,7 @@ test_that("pull_archive", {
 
 
 test_that("push_archive", {
+  skip("api")
   dat <- prepare_orderly_remote_example(TRUE)
   remote_path <- orderly_remote_path(dat$path_remote)
 
@@ -85,6 +89,7 @@ test_that("push_archive", {
 
 
 test_that("set default", {
+  skip("api")
   dat <- prepare_orderly_remote_example(TRUE)
   v <- set_default_remote("default", dat$config)
   expect_is(v, "montagu_server")
@@ -94,6 +99,7 @@ test_that("set default", {
 
 
 test_that("run", {
+  skip("api")
   dat <- prepare_orderly_remote_example(TRUE)
   remote_path <- orderly_remote_path(dat$path_remote)
   fake_run <- function(name, ...) {
@@ -134,6 +140,7 @@ test_that("run", {
 
 
 test_that("publish", {
+  skip("api")
   dat <- prepare_orderly_remote_example(TRUE)
   remote_path <- orderly_remote_path(dat$path_remote)
   fake_publish <- function(name, id, value) {

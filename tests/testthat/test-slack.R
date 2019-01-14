@@ -113,16 +113,17 @@ test_that("sending messages is not a failure", {
 
 test_that("main interface", {
   skip_if_no_internet()
+  skip("needs work")
   dat <- list(elapsed = 10,
               git = NULL,
               id = "20181213-123456-fedcba98",
               name = "example")
-  config <- list(api_server_identity = "myserver",
-                 api_server = list(
+  config <- list(remote_identity = "myserver",
+                 remote = list(
                    myserver = list(
                      slack_url = "https://httpbin.org/post",
                      name = "myserver",
-                     url_www = "https://example.com")))
+                     url = "https://example.com")))
   r <- slack_post_success(dat, config)
   expect_equal(r$status_code, 200L)
 })

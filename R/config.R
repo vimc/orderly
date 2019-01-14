@@ -146,20 +146,34 @@ config_check_remote <- function(dat, filename) {
       assert_scalar_logical(remote$master_only, field_name("master_only"))
     }
 
-    if (remote$driver == "orderly_remote_path") {
-      remote$driver <- "orderly_remote_path"
-    } else if (grepl("::", remote$driver)) {
+    if (grepl("::", remote$driver)) {
       remote$driver <-
         check_symbol_from_str(remote$driver, field_name("driver"))
     } else {
-      stop("invalid driver")
+      assert_scalar_character(remote$driver)
+      tryCatch(
+        match.fun(remote$driver),
+        error = function(e)
+          stop(sprintf("Did not find orderly remote driver '%s' (%s)",
+                       remote$driver, field_name("driver")), call. = FALSE))
     }
     remote$args <- c(remote$args, list(name = name))
     remote$name <- name
     remote
   }
 
-  set_names(lapply(names(dat), check1), names(dat))
+  ret <- set_names(lapply(names(dat), check1), names(dat))
+  primary <- vlapply(ret, "[[", "primary")
+  if (sum(primary) > 1L) {
+    stop(sprintf(
+      "At most one remote can be listed as primary but here %d are: %s",
+      sum(primary), paste(squote(names(which(primary))), collapse = ", ")),
+      call. = FALSE)
+  }
+  if (any(primary)) {
+    ret <- ret[order(!primary)]
+  }
+  ret
 }
 
 config_check_changelog <- function(x, filename) {
