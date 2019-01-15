@@ -532,8 +532,24 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
   }
 
   if (length(missing_packages) > 0) {
-    stop(paste("Missing packages:", 
-               paste(squote(missing_packages), collapse = ", ")))
+    # stop(paste("Missing packages:", 
+    #            paste(squote(missing_packages), collapse = ", ")))
+    orderly_log("WARNING",
+                paste("Missing packages:", 
+                      paste(squote(missing_packages), collapse = ", ")))
+    orderly_log("QUERY",
+                sprintf("Would you like to try to install these packages y/N?")
+    )
+    user_input <- tolower(readline())
+    first_char <- substring(user_input, 1, 1)
+    if (first_char == "y") {
+      for (pckg in missing_packages) {
+        orderly_log("INSTALL",
+                    sprintf("Attempting to install %s", pckg))
+        withCallingHandlers(install.packages(pckg, quiet = TRUE),
+                            warning = function(w) stop(w))
+      }     
+    }
   }
 
   ret <- list(data = ldata, hash_resources = hash_resources,
