@@ -1,7 +1,7 @@
 ##' Unzip an orderly archive into place.  This exists to work around
-##' an alarming number of failure modes that
-##' \code{\link{utils::unzip}} can suffer.  This should rarely be
-##' needed to be used from user code and exists to support remotes.
+##' an alarming number of failure modes that \code{\link{unzip}} can
+##' suffer.  This should rarely be needed to be used from user code
+##' and exists to support remotes.
 ##'
 ##' @title Unzip orderly archive into place
 ##' @param zip Path to a zip file
