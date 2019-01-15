@@ -10,7 +10,7 @@ test_that("Reject impossible remotes", {
 
 test_that("remote_name", {
   path <- prepare_orderly_example("minimal")
-  expect_identical(normalizePath(orderly_remote_path(path)$name),
+  expect_identical(normalizePath(orderly_remote_path(path)$name, "/"),
                    normalizePath(path, "/"))
 })
 
