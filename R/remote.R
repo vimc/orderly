@@ -141,8 +141,9 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
                                progress = TRUE,
                                config = NULL, locate = TRUE, remote = NULL) {
   remote <- get_remote(remote, orderly_config_get(config, locate))
-  remote$run(name, parameters, ref, timeout, poll, open, stop_on_error,
-             progress, config)
+  remote$run(name, parameters = parameters, ref = ref,
+             timeout = timeout, poll = poll, progress = progress,
+             stop_on_error = stop_on_error)
 }
 
 ##' Publish a report on a remote server
