@@ -1,6 +1,6 @@
 Package: orderly
 Title: Reproducible and Versioned Reporting
-Version: 0.5.11
+Version: 0.5.12
 Description: Order, create and store reports from R.
 License: MIT + file LICENSE
 Encoding: UTF-8

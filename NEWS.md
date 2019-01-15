@@ -1,6 +1,10 @@
-# 0.5.11
+# 0.5.12
 
 * The `montagu` package is no longer used directly by `orderly` (VIMC-2453) - instead we use a similar "driver" approach to the database connections.  This paves the way for an eventual CRAN release (VIMC-2421).
+
+# 0.5.11
+
+* Improvements to archive migration when local archive directories contain invalid files (VIMC-2449). `orderly` now indicates the version that failed to run, and can move failed versions aside to complete migration of the rest of an archive.
 
 # 0.5.10
 
