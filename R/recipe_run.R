@@ -364,16 +364,6 @@ recipe_prepare_workdir <- function(info, message, config) {
                 recursive = TRUE)
     }
   }
-    
-  ## if we are using resources or global resource
-  if (!is.null(info$resources) || !is.null(info$global_resources)) {
-    ## Hash the resources + calculate the file size, before we the report has
-    ## a chance to modify them
-    resource_info <- get_resource_info(info)
-  } else {
-    resource_info <- NULL
-  }
-  
 
   if (!is.null(info$depends)) {
     dep_src <- file.path(info$depends$path, info$depends$filename)
@@ -402,6 +392,15 @@ recipe_prepare_workdir <- function(info, message, config) {
     path_global_recs <- file.path(global_resource_dir, info$global_resources)
     dest_resources_src <- file.path(info$workdir, info$global_resources)
     file_copy(path_global_recs, info$workdir, recursive = TRUE)
+  }
+  
+  ## if we are using resources or global resources...
+  if (!is.null(info$resources) || !is.null(info$global_resources)) {
+    ## ...hash the resources + calculate the file size,
+    ## before we the report has a chance to modify them
+    resource_info <- get_resource_info(info)
+  } else {
+    resource_info <- NULL
   }
 
   info$changelog <- changelog_load(src, message, info, config)
