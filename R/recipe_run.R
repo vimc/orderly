@@ -214,6 +214,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   con_csv <- orderly_db("csv", config, FALSE)
 
   prep <- orderly_prepare_data(config, info, parameters, envir)
+  resource_info <- info$resource_info
 
   t0 <- Sys.time()
   orderly_log("start", as.character(t0))
@@ -258,8 +259,10 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                hash_input = hash_files("orderly.yml", FALSE),
                ## Below here all seems sensible enough to track
                hash_script = hash_files(info$script, FALSE),
-               hash_resources = as.list(prep$hash_resources),
-               hash_global = as.list(prep$hash_global),
+               hash_resources = as.list(resource_info$hash_resources),
+               size_resources = as.list(resource_info$size_resources),
+               hash_global = as.list(resource_info$hash_global),
+               size_global = as.list(resource_info$size_global),
                hash_data = as.list(hash_data_rds),
                hash_artefacts = as.list(hash_artefacts),
                depends = depends,
@@ -346,9 +349,10 @@ recipe_prepare_workdir <- function(info, message, config) {
   on.exit(setwd(owd))
 
   dir.create(dirname(info$script), FALSE, TRUE)
+  
   file_copy(file.path(src, info$script), info$script)
   file_copy(file.path(src, "orderly.yml"), "orderly.yml")
-
+  
   if (!is.null(info$resources)) {
     dir_create(dirname(info$resources))
     ## There's a bit of awfulness in R's path handling to deal with here.
@@ -360,6 +364,16 @@ recipe_prepare_workdir <- function(info, message, config) {
                 recursive = TRUE)
     }
   }
+    
+  ## if we are using resources or global resource
+  if (!is.null(info$resources) || !is.null(info$global_resources)) {
+    ## Hash the resources + calculate the file size, before we the report has
+    ## a chance to modify them
+    resource_info <- get_resource_info(info)
+  } else {
+    resource_info <- NULL
+  }
+  
 
   if (!is.null(info$depends)) {
     dep_src <- file.path(info$depends$path, info$depends$filename)
@@ -394,6 +408,7 @@ recipe_prepare_workdir <- function(info, message, config) {
   changelog_save_json(info$changelog, info$workdir)
 
   info$owd <- owd
+  info$resource_info <- resource_info
   info
 }
 
@@ -514,30 +529,45 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
   ## Compute the device stack size before starting work too
   n_dev <- length(grDevices::dev.list())
 
-  hash_resources <- hash_files(expand_directory_list(info$resources))
-  if (length(hash_resources) > 0L) {
-    orderly_log("resources",
-                sprintf("%s: %s", names(hash_resources), hash_resources))
-  } else {
-    hash_resources <- NULL
-  }
+  # hash_resources <- hash_files(expand_directory_list(info$resources))
+  # if (length(hash_resources) > 0L) {
+  #   orderly_log("resources",
+  #               sprintf("%s: %s", names(hash_resources), hash_resources))
+  # } else {
+  #   hash_resources <- NULL
+  # }
   missing_packages <- setdiff(info$packages, .packages(TRUE))
 
-  hash_global <- hash_files(expand_directory_list(info$global_resources))
-  if (length(hash_global) > 0L) {
-    orderly_log("global",
-                sprintf("%s: %s", names(hash_global), hash_global))
-  } else {
-    hash_global <- NULL
-  }
+  # hash_global <- hash_files(expand_directory_list(info$global_resources))
+  # if (length(hash_global) > 0L) {
+  #   orderly_log("global",
+  #               sprintf("%s: %s", names(hash_global), hash_global))
+  # } else {
+  #   hash_global <- NULL
+  # }
+  # 
+  # if (length(info$resources) > 0) {
+  #   size_resource <- file_size(expand_directory_list(info$resources))
+  # } else {
+  #   size_resource <- NULL
+  # }
+  # 
+  # if (length(info$global_resources) > 0) {
+  #   size_global <- file_size(expand_directory_list(info$global_resources))
+  # } else {
+  #   size_global <- NULL
+  # }
 
   if (length(missing_packages) > 0) {
     stop(paste("Missing packages:", 
                paste(squote(missing_packages), collapse = ", ")))
   }
 
-  ret <- list(data = ldata, hash_resources = hash_resources,
-              hash_global = hash_global, n_dev = n_dev)
+  # ret <- list(data = ldata, hash_resources = hash_resources,
+  #             hash_global = hash_global, n_dev = n_dev,
+  #             size_resource = size_resource, size_global = size_global)
+  
+  ret <- list(data = ldata, n_dev = n_dev)
 
   if (!is.null(info$connection)) {
     ret$con <- data[[info$connection]]
@@ -550,6 +580,43 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
     source(s, envir)
   }
 
+  ret
+}
+
+get_resource_info <- function(info) {
+  hash_resources <- hash_files(expand_directory_list(info$resources))
+  if (length(hash_resources) > 0L) {
+    orderly_log("resources",
+                sprintf("%s: %s", names(hash_resources), hash_resources))
+  } else {
+    hash_resources <- NULL
+  }
+  
+  hash_global <- hash_files(expand_directory_list(info$global_resources))
+  if (length(hash_global) > 0L) {
+    orderly_log("global",
+                sprintf("%s: %s", names(hash_global), hash_global))
+  } else {
+    hash_global <- NULL
+  }
+  
+  if (length(info$resources) > 0) {
+    size_resources <- file_size(expand_directory_list(info$resources))
+  } else {
+    size_resources <- NULL
+  }
+  
+  if (length(info$global_resources) > 0) {
+    size_global <- file_size(expand_directory_list(info$global_resources))
+  } else {
+    size_global <- NULL
+  }
+
+  ret <- list(hash_resources = hash_resources,
+              hash_global = hash_global,
+              size_resources = size_resources, size_global = size_global)
+  
+#  print(ret)
   ret
 }
 

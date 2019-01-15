@@ -159,6 +159,19 @@ hash_object <- function(object) {
   digest::digest(object)
 }
 
+file_size <- function(filenames, named = TRUE) {
+  if (is.null(filenames)) {
+    set_names(character(0), if (named) character(0) else NULL)
+  } else {
+    file_info <- file.info(filenames)
+    s <- file_info$size
+    if (named) {
+      names(s) <- row.names(file_info)
+    } 
+    s
+  }  
+}
+
 to_json <- function(x, auto_unbox = TRUE, ...) {
   jsonlite::toJSON(x, auto_unbox = auto_unbox)
 }
