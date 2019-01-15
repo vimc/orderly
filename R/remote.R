@@ -1,37 +1,30 @@
-##' Download dependent reports (WARNING: this is still in transition
-##' and the docs may not be entirely accurate)
+##' Download dependent reports.
 ##'
-##' If \code{remote} is a \code{montagu_server} object then this
-##' requires the montagu package and for montagu's credentials to be
-##' correctly set up.  The \code{pull_archive} function pulls report
-##' directly (without it being a dependent report).
+##' The \code{pull_archive} function pulls report directly (without it
+##' being a dependent report).
 ##'
-##' To use this functionality you will need to have \code{montagu}
-##' installed, and be part of the VIMC team.  To set it up run
-##'
-##' \preformatted{
-##' options(montagu.username = "your.email@imperial.ac.uk")
-##' }
-##'
-##' You can add that line to your \code{~/.Rprofile} file perhaps -
-##' see \code{path.expand("~/.Rprofile")} for where this file lives on
-##' your computer.  After setting your username up you can run
+##' After setting your username up you can run
 ##' \code{pull_dependencies("reportname")} to pull the
 ##' \emph{dependencies} of \code{"reportname"} down so that
 ##' \code{"reportname"} can be run, or you can run
 ##' \code{pull_archive("reportname")} to pull a copy of
-##' \code{"reportname"} that has been run on the production server.
+##' \code{"reportname"} that has been run on the remote server.
 ##'
 ##' @title Download dependent reports
 ##' @param name Name of the report to download dependencies for
 ##'
-##' @param remote Description of the location.  This must be an
-##'   \code{orderly_remote} object.
+##' @param remote Description of the location.  Typically this is a
+##'   character string indicating a remote specified in the
+##'   \code{remotes} block of your \code{orderly_config.yml}.  It is
+##'   also possible to pass in a directly created remote object (e.g.,
+##'   using \code{\link{orderly_remote_path}}, or one provided by
+##'   another package).  If left \code{NULL}, then the default remote
+##'   for this orderly repository is used - by default that is the
+##'   first listed remote.
 ##'
 ##' @inheritParams orderly_list
 ##' @export
-pull_dependencies <- function(name, config = NULL, locate = TRUE,
-                              remote = NULL) {
+pull_dependencies <- function(name, config = NULL, locate = TRUE, remote = NULL) {
   config <- orderly_config_get(config, locate)
   remote <- get_remote(remote, config)
 
@@ -86,12 +79,10 @@ pull_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
 
 ##' Push an archive report to a remote location.
 ##'
-##' This is experimental and only supported using paths for
-##' \code{remote}.  It will be useful for doing something like sharing
-##' preliminary artefacts peer-to-peer before running centrally.  It
-##' is not supported (yet) for pushing onto a montagu server, but that
-##' would be nice to have (probably locked down the same way that the
-##' \code{ref} argument is).
+##' This is experimental and only supported using
+##' \code{\link{orderly_remote_path}} remotes.  It might be useful for
+##' doing something like sharing preliminary artefacts peer-to-peer
+##' before running centrally.
 ##'
 ##' @title Push an archive report to a remote location
 ##' @inheritParams pull_dependencies
@@ -115,12 +106,9 @@ push_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
 }
 
 
-##' Run a report on a remote server (for now this means montagu).  Be
-##' careful doing this because once a report is run to completion on
-##' production it cannot be deleted.  So get things working locally,
-##' test on science and then run on production.
+##' Run a report on a remote server.
 ##'
-##' @title Run a report on montagu
+##' @title Run a report on a remote server
 ##'
 ##' @param name Name of the report
 ##'
@@ -141,7 +129,8 @@ push_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
 ##'   be included.
 ##'
 ##' @param ref Optional reference, indicating which branch should be
-##'   used.  This cannot be used on production.
+##'   used.  This cannot be used if the remote has \code{master_only}
+##'   set.
 ##'
 ##' @inheritParams pull_dependencies
 ##'

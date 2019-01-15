@@ -160,9 +160,6 @@ config_check_remote <- function(dat, filename) {
       sum(primary), paste(squote(names(which(primary))), collapse = ", ")),
       call. = FALSE)
   }
-  if (any(primary)) {
-    ret <- ret[order(!primary)]
-  }
   ret
 }
 
