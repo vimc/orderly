@@ -163,6 +163,15 @@ file_size <- function(filenames, named = TRUE) {
   if (is.null(filenames)) {
     set_names(character(0), if (named) character(0) else NULL)
   } else {
+    ## make sure file exists otherwise we get an
+    ## unhelpful base R error message from file.size
+    file_exists <- file.exists(filenames)
+    if (any(!file_exists)) {
+      missing_files <-  filenames[!file_exists]
+      stop(paste("Missing resource files:",
+                 paste(squote(missing_files), collapse = ", ")))
+    }
+
     file_info <- file.info(filenames)
     s <- file_info$size
     if (named) {
