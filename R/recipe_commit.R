@@ -141,6 +141,7 @@ report_read_data <- function(workdir, config) {
     hash_orderly = info$hash_orderly,
     hash_input = info$hash_input,
     hash_resources = to_json_string(info$hash_resources),
+    size_resources = to_json_string(info$size_resources),
     hash_data = to_json_string(info$hash_data),
     hash_artefacts = to_json_string(info$hash_artefacts),
     published = jsonlite::unbox(published),
