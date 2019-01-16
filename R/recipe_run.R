@@ -532,35 +532,7 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
   }
 
   if (length(missing_packages) > 0) {
-    print(paste("Missing packages:",
-                paste(squote(missing_packages), collapse = ", ")))
-
-    question <- "Should I try to install missing packages by running:"
-    ## collapse vector to packages to string "c('pckg_1','pckg_2')"
-    vector_packages <- sprintf("c(%s)",
-                               paste(sprintf("'%s'", missing_packages),
-                                     collapse=","))
-    install_command <- paste0("\n", question, "\n\n",
-                              "    install.packages(", vector_packages, ")")
-
-    do_install <- (utils::menu(c("no", "yes"), FALSE,
-                               title = install_command) == 2)
-
-    if (do_install) {
-      for (pckg in missing_packages) {
-        orderly_log("INSTALL",
-                    sprintf("Attempting to install %s", pckg))
-        withCallingHandlers(install.packages(pckg, quiet = TRUE),
-                            warning = function(w) {
-                              ## override the default missing package error
-                              ## message to avoid confusion
-                              err <- sprintf("Cannot find package %s ", pckg)
-                              stop(err)
-                            })
-      }
-    } else {
-      stop("Missing packages")
-    }
+    handle_missing_packages(missing_packages)
   }
 
   ret <- list(data = ldata, hash_resources = hash_resources,
