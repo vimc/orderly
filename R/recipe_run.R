@@ -238,6 +238,17 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   hash_data_rds <- con_rds$mset(prep$data)
   stopifnot(identical(hash_data_csv, hash_data_rds))
 
+  ## make sure the resources have the same hashes (and size?)
+  post_run_resources <- get_resource_info(info)
+  stopifnot(identical(resource_info$hash_resources,
+                      post_run_resources$hash_resources))
+  stopifnot(identical(resource_info$size_resources,
+                      post_run_resources$size_resources))
+  stopifnot(identical(resource_info$hash_global,
+                      post_run_resources$hash_global))
+  stopifnot(identical(resource_info$size_global,
+                      post_run_resources$size_global))
+
   if (is.null(info$depends)) {
     depends <- NULL
   } else {
@@ -338,7 +349,6 @@ recipe_data <- function(config, info, parameters, dest) {
   dest
 }
 
-
 recipe_prepare_workdir <- function(info, message, config) {
   if (file.exists(info$workdir)) {
     stop("'workdir' must not exist")
@@ -349,10 +359,10 @@ recipe_prepare_workdir <- function(info, message, config) {
   on.exit(setwd(owd))
 
   dir.create(dirname(info$script), FALSE, TRUE)
-  
+
   file_copy(file.path(src, info$script), info$script)
   file_copy(file.path(src, "orderly.yml"), "orderly.yml")
-  
+
   if (!is.null(info$resources)) {
     dir_create(dirname(info$resources))
     ## There's a bit of awfulness in R's path handling to deal with here.
@@ -380,7 +390,7 @@ recipe_prepare_workdir <- function(info, message, config) {
     orderly_log("depends", str)
     file_copy(dep_src, dep_dst)
   }
-  
+
   if (!is.null(info$global_resources)) {
     root_path <- normalizePath(config$path, mustWork = TRUE)
     global_resource_dir <- file.path(root_path, config$global_resources)
@@ -393,7 +403,7 @@ recipe_prepare_workdir <- function(info, message, config) {
     dest_resources_src <- file.path(info$workdir, info$global_resources)
     file_copy(path_global_recs, info$workdir, recursive = TRUE)
   }
-  
+
   ## if we are using resources or global resources...
   if (!is.null(info$resources) || !is.null(info$global_resources)) {
     ## ...hash the resources + calculate the file size,
