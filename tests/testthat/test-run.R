@@ -365,6 +365,7 @@ test_that("resources", {
   expect_identical(d$resources, '["meta/data.csv"]')
   expect_identical(d$hash_resources,
                    '{"meta/data.csv":"0bec5bf6f93c547bc9c6774acaf85e1a"}')
+  expect_identical(d$size_resources, "{\"meta/data.csv\":18}")
   expect_true(file.exists(file.path(p, "meta/data.csv")))
 })
 
