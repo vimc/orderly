@@ -614,7 +614,6 @@ abbreviate <- function(x, len = round(getOption("width", 80) * 0.8)) {
 handle_missing_packages <- function(missing_packages) {
   print(paste("Missing packages:",
               paste(squote(missing_packages), collapse = ", ")))
-
   ## collapse vector to packages to string "c('pckg_1','pckg_2')"
   vector_packages <- sprintf("install.packages(c(%s))",
                              paste(sprintf("'%s'", missing_packages),
@@ -643,13 +642,15 @@ handle_missing_packages <- function(missing_packages) {
                             })
       }
     } else {
-      stop("Missing packages")
+      stop(paste("Missing packages:",
+                  paste(squote(missing_packages), collapse = ", ")))
     }
   } else {
     ## ...we're not in interactive environment so just print out the command
     question <- "To install the missing packages run:"
     install_command <- paste0("\n", question, "\n\n",
                               "    ", vector_packages)
-    stop("Missing packages")
+    stop(paste("Missing packages:",
+               paste(squote(missing_packages), collapse = ", ")))
   }
 }
