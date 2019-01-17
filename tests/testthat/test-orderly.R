@@ -114,6 +114,7 @@ test_that("orderly_run_info: is_latest detects latest version", {
 test_that("orderly_test_start failure resets working directory", {
   # if logging is on this test will wait for user input, so turn off
   orderly_log_off()
+  on.exit(orderly_log_on())
   path <- prepare_orderly_example("minimal")
   p <- file.path(path, "src", "example", "orderly.yml")
   txt <- c(readLines(p), "packages: nonexistantpackage")
@@ -122,7 +123,6 @@ test_that("orderly_test_start failure resets working directory", {
   expect_error(orderly_test_start("example", config = path),
                "nonexistantpackage")
   expect_equal(getwd(), wd)
-  orderly_log_on()
 })
 
 

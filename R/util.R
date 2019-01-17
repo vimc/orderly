@@ -612,44 +612,45 @@ abbreviate <- function(x, len = round(getOption("width", 80) * 0.8)) {
 }
 
 handle_missing_packages <- function(missing_packages) {
-  ## collapse vector to packages to string "c('pckg_1','pckg_2')"
-  vector_packages <- sprintf("install.packages(c(%s))",
-                             paste(sprintf("'%s'", missing_packages),
-                                   collapse=","))
-
   ## check if we are interactive and logging is active...
   logging <- !isTRUE(getOption("orderly.nolog"))
   if (interactive() && logging) {
-    ## ...if so ask if Orderly should try to install the pacakges
-    question <- "Should I try to install missing packages by running:"
-    install_command <- paste0("\n", question, "\n\n",
-                              "    ", vector_packages)
-
-    try_install <- (utils::menu(c("no", "yes"), FALSE,
-                               title = install_command) == 2)
-
-    if (try_install) {
-      for (pckg in missing_packages) {
-        orderly_log("INSTALL",
-                    sprintf("Attempting to install %s", pckg))
-        withCallingHandlers(install.packages(pckg, quiet = TRUE),
-                            warning = function(w) {
-                              ## override the default missing package error
-                              ## message to avoid confusion
-                              err <- sprintf("Cannot find package %s ", pckg)
-                              stop(err)
-                            })
-      }
-    } else {
-      stop(paste("Missing packages:",
-                  paste(squote(missing_packages), collapse = ", ")))
-    }
+    orderly_package_install(missing_packages)
   } else {
     ## ...we're not in interactive environment so just print out the command
+    vector_packages <- sprintf("install.packages(c(%s))",
+                               paste(squote(missing_packages), collapse = ", "))
     question <- "To install the missing packages run:"
-    install_command <- paste0("\n", question, "\n\n",
-                              "    ", vector_packages)
-    stop(paste("Missing packages:",
-               paste(squote(missing_packages), collapse = ", ")))
+    install_command <- sprintf("\n%s\n\n    %s", question, vector_packages)
+    stop(sprintf("Missing packages: %s",
+                 paste(squote(missing_packages), collapse = ", ")))
+  }
+}
+
+orderly_package_install <- function(missing_packages) {
+  ## collapse vector to packages to string "c('pckg_1','pckg_2')"
+  vector_packages <- sprintf("install.packages(c(%s))",
+                             paste(squote(missing_packages), collapse = ", "))
+
+  ## ...if so ask if Orderly should try to install the pacakges
+  question <- "Should I try to install missing packages by running:"
+  install_command <- sprintf("\n%s\n\n    %s", question, vector_packages)
+
+  try_install <- (utils::menu(c("no", "yes"), FALSE,
+                              title = install_command) == 2)
+
+  if (try_install) {
+    ## try to install missing pacakges
+    install.packages(missing_packages)
+    ## check that they have been
+    found_packages <- missing_packages %in% rownames(installed.packages())
+    if (any(!found_packages)) {
+      stop(sprintf("Could not install these packages: %s",
+                   paste(squote(missing_packages[!found_packages]),
+                         collapse = ", ")))
+    }
+  } else {
+    stop(sprintf("Missing packages: %s",
+                 paste(squote(missing_packages), collapse = ", ")))
   }
 }

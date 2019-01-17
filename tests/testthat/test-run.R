@@ -493,7 +493,7 @@ test_that("renamed dependencies are expected", {
 test_that("non-existent package", {
   # if logging is on this test will wait for user input, so turn off
   orderly_log_off()
-  
+  on.exit(orderly_log_on())
   path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
@@ -506,12 +506,12 @@ test_that("non-existent package", {
   expect_error(orderly_run("example", config = path, id_file = tmp,
                            echo = FALSE),
                "Missing packages: 'non_existent_package'")
-  orderly_log_on()
 })
 
 test_that("multiple non-existent packages", {
   # if logging is on this test will wait for user input, so turn off
   orderly_log_off()
+  on.exit(orderly_log_on())
   path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
@@ -527,7 +527,6 @@ test_that("multiple non-existent packages", {
                            echo = FALSE),
                paste("Missing packages:",
                      "'non_existent_package', 'non_existent_package_2'"))
-  orderly_log_on()
 })
 
 test_that("use multiple versions of an artefact", {
