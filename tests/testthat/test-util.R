@@ -428,3 +428,21 @@ test_that("ordered_map_to_list", {
                "Corrupt ordered map (this should never happen)",
                fixed = TRUE)
 })
+
+test_that("interactive package install", {
+  ## simulate the user asking Orderly to try to install foo and bar
+  with_mock(
+    menu = function(a, b, title) 2,
+    expect_error(install_missing_packages(c("foo", "bar")),
+                 "Could not install these packages: 'foo', 'bar'",
+                 fixed = TRUE)
+  )
+
+  ## simulate the user Orderly to not install foo and bar
+  with_mock(
+    menu = function(a, b, title) 1,
+    expect_error(install_missing_packages(c("foo", "bar")),
+                 "Missing packages: 'foo', 'bar'",
+                 fixed = TRUE)
+  )
+})

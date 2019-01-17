@@ -615,7 +615,7 @@ handle_missing_packages <- function(missing_packages) {
   ## check if we are interactive and logging is active...
   logging <- !isTRUE(getOption("orderly.nolog"))
   if (interactive() && logging) {
-    orderly_package_install(missing_packages)
+    install_missing_packages(missing_packages)
   } else {
     ## ...we're not in interactive environment so just print out the command
     vector_packages <- sprintf("install.packages(c(%s))",
@@ -627,7 +627,7 @@ handle_missing_packages <- function(missing_packages) {
   }
 }
 
-orderly_package_install <- function(missing_packages) {
+install_missing_packages <- function(missing_packages) {
   ## collapse vector to packages to string "c('pckg_1','pckg_2')"
   vector_packages <- sprintf("install.packages(c(%s))",
                              paste(squote(missing_packages), collapse = ", "))
@@ -640,9 +640,11 @@ orderly_package_install <- function(missing_packages) {
                               title = install_command) == 2)
 
   if (try_install) {
-    ## try to install missing pacakges
-    install.packages(missing_packages)
-    ## check that they have been
+    ## try to install missing packages...
+    ## warnings are suppressed since any problem should be immeadiately caught
+    ## on the next line and escalated to an error
+    suppressWarnings(install.packages(missing_packages, quiet = TRUE))
+    ## ...then check that they have been sucessful
     found_packages <- missing_packages %in% rownames(installed.packages())
     if (any(!found_packages)) {
       stop(sprintf("Could not install these packages: %s",
