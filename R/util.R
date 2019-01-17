@@ -612,15 +612,14 @@ abbreviate <- function(x, len = round(getOption("width", 80) * 0.8)) {
 }
 
 handle_missing_packages <- function(missing_packages) {
-  print(paste("Missing packages:",
-              paste(squote(missing_packages), collapse = ", ")))
   ## collapse vector to packages to string "c('pckg_1','pckg_2')"
   vector_packages <- sprintf("install.packages(c(%s))",
                              paste(sprintf("'%s'", missing_packages),
                                    collapse=","))
 
-  ## check if we are interactive...
-  if (interactive()) {
+  ## check if we are interactive and logging is active...
+  logging <- !isTRUE(getOption("orderly.nolog"))
+  if (interactive() && logging) {
     ## ...if so ask if Orderly should try to install the pacakges
     question <- "Should I try to install missing packages by running:"
     install_command <- paste0("\n", question, "\n\n",
