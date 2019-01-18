@@ -641,9 +641,9 @@ install_missing_packages <- function(missing_packages) {
 
   if (try_install) {
     ## try to install missing packages...
-    ## warnings are suppressed since any problem should be immeadiately caught
-    ## on the next line and escalated to an error
-    suppressWarnings(install.packages(missing_packages, quiet = TRUE))
+    ## warnings are down graded to messages since any problem should be
+    ## immediately caught on the next line
+    install.packages(missing_packages, quiet = TRUE)
     ## ...then check that they have been sucessful
     found_packages <- missing_packages %in% rownames(installed.packages())
     if (any(!found_packages)) {

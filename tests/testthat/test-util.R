@@ -431,18 +431,17 @@ test_that("ordered_map_to_list", {
 
 test_that("interactive package install", {
   ## simulate the user asking Orderly to try to install foo and bar
-  with_mock(
-    menu = function(a, b, title) 2,
-    expect_error(install_missing_packages(c("foo", "bar")),
-                 "Could not install these packages: 'foo', 'bar'",
-                 fixed = TRUE)
-  )
+  mockery::stub(install_missing_packages, "utils::menu", 2)
+  ## These packages don't exist so don't even try to install them to avoid
+  ## appveyer pain
+  mockery::stub(install_missing_packages, "install.packages", TRUE)
+  expect_error(install_missing_packages(c("foo", "bar")),
+               "Could not install these packages: 'foo', 'bar'",
+               fixed = TRUE)
 
   ## simulate the user Orderly to not install foo and bar
-  with_mock(
-    menu = function(a, b, title) 1,
-    expect_error(install_missing_packages(c("foo", "bar")),
-                 "Missing packages: 'foo', 'bar'",
-                 fixed = TRUE)
-  )
+  mockery::stub(install_missing_packages, "utils::menu", 1)
+  expect_error(install_missing_packages(c("foo", "bar")),
+               "Missing packages: 'foo', 'bar'",
+               fixed = TRUE)
 })
