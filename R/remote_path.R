@@ -26,7 +26,7 @@ R6_orderly_remote_path <- R6::R6Class(
       lockBinding(quote(name), self)
     },
 
-    list = function() {
+    list_reports = function() {
       orderly_list(self$config)
     },
 

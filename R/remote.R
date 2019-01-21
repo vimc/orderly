@@ -247,7 +247,7 @@ load_remote <- function(name, config) {
 ## Most of these functions can really shrink now?
 remote_report_names <- function(config = NULL, locate = TRUE, remote = NULL) {
   remote <- get_remote(remote, orderly_config_get(config, locate))
-  remote$list()
+  remote$list_reports()
 }
 
 
@@ -266,7 +266,7 @@ remote_name <- function(remote) {
 ## Test to see if something (might) implement our remote interface
 implements_remote <- function(x) {
   is.recursive(x) &&
-    is.function(x$list) &&
+    is.function(x$list_reports) &&
     is.function(x$list_versions) &&
     is.function(x$pull) &&
     is.function(x$publish) &&
