@@ -164,6 +164,7 @@ test_that("resource case matters", {
 })
 
 test_that("shiny app", {
+  skip("ignore shiny")
   path <- prepare_orderly_example("shiny")
   config <- orderly_config_get(path, FALSE)
   dat <- recipe_read(file.path(path, "src", "example"), config)

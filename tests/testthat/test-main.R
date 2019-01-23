@@ -193,6 +193,7 @@ test_that("list", {
 })
 
 test_that("deploy-shiny", {
+  skip("ignore shiny")
   path <- prepare_orderly_example("shiny")
   id <- orderly_run("example", config = path, echo = FALSE)
   orderly_commit(id, config = path)
