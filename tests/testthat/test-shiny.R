@@ -2,6 +2,7 @@ context("shiny")
 
 
 test_that("shiny app", {
+  skip("ignore shiny")
   path <- prepare_orderly_example("shiny")
   id <- orderly_run("example", config = path, echo = FALSE)
   p_shiny <- file.path(path, "draft", "example", id, "shiny")
@@ -30,6 +31,7 @@ test_that("shiny app", {
 
 
 test_that("redeploy", {
+  skip("ignore shiny")
   path <- prepare_orderly_example("shiny")
   dest <- file.path(path, "shiny")
   id1 <- orderly_run("example", config = path, echo = FALSE)
@@ -53,6 +55,7 @@ test_that("redeploy", {
 
 
 test_that("deploy failure: missing report", {
+  skip("ignore shiny")
   path <- prepare_orderly_example("shiny")
   dest <- file.path(path, "shiny")
 
@@ -67,6 +70,7 @@ test_that("deploy failure: missing report", {
 
 
 test_that("deploy failure: impossible report", {
+  skip("ignore shiny")
   path <- prepare_orderly_example("shiny")
   dest <- file.path(path, "shiny")
   id <- orderly_run("example", config = path, echo = FALSE)
@@ -79,6 +83,7 @@ test_that("deploy failure: impossible report", {
 
 
 test_that("deploy failure: impossible destination", {
+  skip("ignore shiny")
   path <- prepare_orderly_example("shiny")
   dest <- file.path(path, "shiny")
   id <- orderly_run("example", config = path, echo = FALSE)
