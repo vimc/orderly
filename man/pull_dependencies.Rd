@@ -21,35 +21,29 @@ searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
 
-\item{remote}{Description of the location.  This must be an
-\code{orderly_remote} object.}
+\item{remote}{Description of the location.  Typically this is a
+character string indicating a remote specified in the
+\code{remotes} block of your \code{orderly_config.yml}.  It is
+also possible to pass in a directly created remote object (e.g.,
+using \code{\link{orderly_remote_path}}, or one provided by
+another package).  If left \code{NULL}, then the default remote
+for this orderly repository is used - by default that is the
+first listed remote.}
 
 \item{id}{The identifier (for \code{pull_archive}.  The default is
 to use the latest report.}
 }
 \description{
-Download dependent reports (WARNING: this is still in transition
-and the docs may not be entirely accurate)
+Download dependent reports.
 }
 \details{
-If \code{remote} is a \code{montagu_server} object then this
-requires the montagu package and for montagu's credentials to be
-correctly set up.  The \code{pull_archive} function pulls report
-directly (without it being a dependent report).
+The \code{pull_archive} function pulls report directly (without it
+being a dependent report).
 
-To use this functionality you will need to have \code{montagu}
-installed, and be part of the VIMC team.  To set it up run
-
-\preformatted{
-options(montagu.username = "your.email@imperial.ac.uk")
-}
-
-You can add that line to your \code{~/.Rprofile} file perhaps -
-see \code{path.expand("~/.Rprofile")} for where this file lives on
-your computer.  After setting your username up you can run
+After setting your username up you can run
 \code{pull_dependencies("reportname")} to pull the
 \emph{dependencies} of \code{"reportname"} down so that
 \code{"reportname"} can be run, or you can run
 \code{pull_archive("reportname")} to pull a copy of
-\code{"reportname"} that has been run on the production server.
+\code{"reportname"} that has been run on the remote server.
 }

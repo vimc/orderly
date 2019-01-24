@@ -2,7 +2,7 @@
 % Please edit documentation in R/remote.R
 \name{orderly_run_remote}
 \alias{orderly_run_remote}
-\title{Run a report on montagu}
+\title{Run a report on a remote server}
 \usage{
 orderly_run_remote(name, parameters = NULL, ref = NULL,
   timeout = 3600, poll = 1, open = TRUE, stop_on_error = TRUE,
@@ -14,7 +14,8 @@ orderly_run_remote(name, parameters = NULL, ref = NULL,
 \item{parameters}{Parameters for the reprt}
 
 \item{ref}{Optional reference, indicating which branch should be
-used.  This cannot be used on production.}
+used.  This cannot be used if the remote has \code{master_only}
+set.}
 
 \item{timeout}{Time to wait for the report to be returned (in seconds)}
 
@@ -38,12 +39,15 @@ searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
 
-\item{remote}{Description of the location.  This must be an
-\code{orderly_remote} object.}
+\item{remote}{Description of the location.  Typically this is a
+character string indicating a remote specified in the
+\code{remotes} block of your \code{orderly_config.yml}.  It is
+also possible to pass in a directly created remote object (e.g.,
+using \code{\link{orderly_remote_path}}, or one provided by
+another package).  If left \code{NULL}, then the default remote
+for this orderly repository is used - by default that is the
+first listed remote.}
 }
 \description{
-Run a report on a remote server (for now this means montagu).  Be
-careful doing this because once a report is run to completion on
-production it cannot be deleted.  So get things working locally,
-test on science and then run on production.
+Run a report on a remote server.
 }

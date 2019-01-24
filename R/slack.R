@@ -1,18 +1,17 @@
 ## Send slack messages!
 slack_post_success <- function(dat, config) {
-  if (!is.null(config$api_server_identity)) {
-    server <- config$api_server[[config$api_server_identity]]
-    slack_url <- resolve_secrets(server$slack_url, config)[[1L]]
+  if (!is.null(config$remote_identity)) {
+    remote <- config$remote[[config$remote_identity]]
+    slack_url <- resolve_secrets(remote$slack_url, config)[[1L]]
     if (!is.null(slack_url)) {
-      data <- slack_data(dat, server$server$name, server$server$url_www,
-                         isTRUE(server$primary))
+      data <- slack_data(dat, remote$name, remote$url, remote$primary)
       do_slack_post_success(slack_url, data)
     }
   }
 }
 
 
-slack_data <- function(dat, server_name, server_url, server_is_primary) {
+slack_data <- function(dat, remote_name, remote_url, remote_is_primary) {
   elapsed <- format(as.difftime(dat$elapsed, units = "secs"), digits = 2)
   if (is.null(dat$git)) {
     git <- NULL
@@ -28,12 +27,12 @@ slack_data <- function(dat, server_name, server_url, server_is_primary) {
   }
   id <- dat$id
 
-  report_url <- sprintf("%s/reports/%s/%s/", server_url, dat$name, id)
+  report_url <- sprintf("%s/reports/%s/%s/", remote_url, dat$name, id)
   title <- sprintf("Ran report '%s'", dat$name)
-  text <- sprintf("on server *%s* in %s", server_name, elapsed)
+  text <- sprintf("on server *%s* in %s", remote_name, elapsed)
   fallback <- sprintf("Ran '%s' as '%s'; view at %s", dat$name, id, report_url)
   ## NOTE: 'warning' is actually quite a nice yellow colour
-  col <- if (server_is_primary) "good" else "warning"
+  col <- if (remote_is_primary) "good" else "warning"
 
   fields <- list(list(title = "id", value = sprintf("`%s`", id), short = TRUE))
   if (!is.null(git)) {
