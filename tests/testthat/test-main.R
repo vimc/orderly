@@ -192,27 +192,6 @@ test_that("list", {
                "argument to list must be one of")
 })
 
-test_that("deploy-shiny", {
-  path <- prepare_orderly_example("shiny")
-  id <- orderly_run("example", config = path, echo = FALSE)
-  orderly_commit(id, config = path)
-
-  path_shiny <- file.path(path, "shiny")
-  args <- c("--root", path, "deploy-shiny", path_shiny)
-  res <- main_args(args)
-  expect_equal(res$args, path_shiny)
-  expect_equal(res$options$info, "shiny.yml")
-
-  expect_message(res$target(res), "Copying example")
-  expect_true(file.exists(path_shiny))
-  expect_true(file.exists(file.path(path_shiny, "index.html")))
-  expect_true(file.exists(file.path(path_shiny, "example-shiny-app")))
-
-  args <- c("--root", path, "deploy-shiny", "shiny-path", "--info", "foo.yml")
-  res <- main_args(args)
-  expect_equal(res$args, "shiny-path")
-  expect_equal(res$options$info, "foo.yml")
-})
 
 test_that("unknown", {
   path <- tempfile()

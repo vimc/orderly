@@ -1,6 +1,6 @@
 Package: orderly
-Title: Reproducible and Versioned Reporting
-Version: 0.5.12
+Title: R support for montagu-reports
+Version: 0.5.13
 Description: Order, create and store reports from R.
 License: MIT + file LICENSE
 Encoding: UTF-8

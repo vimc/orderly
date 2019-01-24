@@ -306,31 +306,6 @@ main_do_latest <- function(x) {
   cat(paste0(ids, "\n", collapse = ""))
 }
 
-## 7. deploy-shiny
-main_args_deploy_shiny <- function(res) {
-  opts <- list(
-    optparse::make_option("--info",
-                          help = "path to shiny info file",
-                          type = "character",
-                          default = formals(orderly_deploy_shiny)$info))
-
-  parser <- optparse::OptionParser(
-    option_list = opts,
-    usage = "%prog [--root=ROOT] deploy-shiny [--info=INFO] <dest>")
-  if (res$options$help) {
-    optparse_die_help(parser)
-  }
-  opts_subcommand(res, parser, main_do_deploy_shiny, 1L)
-}
-
-main_do_deploy_shiny <- function(x) {
-  config <- orderly_config_get(x$options$root, TRUE)
-  dest <- x$args
-  info <- x$options$info %||% formals(orderly_deploy_shiny)$info
-  orderly_deploy_shiny(dest, info, config = config, locate = FALSE)
-  invisible(NULL)
-}
-
 
 ## 8. migrate
 main_args_migrate <- function(res) {
@@ -416,7 +391,5 @@ main_args_commands <- function() {
        rebuild = list(name = "rebuild the database",
                       args = main_args_rebuild),
        migrate = list(name = "migrate the archive",
-                      args = main_args_migrate),
-       "deploy-shiny" = list(name = "deploy shiny apps",
-                             args = main_args_deploy_shiny))
+                      args = main_args_migrate))
 }

@@ -163,13 +163,6 @@ test_that("resource case matters", {
                "Script file does not exist: 'script.R'")
 })
 
-test_that("shiny app", {
-  path <- prepare_orderly_example("shiny")
-  config <- orderly_config_get(path, FALSE)
-  dat <- recipe_read(file.path(path, "src", "example"), config)
-  expect_equal(dat$resources, "shiny")
-})
-
 
 test_that("dependencies must be scalar", {
   path <- prepare_orderly_example("depends")

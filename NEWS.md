@@ -1,3 +1,7 @@
+# 0.5.13
+
+* Removes support for shiny apps as this was poorly tested and not used by us (VIMC-2544, VIMC-2538).
+
 # 0.5.12
 
 * The `montagu` package is no longer used directly by `orderly` (VIMC-2453) - instead we use a similar "driver" approach to the database connections.  This paves the way for an eventual CRAN release (VIMC-2421).
