@@ -264,9 +264,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                ## Below here all seems sensible enough to track
                hash_script = hash_files(info$script, FALSE),
                hash_resources = as.list(resource_info$hash_resources),
-               size_resources = as.list(resource_info$size_resources),
                hash_global = as.list(resource_info$hash_global),
-               size_global = as.list(resource_info$size_global),
                hash_data = as.list(hash_data_rds),
                hash_artefacts = as.list(hash_artefacts),
                depends = depends,
@@ -534,7 +532,7 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
   missing_packages <- setdiff(info$packages, .packages(TRUE))
 
   if (length(missing_packages) > 0) {
-    stop(paste("Missing packages:", 
+    stop(paste("Missing packages:",
                paste(squote(missing_packages), collapse = ", ")))
   }
 
@@ -562,7 +560,7 @@ get_resource_info <- function(info) {
   } else {
     hash_resources <- NULL
   }
-  
+
   hash_global <- hash_files(expand_directory_list(info$global_resources))
   if (length(hash_global) > 0L) {
     orderly_log("global",
@@ -570,10 +568,8 @@ get_resource_info <- function(info) {
   } else {
     hash_global <- NULL
   }
-
   ret <- list(hash_resources = hash_resources, hash_global = hash_global)
-  
-#  print(ret)
+
   ret
 }
 

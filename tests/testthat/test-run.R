@@ -63,7 +63,6 @@ test_that("run", {
   expect_identical(unname(unlist(run$hash_artefacts, use.names = FALSE)),
                    hash_files(file.path(p, "mygraph.png"), FALSE))
   expect_identical(run$hash_resources, list())
-  expect_identical(run$size_resources, list())
   expect_identical(run$parameters, parameters)
   expect_is(run$date, "character")
   ## I feel hash_orderly and hash_input have the wrong names here
@@ -759,7 +758,7 @@ test_that("delete resources", {
         file = script_path, append = TRUE)
 
   # has orderly detected that the package does not exist>
-  error_message <- 
+  error_message <-
     sprintf("Script either did not copy or deleted resources: %s, %s",
             "meta/data.csv", "meta/data2.csv")
   expect_error(orderly_run("multiple_resources", config = path, id_file = tmp,

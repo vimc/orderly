@@ -176,9 +176,9 @@ file_size <- function(filenames, named = TRUE) {
     s <- file_info$size
     if (named) {
       names(s) <- row.names(file_info)
-    } 
+    }
     s
-  }  
+  }
 }
 
 to_json <- function(x, auto_unbox = TRUE, ...) {
