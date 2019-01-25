@@ -106,7 +106,7 @@ test_that("sending messages is not a failure", {
   d <- slack_data(dat, server_name, server_url, server_is_primary)
 
   slack_url <- "https://httpbin.org/status/403"
-  expect_message(r <- do_slack_post_success(slack_url, d),
+  expect_message(do_slack_post_success(slack_url, d),
                  "NOTE: running slack hook failed")
 })
 

@@ -70,7 +70,7 @@ do_slack_post_success <- function(slack_url, data) {
     r
   }, error = function(e) {
     message("NOTE: running slack hook failed\n", e$message)
-    r
+    NULL
   })
   invisible(r)
 }
