@@ -238,16 +238,9 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   hash_data_rds <- con_rds$mset(prep$data)
   stopifnot(identical(hash_data_csv, hash_data_rds))
 
-  ## make sure the resources have the same hashes (and size?)
   post_run_resources <- get_resource_info(info)
-  stopifnot(identical(resource_info$hash_resources,
-                      post_run_resources$hash_resources))
-  stopifnot(identical(resource_info$size_resources,
-                      post_run_resources$size_resources))
-  stopifnot(identical(resource_info$hash_global,
-                      post_run_resources$hash_global))
-  stopifnot(identical(resource_info$size_global,
-                      post_run_resources$size_global))
+  compare_resource_hashes(resource_info$hash_resources,
+                          post_run_resources$hash_resources)
 
   if (is.null(info$depends)) {
     depends <- NULL
@@ -538,44 +531,13 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
   ## Compute the device stack size before starting work too
   n_dev <- length(grDevices::dev.list())
 
-  # hash_resources <- hash_files(expand_directory_list(info$resources))
-  # if (length(hash_resources) > 0L) {
-  #   orderly_log("resources",
-  #               sprintf("%s: %s", names(hash_resources), hash_resources))
-  # } else {
-  #   hash_resources <- NULL
-  # }
   missing_packages <- setdiff(info$packages, .packages(TRUE))
-
-  # hash_global <- hash_files(expand_directory_list(info$global_resources))
-  # if (length(hash_global) > 0L) {
-  #   orderly_log("global",
-  #               sprintf("%s: %s", names(hash_global), hash_global))
-  # } else {
-  #   hash_global <- NULL
-  # }
-  # 
-  # if (length(info$resources) > 0) {
-  #   size_resource <- file_size(expand_directory_list(info$resources))
-  # } else {
-  #   size_resource <- NULL
-  # }
-  # 
-  # if (length(info$global_resources) > 0) {
-  #   size_global <- file_size(expand_directory_list(info$global_resources))
-  # } else {
-  #   size_global <- NULL
-  # }
 
   if (length(missing_packages) > 0) {
     stop(paste("Missing packages:", 
                paste(squote(missing_packages), collapse = ", ")))
   }
 
-  # ret <- list(data = ldata, hash_resources = hash_resources,
-  #             hash_global = hash_global, n_dev = n_dev,
-  #             size_resource = size_resource, size_global = size_global)
-  
   ret <- list(data = ldata, n_dev = n_dev)
 
   if (!is.null(info$connection)) {
@@ -608,26 +570,43 @@ get_resource_info <- function(info) {
   } else {
     hash_global <- NULL
   }
-  
-  if (length(info$resources) > 0) {
-    size_resources <- file_size(expand_directory_list(info$resources))
-  } else {
-    size_resources <- NULL
-  }
-  
-  if (length(info$global_resources) > 0) {
-    size_global <- file_size(expand_directory_list(info$global_resources))
-  } else {
-    size_global <- NULL
-  }
 
-  ret <- list(hash_resources = hash_resources,
-              hash_global = hash_global,
-              size_resources = size_resources, size_global = size_global)
+  ret <- list(hash_resources = hash_resources, hash_global = hash_global)
   
 #  print(ret)
   ret
 }
+
+compare_resource_hashes <- function(pre_run_hashes, post_run_hashes) {
+  ## compare resource hashes here
+  found <- names(post_run_hashes)
+  expected <- names(pre_run_hashes)
+
+  ## we expected a resource but can't find it.
+  not_found <- which(!(expected %in% found))
+  if (any(not_found)) {
+    stop("Script either did not copy or deleted resources: ",
+         paste(expected[not_found], collapse = ", "))
+  }
+
+  ## I'm not sure this can ever happen
+  ## Orderly has found a copied resource that was not expected...
+  not_expected <- which(!(found %in% expected))
+  if (any(not_expected)) {
+    stop("Script has found an unexpected resources: ",
+         paste(found[!not_expected], collapse = ", "))
+  }
+
+  ## at this point the set of found == the set of expected
+  found_hash <- post_run_hashes[found] ## put the hashes in the same order
+  expected_hash <- pre_run_hashes[found]
+  hash_miss <- which(found_hash != expected_hash)
+  if (any(hash_miss)) {
+    stop("Script has modified resources: ",
+         paste(found[hash_miss], collapse = ", "))
+  }
+}
+
 
 
 recipe_current_run_set <- function(info) {
