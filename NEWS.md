@@ -1,3 +1,7 @@
+# 0.5.14
+
+* Fix handling of remote environment variables (VIMC-2553)
+
 # 0.5.13
 
 * Removes support for shiny apps as this was poorly tested and not used by us (VIMC-2544, VIMC-2538).
