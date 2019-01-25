@@ -163,7 +163,6 @@ test_that("resource case matters", {
                "Script file does not exist: 'script.R'")
 })
 
-
 test_that("dependencies must be scalar", {
   path <- prepare_orderly_example("depends")
   id <- orderly_run("example", config = path, echo = FALSE)
