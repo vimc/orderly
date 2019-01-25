@@ -370,7 +370,7 @@ resolve_driver_config <- function(args, config) {
 
 resolve_env <- function(x, error = TRUE, default = NULL) {
   f <- function(x) {
-    if (grepl("^\\$[0-9A-Z_]+$", x)) {
+    if (length(x) == 1L && is.character(x) && grepl("^\\$[0-9A-Z_]+$", x)) {
       Sys_getenv(substr(x, 2, nchar(x)), error = error, default = NULL)
     } else {
       x
@@ -548,6 +548,7 @@ file_canonical_case <- function(filename) {
 }
 
 copy_directory <- function(src, as, rollback_on_error = FALSE) {
+  assert_is_directory(src)
   files <- dir(src, all.files = TRUE, no.. = TRUE, full.names = TRUE)
   if (rollback_on_error) {
     if (file.exists(as)) {

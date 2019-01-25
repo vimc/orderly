@@ -64,8 +64,6 @@
 - name: multifile-artefact
   publish: true
 
-- name: shiny
-
 - name: changelog
   before: add_changelog
 

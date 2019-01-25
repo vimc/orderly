@@ -58,12 +58,6 @@ recipe_read <- function(path, config, validate = TRUE) {
     assert_scalar_character(info$connection)
   }
 
-  is_shiny <- info$artefacts[, "format"] == "shinyapp"
-  shiny_dirs <- unlist(info$artefacts[is_shiny, "filenames"], use.names = FALSE)
-  if (length(shiny_dirs) > 0L) {
-    info$resources <- c(info$resources, shiny_dirs)
-  }
-
   ## Then some processing:
   if (!is.null(info$data)) {
     assert_named(info$data, TRUE, fieldname("data"))
@@ -106,7 +100,7 @@ recipe_read <- function(path, config, validate = TRUE) {
 ## *format* (which we can get from the extension) but an intent of
 ## use.
 valid_formats <- function() {
-  c("staticgraph", "interactivegraph", "data", "report", "shinyapp", "interactivehtml")
+  c("staticgraph", "interactivegraph", "data", "report", "interactivehtml")
 }
 
 string_or_filename <- function(x, path, name) {
@@ -134,11 +128,6 @@ recipe_read_check_artefacts <- function(x, filename, path) {
     check_fields(el, sprintf("%s:artefacts[%d]", filename, i), v, NULL)
     for (j in v) {
       assert_character(el[[j]], sprintf("artefacts:%s:%s", i, j))
-    }
-    if (identical(format, "shinyapp")) {
-      nm <- sprintf("artefacts:%s:filenames", i)
-      assert_scalar(el$filenames, nm)
-      assert_is_directory(el$filenames, workdir = path, name = nm)
     }
     c(el[v], list(format = format))
   }

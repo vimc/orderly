@@ -370,8 +370,6 @@ report_data_import <- function(con, workdir, config) {
   n <- lengths(dat_in$artefacts[, "filenames"])
   i <- rep(seq_along(n), n)
 
-  ## Not certain this will cope with shiny outputs?  Or other
-  ## directory outputs (are there any?)
   artefact_files <- unlist(dat_in$artefacts[, "filenames"], use.names = FALSE)
   artefact_hash <-
     list_to_character(dat_rds$meta$hash_artefacts[artefact_files], FALSE)
