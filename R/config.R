@@ -125,6 +125,7 @@ config_check_remote <- function(dat, filename) {
     }
     assert_scalar_character(remote$driver, field_name("driver"))
     assert_named(remote$args, name = field_name("args"))
+    remote <- resolve_env(remote, error = FALSE)
     remote$args <- resolve_env(remote$args, error = FALSE, default = NULL)
 
     ## optionals:
