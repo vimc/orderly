@@ -774,12 +774,13 @@ test_that("multiple resources", {
   expect_true(file.exists(file.path(p, "meta/data2.csv")))
   p <- orderly_commit(id, config = path)
 
-  d <- read_orderly_db(path)
-  expect_identical(d$resources, '["meta/data.csv","meta/data2.csv"]')
-  expected_meta <- sprintf("{\"%s\":\"%s\",\"%s\":\"%s\"}",
-                           "meta/data.csv", "0bec5bf6f93c547bc9c6774acaf85e1a",
-                           "meta/data2.csv", "15bd0276ba238a412caf3e8dcd289751")
-  expect_identical(d$hash_resources, expected_meta)
+  con <- orderly_db("destination", config = path)
+  d <- DBI::dbReadTable(con, "file_input")
+  d <- d[d$file_purpose == "resource", ]
+
+  expect_identical(d$filename, c("meta/data.csv", "meta/data2.csv"))
+  expect_identical(d$file_hash, c("0bec5bf6f93c547bc9c6774acaf85e1a",
+                                  "15bd0276ba238a412caf3e8dcd289751"))
   expect_true(file.exists(file.path(p, "meta/data.csv")))
   expect_true(file.exists(file.path(p, "meta/data2.csv")))
 })
