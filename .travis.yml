@@ -9,7 +9,6 @@ before_script:
 after_success:
   - Rscript -e 'covr::codecov()'
 r_github_packages:
-  - vimc/montagu-r
   - vimc/vaultr
 env:
   global:

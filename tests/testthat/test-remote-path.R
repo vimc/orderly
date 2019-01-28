@@ -10,18 +10,28 @@ test_that("Reject impossible remotes", {
 
 test_that("remote_name", {
   path <- prepare_orderly_example("minimal")
-  expect_identical(remote_name(orderly_remote_path(path)),
+  expect_identical(normalizePath(orderly_remote_path(path)$name, "/"),
                    normalizePath(path, "/"))
 })
 
 
+test_that("get remote", {
+  path1 <- prepare_orderly_example("minimal")
+  path2 <- prepare_orderly_example("minimal")
+
+  obj <- get_remote(path1, orderly_config(path2))
+  expect_is(obj, "orderly_remote_path")
+  expect_equal(normalizePath(obj$name), normalizePath(path1))
+})
+
+
 test_that("pull report", {
-  path1 <- create_orderly_demo()
+  path1 <- prepare_orderly_example("demo")
+  id <- orderly_run("multifile-artefact", config = path1, echo = FALSE)
+  orderly_commit(id, config = path1)
+
   path2 <- prepare_orderly_example("demo")
-
-  remote <- orderly_remote_path(path1)
-
-  pull_archive("multifile-artefact", "latest", path2, remote = remote)
+  pull_archive("multifile-artefact", "latest", path2, remote = path1)
 
   d <- orderly_list_archive(path2)
   expect_equal(d$name, "multifile-artefact")
@@ -61,7 +71,10 @@ test_that("pull report: already done", {
 
 
 test_that("push report (path)", {
-  ours <- create_orderly_demo()
+  ours <- prepare_orderly_example("demo")
+  id <- orderly_run("multifile-artefact", config = ours, echo = FALSE)
+  orderly_commit(id, config = ours)
+
   theirs <- prepare_orderly_example("demo")
 
   remote <- orderly_remote_path(theirs)
@@ -93,47 +106,71 @@ test_that("push report: already done", {
 
 
 test_that("remote_report_names", {
-  dat <- prepare_orderly_remote_example(FALSE)
-  remote_path <- orderly_remote_path(dat$path_remote)
-  expect_equal(remote_report_names(dat$config, remote = dat$remote),
+  dat <- prepare_orderly_remote_example()
+  expect_equal(remote_report_names(dat$config),
                c("depend", "depend2", "example"))
 })
 
 
 test_that("remote_report_versions", {
-  dat <- prepare_orderly_remote_example(FALSE)
-  remote_path <- orderly_remote_path(dat$path_remote)
+  dat <- prepare_orderly_remote_example()
 
   expect_equal(
-    remote_report_versions("example", dat$config, remote = dat$remote),
+    remote_report_versions("example", dat$config),
     c(dat$id1, dat$id2))
   expect_equal(
-    remote_report_versions("unknown", dat$config, remote = dat$remote),
+    remote_report_versions("unknown", dat$config),
     character(0))
 })
 
 
 test_that("orderly_run", {
-  dat <- prepare_orderly_remote_example(FALSE)
+  dat <- prepare_orderly_remote_example()
   expect_error(
-    orderly_run_remote("example", config = dat$config, remote = dat$remote),
+    orderly_run_remote("example", config = dat$config),
     "'orderly_remote_path' remotes do not run")
 })
 
 
 test_that("orderly_publish", {
-  dat <- prepare_orderly_remote_example(FALSE)
-  expect_error(
-    orderly_publish_remote("example", dat$id1,
-                           config = dat$config, remote = dat$remote),
-    "'orderly_remote_path' remotes do not publish")
+  dat <- prepare_orderly_remote_example()
+
+  p <- file.path(dat$path_remote, "archive", "example", dat$id1)
+  orderly_publish_remote("example", dat$id1, config = dat$config)
+  expect_equal(yaml_read(path_orderly_published_yml(p)),
+               list(published = TRUE))
+  orderly_publish_remote("example", dat$id1, FALSE, config = dat$config)
+  expect_equal(yaml_read(path_orderly_published_yml(p)),
+               list(published = FALSE))
 })
 
 
+## TODO: this doesn't make much sense without a second remote too.
 test_that("set_default", {
-  dat <- prepare_orderly_remote_example(FALSE)
-  v <- set_default_remote(dat$path_remote, dat$config)
+  dat <- prepare_orderly_remote_example()
+  v <- set_default_remote("default", dat$config)
   expect_is(v, "orderly_remote_path")
-  expect_identical(v, dat$remote)
+  expect_equal(v, dat$remote)
+  expect_identical(v$name, dat$remote$name)
   expect_identical(get_default_remote(dat$config), v)
+})
+
+
+test_that("pull dependencies", {
+  dat <- prepare_orderly_remote_example()
+
+  expect_message(
+    pull_dependencies("depend", config = dat$config, remote = dat$remote),
+    "\\[ pull\\s+ \\]  example:")
+  expect_equal(orderly_list_archive(dat$config),
+               data_frame(name = "example", id = dat$id2))
+
+  ## and update
+  id3 <- orderly_run("example", config = dat$path_remote, echo = FALSE)
+  orderly_commit(id3, config = dat$path_remote)
+  expect_message(
+    pull_dependencies("depend", config = dat$config, remote = dat$remote),
+    "\\[ pull\\s+ \\]  example:")
+  expect_equal(orderly_list_archive(dat$config),
+               data_frame(name = "example", id = c(dat$id2, id3)))
 })
