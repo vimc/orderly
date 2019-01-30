@@ -696,3 +696,13 @@ test_that("orderly_environment", {
   expect_identical(orderly_environment(e), e)
   expect_error(orderly_environment(list()), "'envir' must be an environment")
 })
+
+test_that("auto copy README.md",  {
+  path <- prepare_orderly_example("minimal")
+  ## in report directory create a file called README.md
+  report_path <- file.path(path, "src", "example")
+  file.create(file.path(report_path, "README.md"))
+  id <- orderly_run("example", config = path, echo = FALSE)
+  p <- file.path(path, "draft", "example", id)
+  expect_true(file.exists(file.path(p, "README.md")))
+})

@@ -348,28 +348,24 @@ recipe_prepare_workdir <- function(info, message, config) {
   dir.create(dirname(info$script), FALSE, TRUE)
   file_copy(file.path(src, info$script), info$script)
   file_copy(file.path(src, "orderly.yml"), "orderly.yml")
-  
+
   ## look for README.md in source directory...
-  readme_exists <- file_exists(file.path(src, "readme.md"), check_case = FALSE)
-  files_in_dir <- list_all_files(src)
-  regex_readme <- "^.*readme(|.md)$"
-  print(regex_readme)
-  print(files_in_dir)
-  print(grepl(regex_readme, files_in_dir, ignore.case = TRUE))
-  readme_exists <- any(grepl(regex_readme, files_in_dir, ignore.case = TRUE))
+  readme_exists <- file_exists(file.path(src, "README.md"), check_case = FALSE)
   if (readme_exists) {
     orderly_log("DEBUG", "readme found")
     ## check if readme is already in resources
     if (length(info$resources) > 0) {
-      readme_resource <- grepl("^readme(|.md)$", info$resources,
-                               ignore.case = TRUE)
+      readme_resource <- any(grepl("README.md", info$resources,
+                               ignore.case = FALSE))
     } else {
       readme_resource <- FALSE
     }
+
     if (!readme_resource) {
-      orderly_log("DEBUG", "add readme to resources")
+      orderly_log("DEBUG", "copy README.md across")
       ## append readme to the expected resources
-      info$resources <- c(info$resources, "readme.md")
+      file_copy(file.path(src, "README.md"), "README.md")
+      #info$resources <- c(info$resources, "readme.md")
     } else {
       orderly_log("DEBUG", "readme already a resource")
     }
