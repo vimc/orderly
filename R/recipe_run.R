@@ -362,10 +362,14 @@ recipe_prepare_workdir <- function(info, message, config) {
   }
   copy_readme <- FALSE
   if (!readme_resource) {
+    readme_exists <- file_exists(file.path(src, "README.md"), check_case = FALSE)
     if (length(info$has_readme) > 0) {
       copy_readme <- info$has_readme
+      if (copy_readme && !readme_exists) {
+        stop("README.md does not exist")
+      }
     } else {
-      copy_readme <- file_exists(file.path(src, "README.md"), check_case = FALSE)
+      copy_readme <- readme_exists
     } 
   }
 
