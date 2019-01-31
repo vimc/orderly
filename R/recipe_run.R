@@ -364,8 +364,7 @@ recipe_prepare_workdir <- function(info, message, config) {
   if (!readme_resource) {
     readme_exists <- file_exists(file.path(src, "README.md"), check_case = FALSE)
     if (!is.null(info$has_readme)) {
-      assert_logical(info$has_readme)
-      copy_readme <- info$has_readme
+      copy_readme <- info$has_readme ## we checked this was a boolean earlier
       if (copy_readme && (!readme_exists)) {
         stop("README.md does not exist")
       }

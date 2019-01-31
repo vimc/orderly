@@ -59,6 +59,10 @@ recipe_read <- function(path, config, validate = TRUE) {
     assert_scalar_character(info$connection)
   }
 
+  if (!is.null(info$has_readme)) {
+    assert_scalar_logical(info$has_readme)
+  }
+
   ## Then some processing:
   if (!is.null(info$data)) {
     assert_named(info$data, TRUE, fieldname("data"))
