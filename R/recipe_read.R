@@ -21,6 +21,7 @@ recipe_read <- function(path, config, validate = TRUE) {
                 "connection",
                 "depends",
                 "global_resources",
+                "has_readme",
                 config$fields$name[!config$fields$required])
   check_fields(info, filename, required, optional)
 

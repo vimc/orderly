@@ -13,7 +13,7 @@ orderly_config_read_yaml <- function(filename, path) {
   check_fields(info, filename, "source",
                c("destination", "fields", "minimum_orderly_version",
                  "remote", "vault_server", "global_resources",
-                 "changelog"))
+                 "changelog", "has_readme"))
 
   ## There's heaps of really boring validation to do here that I am
   ## going to skip.  The drama that we will have is that there are
@@ -66,6 +66,10 @@ orderly_config_read_yaml <- function(filename, path) {
   if (!is.null(info$global_resources)) {
     assert_is_directory(info$global_resources, name = "global resource",
                         workdir = path)
+  }
+
+  if (!is.null(info$has_readme)) {
+    assert_logical(info$has_readme)
   }
 
   info$archive_version <- read_orderly_archive_version(path)
