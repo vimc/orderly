@@ -701,7 +701,6 @@ test_that("auto copy README.md",  {
   path <- prepare_orderly_example("minimal")
   ## in report directory create a file called README.md
   report_path <- file.path(path, "src", "example")
-  print(file.path(report_path, "README.md"))
   file.create(file.path(report_path, "README.md"))
   id <- orderly_run("example", config = path, echo = FALSE)
   p <- file.path(path, "draft", "example", id)
@@ -753,5 +752,5 @@ test_that("bad yaml copy README.md ",  {
   file.create(file.path(path_example, "README.md"))
 
   expect_error(orderly_run("example", config = path, echo = FALSE),
-               "argument is not interpretable as logical")
+               "must be logical")
 })
