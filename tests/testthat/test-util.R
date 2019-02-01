@@ -53,6 +53,20 @@ test_that("resolve_env", {
                    list("value"))
 })
 
+
+test_that("resolve_env skips non-scalars", {
+  set.seed(1)
+  v <- paste(sample(c(LETTERS, 0:9, "_"), 20, replace = TRUE), collapse = "")
+  vv <- paste0("$", v)
+  expect_identical(resolve_env(v), list(v))
+
+  env <- setNames("value", v)
+  expect_identical(
+    withr::with_envvar(env,
+                       resolve_env(list(a = vv, b = list(a = 1, b = 2)))),
+    list(a = "value", b = list(a = 1, b = 2)))
+})
+
 test_that("val_to_bytes", {
   x <- sort(runif(10, 0.1, 0.15)) + 100
   y <- vcapply(x, val_to_bytes, 2)

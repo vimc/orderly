@@ -51,7 +51,7 @@ unpack_reference <- function(version, path = tempfile()) {
 }
 
 
-prepare_orderly_remote_example <- function(api, path = tempfile()) {
+prepare_orderly_remote_example <- function(path = tempfile()) {
   path_remote <- file.path(path, "remote")
   path_local <- file.path(path, "local")
 
@@ -70,21 +70,14 @@ prepare_orderly_remote_example <- function(api, path = tempfile()) {
   d <- sub("draft: true", "draft: false", readLines(p))
   writeLines(d, p)
 
-  if (api) {
-    append_lines(c("api_server:",
-                   "  default:",
-                   "    host: example.com",
-                   "    port: 443",
-                   "    username: me",
-                   "    password: password"),
-                 file.path(path_local, "orderly_config.yml"))
-    config <- orderly_config(path_local)
-    config$api_server$default$server$token <- "123"
-    remote <- get_remote(NULL, config)
-  } else {
-    remote <- orderly_remote_path(path_remote)
-    config <- orderly_config(path_local)
-  }
+  r <- list(remote = list(
+              default = list(
+                driver = "orderly::orderly_remote_path",
+                args = list(path = path_remote))))
+  append_lines(yaml::as.yaml(r), file.path(path_local, "orderly_config.yml"))
+
+  config <- orderly_config(path_local)
+  remote <- get_remote(NULL, config)
 
   list(path_remote = path_remote,
        path_local = path_local,

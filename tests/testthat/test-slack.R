@@ -106,7 +106,7 @@ test_that("sending messages is not a failure", {
   d <- slack_data(dat, server_name, server_url, server_is_primary)
 
   slack_url <- "https://httpbin.org/status/403"
-  expect_message(r <- do_slack_post_success(slack_url, d),
+  expect_message(do_slack_post_success(slack_url, d),
                  "NOTE: running slack hook failed")
 })
 
@@ -117,14 +117,63 @@ test_that("main interface", {
               git = NULL,
               id = "20181213-123456-fedcba98",
               name = "example")
-  config <- list(api_server_identity = "myserver",
-                 api_server = list(
+  config <- list(remote_identity = "myserver",
+                 remote = list(
                    myserver = list(
                      slack_url = "https://httpbin.org/post",
                      name = "myserver",
-                     url_www = "https://example.com")))
+                     primary = FALSE,
+                     url = "https://example.com")))
   r <- slack_post_success(dat, config)
   expect_equal(r$status_code, 200L)
+})
+
+
+test_that("main interface", {
+  skip_if_no_internet()
+
+  path <- prepare_orderly_example("minimal")
+  append_lines(c(
+    "remote:",
+    "  testing:",
+    "    driver: orderly::orderly_remote_path",
+    "    args:",
+    sprintf("      path: %s", path),
+    "    slack_url: https://httpbin.org/post",
+    "    url: https://example.com",
+    "  production:",
+    "    driver: orderly::orderly_remote_path",
+    "    args:",
+    sprintf("      path: %s", path),
+    "    slack_url: https://httpbin.org/post",
+    "    url: https://example.com",
+    "    primary: true"),
+    file.path(path, "orderly_config.yml"))
+
+  dat <- list(elapsed = 10,
+              git = NULL,
+              id = "20181213-123456-fedcba98",
+              name = "example")
+
+  config <- withr::with_envvar(
+    c("ORDERLY_API_SERVER_IDENTITY" = "production"),
+    orderly_config(path))
+
+  r <- slack_post_success(dat, config)
+  expect_equal(r$status_code, 200L)
+  d <- httr::content(r)
+  expect_equal(d$json$attachments[[1]]$color, "good") # primary
+  expect_equal(d$json$attachments[[1]]$actions[[1]]$url,
+               "https://example.com/reports/example/20181213-123456-fedcba98/")
+
+  config <- withr::with_envvar(
+    c("ORDERLY_API_SERVER_IDENTITY" = "testing"),
+    orderly_config(path))
+
+  r <- slack_post_success(dat, config)
+  expect_equal(r$status_code, 200L)
+  d <- httr::content(r)
+  expect_equal(d$json$attachments[[1]]$color, "warning") # secondary
 })
 
 

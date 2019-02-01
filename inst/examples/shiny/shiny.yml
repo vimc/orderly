@@ -1,6 +1,0 @@
-title: Example apps
-
-apps:
-  example-shiny-app:
-    name: example
-    id: latest
