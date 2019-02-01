@@ -611,10 +611,10 @@ abbreviate <- function(x, len = round(getOption("width", 80) * 0.8)) {
   x
 }
 
-handle_missing_packages <- function(missing_packages) {
+handle_missing_packages <- function(missing_packages, force = FALSE) {
   ## check if we are interactive and logging is active...
   logging <- !isTRUE(getOption("orderly.nolog"))
-  if (interactive() && logging) {
+  if ((interactive() && logging) || force) {
     install_missing_packages(missing_packages)
   } else {
     ## ...we're not in interactive environment so just print out the command
@@ -636,23 +636,28 @@ install_missing_packages <- function(missing_packages) {
   question <- "Should I try to install missing packages by running:"
   install_command <- sprintf("\n%s\n\n    %s", question, vector_packages)
 
-  try_install <- (utils::menu(c("no", "yes"), FALSE,
-                              title = install_command) == 2)
-
-  if (try_install) {
-    ## try to install missing packages...
-    ## warnings are down graded to messages since any problem should be
-    ## immediately caught on the next line
-    install.packages(missing_packages, quiet = TRUE)
-    ## ...then check that they have been sucessful
-    found_packages <- missing_packages %in% rownames(installed.packages())
-    if (any(!found_packages)) {
-      stop(sprintf("Could not install these packages: %s",
-                   paste(squote(missing_packages[!found_packages]),
-                         collapse = ", ")))
-    }
+  if (prompt_ask_yes_no(install_command)) {
+      install_packages(missing_packages)
   } else {
     stop(sprintf("Missing packages: %s",
                  paste(squote(missing_packages), collapse = ", ")))
+  }
+}
+
+prompt_ask_yes_no <- function(prompt) {
+  return(utils::menu(c("no", "yes"), FALSE, title = prompt) == 2)
+}
+
+install_packages <- function(missing_packages) {
+  ## try to install missing packages...
+  ## warnings are down graded to messages since any problem should be
+  ## immediately caught on the next line
+  install.packages(missing_packages, quiet = TRUE)
+  ## ...then check that they have been sucessful
+  found_packages <- missing_packages %in% rownames(installed.packages())
+  if (any(!found_packages)) {
+    stop(sprintf("Could not install these packages: %s",
+                 paste(squote(missing_packages[!found_packages]),
+                       collapse = ", ")))
   }
 }
