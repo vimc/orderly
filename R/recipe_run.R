@@ -426,10 +426,7 @@ recipe_prepare_workdir <- function(info, message, config) {
 }
 
 recipe_check_artefacts <- function(info) {
-#  print(info$artefacts[, "filenames"])
-#  print(info$resources)
   found <- recipe_exists_artefacts(info)
-#  print(found)
   artefacts <- names(found)
   if (!all(found)) {
     stop("Script did not produce expected artefacts: ",
