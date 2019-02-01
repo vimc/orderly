@@ -443,19 +443,50 @@ test_that("ordered_map_to_list", {
                fixed = TRUE)
 })
 
-test_that("interactive package install", {
-  ## simulate the user asking Orderly to try to install foo and bar
-  mockery::stub(install_missing_packages, "utils::menu", 2)
+test_that("handle_missing_packages", {
   ## These packages don't exist so don't even try to install them to avoid
   ## appveyer pain
-  mockery::stub(install_missing_packages, "install.packages", TRUE)
-  expect_error(install_missing_packages(c("foo", "bar")),
-               "Could not install these packages: 'foo', 'bar'",
-               fixed = TRUE)
+  mockery::stub(handle_missing_packages, "install_missing_packages", TRUE)
+  ## we test show_question later
+  mockery::stub(handle_missing_packages, "show_question", FALSE)
 
-  ## simulate the user Orderly to not install foo and bar
-  mockery::stub(install_missing_packages, "utils::menu", 1)
+  expect_error(handle_missing_packages(c("foo", "bar"), TRUE),
+               NA)
+
+  expect_error(handle_missing_packages(c("foo", "bar"), FALSE),
+               "Missing packages: 'foo', 'bar'")
+
+##  handle_missing_packages(c("foo", "bar"), FALSE)
+})
+
+test_that("install_missing_packages", {
+  ## These packages don't exist so don't even try to install them to avoid
+  ## appveyer pain
+  mockery::stub(install_missing_packages, "install_packages", TRUE)
+
+  ## scenario 1: user asks to install the packages and succeed
+  mockery::stub(install_missing_packages, "prompt_ask_yes_no", TRUE)
   expect_error(install_missing_packages(c("foo", "bar")),
-               "Missing packages: 'foo', 'bar'",
-               fixed = TRUE)
+               NA)
+  ## scenario 2: user asks to not install the packages
+  mockery::stub(install_missing_packages, "prompt_ask_yes_no", FALSE)
+  expect_error(install_missing_packages(c("foo", "bar")),
+               "Missing packages: 'foo', 'bar'")
+})
+
+test_that("install_packages", {
+  ## this test assumes there will never be packages called foo and bar
+  ## installed on the testing machine
+  mockery::stub(install_packages, "install.packages", TRUE)
+  expect_error(install_packages(c("foo", "bar")),
+               "Could not install these packages: 'foo', 'bar'")
+})
+
+test_that("show_question", {
+  oo <- options(orderly.nolog = NULL) # default setting to start
+  on.exit(options(oo))
+
+  expect_identical(show_question(), TRUE)
+  orderly_log_off()
+  expect_identical(show_question(), FALSE)
 })

@@ -614,8 +614,7 @@ abbreviate <- function(x, len = round(getOption("width", 80) * 0.8)) {
 
 handle_missing_packages <- function(missing_packages, force = FALSE) {
   ## check if we are interactive and logging is active...
-  logging <- !isTRUE(getOption("orderly.nolog"))
-  if ((interactive() && logging) || force) {
+  if (show_question() || force) {
     install_missing_packages(missing_packages)
   } else {
     ## ...we're not in interactive environment so just print out the command
@@ -623,8 +622,10 @@ handle_missing_packages <- function(missing_packages, force = FALSE) {
                                paste(squote(missing_packages), collapse = ", "))
     question <- "To install the missing packages run:"
     install_command <- sprintf("\n%s\n\n    %s", question, vector_packages)
-    stop(sprintf("Missing packages: %s",
-                 paste(squote(missing_packages), collapse = ", ")))
+    warning_message <- sprintf("Missing packages: %s\n%s",
+                               paste(squote(missing_packages), collapse = ", "),
+                               install_command)
+    stop(warning_message)
   }
 }
 
@@ -647,6 +648,10 @@ install_missing_packages <- function(missing_packages) {
 
 prompt_ask_yes_no <- function(prompt) {
   return(utils::menu(c("no", "yes"), FALSE, title = prompt) == 2)
+}
+
+show_question <- function() {
+  return(interactive() && !isTRUE(getOption("orderly.nolog")))
 }
 
 install_packages <- function(missing_packages) {
