@@ -618,14 +618,7 @@ handle_missing_packages <- function(missing_packages, force = FALSE) {
     install_missing_packages(missing_packages)
   } else {
     ## ...we're not in interactive environment so just print out the command
-    vector_packages <- sprintf("install.packages(c(%s))",
-                               paste(squote(missing_packages), collapse = ", "))
-    question <- "To install the missing packages run:"
-    install_command <- sprintf("\n%s\n\n    %s", question, vector_packages)
-    warning_message <- sprintf("Missing packages: %s\n%s",
-                               paste(squote(missing_packages), collapse = ", "),
-                               install_command)
-    stop(warning_message)
+    stop_missing_packages(missing_packages)
   }
 }
 
@@ -639,19 +632,29 @@ install_missing_packages <- function(missing_packages) {
   install_command <- sprintf("\n%s\n\n    %s", question, vector_packages)
 
   if (prompt_ask_yes_no(install_command)) {
-      install_packages(missing_packages)
+    install_packages(missing_packages)
   } else {
-    stop(sprintf("Missing packages: %s",
-                 paste(squote(missing_packages), collapse = ", ")))
+    stop_missing_packages(missing_packages)
   }
 }
 
+stop_missing_packages <- function(missing_packages) {
+  vector_packages <- sprintf("install.packages(c(%s))",
+                             paste(squote(missing_packages), collapse = ", "))
+  question <- "To install the missing packages run:"
+  install_command <- sprintf("\n%s\n\n    %s", question, vector_packages)
+  warning_message <- sprintf("Missing packages: %s\n%s",
+                             paste(squote(missing_packages), collapse = ", "),
+                             install_command)
+  stop(warning_message)
+}
+
 prompt_ask_yes_no <- function(prompt) {
-  return(utils::menu(c("no", "yes"), FALSE, title = prompt) == 2)
+  (utils::menu(c("no", "yes"), FALSE, title = prompt) == 2)
 }
 
 show_question <- function() {
-  return(interactive() && !isTRUE(getOption("orderly.nolog")))
+  (interactive() && !isTRUE(getOption("orderly.nolog")))
 }
 
 install_packages <- function(missing_packages) {
@@ -660,10 +663,9 @@ install_packages <- function(missing_packages) {
   ## immediately caught on the next line
   install.packages(missing_packages, quiet = TRUE)
   ## ...then check that they have been sucessful
-  found_packages <- missing_packages %in% rownames(installed.packages())
-  if (any(!found_packages)) {
+  msg <- setdiff(missing_packages, rownames(installed.packages()))
+  if (length(msg) > 0) {
     stop(sprintf("Could not install these packages: %s",
-                 paste(squote(missing_packages[!found_packages]),
-                       collapse = ", ")))
+                 paste(squote(msg), collapse = ", ")))
   }
 }
