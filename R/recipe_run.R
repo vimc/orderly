@@ -349,34 +349,29 @@ recipe_prepare_workdir <- function(info, message, config) {
   file_copy(file.path(src, info$script), info$script)
   file_copy(file.path(src, "orderly.yml"), "orderly.yml")
 
-  ## look for README.md in source directory...
-  ## Three stages here
-  ## One is there are a readme explicitly listed in the resources?
-  ## Two have they set the has_readme field in the config?
-  ## Three is there a README.md file in the source directory
-  if (length(info$resources) > 0) {
-    readme_resource <- any(grepl("README.md", info$resources,
-                                 ignore.case = FALSE))
-  } else {
-    readme_resource <- FALSE
-  }
-  copy_readme <- FALSE
-  if (!readme_resource) {
-    readme_exists <- file_exists(file.path(src, "README.md"), check_case = FALSE)
-    if (!is.null(info$has_readme)) {
-      copy_readme <- info$has_readme ## we checked this was a boolean earlier
-      if (copy_readme && (!readme_exists)) {
-        stop("README.md does not exist")
-      }
-    } else {
-      copy_readme <- readme_exists
-    } 
-  }
-
-  if (copy_readme) {
+  # README logic:
+  # if there's a readme we copy it
+  # if they also list it as a resource let them know that's redundant (edited)
+  # if they also list it as an artefact then error
+  if (file_exists(file.path(src, "README.md"), check_case = FALSE)) {
     file_copy(file.path(src, "README.md"), "README.md")
+    ## now check if README is a resource
+    if (length(info$resources) > 0) {
+      if (any(grepl("README.md", info$resources, ignore.case = FALSE))) {
+        ## WARNING
+        orderly_log("readme",
+                    "README.md should not be listed as a resource")
+      }
+    }
+    ## now check if README is an artefact
+    expected <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
+    if (length(expected) > 0) {
+      if (any(grepl("README.md", expected, ignore.case = FALSE))) {
+        stop("README.md should not be listed as an artefact")
+      }
+    }
   }
-
+  
   if (!is.null(info$resources)) {
     dir_create(dirname(info$resources))
     ## There's a bit of awfulness in R's path handling to deal with here.

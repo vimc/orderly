@@ -21,7 +21,6 @@ recipe_read <- function(path, config, validate = TRUE) {
                 "connection",
                 "depends",
                 "global_resources",
-                "has_readme",
                 config$fields$name[!config$fields$required])
   check_fields(info, filename, required, optional)
 
@@ -57,10 +56,6 @@ recipe_read <- function(path, config, validate = TRUE) {
   }
   if (!is.null(info$connection)) {
     assert_scalar_character(info$connection)
-  }
-
-  if (!is.null(info$has_readme)) {
-    assert_scalar_logical(info$has_readme)
   }
 
   ## Then some processing:
