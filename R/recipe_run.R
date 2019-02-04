@@ -581,16 +581,8 @@ compare_resource_hashes <- function(pre_run_hashes, post_run_hashes) {
   ## we expected a resource but can't find it.
   not_found <- which(!(expected %in% found))
   if (any(not_found)) {
-    stop("Script either did not copy or deleted resources: ",
+    stop("Script deleted the following resources: ",
          paste(expected[not_found], collapse = ", "))
-  }
-
-  ## I'm not sure this can ever happen
-  ## Orderly has found a copied resource that was not expected...
-  not_expected <- which(!(found %in% expected))
-  if (any(not_expected)) {
-    stop("Script has found an unexpected resources: ",
-         paste(found[!not_expected], collapse = ", "))
   }
 
   ## at this point the set of found == the set of expected
