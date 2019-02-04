@@ -744,7 +744,7 @@ test_that("delete resources", {
   # has orderly detected that the package does not exist>
   expect_error(orderly_run("use_resource", config = path, id_file = tmp,
                            echo = FALSE),
-               "Script either did not copy or deleted resources: meta/data.csv")
+               "Script deleted the following resources: meta/data.csv")
   ## delete 2 resources
   path <- prepare_orderly_example("resources")
   tmp <- tempfile()
@@ -759,7 +759,7 @@ test_that("delete resources", {
 
   # has orderly detected that the package does not exist>
   error_message <-
-    sprintf("Script either did not copy or deleted resources: %s, %s",
+    sprintf("Script deleted the following resources: %s, %s",
             "meta/data.csv", "meta/data2.csv")
   expect_error(orderly_run("multiple_resources", config = path, id_file = tmp,
                            echo = FALSE),
