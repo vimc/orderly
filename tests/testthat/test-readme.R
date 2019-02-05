@@ -56,3 +56,23 @@ test_that("list README.md as artefact",  {
   expect_error(orderly_run("example", config = path),
                "README.md should not be listed as an artefact")
 })
+
+test_that("readme db",  {
+  path <- prepare_orderly_example("minimal")
+  report_path <- file.path(path, "src", "example")
+  file.create(file.path(report_path, "README.md"))
+  id <- orderly_run("example", config = path, echo = FALSE)
+  orderly_commit(id, config = path)
+
+  con <- orderly_db("destination", config = path)
+  ## read the file input table
+  d <- DBI::dbReadTable(con, "file_input")
+  DBI::dbDisconnect(con)
+
+  ## check README.md has been added to file_input table
+  readme_file <- (d$filename == "README.md")
+  expect_true(any(readme_file))
+
+  ## check that the purpose of README.md is readme
+  expect_true(all(d$file_purpose[readme_file] == "readme"))
+})

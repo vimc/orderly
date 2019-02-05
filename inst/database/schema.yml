@@ -71,6 +71,7 @@ file_purpose:
     - {name: resource}
     - {name: orderly_yml}
     - {name: global}
+    - {name: readme}
 
 # A realisation of a file requires a filename.  These are scoped by
 # the report version and by the use within the report.
@@ -85,7 +86,6 @@ file_input:
     - file_purpose: {fk: file_purpose.name}
     # This would be great to have but seems overkill
     # - mime: {type: TEXT}
-    # - readme: {type: BOOLEAN}
 
 # Link views into the report
 report_version_view:

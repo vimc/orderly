@@ -233,6 +233,15 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   recipe_check_device_stack(prep$n_dev)
   hash_artefacts <- recipe_check_artefacts(info)
 
+  ## check if README.md exists in report directroy AND is not a resource
+  ## If it's a resource it will get hashed with the other resources
+  if (file_exists("README.md", check_case = FALSE) &&
+      !any(grepl("README.md", info$resources, ignore.case = FALSE))) {
+    hash_readme <- hash_files("README.md")
+  } else {
+    hash_readme <- NULL
+  }
+
   hash_data_csv <- con_csv$mset(prep$data)
   hash_data_rds <- con_rds$mset(prep$data)
   stopifnot(identical(hash_data_csv, hash_data_rds))
@@ -258,6 +267,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                hash_input = hash_files("orderly.yml", FALSE),
                ## Below here all seems sensible enough to track
                hash_script = hash_files(info$script, FALSE),
+               hash_readme = as.list(hash_readme),
                hash_resources = as.list(prep$hash_resources),
                hash_global = as.list(prep$hash_global),
                hash_data = as.list(hash_data_rds),
