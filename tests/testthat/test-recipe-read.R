@@ -190,3 +190,12 @@ test_that("dependencies must exist", {
   expect_error(orderly_run("depend", config = path, echo = FALSE),
                "Did not find file unknown.file at")
 })
+
+
+test_that("data field is optional", {
+  path <- prepare_orderly_example("nodata")
+  report_path <- file.path(path, "src", "example")
+
+  ## expect no error
+  expect_error(orderly_run("example", config = path, echo = FALSE), NA)
+})
