@@ -486,7 +486,15 @@ test_that("show_question", {
   oo <- options(orderly.nolog = NULL) # default setting to start
   on.exit(options(oo))
 
-  expect_identical(show_question(), TRUE)
   orderly_log_off()
   expect_identical(show_question(), FALSE)
+})
+
+test_that("show_question interactive", {
+  ## We can't check that show_question will return true on appveyor since
+  ## R CMD check is non-interactive
+  skip_on_cran()
+  skip_on_appveyor()
+
+  expect_identical(show_question(), TRUE)
 })
