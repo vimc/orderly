@@ -88,11 +88,11 @@ main_args_run <- function(res) {
                           type = "logical",
                           default = FALSE,
                           action = "store_true"),
-  optparse::make_option("--message",
-                        help = "Pull git before running report",
-                        type = "character",
-                        default = NULL,
-                        dest = "message"))
+    optparse::make_option("--message",
+                          help = "Pull git before running report",
+                          type = "character",
+                          default = NULL,
+                          dest = "message"))
   parser <- optparse::OptionParser(
     option_list = opts,
     usage = "%prog [--root=ROOT] run [options] <name>")
