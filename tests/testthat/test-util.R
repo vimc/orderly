@@ -494,6 +494,7 @@ test_that("show_question interactive", {
   ## We can't check that show_question will return true on appveyor since
   ## R CMD check is non-interactive
   skip_on_cran()
+  skip_on_travis()
   skip_on_appveyor()
 
   expect_identical(show_question(), TRUE)
