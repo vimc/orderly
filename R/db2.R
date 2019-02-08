@@ -6,7 +6,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-ORDERLY_SCHEMA_VERSION <- "0.0.4"
+ORDERLY_SCHEMA_VERSION <- "0.0.5"
 
 ## These will be used in a few places and even though they're not
 ## super likely to change it would be good
@@ -326,7 +326,7 @@ report_data_import <- function(con, workdir, config) {
   ## At the moment we are repeatedly checking if a readme has been copied
   ## maybe add a field to the run info saying that we've copied a README?
   if (file_exists(file.path(workdir, "README.md"), check_case = FALSE)) {
-    readme_name <- "README.md"
+    readme_name <- file_canonical_case("README.md")
   } else {
     readme_name <- NULL
   }

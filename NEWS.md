@@ -1,5 +1,9 @@
 # 0.5.14
 
+* README.md is automatically treated as reaource if present (VIMC-2230)
+
+# 0.5.14
+
 * Fix handling of remote environment variables (VIMC-2553)
 
 # 0.5.13
