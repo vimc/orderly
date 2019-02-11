@@ -1,3 +1,7 @@
+# 0.5.15
+
+* `orderly` checks that the resources were not modified during running a report (VIMC-2137)
+
 # 0.5.14
 
 * Fix handling of remote environment variables (VIMC-2553)
