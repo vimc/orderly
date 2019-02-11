@@ -214,6 +214,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   con_csv <- orderly_db("csv", config, FALSE)
 
   prep <- orderly_prepare_data(config, info, parameters, envir)
+  resource_info <- info$resource_info
 
   t0 <- Sys.time()
   orderly_log("start", as.character(t0))
@@ -237,6 +238,10 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   hash_data_rds <- con_rds$mset(prep$data)
   stopifnot(identical(hash_data_csv, hash_data_rds))
 
+  post_run_resources <- get_resource_info(info)
+  compare_resource_hashes(resource_info$hash_resources,
+                          post_run_resources$hash_resources)
+
   if (is.null(info$depends)) {
     depends <- NULL
   } else {
@@ -258,8 +263,8 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                hash_input = hash_files("orderly.yml", FALSE),
                ## Below here all seems sensible enough to track
                hash_script = hash_files(info$script, FALSE),
-               hash_resources = as.list(prep$hash_resources),
-               hash_global = as.list(prep$hash_global),
+               hash_resources = as.list(resource_info$hash_resources),
+               hash_global = as.list(resource_info$hash_global),
                hash_data = as.list(hash_data_rds),
                hash_artefacts = as.list(hash_artefacts),
                depends = depends,
@@ -335,7 +340,6 @@ recipe_data <- function(config, info, parameters, dest) {
   dest
 }
 
-
 recipe_prepare_workdir <- function(info, message, config) {
   if (file.exists(info$workdir)) {
     stop("'workdir' must not exist")
@@ -346,6 +350,7 @@ recipe_prepare_workdir <- function(info, message, config) {
   on.exit(setwd(owd))
 
   dir.create(dirname(info$script), FALSE, TRUE)
+
   file_copy(file.path(src, info$script), info$script)
   file_copy(file.path(src, "orderly.yml"), "orderly.yml")
 
@@ -376,7 +381,7 @@ recipe_prepare_workdir <- function(info, message, config) {
     orderly_log("depends", str)
     file_copy(dep_src, dep_dst)
   }
-  
+
   if (!is.null(info$global_resources)) {
     root_path <- normalizePath(config$path, mustWork = TRUE)
     global_resource_dir <- file.path(root_path, config$global_resources)
@@ -390,10 +395,20 @@ recipe_prepare_workdir <- function(info, message, config) {
     file_copy(path_global_recs, info$workdir, recursive = TRUE)
   }
 
+  ## if we are using resources or global resources...
+  if (!is.null(info$resources) || !is.null(info$global_resources)) {
+    ## ...hash the resources + calculate the file size,
+    ## before we the report has a chance to modify them
+    resource_info <- get_resource_info(info)
+  } else {
+    resource_info <- NULL
+  }
+
   info$changelog <- changelog_load(src, message, info, config)
   changelog_save_json(info$changelog, info$workdir)
 
   info$owd <- owd
+  info$resource_info <- resource_info
   info
 }
 
@@ -514,30 +529,14 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
   ## Compute the device stack size before starting work too
   n_dev <- length(grDevices::dev.list())
 
-  hash_resources <- hash_files(expand_directory_list(info$resources))
-  if (length(hash_resources) > 0L) {
-    orderly_log("resources",
-                sprintf("%s: %s", names(hash_resources), hash_resources))
-  } else {
-    hash_resources <- NULL
-  }
   missing_packages <- setdiff(info$packages, .packages(TRUE))
 
-  hash_global <- hash_files(expand_directory_list(info$global_resources))
-  if (length(hash_global) > 0L) {
-    orderly_log("global",
-                sprintf("%s: %s", names(hash_global), hash_global))
-  } else {
-    hash_global <- NULL
-  }
-
   if (length(missing_packages) > 0) {
-    stop(paste("Missing packages:", 
+    stop(paste("Missing packages:",
                paste(squote(missing_packages), collapse = ", ")))
   }
 
-  ret <- list(data = ldata, hash_resources = hash_resources,
-              hash_global = hash_global, n_dev = n_dev)
+  ret <- list(data = ldata, n_dev = n_dev)
 
   if (!is.null(info$connection)) {
     ret$con <- data[[info$connection]]
@@ -552,6 +551,50 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
 
   ret
 }
+
+get_resource_info <- function(info) {
+  hash_resources <- hash_files(expand_directory_list(info$resources))
+  if (length(hash_resources) > 0L) {
+    orderly_log("resources",
+                sprintf("%s: %s", names(hash_resources), hash_resources))
+  } else {
+    hash_resources <- NULL
+  }
+
+  hash_global <- hash_files(expand_directory_list(info$global_resources))
+  if (length(hash_global) > 0L) {
+    orderly_log("global",
+                sprintf("%s: %s", names(hash_global), hash_global))
+  } else {
+    hash_global <- NULL
+  }
+  ret <- list(hash_resources = hash_resources, hash_global = hash_global)
+
+  ret
+}
+
+compare_resource_hashes <- function(pre_run_hashes, post_run_hashes) {
+  ## compare resource hashes here
+  found <- names(post_run_hashes)
+  expected <- names(pre_run_hashes)
+
+  ## we expected a resource but can't find it.
+  not_found <- which(!(expected %in% found))
+  if (any(not_found)) {
+    stop("Script deleted the following resources: ",
+         paste(expected[not_found], collapse = ", "))
+  }
+
+  ## at this point the set of found == the set of expected
+  found_hash <- post_run_hashes[found] ## put the hashes in the same order
+  expected_hash <- pre_run_hashes[found]
+  hash_miss <- which(found_hash != expected_hash)
+  if (any(hash_miss)) {
+    stop("Script has modified resources: ",
+         paste(found[hash_miss], collapse = ", "))
+  }
+}
+
 
 
 recipe_current_run_set <- function(info) {
