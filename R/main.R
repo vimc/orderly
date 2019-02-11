@@ -49,7 +49,7 @@ main_args <- function(args) {
 }
 
 ## 1. orderly [--root] run <name> [--no-commit] [--parameters=PARAMS] \
-##                         [--print-log] [--id-file=FILE] \
+##                         [--print-log] [--id-file=FILE] [--message=MESSAGE] \
 ##                         [--ref=REF [--fetch] | --pull]
 main_args_run <- function(res) {
   opts <- list(
@@ -87,7 +87,12 @@ main_args_run <- function(res) {
                           help = "Pull git before running report",
                           type = "logical",
                           default = FALSE,
-                          action = "store_true"))
+                          action = "store_true"),
+    optparse::make_option("--message",
+                          help = "A message explaining why the report was run",
+                          type = "character",
+                          default = NULL,
+                          dest = "message"))
   parser <- optparse::OptionParser(
     option_list = opts,
     usage = "%prog [--root=ROOT] run [options] <name>")
@@ -115,6 +120,7 @@ main_do_run <- function(x) {
   ref <- x$options$ref
   fetch <- x$options$fetch
   pull <- x$options$pull
+  message <- x$options$message
 
   main_run <- function() {
     if (pull) {
@@ -125,7 +131,8 @@ main_do_run <- function(x) {
       }
     }
     dat <- orderly_run(name, parameters, config = config, id_file = id_file,
-                       ref = ref, fetch = fetch, extended_output = TRUE)
+                       ref = ref, fetch = fetch, message = message,
+                       extended_output = TRUE)
     if (commit) {
       orderly_commit(dat$id, name, config)
     }

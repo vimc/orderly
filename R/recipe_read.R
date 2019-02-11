@@ -9,10 +9,10 @@ recipe_read <- function(path, config, validate = TRUE) {
 
   required <- c("script", # filename
                 "artefacts",
-                "data",
                 config$fields$name[config$fields$required])
   optional <- c("displayname",
                 "description",
+                "data",
                 "parameters", # character >= 1
                 "views",
                 "packages",
