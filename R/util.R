@@ -643,10 +643,10 @@ stop_missing_packages <- function(missing_packages) {
                              paste(squote(missing_packages), collapse = ", "))
   question <- "To install the missing packages run:"
   install_command <- sprintf("\n%s\n\n    %s", question, vector_packages)
-  warning_message <- sprintf("Missing packages: %s\n%s",
-                             paste(squote(missing_packages), collapse = ", "),
-                             install_command)
-  stop(warning_message)
+  msg <- sprintf("Missing packages: %s\n%s",
+                 paste(squote(missing_packages), collapse = ", "),
+                 install_command)
+  stop(msg)
 }
 
 prompt_ask_yes_no <- function(prompt) {
@@ -659,8 +659,6 @@ show_question <- function() {
 
 install_packages <- function(missing_packages) {
   ## try to install missing packages...
-  ## warnings are down graded to messages since any problem should be
-  ## immediately caught on the next line
   install.packages(missing_packages, quiet = TRUE)
   ## ...then check that they have been sucessful
   msg <- setdiff(missing_packages, rownames(installed.packages()))
