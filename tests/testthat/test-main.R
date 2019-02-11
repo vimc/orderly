@@ -192,7 +192,6 @@ test_that("list", {
                "argument to list must be one of")
 })
 
-
 test_that("unknown", {
   path <- tempfile()
   args <- c("--root", path, "foo")
