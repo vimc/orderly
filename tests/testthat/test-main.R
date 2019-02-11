@@ -308,6 +308,7 @@ test_that("list", {
   expect_error(res$target(res), "orderly bug")
 })
 
+
 test_that("run: message", {
   ## Should have no errors
   path <- prepare_orderly_example("changelog")
@@ -325,6 +326,16 @@ test_that("run: message", {
 
   capture.output(res$target(res))
 
+  con <- orderly_db("destination", config = path)
+  on.exit(DBI::dbDisconnect(con))
+  d <- DBI::dbReadTable(con, "changelog")
+
+  table_message <- sprintf("[%s] %s", d$label, d$value)
+  expect_equal(message, table_message)
+})
+
+
+test_that("run: bad message", {
   ## mal-formatted message
   path <- prepare_orderly_example("changelog")
   message <- "Invalid message"
@@ -334,7 +345,10 @@ test_that("run: message", {
   error <- paste("message must be of the form '[<label>] <message>' failed on:",
                  sprintf("'%s'", message), sep = "\n")
   expect_error(capture.output(res$target(res)), error, fixed = TRUE)
+})
 
+
+test_that("run: message no changelog",{
   ## changelog not enabled
   path <- prepare_orderly_example("minimal")
   message <- "[label1] This is a test message."
