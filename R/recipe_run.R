@@ -530,10 +530,8 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
   n_dev <- length(grDevices::dev.list())
 
   missing_packages <- setdiff(info$packages, .packages(TRUE))
-
   if (length(missing_packages) > 0) {
-    stop(paste("Missing packages:",
-               paste(squote(missing_packages), collapse = ", ")))
+    handle_missing_packages(missing_packages)
   }
 
   ret <- list(data = ldata, n_dev = n_dev)
@@ -568,9 +566,7 @@ get_resource_info <- function(info) {
   } else {
     hash_global <- NULL
   }
-  ret <- list(hash_resources = hash_resources, hash_global = hash_global)
-
-  ret
+  list(hash_resources = hash_resources, hash_global = hash_global)
 }
 
 compare_resource_hashes <- function(pre_run_hashes, post_run_hashes) {

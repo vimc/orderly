@@ -611,3 +611,59 @@ abbreviate <- function(x, len = round(getOption("width", 80) * 0.8)) {
   }
   x
 }
+
+handle_missing_packages <- function(missing_packages, force = FALSE) {
+  ## check if we are interactive and logging is active...
+  if (show_question() || force) {
+    install_missing_packages(missing_packages)
+  } else {
+    ## ...we're not in interactive environment so just print out the command
+    stop_missing_packages(missing_packages)
+  }
+}
+
+install_missing_packages <- function(missing_packages) {
+  ## collapse vector to packages to string "c('pckg_1','pckg_2')"
+  vector_packages <- sprintf("install.packages(c(%s))",
+                             paste(squote(missing_packages), collapse = ", "))
+
+  ## ...if so ask if Orderly should try to install the pacakges
+  question <- "Should I try to install missing packages by running:"
+  install_command <- sprintf("\n%s\n\n    %s", question, vector_packages)
+
+  if (prompt_ask_yes_no(install_command)) {
+    install_packages(missing_packages)
+  } else {
+    stop_missing_packages(missing_packages)
+  }
+}
+
+stop_missing_packages <- function(missing_packages) {
+  vector_packages <- sprintf("install.packages(c(%s))",
+                             paste(squote(missing_packages), collapse = ", "))
+  question <- "To install the missing packages run:"
+  install_command <- sprintf("\n%s\n\n    %s", question, vector_packages)
+  msg <- sprintf("Missing packages: %s\n%s",
+                 paste(squote(missing_packages), collapse = ", "),
+                 install_command)
+  stop(msg)
+}
+
+prompt_ask_yes_no <- function(prompt) {
+  utils::menu(c("no", "yes"), FALSE, title = prompt) == 2 # nocov
+}
+
+show_question <- function() {
+  (interactive() && !isTRUE(getOption("orderly.nolog")))
+}
+
+install_packages <- function(missing_packages) {
+  ## try to install missing packages...
+  utils::install.packages(missing_packages, quiet = TRUE)
+  ## ...then check that they have been sucessful
+  msg <- setdiff(missing_packages, .packages(TRUE))
+  if (length(msg) > 0) {
+    stop(sprintf("Could not install these packages: %s",
+                 paste(squote(msg), collapse = ", ")))
+  }
+}
