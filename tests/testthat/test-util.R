@@ -477,7 +477,7 @@ test_that("install_missing_packages", {
 test_that("install_packages", {
   ## this test assumes there will never be packages called foo and bar
   ## installed on the testing machine
-  mockery::stub(install_packages, "install.packages", TRUE)
+  mockery::stub(install_packages, "utils::install.packages", TRUE)
   expect_error(install_packages(c("foo", "bar")),
                "Could not install these packages: 'foo', 'bar'")
 })
