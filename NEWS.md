@@ -1,5 +1,6 @@
 # 0.5.15
 
+* `orderly run` on the command line accepts message entries (VIMC-2363, VIMC-1797)
 * `orderly` checks that the resources were not modified during running a report (VIMC-2137)
 
 # 0.5.14
