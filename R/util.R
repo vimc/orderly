@@ -659,9 +659,9 @@ show_question <- function() {
 
 install_packages <- function(missing_packages) {
   ## try to install missing packages...
-  install.packages(missing_packages, quiet = TRUE)
+  utils::install.packages(missing_packages, quiet = TRUE)
   ## ...then check that they have been sucessful
-  msg <- setdiff(missing_packages, rownames(installed.packages()))
+  msg <- setdiff(missing_packages, .packages(TRUE))
   if (length(msg) > 0) {
     stop(sprintf("Could not install these packages: %s",
                  paste(squote(msg), collapse = ", ")))
