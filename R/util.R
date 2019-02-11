@@ -650,7 +650,7 @@ stop_missing_packages <- function(missing_packages) {
 }
 
 prompt_ask_yes_no <- function(prompt) {
-  (utils::menu(c("no", "yes"), FALSE, title = prompt) == 2)
+  utils::menu(c("no", "yes"), FALSE, title = prompt) == 2 # nocov
 }
 
 show_question <- function() {
