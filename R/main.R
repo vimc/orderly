@@ -49,7 +49,7 @@ main_args <- function(args) {
 }
 
 ## 1. orderly [--root] run <name> [--no-commit] [--parameters=PARAMS] \
-##                         [--print-log] [--id-file=FILE] \
+##                         [--print-log] [--id-file=FILE] [--message=MESSAGE] \
 ##                         [--ref=REF [--fetch] | --pull]
 main_args_run <- function(res) {
   opts <- list(
@@ -89,7 +89,7 @@ main_args_run <- function(res) {
                           default = FALSE,
                           action = "store_true"),
     optparse::make_option("--message",
-                          help = "Pull git before running report",
+                          help = "A message explaining why the report was run",
                           type = "character",
                           default = NULL,
                           dest = "message"))
