@@ -781,6 +781,7 @@ test_that("multiple resources", {
   p <- orderly_commit(id, config = path)
 
   con <- orderly_db("destination", config = path)
+  on.exit(DBI::dbDisconnect(con))
   d <- DBI::dbReadTable(con, "file_input")
   d <- d[d$file_purpose == "resource", ]
 
