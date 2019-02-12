@@ -273,8 +273,8 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                ## Below here all seems sensible enough to track
                hash_script = hash_files(info$script, FALSE),
                hash_readme = as.list(hash_readme),
-               hash_resources = as.list(prep$hash_resources),
-               hash_global = as.list(prep$hash_global),
+               hash_resources = as.list(resource_info$hash_resources),
+               hash_global = as.list(resource_info$hash_global),
                hash_data = as.list(hash_data_rds),
                hash_artefacts = as.list(hash_artefacts),
                depends = depends,
