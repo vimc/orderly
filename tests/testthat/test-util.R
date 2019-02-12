@@ -442,3 +442,60 @@ test_that("ordered_map_to_list", {
                "Corrupt ordered map (this should never happen)",
                fixed = TRUE)
 })
+
+test_that("handle_missing_packages", {
+  ## These packages don't exist so don't even try to install them to avoid
+  ## appveyer pain
+  mockery::stub(handle_missing_packages, "install_missing_packages", TRUE)
+  ## we test show_question later
+  mockery::stub(handle_missing_packages, "show_question", FALSE)
+
+  expect_error(handle_missing_packages(c("foo", "bar"), TRUE),
+               NA)
+
+  expect_error(handle_missing_packages(c("foo", "bar"), FALSE),
+               "Missing packages: 'foo', 'bar'")
+
+##  handle_missing_packages(c("foo", "bar"), FALSE)
+})
+
+test_that("install_missing_packages", {
+  ## These packages don't exist so don't even try to install them to avoid
+  ## appveyer pain
+  mockery::stub(install_missing_packages, "install_packages", TRUE)
+
+  ## scenario 1: user asks to install the packages and succeed
+  mockery::stub(install_missing_packages, "prompt_ask_yes_no", TRUE)
+  expect_error(install_missing_packages(c("foo", "bar")),
+               NA)
+  ## scenario 2: user asks to not install the packages
+  mockery::stub(install_missing_packages, "prompt_ask_yes_no", FALSE)
+  expect_error(install_missing_packages(c("foo", "bar")),
+               "Missing packages: 'foo', 'bar'")
+})
+
+test_that("install_packages", {
+  ## this test assumes there will never be packages called foo and bar
+  ## installed on the testing machine
+  mockery::stub(install_packages, "utils::install.packages", TRUE)
+  expect_error(install_packages(c("foo", "bar")),
+               "Could not install these packages: 'foo', 'bar'")
+})
+
+test_that("show_question", {
+  oo <- options(orderly.nolog = NULL) # default setting to start
+  on.exit(options(oo))
+
+  orderly_log_off()
+  expect_identical(show_question(), FALSE)
+})
+
+test_that("show_question interactive", {
+  ## We can't check that show_question will return true on appveyor since
+  ## R CMD check is non-interactive
+  skip_on_cran()
+  skip_on_travis()
+  skip_on_appveyor()
+
+  expect_identical(show_question(), TRUE)
+})

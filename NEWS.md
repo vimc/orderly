@@ -1,3 +1,9 @@
+# 0.5.15
+
+* `orderly` now prompts to install missing packages and offers code to help with this (VIMC-2384)
+* `orderly run` on the command line accepts message entries (VIMC-2363, VIMC-1797)
+* `orderly` checks that the resources were not modified during running a report (VIMC-2137)
+
 # 0.5.14
 
 * README.md is automatically treated as reaource if present (VIMC-2230)

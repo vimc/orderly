@@ -192,7 +192,6 @@ test_that("list", {
                "argument to list must be one of")
 })
 
-
 test_that("unknown", {
   path <- tempfile()
   args <- c("--root", path, "foo")
@@ -306,4 +305,56 @@ test_that("list", {
   res <- main_args(c("--root", path, "list", "names"))
   res$args <- "other"
   expect_error(res$target(res), "orderly bug")
+})
+
+
+test_that("run: message", {
+  ## Should have no errors
+  path <- prepare_orderly_example("changelog")
+  message <- "[label1] This is a test message."
+  args <- c("--root", path, "run", "--message", message, "example")
+  res <- main_args(args)
+  expect_equal(res$command, "run")
+  expect_equal(res$args, "example")
+  expect_null(res$options$parameters)
+  expect_null(res$options$ref)
+  expect_false(res$options$no_commit)
+  expect_false(res$options$print_log)
+  expect_identical(res$target, main_do_run)
+  expect_equal(res$options$message, message)
+
+  capture.output(res$target(res))
+
+  con <- orderly_db("destination", config = path)
+  on.exit(DBI::dbDisconnect(con))
+  d <- DBI::dbReadTable(con, "changelog")
+
+  table_message <- sprintf("[%s] %s", d$label, d$value)
+  expect_equal(message, table_message)
+})
+
+
+test_that("run: bad message", {
+  ## mal-formatted message
+  path <- prepare_orderly_example("changelog")
+  message <- "Invalid message"
+  args <- c("--root", path, "run", "--message", message, "example")
+  res <- main_args(args)
+
+  error <- paste("message must be of the form '[<label>] <message>' failed on:",
+                 sprintf("'%s'", message), sep = "\n")
+  expect_error(capture.output(res$target(res)), error, fixed = TRUE)
+})
+
+
+test_that("run: message no changelog",{
+  ## changelog not enabled
+  path <- prepare_orderly_example("minimal")
+  message <- "[label1] This is a test message."
+  args <- c("--root", path, "run", "--message", message, "example")
+  res <- main_args(args)
+
+  error <- paste("report 'example' uses changelog,",
+                 "but this is not enabled in orderly_config.yml", sep = " ")
+  expect_error(capture.output(res$target(res)), error)
 })

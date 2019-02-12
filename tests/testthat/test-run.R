@@ -491,6 +491,9 @@ test_that("renamed dependencies are expected", {
 
 
 test_that("non-existent package", {
+  # if logging is on this test will wait for user input, so turn off
+  orderly_log_off()
+  on.exit(orderly_log_on())
   path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
@@ -506,6 +509,9 @@ test_that("non-existent package", {
 })
 
 test_that("multiple non-existent packages", {
+  # if logging is on this test will wait for user input, so turn off
+  orderly_log_off()
+  on.exit(orderly_log_on())
   path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
@@ -695,4 +701,92 @@ test_that("orderly_environment", {
   expect_identical(parent.env(e), .GlobalEnv)
   expect_identical(orderly_environment(e), e)
   expect_error(orderly_environment(list()), "'envir' must be an environment")
+})
+
+test_that("modify resources", {
+  ## modify 1 resource
+  path <- prepare_orderly_example("resources")
+  tmp <- tempfile()
+  path_example <- file.path(path, "src", "use_resource")
+  script_path <- file.path(path_example, "script.R")
+
+  # add a line to script.R that modifies a resource
+  write(sprintf("write.csv(x = c(1, 2, 3), file = 'meta/data.csv')"),
+        file = script_path, append = TRUE)
+
+  # has orderly detected that the package does not exist>
+  expect_error(orderly_run("use_resource", config = path, id_file = tmp,
+                           echo = FALSE),
+               "Script has modified resources: meta/data.csv")
+  ## modify 2 resources
+  path <- prepare_orderly_example("resources")
+  tmp <- tempfile()
+  path_example <- file.path(path, "src", "multiple_resources")
+  script_path <- file.path(path_example, "script.R")
+
+  # add a line to script.R that modifies a resource
+  write(sprintf("write.csv(x = c(1, 2, 3), file = 'meta/data.csv')"),
+        file = script_path, append = TRUE)
+  write(sprintf("write.csv(x = c('Hello', 'World'), file = 'meta/data2.csv')"),
+        file = script_path, append = TRUE)
+
+  # has orderly detected that the package does not exist>
+  expect_error(orderly_run("multiple_resources", config = path, id_file = tmp,
+                           echo = FALSE),
+               "Script has modified resources: meta/data.csv, meta/data2.csv")
+})
+
+test_that("delete resources", {
+  ## delete 1 resource
+  path <- prepare_orderly_example("resources")
+  tmp <- tempfile()
+  path_example <- file.path(path, "src", "use_resource")
+  script_path <- file.path(path_example, "script.R")
+
+  # add a line to script.R that modifies a resource
+  write(sprintf("file.remove('meta/data.csv')"),
+        file = script_path, append = TRUE)
+
+  # has orderly detected that the package does not exist>
+  expect_error(orderly_run("use_resource", config = path, id_file = tmp,
+                           echo = FALSE),
+               "Script deleted the following resources: meta/data.csv")
+  ## delete 2 resources
+  path <- prepare_orderly_example("resources")
+  tmp <- tempfile()
+  path_example <- file.path(path, "src", "multiple_resources")
+  script_path <- file.path(path_example, "script.R")
+
+  # add a line to script.R that modifies a resource
+  write(sprintf("file.remove('meta/data.csv')"),
+        file = script_path, append = TRUE)
+  write(sprintf("file.remove('meta/data2.csv')"),
+        file = script_path, append = TRUE)
+
+  # has orderly detected that the package does not exist>
+  error_message <-
+    sprintf("Script deleted the following resources: %s, %s",
+            "meta/data.csv", "meta/data2.csv")
+  expect_error(orderly_run("multiple_resources", config = path, id_file = tmp,
+                           echo = FALSE),
+               error_message)
+})
+
+test_that("multiple resources", {
+  path <- prepare_orderly_example("resources")
+  id <- orderly_run("multiple_resources", config = path, echo = FALSE)
+  p <- file.path(path, "draft", "multiple_resources", id)
+  expect_true(file.exists(file.path(p, "meta/data.csv")))
+  expect_true(file.exists(file.path(p, "meta/data2.csv")))
+  p <- orderly_commit(id, config = path)
+
+  con <- orderly_db("destination", config = path)
+  d <- DBI::dbReadTable(con, "file_input")
+  d <- d[d$file_purpose == "resource", ]
+
+  expect_identical(d$filename, c("meta/data.csv", "meta/data2.csv"))
+  expect_identical(d$file_hash, c("0bec5bf6f93c547bc9c6774acaf85e1a",
+                                  "15bd0276ba238a412caf3e8dcd289751"))
+  expect_true(file.exists(file.path(p, "meta/data.csv")))
+  expect_true(file.exists(file.path(p, "meta/data2.csv")))
 })
