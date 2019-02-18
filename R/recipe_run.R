@@ -458,9 +458,11 @@ recipe_unexpected_artefacts <- function(info, id) {
   if (!is.null(info$depends)) {
     dependencies <- info$depends$as
   }
-  # we expect to see all artefacts from the config, the source file and the yml
-  # config
-  expected <- c(expected, resources, dependencies, info$script, "orderly.yml")
+  ## we expect to see all artefacts from the config, the source file
+  ## and the yml config; the changelog may or may not be present, but
+  ## it's never unexpected.
+  expected <- c(expected, resources, dependencies, info$script, "orderly.yml",
+                "changelog.json")
 
   # this is set to recursive to ensure that artefacts created in directories
   # are tracked
