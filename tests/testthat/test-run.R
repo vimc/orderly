@@ -790,3 +790,16 @@ test_that("multiple resources", {
   expect_true(file.exists(file.path(p, "meta/data.csv")))
   expect_true(file.exists(file.path(p, "meta/data2.csv")))
 })
+
+
+test_that("producing a directory is an error", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+
+  writeLines(
+    'dir.create("mygraph.png")',
+    file.path(path, "src", "example", "script.R"))
+  expect_error(orderly_run("example", config = path, echo = FALSE),
+               "Produced a directory artefact: 'mygraph.png'",
+               fixed = TRUE)
+})

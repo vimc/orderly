@@ -431,11 +431,12 @@ recipe_check_artefacts <- function(info) {
 
 hash_artefacts <- function(artefacts) {
   i <- is_directory(artefacts)
-  i[is.na(i)] <- FALSE
-  h <- set_names(character(length(artefacts)), artefacts)
-  h[i] <- hash_directory(artefacts[i])
-  h[!i] <- hash_files(artefacts[!i])
-  h
+  if (any(i)) {
+    stop("Produced a directory artefact: ",
+         paste(squote(artefacts[i]), collapse = ", "),
+         call. = FALSE)
+  }
+  hash_files(artefacts)
 }
 
 recipe_exists_artefacts <- function(info, id) {
