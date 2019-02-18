@@ -146,15 +146,6 @@ hash_files <- function(filenames, named = TRUE) {
   }
 }
 
-hash_directory <- function(filenames, named = TRUE) {
-  f <- function(p) {
-    hash_object(hash_files(list_all_files(p), FALSE))
-  }
-  res <- vcapply(filenames, f)
-  names(res) <- if (named) filenames else NULL
-  res
-}
-
 hash_object <- function(object) {
   digest::digest(object)
 }
