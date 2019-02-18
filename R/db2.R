@@ -6,7 +6,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-ORDERLY_SCHEMA_VERSION <- "0.0.4"
+ORDERLY_SCHEMA_VERSION <- "0.0.5"
 
 ## These will be used in a few places and even though they're not
 ## super likely to change it would be good
@@ -205,6 +205,17 @@ report_db2_rebuild <- function(config, verbose = TRUE) {
         message(sprintf("%s (%s)", basename(p), basename(dirname(p))))
       }
       report_data_import(con, p, config)
+    }
+  }
+
+  if (!is.null(config$changelog)) {
+    sql <- paste("SELECT distinct report_version.report",
+                 "  FROM changelog",
+                 "  JOIN report_version",
+                 "    ON report_version.id = changelog.report_version")
+    reports <- DBI::dbGetQuery(con, sql)[[1]]
+    for (r in reports) {
+      report_db2_update_changelog_published(con, r)
     }
   }
 }
@@ -459,9 +470,46 @@ report_db2_destroy <- function(con) {
 }
 
 
-report_db2_publish <- function(con, id, value) {
+report_db2_publish <- function(con, id, name, value) {
   sql <- "UPDATE report_version SET published = $1 WHERE id = $2"
   DBI::dbExecute(con, sql, list(value, id))
+  report_db2_update_changelog_published(con, name)
+}
+
+
+report_db2_update_changelog_published <- function(con, name) {
+  sql <- "SELECT id FROM report_version WHERE report = $1 and published"
+  published <- DBI::dbGetQuery(con, sql, name)$id
+
+  sql <- paste("SELECT",
+               "  changelog.id, report_version, report_version_public,",
+               "    published",
+               "  FROM changelog",
+               "  JOIN report_version",
+               "    ON report_version.id = changelog.report_version",
+               "  JOIN changelog_label",
+               "    ON changelog_label.id = changelog.label",
+               " WHERE report_version.report = $1",
+               "   AND changelog_label.public",
+               " ORDER BY report_version")
+  dat <- DBI::dbGetQuery(con, sql, list(name))
+  dat$published <- dat$published == 1
+
+  p <- rep(NA_character_, nrow(dat))
+  for (i in seq_len(nrow(dat))) {
+    j <- dat$report_version[[i]] <= published
+    if (!any(j)) {
+      break
+    }
+    p[[i]] <- published[[min(which(j))]]
+  }
+
+  prev <- dat$report_version_public
+  update <- is.na(p) != is.na(prev) | (!is.na(p) & !is.na(prev) & p != prev)
+  sql <- "UPDATE changelog SET report_version_public = $1 WHERE id = $2"
+  for (k in which(update)) {
+    DBI::dbExecute(con, sql, list(p[[k]], dat$id[[k]]))
+  }
 }
 
 
