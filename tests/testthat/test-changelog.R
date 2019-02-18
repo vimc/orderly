@@ -170,7 +170,7 @@ test_that("append changelog", {
   d <- DBI::dbReadTable(con, "changelog")
   d$from_file <- as.logical(d$from_file)
   expect_equal(d[names(l1)], l1)
-  expect_setequal(names(d), c(names(l1), "id"))
+  expect_setequal(names(d), c(names(l1), "id", "report_version_public"))
 
   txt <- c("[label2]", "value2", readLines(path_cl))
   writeLines(txt, path_cl)
