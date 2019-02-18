@@ -431,6 +431,7 @@ recipe_check_artefacts <- function(info) {
 
 hash_artefacts <- function(artefacts) {
   i <- is_directory(artefacts)
+  i[is.na(i)] <- FALSE # for test mode
   if (any(i)) {
     stop("Produced a directory artefact: ",
          paste(squote(artefacts[i]), collapse = ", "),
