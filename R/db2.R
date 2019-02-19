@@ -505,9 +505,13 @@ report_db2_update_changelog_published <- function(con, name) {
   }
 
   prev <- dat$report_version_public
-  update <- is.na(p) != is.na(prev) | (!is.na(p) & !is.na(prev) & p != prev)
+  new <- p
+  ## Replace NAs with empty strings for ease of the next comparison
+  prev[is.na(prev)] <- ""
+  new[is.na(new)] <- ""
+
   sql <- "UPDATE changelog SET report_version_public = $1 WHERE id = $2"
-  for (k in which(update)) {
+  for (k in which(new != prev)) {
     DBI::dbExecute(con, sql, list(p[[k]], dat$id[[k]]))
   }
 }
