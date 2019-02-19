@@ -6,4 +6,5 @@ cache <- new.env(parent = emptyenv())
     utils::tail(migrations[migrations <= utils::packageVersion("orderly")], 1L)
   cache$default_remote <- list()
   cache$remotes <- list()
+  cache$schema <- list()
 }
