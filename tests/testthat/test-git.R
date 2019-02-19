@@ -208,3 +208,18 @@ test_that("handle failure", {
     git_run("unknown-command", root = path[["origin"]], check = TRUE),
     r$output, fixed = TRUE)
 })
+
+
+test_that("git into db", {
+  path <- unzip_git_demo()
+  id <- orderly_run("minimal", config = path, echo = FALSE)
+  orderly_commit(id, config = path)
+
+  con <- orderly_db("destination", config = path)
+  on.exit(DBI::dbDisconnect(con))
+  d <- DBI::dbReadTable(con, "report_version")
+
+  expect_equal(d$git_sha, git_ref_to_sha("HEAD", path))
+  expect_equal(d$git_branch, "master")
+  expect_equal(d$git_clean, 1)
+})

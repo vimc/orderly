@@ -35,6 +35,9 @@ report_version:
     - description: {type: TEXT, nullable: true}
     - connection: {type: BOOLEAN}
     - published: {type: BOOLEAN}
+    - git_sha: {type: TEXT, nullable: true}
+    - git_branch: {type: TEXT, nullable: true}
+    - git_clean: {type: BOOLEAN, nullable: true}
     # NOTE: fields listed in orderly_config.yml will also be
     # included here.
 

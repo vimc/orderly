@@ -6,7 +6,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-ORDERLY_SCHEMA_VERSION <- "0.0.4"
+ORDERLY_SCHEMA_VERSION <- "0.0.5"
 
 ## These will be used in a few places and even though they're not
 ## super likely to change it would be good
@@ -252,6 +252,12 @@ report_data_import <- function(con, workdir, config) {
     }
   }
 
+  if (is.null(dat_rds$git$sha)) {
+    git_clean <- NA
+  } else {
+    git_clean <- is.null(dat_rds$git$status)
+  }
+
   report_version <- data_frame(
     id = id,
     report = dat_rds$meta$name,
@@ -259,7 +265,11 @@ report_data_import <- function(con, workdir, config) {
     displayname = dat_in$displayname %||% NA_character_,
     description = dat_in$description %||% NA_character_,
     published = published,
-    connection = dat_rds$meta$connection)
+    connection = dat_rds$meta$connection,
+    git_sha = dat_rds$git$sha %||% NA_character_,
+    git_branch = dat_rds$git$branch %||% NA_character_,
+    git_clean = git_clean)
+
   if (nrow(config$fields) > 0L) {
     extra <- drop_null(set_names(
       lapply(config$fields$name, function(x) dat_in[[x]]),
