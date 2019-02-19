@@ -1,3 +1,7 @@
+# 0.5.16
+
+* The runner now recognises the `master_only` configuration option and can prevent running reports with references other than `master`.  This is now enforced entirely on the server (VIMC-2642)
+
 # 0.5.15
 
 * `orderly` now prompts to install missing packages and offers code to help with this (VIMC-2384)
