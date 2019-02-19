@@ -4,9 +4,15 @@
 ##'
 ##' @title Orderly runner
 ##' @param path Path to use
-##' @param allow_ref Allow git to change branches/ref for run
+##'
+##' @param allow_ref Allow git to change branches/ref for run.  If not
+##'   given, then we will look to see if the orderly configuration
+##'   disallows branch changes (based on the
+##'   \code{ORDERLY_API_SERVER_IDENTITY} environment variable and the
+##'   \code{master_only} setting of the relevant server block.
+##'
 ##' @export
-orderly_runner <- function(path, allow_ref = TRUE) {
+orderly_runner <- function(path, allow_ref = NULL) {
   R6_orderly_runner$new(path, allow_ref)
 }
 
@@ -44,8 +50,11 @@ R6_orderly_runner <- R6::R6Class(
       if (!self$has_git) {
         message("Not enabling git features as this is not version controlled")
       }
-      self$allow_ref <- allow_ref && self$has_git &&
-        git_run(c("rev-parse", "HEAD"), root = path, check = FALSE)$success
+
+      self$allow_ref <- runner_allow_ref(allow_ref, self$config)
+      if (self$has_git && !self$allow_ref) {
+        message("Disallowing reference switching in runner")
+      }
 
       bin <- tempfile()
       dir.create(bin)
@@ -66,7 +75,8 @@ R6_orderly_runner <- R6::R6Class(
     queue = function(name, parameters = NULL, ref = NULL, update = FALSE,
                      timeout = 600) {
       if (!self$allow_ref && !is.null(ref)) {
-        stop("Reference switching is disabled in this runner")
+        stop("Reference switching is disallowed in this runner",
+             call. = FALSE)
       }
       if (update && self$has_git) {
         if (is.null(ref)) {
@@ -382,4 +392,16 @@ runner_queue <- function() {
         FALSE
       }
     })
+}
+
+
+runner_allow_ref <- function(allow_ref, config) {
+  if (is.null(allow_ref)) {
+    allow_ref <- !(config$server_options$master_only %||% FALSE)
+  }
+  if (allow_ref) {
+    res <- git_run(c("rev-parse", "HEAD"), root = config$path, check = FALSE)
+    allow_ref <- res$success
+  }
+  allow_ref
 }

@@ -351,3 +351,50 @@ test_that("queue status", {
   expect_equal(runner$status(key3)$output$stdout,
                sprintf("queued:%s:%s", key2, "interactive"))
 })
+
+
+test_that("prevent git changes", {
+  skip_on_windows()
+  path <- prepare_orderly_git_example()
+
+  cfg <- list(
+    source = list(
+      driver = "RSQLite::SQLite",
+      dbname = "dbname: source.sqlite"),
+    remote = list(
+      main = list(
+        driver = "orderly::orderly_remote_path",
+        primary = TRUE,
+        master_only = TRUE,
+        args = list(path = path[["origin"]])),
+      other = list(
+        driver = "orderly::orderly_remote_path",
+        args = list(path = path[["origin"]]))))
+
+  path_local <- path[["local"]]
+  writeLines(yaml::as.yaml(cfg), file.path(path_local, "orderly_config.yml"))
+
+  runner <- withr::with_envvar(
+    c("ORDERLY_API_SERVER_IDENTITY" = "main"),
+    orderly_runner(path_local))
+  expect_false(runner$allow_ref)
+  expect_error(
+    runner$queue("example", ref = "origin/other", parameters = list(nmin = 0)),
+    "Reference switching is disallowed in this runner")
+
+  runner <- withr::with_envvar(
+    c("ORDERLY_API_SERVER_IDENTITY" = "other"),
+    orderly_runner(path_local))
+  expect_true(runner$allow_ref)
+  r <- runner$queue("example", ref = "origin/other",
+                    parameters = list(nmin = 0))
+  expect_equal(nrow(runner$queue_status()$queue), 1L)
+
+  runner <- withr::with_envvar(
+    c("ORDERLY_API_SERVER_IDENTITY" = NA_character_),
+    orderly_runner(path_local))
+  expect_true(runner$allow_ref)
+  r <- runner$queue("example", ref = "origin/other",
+                    parameters = list(nmin = 0))
+  expect_equal(nrow(runner$queue_status()$queue), 1L)
+})
