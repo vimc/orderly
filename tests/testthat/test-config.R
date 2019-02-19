@@ -103,6 +103,7 @@ test_that("support declaring api server", {
                 main = list(
                   driver = "orderly::orderly_remote_path",
                   primary = TRUE,
+                  master_only = TRUE,
                   args = list(path = path)),
                 other = list(
                   driver = "orderly::orderly_remote_path",
@@ -114,12 +115,26 @@ test_that("support declaring api server", {
   expect_equal(cfg$remote$main$args,
                list(path = path, name = "main"))
 
-  withr::with_envvar(
-    c("ORDERLY_API_SERVER_IDENTITY" = NA),
-    expect_null(orderly_config(path)$remote_identity))
-  withr::with_envvar(
+  cfg <- withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = "main"),
-    expect_equal(orderly_config(path)$remote_identity, "main"))
+    orderly_config(path))
+  expect_equal(cfg$remote_identity, "main")
+  expect_true(cfg$server_options$primary)
+  expect_true(cfg$server_options$master_only)
+
+  cfg <- withr::with_envvar(
+    c("ORDERLY_API_SERVER_IDENTITY" = "other"),
+    orderly_config(path))
+  expect_equal(cfg$remote_identity, "other")
+  expect_false(cfg$server_options$primary)
+  expect_false(cfg$server_options$master_only)
+
+  cfg <- withr::with_envvar(
+    c("ORDERLY_API_SERVER_IDENTITY" = NA),
+    orderly_config(path))
+  expect_null(cfg$remote_identity)
+  expect_null(cfg$server_options)
+
   withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = "something-else"),
     expect_error(

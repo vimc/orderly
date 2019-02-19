@@ -61,6 +61,9 @@ orderly_config_read_yaml <- function(filename, path) {
   if (nzchar(remote_identity)) {
     info$remote_identity <-
       match_value(remote_identity, names(info$remote))
+    excl <- c("driver", "args", "name")
+    server_options <- info$remote[[remote_identity]]
+    info$server_options <- server_options[setdiff(names(server_options), excl)]
   }
 
   if (!is.null(info$global_resources)) {
