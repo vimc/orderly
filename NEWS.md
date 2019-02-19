@@ -1,3 +1,7 @@
+# 0.5.16
+
+* The database schema now stores basic git information alongside report versions, if the report source archive uses git (VIMC-2615)
+
 # 0.5.15
 
 * `orderly` now prompts to install missing packages and offers code to help with this (VIMC-2384)
