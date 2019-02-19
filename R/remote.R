@@ -114,7 +114,13 @@ push_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
 ##'
 ##' @param parameters Parameters for the reprt
 ##'
-##' @param timeout Time to wait for the report to be returned (in seconds)
+##' @param timeout Time to tell the server to wait before killing the
+##'   report.
+##'
+##' @param wait Time to wait for the report to be run; if the report
+##'   takes longer than this time to run but \code{timeout} is longer
+##'   it will remain running on the server but we will stop waiting
+##'   for it and instead thrown an error.
 ##'
 ##' @param poll Period to poll the server for results (in seconds)
 ##'
@@ -136,14 +142,14 @@ push_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
 ##'
 ##' @export
 orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
-                               timeout = 3600, poll = 1,
+                               timeout = NULL, wait = 3600, poll = 1,
                                open = TRUE, stop_on_error = TRUE,
                                progress = TRUE,
                                config = NULL, locate = TRUE, remote = NULL) {
   remote <- get_remote(remote, orderly_config_get(config, locate))
   remote$run(name, parameters = parameters, ref = ref,
              timeout = timeout, poll = poll, progress = progress,
-             stop_on_error = stop_on_error)
+             stop_on_error = stop_on_error, open = open)
 }
 
 ##' Publish a report on a remote server

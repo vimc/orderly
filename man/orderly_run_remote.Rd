@@ -5,8 +5,9 @@
 \title{Run a report on a remote server}
 \usage{
 orderly_run_remote(name, parameters = NULL, ref = NULL,
-  timeout = 3600, poll = 1, open = TRUE, stop_on_error = TRUE,
-  progress = TRUE, config = NULL, locate = TRUE, remote = NULL)
+  timeout = NULL, wait = 3600, poll = 1, open = TRUE,
+  stop_on_error = TRUE, progress = TRUE, config = NULL,
+  locate = TRUE, remote = NULL)
 }
 \arguments{
 \item{name}{Name of the report}
@@ -17,7 +18,13 @@ orderly_run_remote(name, parameters = NULL, ref = NULL,
 used.  This cannot be used if the remote has \code{master_only}
 set.}
 
-\item{timeout}{Time to wait for the report to be returned (in seconds)}
+\item{timeout}{Time to tell the server to wait before killing the
+report.}
+
+\item{wait}{Time to wait for the report to be run; if the report
+takes longer than this time to run but \code{timeout} is longer
+it will remain running on the server but we will stop waiting
+for it and instead thrown an error.}
 
 \item{poll}{Period to poll the server for results (in seconds)}
 
