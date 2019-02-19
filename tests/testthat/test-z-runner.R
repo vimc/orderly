@@ -398,3 +398,26 @@ test_that("prevent git changes", {
                     parameters = list(nmin = 0))
   expect_equal(nrow(runner$queue_status()$queue), 1L)
 })
+
+
+test_that("allow ref logic", {
+  path <- unzip_git_demo()
+  config <- list(server_options = list(master_only = FALSE),
+                 path = path)
+
+  expect_false(runner_allow_ref(FALSE, config))
+  expect_true(runner_allow_ref(TRUE, config))
+  expect_true(runner_allow_ref(NULL, config))
+
+  config <- list(server_options = list(master_only = TRUE),
+                 path = path)
+  expect_false(runner_allow_ref(FALSE, config))
+  expect_true(runner_allow_ref(TRUE, config))
+  expect_false(runner_allow_ref(NULL, config))
+
+  config <- list(server_options = list(master_only = FALSE),
+                 path = tempfile())
+  expect_false(runner_allow_ref(FALSE, config))
+  expect_false(runner_allow_ref(TRUE, config))
+  expect_false(runner_allow_ref(NULL, config))
+})
