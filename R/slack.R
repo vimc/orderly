@@ -16,14 +16,15 @@ slack_data <- function(dat, remote_name, remote_url, remote_is_primary) {
   if (is.null(dat$git)) {
     git <- NULL
   } else {
-    git <- sprintf("%s@%s", dat$git$branch, dat$git$sha_short)
-    if (is.null(dat$git$github_url)) {
-      git <- sprintf("%s@%s", dat$git$branch, dat$git$sha_short)
-    } else {
-      git <- sprintf("<%s/tree/%s|%s>@<%s/tree/%s|%s>",
-                     dat$git$github_url, dat$git$branch, dat$git$branch,
-                     dat$git$github_url, dat$git$sha_short, dat$git$sha_short)
+    branch <- dat$git$branch %||% "(detached)"
+    sha <- dat$git$sha_short
+    if (!is.null(dat$git$github_url)) {
+      sha <- sprintf("<%s/tree/%s|%s>", dat$git$github_url, sha, sha)
     }
+    if (!is.null(dat$git$github_url) && !is.null(dat$git$branch)) {
+      branch <- sprintf("<%s/tree/%s|%s>", dat$git$github_url, branch, branch)
+    }
+    git <- sprintf("%s@%s", branch, sha)
   }
   id <- dat$id
 

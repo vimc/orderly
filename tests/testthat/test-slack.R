@@ -76,6 +76,23 @@ test_that("git information is collected correctly", {
 })
 
 
+test_that("git information works in detached head mode", {
+  server_url <- "https://example.com"
+  server_is_primary <- FALSE
+  server_name <- "myserver"
+
+  dat <- list(elapsed = 10,
+              git = list(branch = NULL, sha_short = "abcdefg",
+                         github_url = "https://github.com/vimc/repo"),
+              id = "20181213-123456-fedcba98",
+              name = "example")
+  d <- slack_data(dat, server_name, server_url, server_is_primary)
+  expect_equal(
+    d$attachments[[1]]$fields[[2]]$value,
+    "(detached)@<https://github.com/vimc/repo/tree/abcdefg|abcdefg>")
+})
+
+
 test_that("primary server changes colour", {
   server_url <- "https://example.com"
   server_is_primary <- FALSE
