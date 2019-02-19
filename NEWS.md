@@ -1,3 +1,7 @@
+# 0.5.16
+
+* The `changelog` table includes the attributable *public* report version attributable to each changelog entry
+
 # 0.5.15
 
 * `orderly` now prompts to install missing packages and offers code to help with this (VIMC-2384)
