@@ -1,3 +1,7 @@
+# 0.5.17
+
+* Fix passing of `timeout` through to remote runners when using the `montagu` package (VIMC-2517)
+
 # 0.5.16
 
 * The database schema now stores basic git information alongside report versions, if the report source archive uses git (VIMC-2615)
