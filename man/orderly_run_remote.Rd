@@ -6,8 +6,8 @@
 \usage{
 orderly_run_remote(name, parameters = NULL, ref = NULL,
   timeout = NULL, wait = 3600, poll = 1, open = TRUE,
-  stop_on_error = TRUE, progress = TRUE, config = NULL,
-  locate = TRUE, remote = NULL)
+  stop_on_error = TRUE, stop_on_timeout = TRUE, progress = TRUE,
+  config = NULL, locate = TRUE, remote = NULL)
 }
 \arguments{
 \item{name}{Name of the report}
@@ -33,7 +33,13 @@ a browser on completion}
 
 \item{stop_on_error}{Logical, indicating if we should throw an
 error if the report fails.  If you set this to \code{FALSE} it
-will be much easier to debug, but more annoying in scripts.}
+will be much easier to debug, but more annoying in scripts.  If
+the times out on the server (i.e., takes longer than
+\code{timeout}) that counts as an error.}
+
+\item{stop_on_timeout}{Logical, indicating if we should throw an
+error if the report takes longer than \code{wait} seconds to
+complete.}
 
 \item{progress}{Logical, indicating if a progress spinner should
 be included.}
