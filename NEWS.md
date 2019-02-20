@@ -1,3 +1,7 @@
+# 0.5.17
+
+* Fix passing of `timeout` through to remote runners when using the `montagu` package (VIMC-2517)
+
 # 0.5.16
 
 * The `changelog` table includes the attributable *public* report version attributable to each changelog entry
