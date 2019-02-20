@@ -1,5 +1,6 @@
 # 0.5.16
 
+* The database schema now stores basic git information alongside report versions, if the report source archive uses git (VIMC-2615)
 * The runner now recognises the `master_only` configuration option and can prevent running reports with references other than `master`.  This is now enforced entirely on the server (VIMC-2642)
 * The `changelog` table includes the attributable *public* report version attributable to each changelog entry
 
