@@ -170,7 +170,7 @@ test_that("append changelog", {
   d <- DBI::dbReadTable(con, "changelog")
   d$from_file <- as.logical(d$from_file)
   expect_equal(d[names(l1)], l1)
-  expect_setequal(names(d), c(names(l1), "id"))
+  expect_setequal(names(d), c(names(l1), "id", "report_version_public"))
 
   txt <- c("[label2]", "value2", readLines(path_cl))
   writeLines(txt, path_cl)
@@ -242,4 +242,107 @@ test_that("reports can't use changelogs if not enabled", {
     orderly_run("example", config = path, echo = FALSE),
     "report 'example' uses changelog, but this is not enabled",
     fixed = TRUE)
+})
+
+
+test_that("public changelog", {
+  path <- prepare_orderly_example("changelog")
+
+  name <- "example"
+  ids <- character(10)
+  for (i in seq_along(ids)) {
+    ids[[i]] <- orderly_run(name, config = path, echo = FALSE,
+                            message = sprintf("[label1] %d", i))
+    orderly_commit(ids[[i]], config = path)
+  }
+
+  con <- orderly_db("destination", config = path)
+  on.exit(DBI::dbDisconnect(con))
+
+  orderly_publish(ids[[2]], config = path)
+  expect_equal(
+    DBI::dbReadTable(con, "changelog")$report_version_public,
+    rep(c(ids[[2]], NA_character_), c(2, length(ids) - 2)))
+
+  orderly_publish(ids[[6]], config = path)
+  expect_equal(
+    DBI::dbReadTable(con, "changelog")$report_version_public,
+    rep(c(ids[[2]], ids[[6]], NA_character_), c(2, 4, 4)))
+
+  orderly_publish(ids[[5]], config = path)
+  expect_equal(
+    DBI::dbReadTable(con, "changelog")$report_version_public,
+    rep(c(ids[[2]], ids[[5]], ids[[6]], NA_character_), c(2, 3, 1, 4)))
+
+  orderly_publish(ids[[2]], FALSE, config = path)
+  expect_equal(
+    DBI::dbReadTable(con, "changelog")$report_version_public,
+    rep(c(ids[[5]], ids[[6]], NA_character_), c(5, 1, 4)))
+
+  ## This should all survive a rebuild
+  prev <- DBI::dbReadTable(con, "changelog")
+  orderly_rebuild(config = path)
+  expect_equal(DBI::dbReadTable(con, "changelog"), prev)
+})
+
+
+test_that("public changelog with multiple entries", {
+  path <- prepare_orderly_example("changelog")
+
+  name <- "example"
+  ids <- character(3)
+
+  ids[[1]] <- orderly_run(name, config = path, echo = FALSE,
+                          message = paste("[label1]", c("a", "b", "c")))
+  ids[[2]] <- orderly_run(name, config = path, echo = FALSE,
+                          message = paste("[label1]", c("d")))
+  ids[[3]] <- orderly_run(name, config = path, echo = FALSE,
+                          message = paste("[label1]", c("e", "f")))
+  for (i in ids) {
+    orderly_commit(i, config = path)
+  }
+
+  con <- orderly_db("destination", config = path)
+  on.exit(DBI::dbDisconnect(con))
+
+  orderly_publish(ids[[2]], config = path)
+  expect_equal(
+    DBI::dbReadTable(con, "changelog")$report_version_public,
+    rep(c(ids[[2]], NA_character_), c(4, 2)))
+
+  orderly_publish(ids[[1]], config = path)
+  expect_equal(
+    DBI::dbReadTable(con, "changelog")$report_version_public,
+    rep(c(ids[[1]], ids[[2]], NA_character_), c(3, 1, 2)))
+
+  orderly_publish(ids[[3]], config = path)
+  expect_equal(
+    DBI::dbReadTable(con, "changelog")$report_version_public,
+    rep(c(ids[[1]], ids[[2]], ids[[3]]), c(3, 1, 2)))
+
+  orderly_publish(ids[[2]], FALSE, config = path)
+  expect_equal(
+    DBI::dbReadTable(con, "changelog")$report_version_public,
+    rep(c(ids[[1]], ids[[3]]), c(3, 3)))
+})
+
+
+test_that("public version has no changelog", {
+  path <- prepare_orderly_example("changelog")
+
+  name <- "example"
+  ids <- character(4)
+  for (i in seq_along(ids)) {
+    msg <- if (i != 3) sprintf("[label1] %d", i)
+    ids[[i]] <- orderly_run(name, config = path, echo = FALSE, message = msg)
+    orderly_commit(ids[[i]], config = path)
+  }
+
+  con <- orderly_db("destination", config = path)
+  DBI::dbReadTable(con, "changelog")
+
+  orderly_publish(ids[[3]], config = path)
+  expect_equal(
+    DBI::dbReadTable(con, "changelog")$report_version_public,
+    rep(c(ids[[3]], NA_character_), c(2, 1)))
 })
