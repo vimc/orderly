@@ -368,8 +368,14 @@ recipe_prepare_workdir <- function(info, message, config) {
   # if there's a readme we copy it
   # if they also list it as a resource let them know that's redundant (edited)
   # if they also list it as an artefact then error
-  if (file_exists(file.path(src, "README.md"), check_case = FALSE)) {
-    file_copy(file.path(src, "README.md"), "README.md")
+  src_files <- dir(src)
+  readme_file <- src_files[tolower(src_files) == "readme.md"]
+  ## Two readme files e.g. README.md and Readme.MD can happen on unix systems
+  ## I t is not clear what we should do here.
+  if (length(readme_file) == 1) {
+    ## we copy the readme.md file to README.md irrespective of what
+    ## case filename the user has used
+    file_copy(file.path(src, readme_file), "README.md")
     ## now check if README is a resource
     if (length(info$resources) > 0) {
       if (any(grepl("README.md", info$resources, ignore.case = FALSE))) {

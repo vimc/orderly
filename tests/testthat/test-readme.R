@@ -10,6 +10,16 @@ test_that("auto copy README.md",  {
   expect_true(file.exists(file.path(p, "README.md")))
 })
 
+test_that("lowercase README.md",  {
+  path <- prepare_orderly_example("minimal")
+  ## in report directory create a file called README.md
+  report_path <- file.path(path, "src", "example")
+  file.create(file.path(report_path, "readme.MD"))
+  id <- orderly_run("example", config = path, echo = FALSE)
+  p <- file.path(path, "draft", "example", id)
+  expect_true(file.exists(file.path(p, "README.md")))
+})
+
 test_that("list README.md as resource",  {
   path <- prepare_orderly_example("minimal")
   report_path <- file.path(path, "src", "example")

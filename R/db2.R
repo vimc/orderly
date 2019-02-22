@@ -325,12 +325,8 @@ report_data_import <- function(con, workdir, config) {
   ## there might be a better way to this.
   ## At the moment we are repeatedly checking if a readme has been copied
   ## maybe add a field to the run info saying that we've copied a README?
-  if (file_exists(file.path(workdir, "README.md"), check_case = FALSE)) {
-    if (file_has_canonical_case("README.md")) {
-      readme_name <- file_canonical_case("README.md")
-    } else {
-      readme_name <- "README.md"
-    }
+  if (file.exists(file.path(workdir, "README.md"))) {
+    readme_name <- "README.md"
   } else {
     readme_name <- NULL
   }
