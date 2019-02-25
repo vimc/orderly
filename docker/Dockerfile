@@ -4,6 +4,7 @@ RUN apt-get update && apt-get -y install \
   git \
   libssl-dev \
   libpq-dev \
+  sqlite3 \
   wget
 
 # R package dependencies, including a few extras that we'll want handy
