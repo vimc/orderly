@@ -1,3 +1,7 @@
+# 0.5.17
+
+* `README.md` files are automatically copied as resources from source folder. Additionally it is an error to include `README.md` as an artefact (VIMC-2230)
+
 # 0.5.15
 
 * `orderly` now prompts to install missing packages and offers code to help with this (VIMC-2384)
