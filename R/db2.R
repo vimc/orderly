@@ -201,7 +201,7 @@ report_db2_rebuild <- function(config, verbose = TRUE) {
   on.exit(DBI::dbDisconnect(con))
 
   if (DBI::dbExistsTable(con, ORDERLY_TABLE_LIST)) {
-    report_db2_destroy(con)
+    report_db2_destroy(con, config)
   }
   report_db2_init(con, config)
   reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
@@ -473,13 +473,27 @@ report_data_find_dependencies <- function(con, meta) {
 }
 
 
-report_db2_destroy <- function(con) {
-  if (DBI::dbExistsTable(con, ORDERLY_TABLE_LIST)) {
-    ## We have to disable the FK check here, otherwise it's a bit of a
-    ## pain to delete all tables.
+report_db2_destroy <- function(con, config) {
+  schema <- report_db2_schema(config$fields, report_db2_dialect(con))
+  drop <- intersect(DBI::dbReadTable(con, ORDERLY_TABLE_LIST)[[1L]],
+                    DBI::dbListTables(con))
+  extra <- setdiff(names(schema$tables), drop)
+
+  if (length(extra)) {
+    msg <- c("While rebuilding the orderly database, we will delete",
+             sprintf("additional tables: %s.",
+                     paste(squote(extra), collapse = ", ")),
+             "This is most likely an orderly bug - please request that",
+             "the orderly schema version is increased")
+    warning(paste(msg, collapse = " "),
+            immediate. = TRUE, call. = FALSE)
+    drop <- c(drop, extra)
+  }
+
+  if (length(drop) > 0L) {
     sqlite_pragma_fk(con, FALSE)
     on.exit(sqlite_pragma_fk(con, TRUE))
-    for (t in DBI::dbReadTable(con, ORDERLY_TABLE_LIST)[[1L]]) {
+    for (t in drop) {
       DBI::dbRemoveTable(con, t)
     }
   }
