@@ -474,10 +474,12 @@ report_data_find_dependencies <- function(con, meta) {
 
 
 report_db2_destroy <- function(con, config) {
-  schema <- report_db2_schema(config$fields, report_db2_dialect(con))
-  drop <- intersect(DBI::dbReadTable(con, ORDERLY_TABLE_LIST)[[1L]],
-                    DBI::dbListTables(con))
-  extra <- setdiff(names(schema$tables), drop)
+  dialect <- report_db2_dialect(con)
+  schema <- names(report_db2_schema(config$fields, dialect)$tables)
+  existing <- DBI::dbListTables(con)
+  known <- DBI::dbReadTable(con, ORDERLY_TABLE_LIST)[[1L]]
+  drop <- intersect(known, existing)
+  extra <- setdiff(intersect(schema, existing), drop)
 
   if (length(extra)) {
     msg <- c("While rebuilding the orderly database, we will delete",

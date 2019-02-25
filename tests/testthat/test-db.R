@@ -146,23 +146,3 @@ test_that("dialects", {
   expect_error(report_db2_dialect(structure(TRUE, class = "other")),
                "Can't determine SQL dialect")
 })
-
-
-test_that("rebuild db with incorrect schema information", {
-  path <- unpack_reference("0.5.17")
-  con <- orderly_db("destination", path, validate = FALSE)
-  on.exit(DBI::dbDisconnect(con))
-
-  DBI::dbExecute(
-    con,
-    "DELETE FROM orderly_schema_tables WHERE name is 'parameters'")
-
-  expect_true("parameters" %in% DBI::dbListTables(con))
-  expect_false("parameters" %in%
-               DBI::dbReadTable(con, "orderly_schema_tables")$name)
-
-  expect_warning(
-    orderly_rebuild(path),
-    "While rebuilding the orderly database, we will delete additional",
-    fixed = TRUE)
-})
