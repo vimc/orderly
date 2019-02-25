@@ -35,6 +35,9 @@ report_version:
     - description: {type: TEXT, nullable: true}
     - connection: {type: BOOLEAN}
     - published: {type: BOOLEAN}
+    - git_sha: {type: TEXT, nullable: true}
+    - git_branch: {type: TEXT, nullable: true}
+    - git_clean: {type: BOOLEAN, nullable: true}
     # NOTE: fields listed in orderly_config.yml will also be
     # included here.
 
@@ -171,6 +174,7 @@ changelog:
   columns:
     - id: {type: SERIAL}
     - report_version: {fk: report_version.id}
+    - report_version_public: {fk: report_version.id, nullable: true}
     - label: {type: TEXT, fk: changelog_label.id}
     - value: {type: TEXT}
     - from_file: {type: BOOLEAN}

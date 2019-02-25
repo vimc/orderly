@@ -470,11 +470,13 @@ recipe_check_artefacts <- function(info) {
 
 hash_artefacts <- function(artefacts) {
   i <- is_directory(artefacts)
-  i[is.na(i)] <- FALSE
-  h <- set_names(character(length(artefacts)), artefacts)
-  h[i] <- hash_directory(artefacts[i])
-  h[!i] <- hash_files(artefacts[!i])
-  h
+  i[is.na(i)] <- FALSE # for test mode
+  if (any(i)) {
+    stop("Produced a directory artefact: ",
+         paste(squote(artefacts[i]), collapse = ", "),
+         call. = FALSE)
+  }
+  hash_files(artefacts)
 }
 
 recipe_exists_artefacts <- function(info, id) {
@@ -497,9 +499,11 @@ recipe_unexpected_artefacts <- function(info, id) {
   if (!is.null(info$depends)) {
     dependencies <- info$depends$as
   }
-  # we expect to see all artefacts from the config, the source file and the yml
-  # config
-  expected <- c(expected, resources, dependencies, info$script, "orderly.yml")
+  ## we expect to see all artefacts from the config, the source file
+  ## and the yml config; the changelog may or may not be present, but
+  ## it's never unexpected.
+  expected <- c(expected, resources, dependencies, info$script, "orderly.yml",
+                "changelog.json")
 
   # this is set to recursive to ensure that artefacts created in directories
   # are tracked

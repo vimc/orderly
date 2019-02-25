@@ -1,6 +1,13 @@
 # 0.5.17
 
 * `README.md` files are automatically copied as resources from source folder. Additionally it is an error to include `README.md` as an artefact (VIMC-2230)
+* Fix passing of `timeout` through to remote runners when using the `montagu` package (VIMC-2517)
+
+# 0.5.16
+
+* The database schema now stores basic git information alongside report versions, if the report source archive uses git (VIMC-2615)
+* The runner now recognises the `master_only` configuration option and can prevent running reports with references other than `master`.  This is now enforced entirely on the server (VIMC-2642)
+* The `changelog` table includes the attributable *public* report version attributable to each changelog entry
 
 # 0.5.15
 

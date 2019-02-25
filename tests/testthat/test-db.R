@@ -127,8 +127,8 @@ test_that("avoid unserialisable parameters", {
 
 test_that("dialects", {
   skip_on_cran() # likely platform dependent
-  s <- orderly_schema_prepare(NULL, "sqlite")
-  p <- orderly_schema_prepare(NULL, "postgres")
+  s <- report_db2_schema_read(NULL, "sqlite")
+  p <- report_db2_schema_read(NULL, "postgres")
   expect_false(isTRUE(all.equal(s, p)))
 
   path <- prepare_orderly_example("minimal")

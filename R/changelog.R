@@ -68,7 +68,7 @@ changelog_update <- function(id, new, old) {
   }
 
   new <- changelog_compare(new, old)
-  if (nrow(new) > 0L) {
+  if (!is.null(new) && nrow(new) > 0L) {
     new$report_version <- id
     ret <- rbind(new, old)
   } else {

@@ -14,7 +14,7 @@ ORDERLY_SCHEMA_TABLE <- "orderly_schema"
 ORDERLY_MAIN_TABLE <- "report_version"
 ORDERLY_TABLE_LIST <- "orderly_schema_tables"
 
-orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
+report_db2_schema_read <- function(fields = NULL, dialect = "sqlite") {
   d <- yaml_read(orderly_file("database/schema.yml"))
 
   preprepare <- function(nm) {
@@ -109,6 +109,15 @@ orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
 }
 
 
+report_db2_schema <- function(fields = NULL, dialect = "sqlite") {
+  key <- hash_object(list(fields, dialect))
+  if (is.null(cache$schema[[key]])) {
+    cache$schema[[key]] <- report_db2_schema_read(fields, dialect)
+  }
+  cache$schema[[key]]
+}
+
+
 ## Same pattern as existing db.R version but with
 report_db2_init <- function(con, config, must_create = FALSE, validate = TRUE) {
   sqlite_pragma_fk(con, TRUE)
@@ -124,7 +133,7 @@ report_db2_init <- function(con, config, must_create = FALSE, validate = TRUE) {
 
 
 report_db2_init_create <- function(con, config, dialect) {
-  dat <- orderly_schema_prepare(config$fields, dialect)
+  dat <- report_db2_schema(config$fields, dialect)
   dat$values$changelog_label <- config$changelog
 
   DBI::dbBegin(con)
@@ -151,12 +160,9 @@ report_db2_open_existing <- function(con, config) {
                  paste(squote(msg), collapse = ", ")))
   }
 
-  ## TODO: this should be dealt with in a more sustainable way; the
-  ## report_db_cols() function duplicates information already
-  ## present in the yml and that should be the source of truth here
-  ## but we shuold only load that once in a session.
-  extra <- setdiff(setdiff(names(d), names(report_db_cols())),
-                   c("report", "connection", custom_name))
+  schema <- report_db2_schema(config$fields, report_db2_dialect(con))
+  cols <- names(schema$tables[[ORDERLY_MAIN_TABLE]]$columns)
+  extra <- setdiff(names(d), cols)
   if (length(extra) > 0L) {
     stop(sprintf("custom fields %s in database not present in config",
                  paste(squote(extra), collapse = ", ")))
@@ -207,6 +213,17 @@ report_db2_rebuild <- function(config, verbose = TRUE) {
       report_data_import(con, p, config)
     }
   }
+
+  if (!is.null(config$changelog)) {
+    sql <- paste("SELECT distinct report_version.report",
+                 "  FROM changelog",
+                 "  JOIN report_version",
+                 "    ON report_version.id = changelog.report_version")
+    reports <- DBI::dbGetQuery(con, sql)[[1]]
+    for (r in reports) {
+      report_db2_update_changelog_published(con, r)
+    }
+  }
 }
 
 
@@ -246,6 +263,12 @@ report_data_import <- function(con, workdir, config) {
     }
   }
 
+  if (is.null(dat_rds$git$sha)) {
+    git_clean <- NA
+  } else {
+    git_clean <- is.null(dat_rds$git$status)
+  }
+
   report_version <- data_frame(
     id = id,
     report = dat_rds$meta$name,
@@ -253,7 +276,11 @@ report_data_import <- function(con, workdir, config) {
     displayname = dat_in$displayname %||% NA_character_,
     description = dat_in$description %||% NA_character_,
     published = published,
-    connection = dat_rds$meta$connection)
+    connection = dat_rds$meta$connection,
+    git_sha = dat_rds$git$sha %||% NA_character_,
+    git_branch = dat_rds$git$branch %||% NA_character_,
+    git_clean = git_clean)
+
   if (nrow(config$fields) > 0L) {
     extra <- drop_null(set_names(
       lapply(config$fields$name, function(x) dat_in[[x]]),
@@ -473,9 +500,50 @@ report_db2_destroy <- function(con) {
 }
 
 
-report_db2_publish <- function(con, id, value) {
+report_db2_publish <- function(con, id, name, value) {
   sql <- "UPDATE report_version SET published = $1 WHERE id = $2"
   DBI::dbExecute(con, sql, list(value, id))
+  report_db2_update_changelog_published(con, name)
+}
+
+
+report_db2_update_changelog_published <- function(con, name) {
+  sql <- "SELECT id FROM report_version WHERE report = $1 and published"
+  published <- DBI::dbGetQuery(con, sql, name)$id
+
+  sql <- paste("SELECT",
+               "  changelog.id, report_version, report_version_public,",
+               "    published",
+               "  FROM changelog",
+               "  JOIN report_version",
+               "    ON report_version.id = changelog.report_version",
+               "  JOIN changelog_label",
+               "    ON changelog_label.id = changelog.label",
+               " WHERE report_version.report = $1",
+               "   AND changelog_label.public",
+               " ORDER BY report_version")
+  dat <- DBI::dbGetQuery(con, sql, list(name))
+  dat$published <- dat$published == 1
+
+  p <- rep(NA_character_, nrow(dat))
+  for (i in seq_len(nrow(dat))) {
+    j <- dat$report_version[[i]] <= published
+    if (!any(j)) {
+      break
+    }
+    p[[i]] <- published[[min(which(j))]]
+  }
+
+  prev <- dat$report_version_public
+  new <- p
+  ## Replace NAs with empty strings for ease of the next comparison
+  prev[is.na(prev)] <- ""
+  new[is.na(new)] <- ""
+
+  sql <- "UPDATE changelog SET report_version_public = $1 WHERE id = $2"
+  for (k in which(new != prev)) {
+    DBI::dbExecute(con, sql, list(p[[k]], dat$id[[k]]))
+  }
 }
 
 
