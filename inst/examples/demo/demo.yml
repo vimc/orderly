@@ -77,3 +77,4 @@
 - name: connection
 
 - name: spaces
+  before: write_spacy_filename
