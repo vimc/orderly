@@ -33,3 +33,9 @@ add_changelog <- function() {
     "it doesn't hold a candle to man.")
   writeLines(c(new, "", txt), path)
 }
+
+
+write_spacy_filename <- function() {
+  path <- "src/spaces/a resource with spaces.csv"
+  writeLines(c("a,b", "1,2"), path)
+}
