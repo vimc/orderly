@@ -234,6 +234,15 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   recipe_check_device_stack(prep$n_dev)
   hash_artefacts <- recipe_check_artefacts(info)
 
+  ## check if README.md exists in report directroy AND is not a resource
+  ## If it's a resource it will get hashed with the other resources
+  if (file_exists("README.md", check_case = FALSE) &&
+      !any(grepl("README.md", info$resources, ignore.case = FALSE))) {
+    hash_readme <- hash_files("README.md")
+  } else {
+    hash_readme <- NULL
+  }
+
   hash_data_csv <- con_csv$mset(prep$data)
   hash_data_rds <- con_rds$mset(prep$data)
   stopifnot(identical(hash_data_csv, hash_data_rds))
@@ -263,6 +272,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                hash_input = hash_files("orderly.yml", FALSE),
                ## Below here all seems sensible enough to track
                hash_script = hash_files(info$script, FALSE),
+               hash_readme = as.list(hash_readme),
                hash_resources = as.list(resource_info$hash_resources),
                hash_global = as.list(resource_info$hash_global),
                hash_data = as.list(hash_data_rds),
@@ -354,6 +364,35 @@ recipe_prepare_workdir <- function(info, message, config) {
   file_copy(file.path(src, info$script), info$script)
   file_copy(file.path(src, "orderly.yml"), "orderly.yml")
 
+  # README logic:
+  # if there's a readme we copy it
+  # if they also list it as a resource let them know that's redundant (edited)
+  # if they also list it as an artefact then error
+  src_files <- dir(src)
+  readme_file <- src_files[tolower(src_files) == "readme.md"]
+  ## Two readme files e.g. README.md and Readme.MD can happen on unix systems
+  ## I t is not clear what we should do here.
+  if (length(readme_file) == 1) {
+    ## we copy the readme.md file to README.md irrespective of what
+    ## case filename the user has used
+    file_copy(file.path(src, readme_file), "README.md")
+    ## now check if README is a resource
+    if (length(info$resources) > 0) {
+      if (any(grepl("README.md", info$resources, ignore.case = FALSE))) {
+        ## WARNING
+        orderly_log("readme",
+                    "README.md should not be listed as a resource")
+      }
+    }
+    ## now check if README is an artefact
+    expected <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
+    if (length(expected) > 0) {
+      if (any(grepl("README.md", expected, ignore.case = FALSE))) {
+        stop("README.md should not be listed as an artefact")
+      }
+    }
+  }
+  
   if (!is.null(info$resources)) {
     dir_create(dirname(info$resources))
     ## There's a bit of awfulness in R's path handling to deal with here.

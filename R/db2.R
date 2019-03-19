@@ -8,7 +8,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-ORDERLY_SCHEMA_VERSION <- "0.0.5"
+ORDERLY_SCHEMA_VERSION <- "0.0.6"
 
 ## These will be used in a few places and even though they're not
 ## super likely to change it would be good
@@ -351,15 +351,27 @@ report_data_import <- function(con, workdir, config) {
   ## TODO: patch this back in for the saved rds I think
   hash_orderly_yml <- hash_files(file.path(workdir, "orderly.yml"), FALSE)
 
+  ## there might be a better way to this.
+  ## At the moment we are repeatedly checking if a readme has been copied
+  ## maybe add a field to the run info saying that we've copied a README?
+  if (file.exists(file.path(workdir, "README.md"))) {
+    readme_name <- "README.md"
+  } else {
+    readme_name <- NULL
+  }
+
   ## NOTE: the hash from 'sources' comes from the resources field.
   file_in <- list(resource = names(dat_rds$meta$hash_resources),
                   global = names(dat_rds$meta$hash_global),
                   script = dat_in$script,
+                  readme = readme_name,
                   orderly_yml = "orderly.yml")
   file_in_name <- unlist(file_in, FALSE, FALSE)
+
   file_in_hash <- c(list_to_character(dat_rds$meta$hash_resources, FALSE),
                     list_to_character(dat_rds$meta$hash_global, FALSE),
                     dat_rds$meta$hash_script,
+                    list_to_character(dat_rds$meta$hash_readme, FALSE),
                     hash_orderly_yml)
   file_in_purpose <- rep(names(file_in), lengths(file_in))
   file_in_purpose[file_in_name %in% dat_in$sources] <- "source"
@@ -367,7 +379,9 @@ report_data_import <- function(con, workdir, config) {
   ## These might be missing:
   sql <- sprintf("SELECT hash from file WHERE hash IN (%s)",
                  paste(dquote(unique(file_in_hash)), collapse = ", "))
+
   hash_msg <- setdiff(file_in_hash, DBI::dbGetQuery(con, sql)$hash)
+
   i <- file_in_hash %in% hash_msg & !duplicated(file_in_hash)
   if (any(i)) {
     file <- data_frame(hash = file_in_hash[i],
