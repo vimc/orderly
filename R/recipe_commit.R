@@ -47,7 +47,7 @@ recipe_commit <- function(workdir, config) {
   on.exit(DBI::dbDisconnect(con))
 
   ## Ensure that the db is in a reasonable state:
-  report_db2_init(con, config)
+  report_db_init(con, config)
   ## Copy the _files_ over, but we'll roll this back if anything fails
   dest <- copy_report(workdir, dat$name, config)
 

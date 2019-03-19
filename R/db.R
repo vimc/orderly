@@ -23,7 +23,7 @@ orderly_db <- function(type, config = NULL, locate = TRUE, validate = TRUE) {
     con <- do.call(DBI::dbConnect, c(list(x$driver()), x$args))
     if (type == "destination") {
       withCallingHandlers(
-        report_db2_init(con, config, validate = validate),
+        report_db_init(con, config, validate = validate),
         error = function(e) DBI::dbDisconnect(con))
     }
     con
@@ -78,9 +78,9 @@ orderly_rebuild <- function(config = NULL, locate = TRUE, verbose = TRUE,
     if_schema_changed <- FALSE
   }
 
-  if (!if_schema_changed || report_db2_needs_rebuild(config)) {
+  if (!if_schema_changed || report_db_needs_rebuild(config)) {
     orderly_log("rebuild", "db")
-    report_db2_rebuild(config, verbose)
+    report_db_rebuild(config, verbose)
     invisible(TRUE)
   } else {
     invisible(FALSE)

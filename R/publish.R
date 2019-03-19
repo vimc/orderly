@@ -35,7 +35,7 @@ orderly_publish <- function(id, value = TRUE, name = NULL,
 
   con <- orderly_db("destination", config, FALSE)
   on.exit(DBI::dbDisconnect(con))
-  report_db2_publish(con, id, name, value)
+  report_db_publish(con, id, name, value)
 
   invisible(NULL)
 }

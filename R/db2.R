@@ -1,3 +1,5 @@
+## Low-level db functions
+
 ## This reads in the yaml version of the schema and turns it into an
 ## object ready for use.
 
@@ -14,7 +16,7 @@ ORDERLY_SCHEMA_TABLE <- "orderly_schema"
 ORDERLY_MAIN_TABLE <- "report_version"
 ORDERLY_TABLE_LIST <- "orderly_schema_tables"
 
-report_db2_schema_read <- function(fields = NULL, dialect = "sqlite") {
+report_db_schema_read <- function(fields = NULL, dialect = "sqlite") {
   d <- yaml_read(orderly_file("database/schema.yml"))
 
   preprepare <- function(nm) {
@@ -109,31 +111,31 @@ report_db2_schema_read <- function(fields = NULL, dialect = "sqlite") {
 }
 
 
-report_db2_schema <- function(fields = NULL, dialect = "sqlite") {
+report_db_schema <- function(fields = NULL, dialect = "sqlite") {
   key <- hash_object(list(fields, dialect))
   if (is.null(cache$schema[[key]])) {
-    cache$schema[[key]] <- report_db2_schema_read(fields, dialect)
+    cache$schema[[key]] <- report_db_schema_read(fields, dialect)
   }
   cache$schema[[key]]
 }
 
 
 ## Same pattern as existing db.R version but with
-report_db2_init <- function(con, config, must_create = FALSE, validate = TRUE) {
+report_db_init <- function(con, config, must_create = FALSE, validate = TRUE) {
   sqlite_pragma_fk(con, TRUE)
 
   if (!DBI::dbExistsTable(con, ORDERLY_SCHEMA_TABLE)) {
-    report_db2_init_create(con, config, report_db2_dialect(con))
+    report_db_init_create(con, config, report_db_dialect(con))
   } else if (must_create) {
     stop(sprintf("Table '%s' already exists", ORDERLY_SCHEMA_TABLE))
   } else if (validate) {
-    report_db2_open_existing(con, config)
+    report_db_open_existing(con, config)
   }
 }
 
 
-report_db2_init_create <- function(con, config, dialect) {
-  dat <- report_db2_schema(config$fields, dialect)
+report_db_init_create <- function(con, config, dialect) {
+  dat <- report_db_schema(config$fields, dialect)
   dat$values$changelog_label <- config$changelog
 
   DBI::dbBegin(con)
@@ -150,7 +152,7 @@ report_db2_init_create <- function(con, config, dialect) {
 }
 
 
-report_db2_open_existing <- function(con, config) {
+report_db_open_existing <- function(con, config) {
   sql <- sprintf("SELECT * FROM %s LIMIT 0", ORDERLY_MAIN_TABLE)
   d <- DBI::dbGetQuery(con, sql)
   custom_name <- config$fields$name
@@ -160,7 +162,7 @@ report_db2_open_existing <- function(con, config) {
                  paste(squote(msg), collapse = ", ")))
   }
 
-  schema <- report_db2_schema(config$fields, report_db2_dialect(con))
+  schema <- report_db_schema(config$fields, report_db_dialect(con))
   cols <- names(schema$tables[[ORDERLY_MAIN_TABLE]]$columns)
   extra <- setdiff(names(d), cols)
   if (length(extra) > 0L) {
@@ -194,16 +196,16 @@ report_db2_open_existing <- function(con, config) {
 }
 
 
-report_db2_rebuild <- function(config, verbose = TRUE) {
+report_db_rebuild <- function(config, verbose = TRUE) {
   assert_is(config, "orderly_config")
   root <- config$path
   con <- orderly_db("destination", config, validate = FALSE)
   on.exit(DBI::dbDisconnect(con))
 
   if (DBI::dbExistsTable(con, ORDERLY_TABLE_LIST)) {
-    report_db2_destroy(con, config)
+    report_db_destroy(con, config)
   }
-  report_db2_init(con, config)
+  report_db_init(con, config)
   reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
   if (length(reports) > 0L) {
     for (p in reports[order(basename(reports))]) {
@@ -221,13 +223,13 @@ report_db2_rebuild <- function(config, verbose = TRUE) {
                  "    ON report_version.id = changelog.report_version")
     reports <- DBI::dbGetQuery(con, sql)[[1]]
     for (r in reports) {
-      report_db2_update_changelog_published(con, r)
+      report_db_update_changelog_published(con, r)
     }
   }
 }
 
 
-report_db2_needs_rebuild <- function(config) {
+report_db_needs_rebuild <- function(config) {
   con <- orderly_db("destination", config, FALSE, FALSE)
   on.exit(DBI::dbDisconnect(con))
 
@@ -420,8 +422,8 @@ report_data_import <- function(con, workdir, config) {
     parameters <- data_frame(
       report_version = id,
       name = names(p),
-      type = report_db2_parameter_type(p),
-      value = report_db2_parameter_serialise(p))
+      type = report_db_parameter_type(p),
+      value = report_db_parameter_serialise(p))
     DBI::dbWriteTable(con, "parameters", parameters, append = TRUE)
   }
 
@@ -473,9 +475,9 @@ report_data_find_dependencies <- function(con, meta) {
 }
 
 
-report_db2_destroy <- function(con, config) {
-  dialect <- report_db2_dialect(con)
-  schema <- names(report_db2_schema(config$fields, dialect)$tables)
+report_db_destroy <- function(con, config) {
+  dialect <- report_db_dialect(con)
+  schema <- names(report_db_schema(config$fields, dialect)$tables)
   existing <- DBI::dbListTables(con)
   known <- DBI::dbReadTable(con, ORDERLY_TABLE_LIST)[[1L]]
   drop <- intersect(known, existing)
@@ -502,14 +504,14 @@ report_db2_destroy <- function(con, config) {
 }
 
 
-report_db2_publish <- function(con, id, name, value) {
+report_db_publish <- function(con, id, name, value) {
   sql <- "UPDATE report_version SET published = $1 WHERE id = $2"
   DBI::dbExecute(con, sql, list(value, id))
-  report_db2_update_changelog_published(con, name)
+  report_db_update_changelog_published(con, name)
 }
 
 
-report_db2_update_changelog_published <- function(con, name) {
+report_db_update_changelog_published <- function(con, name) {
   sql <- "SELECT id FROM report_version WHERE report = $1 and published"
   published <- DBI::dbGetQuery(con, sql, name)$id
 
@@ -550,13 +552,13 @@ report_db2_update_changelog_published <- function(con, name) {
 
 
 sqlite_pragma_fk <- function(con, enable = TRUE) {
-  if (report_db2_dialect(con) == "sqlite") {
+  if (report_db_dialect(con) == "sqlite") {
     DBI::dbExecute(con, sprintf("PRAGMA foreign_keys = %d", enable))
   }
 }
 
 
-report_db2_parameter_type <- function(x) {
+report_db_parameter_type <- function(x) {
   vcapply(x, function(el) {
     if (is.character(el)) {
       "text"
@@ -571,7 +573,7 @@ report_db2_parameter_type <- function(x) {
 }
 
 
-report_db2_parameter_serialise <- function(x) {
+report_db_parameter_serialise <- function(x) {
   vcapply(x, function(el) {
     if (is.character(el)) {
       el
@@ -586,7 +588,7 @@ report_db2_parameter_serialise <- function(x) {
 }
 
 
-report_db2_dialect <- function(con) {
+report_db_dialect <- function(con) {
   if (inherits(con, "SQLiteConnection")) {
     "sqlite"
   } else if (inherits(con, "PqConnection")) {

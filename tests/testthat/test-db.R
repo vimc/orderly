@@ -21,18 +21,18 @@ test_that("custom fields", {
   ## not great either.  But then performance probably does not matter.
 
   config <- orderly_config_get(path)
-  expect_error(report_db2_init(con, config, TRUE),
+  expect_error(report_db_init(con, config, TRUE),
                "Table 'orderly_schema' already exists")
 
   d <- DBI::dbReadTable(con, "report_version")
   d <- d[setdiff(names(d), "author")]
   DBI::dbWriteTable(con, "report_version", d, overwrite = TRUE)
 
-  expect_error(report_db2_init(con, config, FALSE),
+  expect_error(report_db_init(con, config, FALSE),
                "custom fields 'author' not present in existing database")
 
   config$fields <- NULL
-  expect_error(report_db2_init(con, config, FALSE),
+  expect_error(report_db_init(con, config, FALSE),
                "custom fields 'requester', 'comments' in database")
 })
 
@@ -109,29 +109,29 @@ test_that("avoid unserialisable parameters", {
                     config = path, echo = FALSE)
   expect_error(orderly_commit(id, config = path),
                "Unsupported parameter type")
-  expect_error(report_db2_parameter_type(t), "Unsupported parameter type")
-  expect_error(report_db2_parameter_serialise(t), "Unsupported parameter type")
+  expect_error(report_db_parameter_type(t), "Unsupported parameter type")
+  expect_error(report_db_parameter_serialise(t), "Unsupported parameter type")
 })
 
 
 test_that("dialects", {
   skip_on_cran() # likely platform dependent
-  s <- report_db2_schema_read(NULL, "sqlite")
-  p <- report_db2_schema_read(NULL, "postgres")
+  s <- report_db_schema_read(NULL, "sqlite")
+  p <- report_db_schema_read(NULL, "postgres")
   expect_false(isTRUE(all.equal(s, p)))
 
   path <- prepare_orderly_example("minimal")
   config <- orderly_config(path)
   con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
   on.exit(DBI::dbDisconnect(con))
-  expect_error(report_db2_init_create(con, config, "postgres"),
+  expect_error(report_db_init_create(con, config, "postgres"),
                "syntax error")
 
-  expect_silent(report_db2_init_create(con, config, "sqlite"))
+  expect_silent(report_db_init_create(con, config, "sqlite"))
 
-  expect_equal(report_db2_dialect(con), "sqlite")
-  expect_equal(report_db2_dialect(structure(TRUE, class = "PqConnection")),
+  expect_equal(report_db_dialect(con), "sqlite")
+  expect_equal(report_db_dialect(structure(TRUE, class = "PqConnection")),
                "postgres")
-  expect_error(report_db2_dialect(structure(TRUE, class = "other")),
+  expect_error(report_db_dialect(structure(TRUE, class = "other")),
                "Can't determine SQL dialect")
 })
