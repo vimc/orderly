@@ -48,11 +48,12 @@ orderly_cleanup_data <- function(config) {
   assert_is(config, "orderly_config")
   con <- orderly_db("destination", config, FALSE)
   on.exit(DBI::dbDisconnect(con))
-  data <- DBI::dbGetQuery(con, "SELECT hash_data FROM orderly")[[1]]
+
+  data <- DBI::dbGetQuery(con, "SELECT hash from report_version_data")[[1]]
 
   ## Determine all used data sets in *both* draft and published
   ## reports
-  used_pub <- unique(unlist(lapply(data, jsonlite::fromJSON)))
+  used_pub <- unique(data)
   dr <- orderly_list_drafts(config, FALSE)
   yml <- path_orderly_run_yml(
     file.path(path_draft(config$path), dr$name, dr$id))

@@ -1,3 +1,7 @@
+# 0.5.18
+
+* Remove old db schema (VIMC-2769)
+
 # 0.5.17
 
 * Fix passing of `timeout` through to remote runners when using the `montagu` package (VIMC-2517)

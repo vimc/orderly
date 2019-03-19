@@ -35,10 +35,6 @@ orderly_publish <- function(id, value = TRUE, name = NULL,
 
   con <- orderly_db("destination", config, FALSE)
   on.exit(DBI::dbDisconnect(con))
-  orderly_table <- "orderly"
-  sql <- sprintf("UPDATE %s SET published = $1 WHERE id = $2", orderly_table)
-  DBI::dbExecute(con, sql, list(value, id))
-
   report_db2_publish(con, id, name, value)
 
   invisible(NULL)

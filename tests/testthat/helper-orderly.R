@@ -4,12 +4,6 @@ with_wd <- function(path, code) {
   force(code)
 }
 
-read_orderly_db <- function(path) {
-  con <- orderly_db("destination", path)
-  on.exit(DBI::dbDisconnect(con))
-  DBI::dbReadTable(con, "orderly")
-}
-
 skip_if_no_git <- function() {
   if (nzchar(Sys.which("git"))) {
     return()

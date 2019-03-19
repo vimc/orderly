@@ -14,7 +14,6 @@ test_that("custom fields", {
   con <- orderly_db("destination", path)
   on.exit(DBI::dbDisconnect(con))
 
-  expect_true(DBI::dbExistsTable(con, "orderly"))
   expect_true(DBI::dbExistsTable(con, "orderly_schema"))
 
   ## TODO: should the db initialisation here check that the custom
@@ -22,27 +21,17 @@ test_that("custom fields", {
   ## not great either.  But then performance probably does not matter.
 
   config <- orderly_config_get(path)
-  expect_error(report_db_init(con, config, TRUE),
-               "Table 'orderly' already exists")
   expect_error(report_db2_init(con, config, TRUE),
                "Table 'orderly_schema' already exists")
-
-  d <- DBI::dbReadTable(con, "orderly")
-  d <- d[setdiff(names(d), "author")]
-  DBI::dbWriteTable(con, "orderly", d, overwrite = TRUE)
 
   d <- DBI::dbReadTable(con, "report_version")
   d <- d[setdiff(names(d), "author")]
   DBI::dbWriteTable(con, "report_version", d, overwrite = TRUE)
 
-  expect_error(report_db_init(con, config, FALSE),
-               "custom fields 'author' not present in existing database")
   expect_error(report_db2_init(con, config, FALSE),
                "custom fields 'author' not present in existing database")
 
   config$fields <- NULL
-  expect_error(report_db_init(con, config, FALSE),
-               "custom fields 'requester', 'comments' in database")
   expect_error(report_db2_init(con, config, FALSE),
                "custom fields 'requester', 'comments' in database")
 })
@@ -56,7 +45,7 @@ test_that("rebuild empty database", {
 
   con <- orderly_db("destination", path)
   on.exit(DBI::dbDisconnect(con))
-  expect_true(DBI::dbExistsTable(con, "orderly"))
+  expect_true(DBI::dbExistsTable(con, "orderly_schema"))
 })
 
 test_that("rebuild nonempty database", {
@@ -68,7 +57,7 @@ test_that("rebuild nonempty database", {
   orderly_rebuild(path)
   con <- orderly_db("destination", path)
   on.exit(DBI::dbDisconnect(con))
-  expect_equal(nrow(DBI::dbReadTable(con, "orderly")), 1)
+  expect_equal(nrow(DBI::dbReadTable(con, "report_version")), 1)
 })
 
 test_that("no transient db", {
