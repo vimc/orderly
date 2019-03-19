@@ -48,7 +48,6 @@ orderly_cleanup_data <- function(config) {
   assert_is(config, "orderly_config")
   con <- orderly_db("destination", config, FALSE)
   on.exit(DBI::dbDisconnect(con))
-
   data <- DBI::dbGetQuery(con, "SELECT hash from report_version_data")[[1]]
 
   ## Determine all used data sets in *both* draft and published
