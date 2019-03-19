@@ -371,6 +371,7 @@ test_that("resources", {
 
 test_that("markdown", {
   skip_if_not_installed("rmarkdown")
+  skip_on_appveyor() # See https://github.com/jgm/pandoc/issues/5037
   path <- prepare_orderly_example("knitr")
 
   id <- orderly_run("example", config = path, echo = FALSE)
