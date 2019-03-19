@@ -491,11 +491,15 @@ test_that("show_question", {
 })
 
 test_that("show_question interactive", {
-  ## We can't check that show_question will return true on appveyor since
-  ## R CMD check is non-interactive
-  skip_on_cran()
-  skip_on_travis()
-  skip_on_appveyor()
+  withr::with_options(
+    list(orderly.nolog = NULL),
+    expect_equal(show_question(), interactive()))
 
-  expect_identical(show_question(), TRUE)
+  mockery::stub(show_question, "interactive", TRUE)
+  withr::with_options(
+    list(orderly.nolog = NULL),
+    expect_equal(show_question(), TRUE))
+  withr::with_options(
+    list(orderly.nolog = TRUE),
+    expect_equal(show_question(), FALSE))
 })
