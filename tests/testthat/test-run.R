@@ -100,12 +100,7 @@ test_that("run", {
 
   con_destination <- orderly_db("destination", config)
   on.exit(DBI::dbDisconnect(con_destination))
-  expect_true(DBI::dbExistsTable(con_destination, "orderly"))
-  d <- DBI::dbReadTable(con_destination, "orderly")
-  expect_true(all(vlapply(d[names(d) != "published"], is.character)))
-  expect_true(is.numeric(d$published))
-
-  expect_equal(d$id, basename(q))
+  expect_true(DBI::dbExistsTable(con_destination, "report_version"))
 })
 
 ## Same as in read; we generate a report and then break it
@@ -212,7 +207,9 @@ test_that("included example", {
   id <- orderly_run("example", list(cyl = 4), config = path, echo = FALSE)
   p <- orderly_commit(id, config = path)
   expect_true(is_directory(p))
-  dat <- read_orderly_db(path)
+  con <- orderly_db("destination", config = path)
+  on.exit(DBI::dbDisconnect(con))
+  dat <- DBI::dbReadTable(con, "report_version")
   expect_equal(dat$description, NA_character_)
   expect_equal(dat$displayname, NA_character_)
 })
@@ -223,7 +220,9 @@ test_that("included other", {
   p <- orderly_commit(id, config = path)
   info <- recipe_read(file.path(path_src(path), "other"),
                       orderly_config(path))
-  dat <- read_orderly_db(path)
+  con <- orderly_db("destination", config = path)
+  on.exit(DBI::dbDisconnect(con))
+  dat <- DBI::dbReadTable(con, "report_version")
   expect_equal(dat$description, info$description)
   expect_equal(dat$displayname, info$displayname)
 })
@@ -360,16 +359,19 @@ test_that("resources", {
   expect_true(file.exists(file.path(p, "meta/data.csv")))
   p <- orderly_commit(id, config = path)
 
-  d <- read_orderly_db(path)
-  expect_identical(d$resources, '["meta/data.csv"]')
-  expect_identical(d$hash_resources,
-                   '{"meta/data.csv":"0bec5bf6f93c547bc9c6774acaf85e1a"}')
+  con <- orderly_db("destination", config = path)
+  d <- DBI::dbGetQuery(
+    con, "SELECT * FROM file_input WHERE file_purpose = 'resource'")
+
+  expect_identical(d$filename, "meta/data.csv")
+  expect_identical(d$file_hash, "0bec5bf6f93c547bc9c6774acaf85e1a")
   expect_true(file.exists(file.path(p, "meta/data.csv")))
 })
 
 
 test_that("markdown", {
   skip_if_not_installed("rmarkdown")
+  skip_on_appveyor() # See https://github.com/jgm/pandoc/issues/5037
   path <- prepare_orderly_example("knitr")
 
   id <- orderly_run("example", config = path, echo = FALSE)

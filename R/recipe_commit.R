@@ -47,18 +47,17 @@ recipe_commit <- function(workdir, config) {
   on.exit(DBI::dbDisconnect(con))
 
   ## Ensure that the db is in a reasonable state:
-  tbl <- report_db_init(con, config)
+  report_db_init(con, config)
   ## Copy the _files_ over, but we'll roll this back if anything fails
-  success <- FALSE
   dest <- copy_report(workdir, dat$name, config)
-  on.exit(if (!success) unlink(dest, recursive = TRUE), add = TRUE)
 
-  report_data_import(con, workdir, config)
-  success <- DBI::dbWriteTable(con, tbl, dat, append = TRUE)
+  withCallingHandlers(
+    report_data_import(con, workdir, config),
+    error = function(e) unlink(dest, recursive = TRUE))
 
-  if (success) {
-    unlink(workdir, recursive = TRUE)
-  }
+  ## After success we can delete the draft directory
+  unlink(workdir, recursive = TRUE)
+
   orderly_log("success", ":)")
   dest
 }

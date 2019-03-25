@@ -53,90 +53,6 @@ orderly_db_args <- function(type, config) {
   list(driver = driver, args = args)
 }
 
-## Reports database needs special initialisation:
-report_db_init <- function(con, config, must_create = FALSE, validate = TRUE) {
-  ## TODO: must_create is never used
-  orderly_table <- "orderly"
-  if (!DBI::dbExistsTable(con, orderly_table)) {
-    ## TODO: we'll need some postgres translation here
-    ## TODO: dumping json columns in as text for now
-    ##
-    ## TODO: the door is open here for the table name to be
-    ## configurable, but defaulting to 'orderly', but I do not know
-    ## that that is good thing, really.
-    cols <- report_db_cols()
-    col_types <- sprintf("  %s %s",
-                         c(names(cols), config$fields$name),
-                         c(unname(cols), config$fields$type_sql))
-
-    sql <- sprintf("CREATE TABLE %s (\n%s\n)",
-                   orderly_table,
-                   paste(col_types, collapse = ",\n"))
-    DBI::dbExecute(con, sql)
-  } else if (must_create) {
-    stop(sprintf("Table '%s' already exists", orderly_table))
-  } else {
-    sql <- sprintf("SELECT * FROM %s LIMIT 0", orderly_table)
-    d <- DBI::dbGetQuery(con, sql)
-    custom_name <- config$fields$name
-    msg <- setdiff(custom_name, names(d))
-    if (length(msg) > 0L) {
-      stop(sprintf("custom fields %s not present in existing database",
-                   paste(squote(msg), collapse = ", ")))
-    }
-    extra <- setdiff(setdiff(names(d), names(report_db_cols())), custom_name)
-    if (length(extra) > 0L) {
-      stop(sprintf("custom fields %s in database not present in config",
-                   paste(squote(extra), collapse = ", ")))
-    }
-  }
-
-  report_db2_init(con, config, must_create, validate)
-  orderly_table
-}
-
-report_db_rebuild <- function(config, verbose = TRUE) {
-  assert_is(config, "orderly_config")
-  root <- config$path
-  con <- orderly_db("destination", config, validate = FALSE)
-  on.exit(DBI::dbDisconnect(con))
-  ## TODO: this assumes name known
-  tbl <- "orderly"
-  DBI::dbExecute(con, "DELETE FROM orderly")
-  reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
-  if (length(reports) > 0L) {
-    dat <- rbind_df(lapply(reports, report_read_data, config))
-    DBI::dbWriteTable(con, tbl, dat, append = TRUE)
-  }
-
-  report_db2_rebuild(config, verbose)
-}
-
-report_db_cols <- function() {
-  c(## INPUTS:
-    id = "TEXT PRIMARY KEY NOT NULL",
-    name = "TEXT",
-    displayname = "TEXT",
-    description = "TEXT",
-    views = "TEXT",          # should be json (dict)
-    data = "TEXT",           # should be json (dict)
-    packages = "TEXT",       # should be json (array)
-    script = "TEXT",
-    artefacts = "TEXT",      # should be json (array)
-    resources = "TEXT",      # should be json (array)
-    hash_script = "TEXT",
-    ## OUTPUTS
-    parameters = "TEXT",     # should be json (dict with values)
-    date = "TIMESTAMP",
-    hash_orderly = "TEXT",
-    hash_input = "TEXT",
-    hash_resources = "TEXT", # should be json (dict)
-    hash_data = "TEXT",      # should be json (dict)
-    hash_artefacts = "TEXT", # should be json (dict)
-    depends = "TEXT",        # should be json (array of dicts)
-    ## PUBLISHING
-    published = "BOOLEAN")
-}
 
 ##' Rebuild the report database
 ##' @title Rebuild the report database
@@ -162,7 +78,7 @@ orderly_rebuild <- function(config = NULL, locate = TRUE, verbose = TRUE,
     if_schema_changed <- FALSE
   }
 
-  if (!if_schema_changed || report_db2_needs_rebuild(config)) {
+  if (!if_schema_changed || report_db_needs_rebuild(config)) {
     orderly_log("rebuild", "db")
     report_db_rebuild(config, verbose)
     invisible(TRUE)

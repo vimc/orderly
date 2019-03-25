@@ -1,3 +1,2 @@
 #!/usr/bin/env Rscript
 con <- orderly::orderly_db("destination")
-DBI::dbRemoveTable(con, "orderly")

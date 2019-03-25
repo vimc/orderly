@@ -1,3 +1,7 @@
+# 0.5.18
+
+* Remove old db schema (VIMC-2769)
+
 # 0.5.17
 
 * `README.md` files are automatically copied as resources from source folder. Additionally it is an error to include `README.md` as an artefact (VIMC-2230)
