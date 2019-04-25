@@ -55,8 +55,30 @@ recipe_read <- function(path, config, validate = TRUE) {
     info$resources <- c(info$resources, info$sources)
   }
   if (!is.null(info$connection)) {
-    stop("Fixme")
-    assert_scalar_character(info$connection)
+    if (is.character(info$connection)) {
+      if (!config$database_old_style) {
+        ## TODO: Better message?
+        msg <- c("Use of strings for connection: is deprecated and will be",
+                 "removed in a future orderly version - please use",
+                 "connection: <object>: <dbname> instead.  See the main",
+                 "package vignette for details")
+        warning(flow_text(msg), immediate. = TRUE, call. = FALSE)
+      }
+      if (length(config$database) > 1L) {
+        ## TODO: better message
+        stop("More than one database configured; fix connection export")
+      }
+      assert_scalar_character(info$connection, fieldname("connection"))
+      info$connection <- set_names(as.list(names(config$database)),
+                                   info$connection)
+    } else {
+      assert_named(info$connection, unique = TRUE,
+                   name = fieldname("connection"))
+      for (i in names(config$connection)) {
+        match_value(info$connection[[i]], names(config$database),
+                    name = sprintf("%s:%s", fieldname("connection"), i))
+      }
+    }
   }
 
   ## Then some processing - this should be factored out because it's

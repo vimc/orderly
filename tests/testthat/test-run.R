@@ -238,7 +238,7 @@ test_that("connection", {
 
   config <- orderly_config(path)
   info <- recipe_read(path_example, config)
-  expect_identical(info$connection, "con")
+  expect_identical(info$connection, list("con" = "source"))
 
   data <- orderly_data("example",
                        envir = new.env(parent = .GlobalEnv),

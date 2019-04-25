@@ -347,9 +347,12 @@ recipe_data <- function(config, info, parameters, dest) {
   }
 
   if (!is.null(info$connection)) {
-    stop("Fixme")
-    dest[[info$connection]] <- con
-    on.exit()
+    for (i in names(info$connection)) {
+      dest[[i]] <- con[[info$connection[[i]]]]
+    }
+    ## Ensure that only unexported connections are closed:
+    con <- con[setdiff(list_to_character(info$connection, FALSE),
+                       names(config$database))]
   }
 
   dest
@@ -585,7 +588,10 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
   ret <- list(data = ldata, n_dev = n_dev)
 
   if (!is.null(info$connection)) {
-    ret$con <- data[[info$connection]]
+    ## NOTE: this is a copy of exported connections so that we can
+    ## close them once the report finishes running.
+    con <- list_to_character(info$connection)
+    ret$con <- lapply(names(con)[!duplicated(con)], function(nm) data[[nm]])
   }
 
   for (p in info$packages) {
