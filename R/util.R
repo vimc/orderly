@@ -658,3 +658,8 @@ install_packages <- function(missing_packages) {
                  paste(squote(msg), collapse = ", ")))
   }
 }
+
+
+flow_text <- function(x) {
+  paste(strwrap(paste(x, collapse = " ")), collapse = "\n")
+}

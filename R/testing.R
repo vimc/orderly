@@ -46,13 +46,13 @@ fake_db <- function(con, seed = 1) {
   d <- data.frame(id = seq_along(id),
                   name = id,
                   number = stats::runif(length(id)))
-  DBI::dbWriteTable(con, "thing", d, overwrite = TRUE)
+  DBI::dbWriteTable(con$source, "thing", d, overwrite = TRUE)
 
   d <- data.frame(id = seq_len(n),
                   thing = sample(length(id), n, replace = TRUE),
                   value = stats::rnorm(n),
                   stringsAsFactors = FALSE)
-  DBI::dbWriteTable(con, "data", d, overwrite = TRUE)
+  DBI::dbWriteTable(con$source, "data", d, overwrite = TRUE)
 }
 
 ## Copy an example directory from 'inst/' and set up the source
@@ -69,7 +69,7 @@ prepare_orderly_example <- function(name, path = tempfile()) {
     generator <- fake_db
   }
   con <- orderly_db("source", config = path)
-  on.exit(DBI::dbDisconnect(con))
+  on.exit(lapply(con, DBI::dbDisconnect))
   generator(con)
   path
 }

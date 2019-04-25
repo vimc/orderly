@@ -226,7 +226,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   orderly_log("elapsed", sprintf("Ran report in %s", format(elapsed)))
 
   if (!is.null(info$connection)) {
-    tryCatch(DBI::dbDisconnect(prep$con),
+    tryCatch(lapply(prep$con, DBI::dbDisconnect),
              error = identity,
              warning = identity)
   }
@@ -328,21 +328,26 @@ recipe_data <- function(config, info, parameters, dest) {
   }
 
   con <- orderly_db("source", config)
-  on.exit(DBI::dbDisconnect(con))
+  on.exit(lapply(con, DBI::dbDisconnect))
 
   views <- info$views
   for (v in names(views)) {
+    stop("Fixme")
     orderly_log("view", v)
     DBI::dbExecute(con, temporary_view(v, views[[v]]))
   }
 
   for (v in names(info$data)) {
-    dest[[v]] <- DBI::dbGetQuery(con, info$data[[v]])
+    database <- info$data[[v]]$database
+    query <- info$data[[v]]$query
+    dest[[v]] <- DBI::dbGetQuery(con[[database]], query)
     orderly_log("data",
-                sprintf("%s: %s x %s", v, nrow(dest[[v]]), ncol(dest[[v]])))
+                sprintf("%s => %s: %s x %s",
+                        database, v, nrow(dest[[v]]), ncol(dest[[v]])))
   }
 
   if (!is.null(info$connection)) {
+    stop("Fixme")
     dest[[info$connection]] <- con
     on.exit()
   }

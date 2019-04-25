@@ -55,14 +55,53 @@ recipe_read <- function(path, config, validate = TRUE) {
     info$resources <- c(info$resources, info$sources)
   }
   if (!is.null(info$connection)) {
+    stop("Fixme")
     assert_scalar_character(info$connection)
   }
 
-  ## Then some processing:
+  ## Then some processing - this should be factored out because it's
+  ## huge and ugly.
   if (!is.null(info$data)) {
+    if (length(config$database) == 0L) {
+      stop("No databases are configured - can't use a 'data' section")
+    }
     assert_named(info$data, TRUE, fieldname("data"))
-    info$data <- string_or_filename(info$data, path, fieldname("data"))
-    info$resources <- c(info$resources, attr(info$data, "files"))
+    f <- function(nm) {
+      name <- sprintf("%s:%s", fieldname("data"), nm)
+      d <- info$data[[nm]]
+      if (is.character(d)) {
+        if (!config$database_old_style) {
+          msg <- c("Use of strings for queries is deprecated and will be",
+                   "removed in a future orderly version - please use",
+                   "query: <yourstring> instead.  See the main package",
+                   "vignette for details")
+          warning(flow_text(msg), immediate. = TRUE, call. = FALSE)
+        }
+        d <- list(query = string_or_filename(d, name))
+      } else {
+        check_fields(d, name, "query", "database")
+        d$query <- string_or_filename(d$query, sprintf("%s:query", name))
+      }
+      d$query_file <- attr(d$query, "files")
+      if (is.null(d$database)) {
+        if (length(config$database) > 1L) {
+          stop("More than one database configured; a 'database' field required")
+        }
+        d$database <- names(config$database)[[1]]
+      } else {
+        if (config$database_old_style) {
+          stop("Can't specfify database without moving to new style")
+        }
+        match_value(d$database, names(config$database),
+                    sprintf("%s:database", name))
+      }
+      d
+    }
+
+    info$data[] <- lapply(names(info$data), f)
+
+    query_files <- unlist(lapply(info$data, "[[", "query_file"), FALSE, FALSE)
+    info$resources <- c(info$resources, query_files)
   }
 
   if (!is.null(info$views)) {
