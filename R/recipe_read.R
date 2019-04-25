@@ -99,10 +99,10 @@ recipe_read <- function(path, config, validate = TRUE) {
                    "vignette for details")
           warning(flow_text(msg), immediate. = TRUE, call. = FALSE)
         }
-        d <- list(query = string_or_filename(d, name))
+        d <- list(query = string_or_filename(d, path, name))
       } else {
         check_fields(d, name, "query", "database")
-        d$query <- string_or_filename(d$query, sprintf("%s:query", name))
+        d$query <- string_or_filename(d$query, path, sprintf("%s:query", name))
       }
       d$query_file <- attr(d$query, "files")
       if (is.null(d$database)) {

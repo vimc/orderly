@@ -17,8 +17,9 @@ test_that("minimal", {
   path_example <- file.path(path, "src", "example")
   info <- recipe_read(path_example, config)
 
-  expect_is(info$data, "character")
-  expect_equal(info$data, c(dat = "SELECT name, number FROM thing"))
+  expect_is(info$data$dat$query, "character")
+  expect_equal(info$data$dat$query, "SELECT name, number FROM thing")
+  expect_equal(info$data$dat$database, "source")
 
   expect_equal(info$script, "script.R")
   expect_equal(info$script_hash,
@@ -41,8 +42,9 @@ test_that("minimal", {
   write(modifyList(dat, list(data = list(dat = "query.sql"))))
 
   cmp <- recipe_read(path_example, config)
-  expect_equal(attr(cmp$data, "files"), "query.sql")
-  attr(cmp$data, "files") <- NULL
+  expect_equal(cmp$data$dat$query_file, "query.sql")
+  attr(cmp$data$dat$query, "files") <- NULL
+  cmp$data$dat$query_file <- NULL
   expect_equal(cmp$data, info$data)
   expect_equal(cmp$resources, "query.sql")
 

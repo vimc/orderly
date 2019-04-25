@@ -7,7 +7,8 @@ test_that("run", {
   path <- tempfile()
   orderly_init(path)
 
-  with_sqlite(file.path(path, "source.sqlite"), fake_db)
+  with_sqlite(file.path(path, "source.sqlite"), function(con)
+    fake_db(list(source = con)))
 
   file.copy("example_config.yml", file.path(path, "orderly_config.yml"),
             overwrite = TRUE)
