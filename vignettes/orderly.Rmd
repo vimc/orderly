@@ -93,10 +93,11 @@ yaml_output(readLines(file.path(path_example, "orderly.yml")))
 Hopefully this is somewhat self explanatory:
 
 * `data` is the data sets to pull from the database; it is a named
-  list with one or more elements.  Each element is a SQL query
-  indicating the required data.  You can use placeholders like
-  `?cyl` in the above example to stand in for *parameters* that
-  will be passed through to the report.
+  list with one or more elements.  Each element is a list with a
+  `query` element containing a SQL query that specifies the
+  required data.  You can use placeholders like `?cyl` in the above
+  example to stand in for *parameters* that will be passed through
+  to the report.
 
 * `parameters` is a list of parameters used to query the SQL
   database.  Note the that only the *names* of the parameters are
@@ -159,25 +160,26 @@ The global configuration looks like:
 yaml_output(readLines(file.path(path, "orderly_config.yml")))
 ```
 
-This defines the field `source`, which describes the database that
-we pull results from (the database that the report queries are run
-against).  This contains a field `driver` which must declare a
-DBI-compatible driver (realistically this is going to be
-`RSQLite::SQLite` for a local SQLite database and
-`RPostgres::Posgres` for accessing a postgres database), and then
-any arguments to be passed through to `DBI::dbConnect` along with
-the driver.  For SQLite this is just going to be `dbname` but for
-postgres this will include `host`, `port`, `user`, `dbname` and
-`password`.  For example:
+This defines the field `database`, which describes the databases
+that we pull results from (the databases that the report queries
+are run against).  Each entry (here there is one called `source`)
+contains a field `driver` which must declare a DBI-compatible
+driver (realistically this is going to be `RSQLite::SQLite` for a
+local SQLite database and `RPostgres::Posgres` for accessing a
+postgres database), and then any arguments to be passed through to
+`DBI::dbConnect` along with the driver.  For SQLite this is just
+going to be `dbname` but for postgres this will include `host`,
+`port`, `user`, `dbname` and `password`.  For example:
 
 ```yaml
-source:
-  driver: RSQLite::SQLite
-  host: dbhost
-  port: 5432
-  user: myusername
-  password: s3cret
-  dbname: mydb
+database:
+  source:
+    driver: RSQLite::SQLite
+    host: dbhost
+    port: 5432
+    user: myusername
+    password: s3cret
+    dbname: mydb
 ```
 
 In order to run anything (as below) the working directory must be
@@ -293,25 +295,27 @@ you can use environment variables within the configuration.  So
 rather than writing
 
 ```yaml
-source:
-  driver: RPostgres::Postgres
-  host: localhost
-  port: 5432
-  user: myuser
-  dbname: databasename
-  password: p4ssw0rd
+database:
+  source:
+    driver: RPostgres::Postgres
+    host: localhost
+    port: 5432
+    user: myuser
+    dbname: databasename
+    password: p4ssw0rd
 ```
 
 you might write
 
 ```yaml
-source:
-  driver: RPostgres::Postgres
-  host: $MY_DBHOST
-  port: $MY_DBPORT
-  user: $MY_DBUSER
-  dbname: $MY_DBNAME
-  password: $MY_PASSWORD
+database:
+  source:
+    driver: RPostgres::Postgres
+    host: $MY_DBHOST
+    port: $MY_DBPORT
+    user: $MY_DBUSER
+    dbname: $MY_DBNAME
+    password: $MY_PASSWORD
 ```
 
 environment varaibles, as used this way **must** begin with a
