@@ -8,7 +8,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-ORDERLY_SCHEMA_VERSION <- "0.0.6"
+ORDERLY_SCHEMA_VERSION <- "0.0.7"
 
 ## These will be used in a few places and even though they're not
 ## super likely to change it would be good
@@ -319,7 +319,8 @@ report_data_import <- function(con, workdir, config) {
     report_version_data <- data_frame(
       report_version = id,
       name = names(hash_data),
-      sql = unname(dat_in$data),
+      database = vcapply(dat_in$data, "[[", "database", USE.NAMES = FALSE),
+      query = vcapply(dat_in$data, "[[", "query", USE.NAMES = FALSE),
       hash = unname(hash_data))
     DBI::dbWriteTable(con, "report_version_data", report_version_data,
                       append = TRUE)
