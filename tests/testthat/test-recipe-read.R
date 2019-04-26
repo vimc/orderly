@@ -214,6 +214,18 @@ test_that("can't use database in configurations that lack them", {
 })
 
 
+test_that("can't use connection in configurations that lack databases", {
+  path <- prepare_orderly_example("db0")
+  p <- file.path(path, "src", "example", "orderly.yml")
+  txt <- readLines(p)
+  dat <- list(connection = "con")
+  writeLines(c(txt, yaml::as.yaml(dat)), p)
+  expect_error(
+    recipe_read(dirname(p), orderly_config(path)),
+    "No databases are configured - can't use a 'connection' section")
+})
+
+
 test_that("database names are required with more than one db", {
   path <- prepare_orderly_example("db2")
   p <- file.path(path, "src", "example", "orderly.yml")
@@ -223,6 +235,18 @@ test_that("database names are required with more than one db", {
   expect_error(
     recipe_read(dirname(p), orderly_config(path)),
     "More than one database configured; a 'database' field is required for")
+})
+
+
+test_that("connection names are required with more than one db", {
+  path <- prepare_orderly_example("db2")
+  p <- file.path(path, "src", "connection", "orderly.yml")
+  dat <- yaml_read(p)
+  dat$connection <- "con"
+  writeLines(yaml::as.yaml(dat), p)
+  expect_error(
+    recipe_read(dirname(p), orderly_config(path)),
+    "More than one database configured; update 'connection' from 'con'")
 })
 
 

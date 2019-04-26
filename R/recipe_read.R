@@ -55,6 +55,9 @@ recipe_read <- function(path, config, validate = TRUE) {
     info$resources <- c(info$resources, info$sources)
   }
   if (!is.null(info$connection)) {
+    if (length(config$database) == 0L) {
+      stop("No databases are configured - can't use a 'connection' section")
+    }
     if (is.character(info$connection)) {
       if (!config$database_old_style) {
         ## TODO: Better message?
@@ -62,11 +65,13 @@ recipe_read <- function(path, config, validate = TRUE) {
                  "removed in a future orderly version - please use",
                  "connection: <object>: <dbname> instead.  See the main",
                  "package vignette for details")
-        warning(flow_text(msg), immediate. = TRUE, call. = FALSE)
+        message(flow_text(msg), immediate. = TRUE, call. = FALSE)
       }
       if (length(config$database) > 1L) {
-        ## TODO: better message
-        stop("More than one database configured; fix connection export")
+        msg <- paste("More than one database configured; update 'connection'",
+                     sprintf("from '%s' to '%s: <dbname>' in '%s'",
+                             info$connection, info$connection, filename))
+        stop(msg, call. = FALSE)
       }
       assert_scalar_character(info$connection, fieldname("connection"))
       info$connection <- set_names(as.list(names(config$database)),
