@@ -1,3 +1,7 @@
+# 0.6.0
+
+* Allow multiple databases (or no database) to be be used in the orderly configuration (VIMC-2795)
+
 # 0.5.18
 
 * Remove old db schema (VIMC-2769)
