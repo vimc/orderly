@@ -293,12 +293,9 @@ report_data_import <- function(con, workdir, config) {
   }
   DBI::dbWriteTable(con, "report_version", report_version, append = TRUE)
 
-  if (!is.null(dat_in$views)) {
-    report_version_view <- data_frame(
-      report_version = id,
-      name = names(dat_in$views),
-      database = vcapply(dat_in$views, "[[", "database", USE.NAMES = FALSE),
-      query = vcapply(dat_in$views, "[[", "query", USE.NAMES = FALSE))
+  if (!is.null(dat_rds$meta$view)) {
+    report_version_view <- cbind(report_version = id, dat_rds$meta$view,
+                                 stringsAsFactors = FALSE)
     DBI::dbWriteTable(con, "report_version_view", report_version_view,
                       append = TRUE)
   }
@@ -317,12 +314,8 @@ report_data_import <- function(con, workdir, config) {
       DBI::dbWriteTable(con, "data", data, append = TRUE)
     }
 
-    report_version_data <- data_frame(
-      report_version = id,
-      name = names(hash_data),
-      database = vcapply(dat_in$data, "[[", "database", USE.NAMES = FALSE),
-      query = vcapply(dat_in$data, "[[", "query", USE.NAMES = FALSE),
-      hash = unname(hash_data))
+    report_version_data <- cbind(report_version = id, dat_rds$meta$data,
+                                 stringsAsFactors = FALSE)
     DBI::dbWriteTable(con, "report_version_data", report_version_data,
                       append = TRUE)
   }

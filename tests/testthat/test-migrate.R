@@ -253,3 +253,17 @@ test_that("rebuild db with incorrect schema information", {
     "While rebuilding the orderly database, we will delete additional",
     fixed = TRUE)
 })
+
+
+test_that("migrate 0.5.18 -> 0.6.0", {
+  path <- unpack_reference("0.5.18")
+
+  reports <- subset(orderly_list_archive(path), name == "minimal")
+  p <- file.path(path, "archive", "minimal", reports$id[[1]])
+  expect_null(readRDS(path_orderly_run_rds(p))$meta$data, "data.frame")
+
+  orderly_migrate(path, to = "0.6.0")
+  orderly_rebuild(path)
+
+  expect_is(readRDS(path_orderly_run_rds(p))$meta$data, "data.frame")
+})

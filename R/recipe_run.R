@@ -280,12 +280,29 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                depends = depends,
                elapsed = as.numeric(elapsed, "secs"),
                git = info$git)
+  ## See VIMC-2873; this will come out at some point
+  writeLines(yaml::as.yaml(meta, column.major = FALSE),
+             path_orderly_run_yml(info$workdir))
+
+  if (!is.null(info$data)) {
+    meta$data <- data_frame(
+      name = names(info$data),
+      database = vcapply(info$data, "[[", "database", USE.NAMES = FALSE),
+      query = vcapply(info$data, "[[", "query", USE.NAMES = FALSE),
+      hash = unname(hash_data_rds))
+  }
+
+  if (!is.null(info$views)) {
+    meta$view <- data_frame(
+      name = names(info$views),
+      database = vcapply(info$views, "[[", "database", USE.NAMES = FALSE),
+      query = vcapply(info$views, "[[", "query", USE.NAMES = FALSE))
+  }
 
   session$meta <- meta
   session$archive_version <- cache$current_archive_version
+
   saveRDS(session, path_orderly_run_rds(info$workdir))
-  writeLines(yaml::as.yaml(meta, column.major = FALSE),
-             path_orderly_run_yml(info$workdir))
 
   meta
 }
