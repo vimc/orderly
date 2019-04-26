@@ -217,3 +217,16 @@ test_that("vault configuration", {
                "orderly_config.yml:vault_server' must be character",
                fixed = TRUE)
 })
+
+
+test_that("can't use both database and source sections", {
+  path <- prepare_orderly_example("minimal")
+  path_config <- file.path(path, "orderly_config.yml")
+  txt <- readLines(path_config)
+  dat <- list(source = list(driver = "RSQLite::SQLite",
+                            dbname = "source.sqlite"))
+  writeLines(c(txt, yaml::as.yaml(dat)), path_config)
+  expect_error(orderly_config(path),
+               "Both 'database' and 'source' fields may not be used",
+               fixed = TRUE)
+})
