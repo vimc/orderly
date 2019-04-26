@@ -237,3 +237,16 @@ test_that("can read a configuration with no database", {
   config <- orderly_config(path)
   expect_false("database" %in% names(config))
 })
+
+
+test_that("can read a configuration with two databases", {
+  path <- prepare_orderly_example("db2")
+  config <- orderly_config(path)
+  expect_setequal(names(config$database), c("source1", "source2"))
+  expect_equal(config$database$source1$args, list(dbname = "source1.sqlite"))
+  expect_equal(config$database$source2$args, list(dbname = "source2.sqlite"))
+
+  con <- orderly_db("source", config = path)
+  DBI::dbListTables(con$source1)
+  DBI::dbListTables(con$source2)
+})
