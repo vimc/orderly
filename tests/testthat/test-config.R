@@ -187,11 +187,9 @@ test_that("no global folder", {
   path <- prepare_orderly_example("global")
   # now we break the orderly_config.yml
   path_config <- file.path(path, "orderly_config.yml")
-  config_lines <- readLines(path_config)
-  # we know the final line (line six) is the global resource folder
-  # so set it to something invalid
-  config_lines[6] <- "  invalid_directory"
-  writeLines(config_lines, path_config)
+  dat <- yaml_read(path_config)
+  dat$global_resources <- "invalid_directory"
+  writeLines(yaml::as.yaml(dat), path_config)
 
   expect_error(
     orderly_config(path = path),
