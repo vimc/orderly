@@ -292,3 +292,29 @@ test_that("validate database names", {
                "orderly.yml:connection:con1 must be one of 'db1', 'db2'",
                fixed = TRUE)
 })
+
+
+test_that("warn old style db", {
+  path <- withr::with_options(
+    list(orderly.nowarnings = TRUE),
+    prepare_orderly_example("old"))
+  cfg <- withr::with_options(
+    list(orderly.nowarnings = TRUE),
+    orderly_config(path))
+
+  expect_silent(
+    recipe_read(file.path(path, "src", "example"), cfg))
+  expect_silent(
+    recipe_read(file.path(path, "src", "connection"), cfg))
+
+  file.rename(file.path(path, "orderly_config.yml.new"),
+              file.path(path, "orderly_config.yml"))
+  cfg <- orderly_config(path)
+
+  expect_warning(
+    recipe_read(file.path(path, "src", "example"), cfg),
+    "Use of strings for queries is deprecated")
+  expect_warning(
+    recipe_read(file.path(path, "src", "connection"), cfg),
+    "Use of strings for connection: is deprecated")
+})

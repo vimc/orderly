@@ -245,3 +245,13 @@ test_that("can read a configuration with two databases", {
   DBI::dbListTables(con$source1)
   DBI::dbListTables(con$source2)
 })
+
+
+test_that("warn when reading old-style configuration", {
+  path <- withr::with_options(
+    list(orderly.nowarnings = TRUE),
+    prepare_orderly_example("old"))
+
+  expect_warning(orderly_config(path),
+                 "Use of 'source' is deprecated and will be removed")
+})
