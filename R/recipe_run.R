@@ -340,7 +340,10 @@ recipe_data <- function(config, info, parameters, dest) {
   for (v in names(info$data)) {
     database <- info$data[[v]]$database
     query <- info$data[[v]]$query
-    dest[[v]] <- DBI::dbGetQuery(con[[database]], query)
+    withCallingHandlers(
+      dest[[v]] <- DBI::dbGetQuery(con[[database]], query),
+      error = function(e)
+        orderly_log("data", sprintf("%s => %s: <error>", database, v)))
     orderly_log("data",
                 sprintf("%s => %s: %s x %s",
                         database, v, nrow(dest[[v]]), ncol(dest[[v]])))
