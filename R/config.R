@@ -40,15 +40,10 @@ orderly_config_read_yaml <- function(filename, path) {
     if (!is.null(info$database)) {
       stop("Both 'database' and 'source' fields may not be used")
     }
-    ## In practice, removing this is going to be slightly difficult
-    ## because we'll have to mess with the reference examples which
-    ## will include the old configuration style.  So we'll probably
-    ## have to do some funny business to migrate the configuration
-    ## over too.
     msg <- c("Use of 'source' is deprecated and will be removed in a",
              "future orderly version - please use 'database' instead.",
              "See the main package vignette for details.")
-    warning(flow_text(msg), immediate. = TRUE, call. = FALSE)
+    orderly_warning(flow_text(msg))
     info$database <- list(source = driver_config("source"))
     info$database_old_style <- TRUE
   } else if (!is.null(info$database)) {

@@ -74,6 +74,11 @@ orderly_db_args <- function(x, config) {
 ##' @export
 orderly_rebuild <- function(config = NULL, locate = TRUE, verbose = TRUE,
                             if_schema_changed = FALSE) {
+  ## We'll skip warnings here - they'll come out as messages rather
+  ## than warnings.
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
   config <- orderly_config_get(config, locate)
 
   if (length(migrate_plan(config$path, to = NULL)) > 0L) {

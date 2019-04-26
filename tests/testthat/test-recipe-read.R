@@ -245,7 +245,7 @@ test_that("connection names are required with more than one db", {
   dat$connection <- "con"
   writeLines(yaml::as.yaml(dat), p)
   expect_error(
-    recipe_read(dirname(p), orderly_config(path)),
+    suppressWarnings(recipe_read(dirname(p), orderly_config(path))),
     "More than one database configured; update 'connection' from 'con'")
 })
 
@@ -262,12 +262,16 @@ test_that("Can't use database name on old style configuration", {
   writeLines(sub("source1", "source", txt), p)
 
   ## If database present, the new style is validated correctly:
-  res <- recipe_read(dirname(p), orderly_config(path))
+  expect_warning(
+    config <- orderly_config(path),
+    "Use of 'source' is deprecated")
+
+  res <- recipe_read(dirname(p), config)
   expect_equal(res$data$dat1$database, "source")
 
   ## If database absent, the new style is imputed correctly
   writeLines(txt[!grepl("^ +database:", txt)], p)
-  res <- recipe_read(dirname(p), orderly_config(path))
+  res <- recipe_read(dirname(p), config)
   expect_equal(res$data$dat1$database, "source")
 })
 

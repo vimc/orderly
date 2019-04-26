@@ -81,3 +81,12 @@ prepare_orderly_remote_example <- function(path = tempfile()) {
        id1 = id1,
        id2 = id2)
 }
+
+
+patch_orderly_config <- function(path) {
+  p <- file.path(path, "orderly_config.yml")
+  dat <- yaml_read(p)
+  dat$database <- list(source = dat$source)
+  dat$source <- NULL
+  writeLines(yaml::as.yaml(dat), p)
+}

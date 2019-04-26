@@ -65,7 +65,7 @@ recipe_read <- function(path, config, validate = TRUE) {
                  "removed in a future orderly version - please use",
                  "connection: <object>: <dbname> instead.  See the main",
                  "package vignette for details")
-        message(flow_text(msg), immediate. = TRUE, call. = FALSE)
+        orderly_warning(flow_text(msg))
       }
       if (length(config$database) > 1L) {
         msg <- paste("More than one database configured; update 'connection'",
@@ -334,7 +334,7 @@ recipe_read_query <- function(field, info, filename, config) {
                    "removed in a future orderly version - please use",
                    "query: <yourstring> instead.  See the main package",
                    "vignette for details")
-          warning(flow_text(msg), immediate. = TRUE, call. = FALSE)
+          orderly_warning(flow_text(msg))
         }
         d <- string_or_filename(d, path, name)
       } else {
