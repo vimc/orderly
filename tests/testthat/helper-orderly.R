@@ -33,6 +33,7 @@ has_internet <- function() {
 
 skip_if_no_internet <- function() {
   skip_on_windows()
+  skip_on_cran() # not worth it
   if (has_internet()) {
     return()
   }
