@@ -270,3 +270,21 @@ test_that("Can't use database name on old style configuration", {
   res <- recipe_read(dirname(p), orderly_config(path))
   expect_equal(res$data$dat1$database, "source")
 })
+
+
+test_that("validate database names", {
+  path <- prepare_orderly_example("db2")
+  p <- file.path(path, "orderly_config.yml")
+  dat <- yaml_read(p)
+  names(dat$database) <- c("db1", "db2")
+  writeLines(yaml::as.yaml(dat), p)
+
+  cfg <- orderly_config(path)
+
+  expect_error(recipe_read(file.path(path, "src", "example"), cfg),
+               "orderly.yml:data:dat1:database must be one of 'db1', 'db2'",
+               fixed = TRUE)
+  expect_error(recipe_read(file.path(path, "src", "connection"), cfg),
+               "orderly.yml:connection:con1 must be one of 'db1', 'db2'",
+               fixed = TRUE)
+})

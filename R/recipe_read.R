@@ -79,7 +79,7 @@ recipe_read <- function(path, config, validate = TRUE) {
     } else {
       assert_named(info$connection, unique = TRUE,
                    name = fieldname("connection"))
-      for (i in names(config$connection)) {
+      for (i in names(info$connection)) {
         match_value(info$connection[[i]], names(config$database),
                     name = sprintf("%s:%s", fieldname("connection"), i))
       }
