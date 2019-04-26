@@ -117,20 +117,16 @@ valid_formats <- function() {
 }
 
 string_or_filename <- function(x, path, name) {
-  if (is.list(x)) {
-    if (all(vlapply(x, is.character))) {
-      x <- vcapply(x, identity)
-    }
+  assert_scalar_character(x, name)
+  if (grepl("\\.sql$", x)) {
+    file <- x
+    assert_file_exists(file, workdir = path, name = "SQL file")
+    query <- read_lines(file.path(path, file))
+  } else {
+    file <- NULL
+    query <- x
   }
-  assert_character(x, name)
-  i <- grepl("\\.sql$", x)
-  if (any(i)) {
-    files <- x[i]
-    assert_file_exists(files, workdir = path, name = "SQL file")
-    x[i] <- vcapply(file.path(path, files), read_lines, USE.NAMES = FALSE)
-    attr(x, "files") <- unname(files)
-  }
-  x
+  list(query = query, query_file = file)
 }
 
 recipe_read_check_artefacts <- function(x, filename, path) {
@@ -335,12 +331,12 @@ recipe_read_query <- function(field, info, filename, config) {
                    "vignette for details")
           warning(flow_text(msg), immediate. = TRUE, call. = FALSE)
         }
-        d <- list(query = string_or_filename(d, path, name))
+        d <- string_or_filename(d, path, name)
       } else {
         check_fields(d, name, "query", "database")
-        d$query <- string_or_filename(d$query, path, sprintf("%s:query", name))
+        dat <- string_or_filename(d$query, path, sprintf("%s:query", name))
+        d[names(dat)] <- dat
       }
-      d$query_file <- attr(d$query, "files")
       if (is.null(d$database)) {
         if (length(config$database) > 1L) {
           stop("More than one database configured; a 'database' field required")
