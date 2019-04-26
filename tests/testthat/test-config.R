@@ -230,3 +230,10 @@ test_that("can't use both database and source sections", {
                "Both 'database' and 'source' fields may not be used",
                fixed = TRUE)
 })
+
+
+test_that("can read a configuration with no database", {
+  path <- prepare_orderly_example("db0")
+  config <- orderly_config(path)
+  expect_false("database" %in% names(config))
+})

@@ -818,3 +818,13 @@ test_that("can run report with a view", {
   res <- DBI::dbReadTable(con, "report_version_view")
   expect_equal(res$database, "source")
 })
+
+
+test_that("can run a report from orderly with no database", {
+  path <- prepare_orderly_example("db0")
+  id <- orderly_run("example", config = path, echo = FALSE)
+  expect_true(file.exists(
+    file.path(path, "draft", "example", id, "mygraph.png")))
+  p <- orderly_commit(id, config = path)
+  expect_true(file.exists(file.path(p, "mygraph.png")))
+})

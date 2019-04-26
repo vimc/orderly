@@ -200,3 +200,15 @@ test_that("data field is optional", {
   ## expect no error
   expect_error(orderly_run("example", config = path, echo = FALSE), NA)
 })
+
+
+test_that("can't use database in configurations that lack them", {
+  path <- prepare_orderly_example("db0")
+  p <- file.path(path, "src", "example", "orderly.yml")
+  txt <- readLines(p)
+  dat <- list(data = list(dat = list(query = "SELECT name, number FROM thing")))
+  writeLines(c(txt, yaml::as.yaml(dat)), p)
+  expect_error(
+    recipe_read(dirname(p), orderly_config(path)),
+    "No databases are configured - can't use a 'data' section")
+})
