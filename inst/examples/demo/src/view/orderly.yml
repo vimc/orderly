@@ -1,7 +1,9 @@
 views:
-  thedata: SELECT name, number FROM thing
+  thedata:
+    query: SELECT name, number FROM thing
 data:
-  dat: SELECT * FROM thedata
+  dat:
+    query: SELECT * FROM thedata
 script: script.R
 artefacts:
   staticgraph:

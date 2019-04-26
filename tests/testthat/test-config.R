@@ -17,12 +17,14 @@ test_that("environment variables", {
   path <- tempfile()
   dir.create(path)
 
-  dat <- list(source = list(driver = "RSQLite::SQLite",
+  dat <- list(database =
+                list(source =
+                       list(driver = "RSQLite::SQLite",
                             host = "OURHOST",
                             port = "OURPORT",
                             user = "OURUSER",
                             dbname = "OURDBNAME",
-                            password = "$OURPASSWORD"))
+                            password = "$OURPASSWORD")))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
 
   cfg <- orderly_config(path)
@@ -72,8 +74,7 @@ test_that("minimum orderly version is enforced", {
   path <- tempfile()
   dir.create(path)
 
-  dat <- list(source = list(driver = "RSQLite::SQLite"),
-              minimum_orderly_version = "9.9.9")
+  dat <- list(minimum_orderly_version = "9.9.9")
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
 
   expect_error(orderly_config(path),
@@ -86,8 +87,7 @@ test_that("minimum version is a less than relationship", {
   path <- tempfile()
   dir.create(path)
 
-  dat <- list(source = list(driver = "RSQLite::SQLite"),
-              minimum_orderly_version = as.character(packageVersion("orderly")))
+  dat <- list(minimum_orderly_version = as.character(packageVersion("orderly")))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
   cfg <- orderly_config(path)
   expect_is(cfg, "orderly_config")
@@ -98,8 +98,7 @@ test_that("minimum version is a less than relationship", {
 test_that("support declaring api server", {
   path <- tempfile()
   dir.create(path)
-  dat <- list(source = list(driver = "RSQLite::SQLite"),
-              remote = list(
+  dat <- list(remote = list(
                 main = list(
                   driver = "orderly::orderly_remote_path",
                   primary = TRUE,
@@ -146,8 +145,7 @@ test_that("support declaring api server", {
 test_that("api server has only one primary", {
   path <- tempfile()
   dir.create(path)
-  dat <- list(source = list(driver = "RSQLite::SQLite"),
-              remote = list(
+  dat <- list(remote = list(
                 main = list(
                   driver = "orderly::orderly_remote_path",
                   primary = TRUE,
@@ -171,8 +169,7 @@ test_that("api server has only one primary", {
 test_that("remote parse check", {
   path <- tempfile()
   dir.create(path)
-  dat <- list(source = list(driver = "RSQLite::SQLite"),
-              remote = list(
+  dat <- list(remote = list(
                 myhost = list(
                   driver = "orderly::orderly_remote_path",
                   primary = TRUE,

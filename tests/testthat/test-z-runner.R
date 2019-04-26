@@ -358,9 +358,10 @@ test_that("prevent git changes", {
   path <- prepare_orderly_git_example()
 
   cfg <- list(
-    source = list(
-      driver = "RSQLite::SQLite",
-      dbname = "dbname: source.sqlite"),
+    database = list(
+      source = list(
+        driver = "RSQLite::SQLite",
+        dbname = "dbname: source.sqlite")),
     remote = list(
       main = list(
         driver = "orderly::orderly_remote_path",

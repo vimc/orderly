@@ -51,7 +51,8 @@ test_that("list README.md as artefact",  {
   yml_path <- file.path(path_example, "orderly.yml")
   ## rewrite the yaml to include README.md as a resource
   yml <- c("data:",
-           "  dat: SELECT name, number FROM thing",
+           "  dat:",
+           "    query: SELECT name, number FROM thing",
            "script: script.R",
            "artefacts:",
            "  - staticgraph:",

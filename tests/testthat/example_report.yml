@@ -2,18 +2,20 @@ requester: the requester
 author: the author
 
 views:
-  helper: >-
-    SELECT
-       thing.name AS thing,
-       thing.number,
-       data.value
-    FROM data JOIN thing ON data.thing = thing.id
+  helper:
+    query: >-
+      SELECT
+         thing.name AS thing,
+         thing.number,
+         data.value
+      FROM data JOIN thing ON data.thing = thing.id
 data:
-  dat: >-
-    SELECT *
-    FROM helper
-    WHERE
-      helper.value >= ?minvalue
+  dat:
+    query: >-
+      SELECT *
+      FROM helper
+      WHERE
+        helper.value >= ?minvalue
 
 parameters:
   - minvalue

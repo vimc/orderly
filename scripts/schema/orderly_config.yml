@@ -7,11 +7,6 @@ destination:
   dbname: orderly
   password: schemaspy
 
-# Dummy - we'll never actually pull this
-source:
-  driver: RSQLite::SQLite
-  dbname: source.sqlite
-
 # Compatible with montagu-reports, but later we'll need this to be
 # tuneable I think.
 fields:

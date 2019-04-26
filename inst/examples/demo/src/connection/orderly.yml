@@ -1,5 +1,6 @@
 data: ~
-connection: con
+connection:
+  con: source
 script: script.R
 artefacts:
   staticgraph:

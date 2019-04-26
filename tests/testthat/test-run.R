@@ -235,7 +235,8 @@ test_that("connection", {
   path_example <- file.path(path, "src", "example")
   yml <- file.path(path_example, "orderly.yml")
   txt <- readLines(yml)
-  writeLines(c(txt, "connection: con"), yml)
+  dat <- list(connection = list(con = "source"))
+  writeLines(c(txt, yaml::as.yaml(dat)), yml)
 
   config <- orderly_config(path)
   info <- recipe_read(path_example, config)
@@ -259,7 +260,8 @@ test_that("connection is saved to db", {
   path_example <- file.path(path, "src", "example")
   yml <- file.path(path_example, "orderly.yml")
   txt <- readLines(yml)
-  writeLines(c(txt, "connection: con"), yml)
+  dat <- list(connection = list(con = "source"))
+  writeLines(c(txt, yaml::as.yaml(dat)), yml)
 
   id2 <- orderly_run("example", config = path, echo = FALSE)
   orderly_commit(id2, config = path)

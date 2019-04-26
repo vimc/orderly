@@ -1,5 +1,6 @@
 data:
-  extract: SELECT name, number FROM thing WHERE number > ?nmin
+  extract:
+    query: SELECT name, number FROM thing WHERE number > ?nmin
 parameters:
   nmin
 script: script.R

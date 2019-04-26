@@ -39,7 +39,7 @@ test_that("minimal", {
 
   sql <- file.path(path_example, "query.sql")
   writeLines(dat$data$dat$query, sql)
-  write(modifyList(dat, list(data = list(dat = "query.sql"))))
+  write(modifyList(dat, list(data = list(dat = list(query = "query.sql")))))
 
   cmp <- recipe_read(path_example, config)
   expect_equal(cmp$data$dat$query_file, "query.sql")
@@ -48,7 +48,7 @@ test_that("minimal", {
   expect_equal(cmp$data, info$data)
   expect_equal(cmp$resources, "query.sql")
 
-  write(modifyList(dat, list(data = list(dat = "foo.sql"))))
+  write(modifyList(dat, list(data = list(dat = list(query = "foo.sql")))))
   expect_error(recipe_read(path_example, config),
                "SQL file does not exist: 'foo.sql'")
 

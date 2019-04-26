@@ -2,10 +2,11 @@ context("envir")
 
 test_that("set env", {
   path <- prepare_orderly_example("minimal")
-  cfg <- c("source:",
-           "  driver: RSQLite::SQLite",
-           "  dbname: source.sqlite",
-           "  user: $MY_USER")
+  cfg <- c("database:",
+           "  source:",
+           "    driver: RSQLite::SQLite",
+           "    dbname: source.sqlite",
+           "    user: $MY_USER")
   writeLines(cfg, file.path(path, "orderly_config.yml"))
 
   config <- orderly_config(path)
