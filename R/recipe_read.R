@@ -339,13 +339,12 @@ recipe_read_query <- function(field, info, filename, config) {
       }
       if (is.null(d$database)) {
         if (length(config$database) > 1L) {
-          stop("More than one database configured; a 'database' field required")
+          msg <- paste("More than one database configured; a 'database'",
+                       sprintf("field is required for '%s'", name))
+          stop(msg, call. = FALSE)
         }
         d$database <- names(config$database)[[1]]
       } else {
-        if (config$database_old_style) {
-          stop("Can't specfify database without moving to new style")
-        }
         match_value(d$database, names(config$database),
                     sprintf("%s:database", name))
       }

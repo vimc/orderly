@@ -212,3 +212,37 @@ test_that("can't use database in configurations that lack them", {
     recipe_read(dirname(p), orderly_config(path)),
     "No databases are configured - can't use a 'data' section")
 })
+
+
+test_that("database names are required with more than one db", {
+  path <- prepare_orderly_example("db2")
+  p <- file.path(path, "src", "example", "orderly.yml")
+  dat <- yaml_read(p)
+  dat$data$dat1$database <- NULL
+  writeLines(yaml::as.yaml(dat), p)
+  expect_error(
+    recipe_read(dirname(p), orderly_config(path)),
+    "More than one database configured; a 'database' field is required for")
+})
+
+
+## This is not *strictly* necessary, but let's roll with it for now
+test_that("Can't use database name on old style configuration", {
+  path <- prepare_orderly_example("db1")
+  p <- file.path(path, "orderly_config.yml")
+  dat <- yaml_read(p)
+  writeLines(yaml::as.yaml(list(source = dat$database$source1)), p)
+
+  p <- file.path(path, "src", "example", "orderly.yml")
+  txt <- readLines(p)
+  writeLines(sub("source1", "source", txt), p)
+
+  ## If database present, the new style is validated correctly:
+  res <- recipe_read(dirname(p), orderly_config(path))
+  expect_equal(res$data$dat1$database, "source")
+
+  ## If database absent, the new style is imputed correctly
+  writeLines(txt[!grepl("^ +database:", txt)], p)
+  res <- recipe_read(dirname(p), orderly_config(path))
+  expect_equal(res$data$dat1$database, "source")
+})

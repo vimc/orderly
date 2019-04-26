@@ -830,6 +830,16 @@ test_that("can run a report from orderly with no database", {
 })
 
 
+test_that("can run a report from orderly with one (named) database", {
+  path <- prepare_orderly_example("db1")
+  id <- orderly_run("example", config = path, echo = FALSE)
+  expect_true(file.exists(
+    file.path(path, "draft", "example", id, "mygraph.png")))
+  p <- orderly_commit(id, config = path)
+  expect_true(file.exists(file.path(p, "mygraph.png")))
+})
+
+
 test_that("can run a report from orderly with two databases", {
   path <- prepare_orderly_example("db2")
   id <- orderly_run("example", config = path, echo = FALSE)
