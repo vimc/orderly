@@ -70,7 +70,9 @@ prepare_orderly_example <- function(name, path = tempfile()) {
   }
   con <- orderly_db("source", config = path)
   on.exit(lapply(con, DBI::dbDisconnect))
-  generator(con)
+  if (length(con) > 0L) {
+    generator(con)
+  }
   path
 }
 
