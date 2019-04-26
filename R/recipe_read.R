@@ -81,56 +81,8 @@ recipe_read <- function(path, config, validate = TRUE) {
     }
   }
 
-  ## Then some processing - this should be factored out because it's
-  ## huge and ugly.
-  if (!is.null(info$data)) {
-    if (length(config$database) == 0L) {
-      stop("No databases are configured - can't use a 'data' section")
-    }
-    assert_named(info$data, TRUE, fieldname("data"))
-    f <- function(nm) {
-      name <- sprintf("%s:%s", fieldname("data"), nm)
-      d <- info$data[[nm]]
-      if (is.character(d)) {
-        if (!config$database_old_style) {
-          msg <- c("Use of strings for queries is deprecated and will be",
-                   "removed in a future orderly version - please use",
-                   "query: <yourstring> instead.  See the main package",
-                   "vignette for details")
-          warning(flow_text(msg), immediate. = TRUE, call. = FALSE)
-        }
-        d <- list(query = string_or_filename(d, path, name))
-      } else {
-        check_fields(d, name, "query", "database")
-        d$query <- string_or_filename(d$query, path, sprintf("%s:query", name))
-      }
-      d$query_file <- attr(d$query, "files")
-      if (is.null(d$database)) {
-        if (length(config$database) > 1L) {
-          stop("More than one database configured; a 'database' field required")
-        }
-        d$database <- names(config$database)[[1]]
-      } else {
-        if (config$database_old_style) {
-          stop("Can't specfify database without moving to new style")
-        }
-        match_value(d$database, names(config$database),
-                    sprintf("%s:database", name))
-      }
-      d
-    }
-
-    info$data[] <- lapply(names(info$data), f)
-
-    query_files <- unlist(lapply(info$data, "[[", "query_file"), FALSE, FALSE)
-    info$resources <- c(info$resources, query_files)
-  }
-
-  if (!is.null(info$views)) {
-    assert_named(info$views, TRUE, fieldname("views"))
-    info$views <- string_or_filename(info$views, path, fieldname("views"))
-    info$resources <- c(info$resources, attr(info$views, "files"))
-  }
+  info <- recipe_read_query("data", info, filename, config)
+  info <- recipe_read_query("views", info, filename, config)
 
   assert_scalar_character(info$script, fieldname("script"))
   assert_file_exists(info$script, workdir = path, name = "Script file")
@@ -360,4 +312,55 @@ recipe_read_check_depends <- function(x, filename, config, validate) {
   }
 
   rbind_df(lapply(seq_along(x), check_use1))
+}
+
+
+recipe_read_query <- function(field, info, filename, config) {
+  d <- info[[field]]
+  path <- dirname(filename)
+
+  if (!is.null(d)) {
+    if (length(config$database) == 0L) {
+      stop("No databases are configured - can't use a 'data' section")
+    }
+    assert_named(d, TRUE, sprintf("%s:%s", filename, field))
+    f <- function(nm) {
+      name <- sprintf("%s:%s:%s", filename, field, nm)
+      d <- d[[nm]]
+      if (is.character(d)) {
+        if (!config$database_old_style) {
+          msg <- c("Use of strings for queries is deprecated and will be",
+                   "removed in a future orderly version - please use",
+                   "query: <yourstring> instead.  See the main package",
+                   "vignette for details")
+          warning(flow_text(msg), immediate. = TRUE, call. = FALSE)
+        }
+        d <- list(query = string_or_filename(d, path, name))
+      } else {
+        check_fields(d, name, "query", "database")
+        d$query <- string_or_filename(d$query, path, sprintf("%s:query", name))
+      }
+      d$query_file <- attr(d$query, "files")
+      if (is.null(d$database)) {
+        if (length(config$database) > 1L) {
+          stop("More than one database configured; a 'database' field required")
+        }
+        d$database <- names(config$database)[[1]]
+      } else {
+        if (config$database_old_style) {
+          stop("Can't specfify database without moving to new style")
+        }
+        match_value(d$database, names(config$database),
+                    sprintf("%s:database", name))
+      }
+      d
+    }
+
+    d[] <- lapply(names(d), f)
+
+    query_files <- unlist(lapply(d, "[[", "query_file"), FALSE, FALSE)
+    info$resources <- c(info$resources, query_files)
+    info[[field]] <- d
+  }
+  info
 }

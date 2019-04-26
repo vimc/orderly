@@ -807,3 +807,14 @@ test_that("producing a directory is an error", {
                "Produced a directory artefact: 'mygraph.png'",
                fixed = TRUE)
 })
+
+
+test_that("can run report with a view", {
+  path <- prepare_orderly_example("demo")
+  id <- orderly_run("view", config = path, echo = FALSE)
+  orderly_commit(id, config = path)
+  con <- orderly_db("destination", config = path)
+  on.exit(DBI::dbDisconnect(con))
+  res <- DBI::dbReadTable(con, "report_version_view")
+  expect_equal(res$database, "source")
+})

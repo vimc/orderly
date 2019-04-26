@@ -332,9 +332,9 @@ recipe_data <- function(config, info, parameters, dest) {
 
   views <- info$views
   for (v in names(views)) {
-    stop("Fixme")
-    orderly_log("view", v)
-    DBI::dbExecute(con, temporary_view(v, views[[v]]))
+    orderly_log("view", sprintf("%s : %s", views[[v]]$database, v))
+    sql <- temporary_view(v, views[[v]]$query)
+    DBI::dbExecute(con[[views[[v]]$database]], sql)
   }
 
   for (v in names(info$data)) {

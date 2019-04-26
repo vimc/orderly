@@ -297,7 +297,8 @@ report_data_import <- function(con, workdir, config) {
     report_version_view <- data_frame(
       report_version = id,
       name = names(dat_in$views),
-      sql = unname(dat_in$views))
+      database = vcapply(dat_in$views, "[[", "database", USE.NAMES = FALSE),
+      query = vcapply(dat_in$views, "[[", "query", USE.NAMES = FALSE))
     DBI::dbWriteTable(con, "report_version_view", report_version_view,
                       append = TRUE)
   }
