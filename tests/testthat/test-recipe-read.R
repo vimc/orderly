@@ -297,7 +297,7 @@ test_that("validate database names", {
 test_that("warn old style db", {
   path <- withr::with_options(
     list(orderly.nowarnings = TRUE),
-    prepare_orderly_example("old"))
+    prepare_orderly_example("olddb"))
   cfg <- withr::with_options(
     list(orderly.nowarnings = TRUE),
     orderly_config(path))

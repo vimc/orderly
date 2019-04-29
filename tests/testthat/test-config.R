@@ -250,7 +250,7 @@ test_that("can read a configuration with two databases", {
 test_that("warn when reading old-style configuration", {
   path <- withr::with_options(
     list(orderly.nowarnings = TRUE),
-    prepare_orderly_example("old"))
+    prepare_orderly_example("olddb"))
 
   expect_warning(orderly_config(path),
                  "Use of 'source' is deprecated and will be removed")
