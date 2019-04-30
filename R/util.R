@@ -655,3 +655,41 @@ install_packages <- function(missing_packages) {
 flow_text <- function(x) {
   paste(strwrap(paste(x, collapse = " ")), collapse = "\n")
 }
+
+
+sqlite_backup <- function(src, dest) {
+  if (file.exists(dest)) {
+    file.rename(dest, paste0(dest, ".prev"))
+  }
+
+  dest_con <- DBI::dbConnect(RSQLite::SQLite(), dest)
+  on.exit(DBI::dbDisconnect(dest_con))
+
+  src_con <- DBI::dbConnect(RSQLite::SQLite(), src)
+  on.exit(DBI::dbDisconnect(src_con), add = TRUE)
+
+  RSQLite::sqliteCopyDatabase(src_con, dest_con)
+  invisible(dest)
+}
+
+
+periodic <- function(fun, period) {
+  fun <- match.fun(fun)
+  force(period)
+  last <- Sys.time()
+  function() {
+    now <- Sys.time()
+    if (now > last + period) {
+      fun()
+      last <<- now
+    }
+  }
+}
+
+
+protect <- function(fun) {
+  fun <- match.fun(fun)
+  function() {
+    tryCatch(fun(), error = function(e) NULL)
+  }
+}

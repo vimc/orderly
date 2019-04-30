@@ -154,3 +154,13 @@ test_that("sources are listed in db", {
   expect_false("resource" %in% d$file_purpose)
   expect_true("source" %in% d$file_purpose)
 })
+
+
+test_that("backup", {
+  path <- create_orderly_demo()
+  expect_message(
+    orderly_backup(path),
+    "orderly.sqlite => backup/orderly.sqlite",
+    fixed = TRUE)
+  expect_true(file.exists(file.path(path, "backup/orderly.sqlite")))
+})

@@ -39,9 +39,10 @@ R6_orderly_runner <- R6::R6Class(
     path_log = NULL,
     path_id = NULL,
 
-    con = NULL,
     data = NULL,
     has_git = NULL,
+
+    backup = NULL,
 
     initialize = function(path, allow_ref) {
       self$path <- path
@@ -55,6 +56,9 @@ R6_orderly_runner <- R6::R6Class(
       if (self$has_git && !self$allow_ref) {
         message("Disallowing reference switching in runner")
       }
+
+      do_backup <- protect(function() orderly_backup(self$config))
+      self$backup <- periodic(do_backup, 600)
 
       bin <- tempfile()
       dir.create(bin)
@@ -214,6 +218,7 @@ R6_orderly_runner <- R6::R6Class(
       } else {
         ret <-"idle"
       }
+      self$backup()
       attr(ret, "key") <- key
       ret
     },
