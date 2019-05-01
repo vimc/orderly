@@ -123,7 +123,7 @@ yaml_output(readLines(file.path(path_example, "script.R")))
 
 The important thing here is that the report references the variable
 `cars` and `cyl` even though it does not create them!  It must
-produce the files that are mentioed in `artefacts`
+produce the files that are mentioned in `artefacts`
 (`disp_vs_wt.png` and `distribution.png`).  The R code can be as
 long and as short as needed and can use whatever packages it needs.
 `orderly` does not do anything with the script apart from run it so
@@ -279,10 +279,16 @@ difference is that the index `orderly.sqlite` has been created.
 
 First, create a directory within `src`.  The name is important and
 should not contain spaces (nor should it change as this will change
-the key report id and you'll lose a chain of history).
+the key report id and you'll lose a chain of history), then edit
+the file `orrderly.yml` within that directory.
 ``` {r }
-dir.create(file.path(path, "src", "new"))
+orderly::orderly_new("new", config = path)
 ```
+
+As a report becomes more complex, the function
+`orderly::orderly_test_start` will become useful; this function
+creates the isolated environment that orderly uses to run a report,
+but then leaves you to interactively work with your report.
 
 ## Customising the configuration
 
