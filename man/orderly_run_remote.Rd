@@ -12,7 +12,7 @@ orderly_run_remote(name, parameters = NULL, ref = NULL,
 \arguments{
 \item{name}{Name of the report}
 
-\item{parameters}{Parameters for the reprt}
+\item{parameters}{Parameters for the report}
 
 \item{ref}{Optional reference, indicating which branch should be
 used.  This cannot be used if the remote has \code{master_only}

@@ -20,7 +20,7 @@ orderly_data(name, parameters = NULL, envir = NULL, config = NULL,
 \item{parameters}{Parameters passed to the report. A named list of
 parameters declared in the orderly.yml.}
 
-\item{envir}{The parent of environment to evalute the report in;
+\item{envir}{The parent of environment to evaluate the report in;
 by default a new environment will be made with the global
 environment as the parent.}
 
