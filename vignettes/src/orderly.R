@@ -265,7 +265,7 @@ plain_output(tree(path, "<root>"))
 ## First, create a directory within `src`.  The name is important and
 ## should not contain spaces (nor should it change as this will change
 ## the key report id and you'll lose a chain of history), then edit
-## the file `orrderly.yml` within that directory.
+## the file `orderly.yml` within that directory.
 orderly::orderly_new("new", config = path)
 
 ## As a report becomes more complex, the function
