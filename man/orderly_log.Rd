@@ -34,7 +34,7 @@ print diagnostic information to the message stream.  This is set
 to be on by default.
 
 Send an entry to the orderly log.  This is designed primarily for
-use with pacakges that build off of orderly, so that they can log
+use with packages that build off of orderly, so that they can log
 in a consistent way.
 }
 \details{

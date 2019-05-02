@@ -19,7 +19,7 @@
 ##' @param parameters Parameters passed to the report. A named list of
 ##'   parameters declared in the orderly.yml.
 ##'
-##' @param envir The parent of environment to evalute the report in;
+##' @param envir The parent of environment to evaluate the report in;
 ##'   by default a new environment will be made with the global
 ##'   environment as the parent.
 ##'

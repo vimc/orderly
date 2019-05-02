@@ -31,5 +31,5 @@ end-of-run metadata).  This will also clean up drafts created by
 Clean up orderly draft and data directories.  Deletes all drafts
 (possibly just for a set of report names) and then deletes
 dangling data sets that are not pointed to by any draft or
-commited reports
+committed reports
 }
