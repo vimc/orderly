@@ -112,7 +112,7 @@ push_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
 ##'
 ##' @param name Name of the report
 ##'
-##' @param parameters Parameters for the reprt
+##' @param parameters Parameters for the report
 ##'
 ##' @param timeout Time to tell the server to wait before killing the
 ##'   report.

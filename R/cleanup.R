@@ -1,7 +1,7 @@
 ##' Clean up orderly draft and data directories.  Deletes all drafts
 ##' (possibly just for a set of report names) and then deletes
 ##' dangling data sets that are not pointed to by any draft or
-##' commited reports
+##' committed reports
 ##'
 ##' @title Orderly cleanup
 ##' @param name Optional name; in this case only clean up drafts with this name

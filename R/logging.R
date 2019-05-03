@@ -27,7 +27,7 @@ orderly_log_off <- function() {
 }
 
 ##' Send an entry to the orderly log.  This is designed primarily for
-##' use with pacakges that build off of orderly, so that they can log
+##' use with packages that build off of orderly, so that they can log
 ##' in a consistent way.
 ##' @title Send entry to orderly log
 ##' @param topic Up to 9 character text string with the log topic

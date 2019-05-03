@@ -9,7 +9,7 @@ orderly_commit(id, name = NULL, config = NULL, locate = TRUE)
 \arguments{
 \item{id}{The identifier of the report}
 
-\item{name}{The name of the report - this can be ommited and the
+\item{name}{The name of the report - this can be omitted and the
 name will be determined from the \code{id}.}
 
 \item{config}{An orderly configuration, or the path to one (or

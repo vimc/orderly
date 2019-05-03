@@ -3,7 +3,7 @@
 ##'
 ##' @param id The identifier of the report
 ##'
-##' @param name The name of the report - this can be ommited and the
+##' @param name The name of the report - this can be omitted and the
 ##'   name will be determined from the \code{id}.
 ##'
 ##' @inheritParams orderly_list
