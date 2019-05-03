@@ -33,6 +33,7 @@ has_internet <- function() {
 
 skip_if_no_internet <- function() {
   skip_on_windows()
+  skip_on_cran() # not worth it
   if (has_internet()) {
     return()
   }
@@ -79,4 +80,13 @@ prepare_orderly_remote_example <- function(path = tempfile()) {
        remote = remote,
        id1 = id1,
        id2 = id2)
+}
+
+
+patch_orderly_config <- function(path) {
+  p <- file.path(path, "orderly_config.yml")
+  dat <- yaml_read(p)
+  dat$database <- list(source = dat$source)
+  dat$source <- NULL
+  writeLines(yaml::as.yaml(dat), p)
 }

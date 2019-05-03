@@ -1,0 +1,7 @@
+database:
+  source1:
+    driver: RSQLite::SQLite
+    dbname: source1.sqlite
+  source2:
+    driver: RSQLite::SQLite
+    dbname: source2.sqlite

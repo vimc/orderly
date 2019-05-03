@@ -226,7 +226,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   orderly_log("elapsed", sprintf("Ran report in %s", format(elapsed)))
 
   if (!is.null(info$connection)) {
-    tryCatch(DBI::dbDisconnect(prep$con),
+    tryCatch(lapply(prep$con, DBI::dbDisconnect),
              error = identity,
              warning = identity)
   }
@@ -280,12 +280,29 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                depends = depends,
                elapsed = as.numeric(elapsed, "secs"),
                git = info$git)
+  ## See VIMC-2873; this will come out at some point
+  writeLines(yaml::as.yaml(meta, column.major = FALSE),
+             path_orderly_run_yml(info$workdir))
+
+  if (!is.null(info$data)) {
+    meta$data <- data_frame(
+      name = names(info$data),
+      database = vcapply(info$data, "[[", "database", USE.NAMES = FALSE),
+      query = vcapply(info$data, "[[", "query", USE.NAMES = FALSE),
+      hash = unname(hash_data_rds))
+  }
+
+  if (!is.null(info$views)) {
+    meta$view <- data_frame(
+      name = names(info$views),
+      database = vcapply(info$views, "[[", "database", USE.NAMES = FALSE),
+      query = vcapply(info$views, "[[", "query", USE.NAMES = FALSE))
+  }
 
   session$meta <- meta
   session$archive_version <- cache$current_archive_version
+
   saveRDS(session, path_orderly_run_rds(info$workdir))
-  writeLines(yaml::as.yaml(meta, column.major = FALSE),
-             path_orderly_run_yml(info$workdir))
 
   meta
 }
@@ -328,23 +345,34 @@ recipe_data <- function(config, info, parameters, dest) {
   }
 
   con <- orderly_db("source", config)
-  on.exit(DBI::dbDisconnect(con))
+  on.exit(lapply(con, DBI::dbDisconnect))
 
   views <- info$views
   for (v in names(views)) {
-    orderly_log("view", v)
-    DBI::dbExecute(con, temporary_view(v, views[[v]]))
+    orderly_log("view", sprintf("%s : %s", views[[v]]$database, v))
+    sql <- temporary_view(v, views[[v]]$query)
+    DBI::dbExecute(con[[views[[v]]$database]], sql)
   }
 
   for (v in names(info$data)) {
-    dest[[v]] <- DBI::dbGetQuery(con, info$data[[v]])
+    database <- info$data[[v]]$database
+    query <- info$data[[v]]$query
+    withCallingHandlers(
+      dest[[v]] <- DBI::dbGetQuery(con[[database]], query),
+      error = function(e)
+        orderly_log("data", sprintf("%s => %s: <error>", database, v)))
     orderly_log("data",
-                sprintf("%s: %s x %s", v, nrow(dest[[v]]), ncol(dest[[v]])))
+                sprintf("%s => %s: %s x %s",
+                        database, v, nrow(dest[[v]]), ncol(dest[[v]])))
   }
 
   if (!is.null(info$connection)) {
-    dest[[info$connection]] <- con
-    on.exit()
+    for (i in names(info$connection)) {
+      dest[[i]] <- con[[info$connection[[i]]]]
+    }
+    ## Ensure that only unexported connections are closed:
+    con <- con[setdiff(list_to_character(info$connection, FALSE),
+                       names(config$database))]
   }
 
   dest
@@ -580,7 +608,10 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
   ret <- list(data = ldata, n_dev = n_dev)
 
   if (!is.null(info$connection)) {
-    ret$con <- data[[info$connection]]
+    ## NOTE: this is a copy of exported connections so that we can
+    ## close them once the report finishes running.
+    con <- list_to_character(info$connection)
+    ret$con <- lapply(names(con)[!duplicated(con)], function(nm) data[[nm]])
   }
 
   for (p in info$packages) {

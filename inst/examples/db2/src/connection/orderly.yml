@@ -1,0 +1,8 @@
+script: script.R
+artefacts:
+  staticgraph:
+    description: A graph of things
+    filenames: mygraph.png
+connection:
+  con1: source1
+  con2: source2

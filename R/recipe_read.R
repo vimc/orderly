@@ -55,21 +55,39 @@ recipe_read <- function(path, config, validate = TRUE) {
     info$resources <- c(info$resources, info$sources)
   }
   if (!is.null(info$connection)) {
-    assert_scalar_character(info$connection)
+    if (length(config$database) == 0L) {
+      stop("No databases are configured - can't use a 'connection' section")
+    }
+    if (is.character(info$connection)) {
+      if (!config$database_old_style) {
+        ## TODO: Better message?
+        msg <- c("Use of strings for connection: is deprecated and will be",
+                 "removed in a future orderly version - please use",
+                 "connection: <object>: <dbname> instead.  See the main",
+                 "package vignette for details")
+        orderly_warning(flow_text(msg))
+      }
+      if (length(config$database) > 1L) {
+        msg <- paste("More than one database configured; update 'connection'",
+                     sprintf("from '%s' to '%s: <dbname>' in '%s'",
+                             info$connection, info$connection, filename))
+        stop(msg, call. = FALSE)
+      }
+      assert_scalar_character(info$connection, fieldname("connection"))
+      info$connection <- set_names(as.list(names(config$database)),
+                                   info$connection)
+    } else {
+      assert_named(info$connection, unique = TRUE,
+                   name = fieldname("connection"))
+      for (i in names(info$connection)) {
+        match_value(info$connection[[i]], names(config$database),
+                    name = sprintf("%s:%s", fieldname("connection"), i))
+      }
+    }
   }
 
-  ## Then some processing:
-  if (!is.null(info$data)) {
-    assert_named(info$data, TRUE, fieldname("data"))
-    info$data <- string_or_filename(info$data, path, fieldname("data"))
-    info$resources <- c(info$resources, attr(info$data, "files"))
-  }
-
-  if (!is.null(info$views)) {
-    assert_named(info$views, TRUE, fieldname("views"))
-    info$views <- string_or_filename(info$views, path, fieldname("views"))
-    info$resources <- c(info$resources, attr(info$views, "files"))
-  }
+  info <- recipe_read_query("data", info, filename, config)
+  info <- recipe_read_query("views", info, filename, config)
 
   assert_scalar_character(info$script, fieldname("script"))
   assert_file_exists(info$script, workdir = path, name = "Script file")
@@ -104,20 +122,16 @@ valid_formats <- function() {
 }
 
 string_or_filename <- function(x, path, name) {
-  if (is.list(x)) {
-    if (all(vlapply(x, is.character))) {
-      x <- vcapply(x, identity)
-    }
+  assert_scalar_character(x, name)
+  if (grepl("\\.sql$", x)) {
+    file <- x
+    assert_file_exists(file, workdir = path, name = "SQL file")
+    query <- read_lines(file.path(path, file))
+  } else {
+    file <- NULL
+    query <- x
   }
-  assert_character(x, name)
-  i <- grepl("\\.sql$", x)
-  if (any(i)) {
-    files <- x[i]
-    assert_file_exists(files, workdir = path, name = "SQL file")
-    x[i] <- vcapply(file.path(path, files), read_lines, USE.NAMES = FALSE)
-    attr(x, "files") <- unname(files)
-  }
-  x
+  list(query = query, query_file = file)
 }
 
 recipe_read_check_artefacts <- function(x, filename, path) {
@@ -299,4 +313,54 @@ recipe_read_check_depends <- function(x, filename, config, validate) {
   }
 
   rbind_df(lapply(seq_along(x), check_use1))
+}
+
+
+recipe_read_query <- function(field, info, filename, config) {
+  d <- info[[field]]
+  path <- dirname(filename)
+
+  if (!is.null(d)) {
+    if (length(config$database) == 0L) {
+      stop("No databases are configured - can't use a 'data' section")
+    }
+    assert_named(d, TRUE, sprintf("%s:%s", filename, field))
+    f <- function(nm) {
+      name <- sprintf("%s:%s:%s", filename, field, nm)
+      d <- d[[nm]]
+      if (is.character(d)) {
+        if (!config$database_old_style) {
+          msg <- c("Use of strings for queries is deprecated and will be",
+                   "removed in a future orderly version - please use",
+                   "query: <yourstring> instead.  See the main package",
+                   "vignette for details")
+          orderly_warning(flow_text(msg))
+        }
+        d <- string_or_filename(d, path, name)
+      } else {
+        check_fields(d, name, "query", "database")
+        dat <- string_or_filename(d$query, path, sprintf("%s:query", name))
+        d[names(dat)] <- dat
+      }
+      if (is.null(d$database)) {
+        if (length(config$database) > 1L) {
+          msg <- paste("More than one database configured; a 'database'",
+                       sprintf("field is required for '%s'", name))
+          stop(msg, call. = FALSE)
+        }
+        d$database <- names(config$database)[[1]]
+      } else {
+        match_value(d$database, names(config$database),
+                    sprintf("%s:database", name))
+      }
+      d
+    }
+
+    d[] <- lapply(names(d), f)
+
+    query_files <- unlist(lapply(d, "[[", "query_file"), FALSE, FALSE)
+    info$resources <- c(info$resources, query_files)
+    info[[field]] <- d
+  }
+  info
 }

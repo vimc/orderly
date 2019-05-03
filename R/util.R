@@ -109,9 +109,12 @@ is_relative_path <- function(path) {
   !is_absolute_path(path)
 }
 
-sql_str_sub <- function(s, data, ...) {
-  vcapply(s, function(el) DBI::sqlInterpolate(DBI::ANSI(), el, .dots = data),
-          ...)
+sql_str_sub <- function(s, data) {
+  for (i in seq_along(s)) {
+    s[[i]]$query <- DBI::sqlInterpolate(DBI::ANSI(), s[[i]]$query,
+                                        .dots = data)
+  }
+  s
 }
 
 read_csv <- function(filename, ...) {
@@ -657,4 +660,9 @@ install_packages <- function(missing_packages) {
     stop(sprintf("Could not install these packages: %s",
                  paste(squote(msg), collapse = ", ")))
   }
+}
+
+
+flow_text <- function(x) {
+  paste(strwrap(paste(x, collapse = " ")), collapse = "\n")
 }

@@ -15,25 +15,30 @@
 orderly_db <- function(type, config = NULL, locate = TRUE, validate = TRUE) {
   config <- orderly_config_get(config, locate)
   if (type == "rds") {
-    file_store_rds(path_rds(config$path))
+    con <- file_store_rds(path_rds(config$path))
   } else if (type == "csv") {
-    file_store_csv(path_csv(config$path))
-  } else if (type %in% c("source", "destination")) {
-    x <- orderly_db_args(type, config)
-    con <- do.call(DBI::dbConnect, c(list(x$driver()), x$args))
-    if (type == "destination") {
-      withCallingHandlers(
-        report_db_init(con, config, validate = validate),
-        error = function(e) DBI::dbDisconnect(con))
-    }
-    con
+    con <- file_store_csv(path_csv(config$path))
+  } else if (type == "destination") {
+    con <- orderly_db_dbi_connect(config$destination, config)
+    withCallingHandlers(
+      report_db_init(con, config, validate = validate),
+      error = function(e) DBI::dbDisconnect(con))
+  } else if (type == "source") {
+    con <- lapply(config$database, orderly_db_dbi_connect, config)
   } else {
     stop(sprintf("Invalid db type '%s'", type))
   }
+  con
 }
 
-orderly_db_args <- function(type, config) {
-  x <- config[[type]]
+
+orderly_db_dbi_connect <- function(x, config) {
+  dat <- orderly_db_args(x, config)
+  do.call(DBI::dbConnect, c(list(dat$driver()), dat$args))
+}
+
+
+orderly_db_args <- function(x, config) {
   driver <- getExportedValue(x$driver[[1L]], x$driver[[2L]])
 
   args <- withr::with_envvar(
@@ -69,6 +74,11 @@ orderly_db_args <- function(type, config) {
 ##' @export
 orderly_rebuild <- function(config = NULL, locate = TRUE, verbose = TRUE,
                             if_schema_changed = FALSE) {
+  ## We'll skip warnings here - they'll come out as messages rather
+  ## than warnings.
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
   config <- orderly_config_get(config, locate)
 
   if (length(migrate_plan(config$path, to = NULL)) > 0L) {

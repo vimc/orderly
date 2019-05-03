@@ -51,3 +51,12 @@ orderly_log_break <- function() {
   orderly_log(strrep("-", 10),
               strrep("-", max(getOption("width") - 18, 0)))
 }
+
+
+orderly_warning <- function(msg) {
+  if (getOption("orderly.nowarnings", FALSE)) {
+    message(msg)
+  } else {
+    warning(msg, immediate. = TRUE, call. = FALSE)
+  }
+}

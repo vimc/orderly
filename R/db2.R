@@ -8,7 +8,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-ORDERLY_SCHEMA_VERSION <- "0.0.6"
+ORDERLY_SCHEMA_VERSION <- "0.0.7"
 
 ## These will be used in a few places and even though they're not
 ## super likely to change it would be good
@@ -293,11 +293,9 @@ report_data_import <- function(con, workdir, config) {
   }
   DBI::dbWriteTable(con, "report_version", report_version, append = TRUE)
 
-  if (!is.null(dat_in$views)) {
-    report_version_view <- data_frame(
-      report_version = id,
-      name = names(dat_in$views),
-      sql = unname(dat_in$views))
+  if (!is.null(dat_rds$meta$view)) {
+    report_version_view <- cbind(report_version = id, dat_rds$meta$view,
+                                 stringsAsFactors = FALSE)
     DBI::dbWriteTable(con, "report_version_view", report_version_view,
                       append = TRUE)
   }
@@ -316,11 +314,8 @@ report_data_import <- function(con, workdir, config) {
       DBI::dbWriteTable(con, "data", data, append = TRUE)
     }
 
-    report_version_data <- data_frame(
-      report_version = id,
-      name = names(hash_data),
-      sql = unname(dat_in$data),
-      hash = unname(hash_data))
+    report_version_data <- cbind(report_version = id, dat_rds$meta$data,
+                                 stringsAsFactors = FALSE)
     DBI::dbWriteTable(con, "report_version_data", report_version_data,
                       append = TRUE)
   }

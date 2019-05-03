@@ -1,0 +1,9 @@
+data:
+  dat1:
+    query: SELECT * FROM mtcars
+    database: source1
+script: script.R
+artefacts:
+  staticgraph:
+    description: A graph of things
+    filenames: mygraph.png

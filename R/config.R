@@ -10,10 +10,10 @@ orderly_config <- function(path) {
 
 orderly_config_read_yaml <- function(filename, path) {
   info <- yaml_read(filename)
-  check_fields(info, filename, "source",
+  check_fields(info, filename, character(),
                c("destination", "fields", "minimum_orderly_version",
                  "remote", "vault_server", "global_resources",
-                 "changelog"))
+                 "changelog", "source", "database"))
 
   ## There's heaps of really boring validation to do here that I am
   ## going to skip.  The drama that we will have is that there are
@@ -23,18 +23,36 @@ orderly_config_read_yaml <- function(filename, path) {
   ## cannot be totally opaque when reading information in.
 
   driver_config <- function(name) {
-    if (name == "destination" && is.null(info[[name]])) {
-      info[[name]] <- list(driver = "RSQLite::SQLite",
-                           dbname = "orderly.sqlite")
+    if (identical(name, "destination") && is.null(info[[name]])) {
+      dat <- list(driver = "RSQLite::SQLite",
+                  dbname = "orderly.sqlite")
+    } else {
+      dat <- info[[name]]
     }
-    driver <- check_symbol_from_str(info[[name]]$driver,
-                                    sprintf("%s:%s:driver", filename, name))
-    args <- info[[name]][setdiff(names(info[[name]]), "driver")]
+    label <- sprintf("%s:%s:driver", filename, paste(name, collapse = ":"))
+    driver <- check_symbol_from_str(dat$driver, label)
+    args <- dat[setdiff(names(dat), "driver")]
     list(driver = driver, args = args)
   }
 
   info$fields <- config_check_fields(info$fields, filename)
-  info$source <- driver_config("source")
+  if (!is.null(info$source)) {
+    if (!is.null(info$database)) {
+      stop("Both 'database' and 'source' fields may not be used")
+    }
+    msg <- c("Use of 'source' is deprecated and will be removed in a",
+             "future orderly version - please use 'database' instead.",
+             "See the main package vignette for details.")
+    orderly_warning(flow_text(msg))
+    info$database <- list(source = driver_config("source"))
+    info$database_old_style <- TRUE
+  } else if (!is.null(info$database)) {
+    assert_named(info$database, unique = TRUE)
+    for (nm in names(info$database)) {
+      info$database[[nm]] <- driver_config(c("database", nm))
+    }
+    info$database_old_style <- FALSE
+  }
   info$destination <- driver_config("destination")
 
   if (!is.null(info$changelog)) {

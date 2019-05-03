@@ -17,8 +17,9 @@ test_that("minimal", {
   path_example <- file.path(path, "src", "example")
   info <- recipe_read(path_example, config)
 
-  expect_is(info$data, "character")
-  expect_equal(info$data, c(dat = "SELECT name, number FROM thing"))
+  expect_is(info$data$dat$query, "character")
+  expect_equal(info$data$dat$query, "SELECT name, number FROM thing")
+  expect_equal(info$data$dat$database, "source")
 
   expect_equal(info$script, "script.R")
   expect_equal(info$script_hash,
@@ -37,16 +38,17 @@ test_that("minimal", {
   }
 
   sql <- file.path(path_example, "query.sql")
-  writeLines(dat$data$dat, sql)
-  write(modifyList(dat, list(data = list(dat = "query.sql"))))
+  writeLines(dat$data$dat$query, sql)
+  write(modifyList(dat, list(data = list(dat = list(query = "query.sql")))))
 
   cmp <- recipe_read(path_example, config)
-  expect_equal(attr(cmp$data, "files"), "query.sql")
-  attr(cmp$data, "files") <- NULL
+  expect_equal(cmp$data$dat$query_file, "query.sql")
+  cmp$data$dat$query_file <- NULL
+  info$data$dat$query_file <- NULL
   expect_equal(cmp$data, info$data)
   expect_equal(cmp$resources, "query.sql")
 
-  write(modifyList(dat, list(data = list(dat = "foo.sql"))))
+  write(modifyList(dat, list(data = list(dat = list(query = "foo.sql")))))
   expect_error(recipe_read(path_example, config),
                "SQL file does not exist: 'foo.sql'")
 
@@ -197,4 +199,122 @@ test_that("data field is optional", {
 
   ## expect no error
   expect_error(orderly_run("example", config = path, echo = FALSE), NA)
+})
+
+
+test_that("can't use database in configurations that lack them", {
+  path <- prepare_orderly_example("db0")
+  p <- file.path(path, "src", "example", "orderly.yml")
+  txt <- readLines(p)
+  dat <- list(data = list(dat = list(query = "SELECT name, number FROM thing")))
+  writeLines(c(txt, yaml::as.yaml(dat)), p)
+  expect_error(
+    recipe_read(dirname(p), orderly_config(path)),
+    "No databases are configured - can't use a 'data' section")
+})
+
+
+test_that("can't use connection in configurations that lack databases", {
+  path <- prepare_orderly_example("db0")
+  p <- file.path(path, "src", "example", "orderly.yml")
+  txt <- readLines(p)
+  dat <- list(connection = "con")
+  writeLines(c(txt, yaml::as.yaml(dat)), p)
+  expect_error(
+    recipe_read(dirname(p), orderly_config(path)),
+    "No databases are configured - can't use a 'connection' section")
+})
+
+
+test_that("database names are required with more than one db", {
+  path <- prepare_orderly_example("db2")
+  p <- file.path(path, "src", "example", "orderly.yml")
+  dat <- yaml_read(p)
+  dat$data$dat1$database <- NULL
+  writeLines(yaml::as.yaml(dat), p)
+  expect_error(
+    recipe_read(dirname(p), orderly_config(path)),
+    "More than one database configured; a 'database' field is required for")
+})
+
+
+test_that("connection names are required with more than one db", {
+  path <- prepare_orderly_example("db2")
+  p <- file.path(path, "src", "connection", "orderly.yml")
+  dat <- yaml_read(p)
+  dat$connection <- "con"
+  writeLines(yaml::as.yaml(dat), p)
+  expect_error(
+    suppressWarnings(recipe_read(dirname(p), orderly_config(path))),
+    "More than one database configured; update 'connection' from 'con'")
+})
+
+
+## This is not *strictly* necessary, but let's roll with it for now
+test_that("Can't use database name on old style configuration", {
+  path <- prepare_orderly_example("db1")
+  p <- file.path(path, "orderly_config.yml")
+  dat <- yaml_read(p)
+  writeLines(yaml::as.yaml(list(source = dat$database$source1)), p)
+
+  p <- file.path(path, "src", "example", "orderly.yml")
+  txt <- readLines(p)
+  writeLines(sub("source1", "source", txt), p)
+
+  ## If database present, the new style is validated correctly:
+  expect_warning(
+    config <- orderly_config(path),
+    "Use of 'source' is deprecated")
+
+  res <- recipe_read(dirname(p), config)
+  expect_equal(res$data$dat1$database, "source")
+
+  ## If database absent, the new style is imputed correctly
+  writeLines(txt[!grepl("^ +database:", txt)], p)
+  res <- recipe_read(dirname(p), config)
+  expect_equal(res$data$dat1$database, "source")
+})
+
+
+test_that("validate database names", {
+  path <- prepare_orderly_example("db2")
+  p <- file.path(path, "orderly_config.yml")
+  dat <- yaml_read(p)
+  names(dat$database) <- c("db1", "db2")
+  writeLines(yaml::as.yaml(dat), p)
+
+  cfg <- orderly_config(path)
+
+  expect_error(recipe_read(file.path(path, "src", "example"), cfg),
+               "orderly.yml:data:dat1:database must be one of 'db1', 'db2'",
+               fixed = TRUE)
+  expect_error(recipe_read(file.path(path, "src", "connection"), cfg),
+               "orderly.yml:connection:con1 must be one of 'db1', 'db2'",
+               fixed = TRUE)
+})
+
+
+test_that("warn old style db", {
+  path <- withr::with_options(
+    list(orderly.nowarnings = TRUE),
+    prepare_orderly_example("olddb"))
+  cfg <- withr::with_options(
+    list(orderly.nowarnings = TRUE),
+    orderly_config(path))
+
+  expect_silent(
+    recipe_read(file.path(path, "src", "example"), cfg))
+  expect_silent(
+    recipe_read(file.path(path, "src", "connection"), cfg))
+
+  file.rename(file.path(path, "orderly_config.yml.new"),
+              file.path(path, "orderly_config.yml"))
+  cfg <- orderly_config(path)
+
+  expect_warning(
+    recipe_read(file.path(path, "src", "example"), cfg),
+    "Use of strings for queries is deprecated")
+  expect_warning(
+    recipe_read(file.path(path, "src", "connection"), cfg),
+    "Use of strings for connection: is deprecated")
 })

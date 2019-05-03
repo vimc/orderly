@@ -7,7 +7,8 @@ test_that("run", {
   path <- tempfile()
   orderly_init(path)
 
-  with_sqlite(file.path(path, "source.sqlite"), fake_db)
+  with_sqlite(file.path(path, "source.sqlite"), function(con)
+    fake_db(list(source = con)))
 
   file.copy("example_config.yml", file.path(path, "orderly_config.yml"),
             overwrite = TRUE)
@@ -234,11 +235,12 @@ test_that("connection", {
   path_example <- file.path(path, "src", "example")
   yml <- file.path(path_example, "orderly.yml")
   txt <- readLines(yml)
-  writeLines(c(txt, "connection: con"), yml)
+  dat <- list(connection = list(con = "source"))
+  writeLines(c(txt, yaml::as.yaml(dat)), yml)
 
   config <- orderly_config(path)
   info <- recipe_read(path_example, config)
-  expect_identical(info$connection, "con")
+  expect_identical(info$connection, list("con" = "source"))
 
   data <- orderly_data("example",
                        envir = new.env(parent = .GlobalEnv),
@@ -258,7 +260,8 @@ test_that("connection is saved to db", {
   path_example <- file.path(path, "src", "example")
   yml <- file.path(path_example, "orderly.yml")
   txt <- readLines(yml)
-  writeLines(c(txt, "connection: con"), yml)
+  dat <- list(connection = list(con = "source"))
+  writeLines(c(txt, yaml::as.yaml(dat)), yml)
 
   id2 <- orderly_run("example", config = path, echo = FALSE)
   orderly_commit(id2, config = path)
@@ -805,4 +808,55 @@ test_that("producing a directory is an error", {
   expect_error(orderly_run("example", config = path, echo = FALSE),
                "Produced a directory artefact: 'mygraph.png'",
                fixed = TRUE)
+})
+
+
+test_that("can run report with a view", {
+  path <- prepare_orderly_example("demo")
+  id <- orderly_run("view", config = path, echo = FALSE)
+  orderly_commit(id, config = path)
+  con <- orderly_db("destination", config = path)
+  on.exit(DBI::dbDisconnect(con))
+  res <- DBI::dbReadTable(con, "report_version_view")
+  expect_equal(res$database, "source")
+})
+
+
+test_that("can run a report from orderly with no database", {
+  path <- prepare_orderly_example("db0")
+  id <- orderly_run("example", config = path, echo = FALSE)
+  expect_true(file.exists(
+    file.path(path, "draft", "example", id, "mygraph.png")))
+  p <- orderly_commit(id, config = path)
+  expect_true(file.exists(file.path(p, "mygraph.png")))
+})
+
+
+test_that("can run a report from orderly with one (named) database", {
+  path <- prepare_orderly_example("db1")
+  id <- orderly_run("example", config = path, echo = FALSE)
+  expect_true(file.exists(
+    file.path(path, "draft", "example", id, "mygraph.png")))
+  p <- orderly_commit(id, config = path)
+  expect_true(file.exists(file.path(p, "mygraph.png")))
+})
+
+
+test_that("can run a report from orderly with two databases", {
+  path <- prepare_orderly_example("db2")
+  id <- orderly_run("example", config = path, echo = FALSE)
+  expect_true(file.exists(
+    file.path(path, "draft", "example", id, "mygraph.png")))
+  p <- orderly_commit(id, config = path)
+  expect_true(file.exists(file.path(p, "mygraph.png")))
+})
+
+
+test_that("Can use connections with two databases", {
+  path <- prepare_orderly_example("db2")
+  id <- orderly_run("connection", config = path, echo = FALSE)
+  expect_true(file.exists(
+    file.path(path, "draft", "connection", id, "mygraph.png")))
+  p <- orderly_commit(id, config = path)
+  expect_true(file.exists(file.path(p, "mygraph.png")))
 })

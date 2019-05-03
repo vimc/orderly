@@ -224,6 +224,9 @@ test_that("write script can be versioned", {
 
 
 test_that("migrate", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
   path <- unpack_reference("0.3.2")
   expect_equal(orderly_config(path)$archive_version, "0.0.0")
 
@@ -252,6 +255,9 @@ test_that("migrate: args", {
 
 
 test_that("rebuild", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
   path <- unpack_reference("0.5.1")
   args <- c("--root", path, "rebuild", "--if-schema-changed")
   res <- main_args(args)

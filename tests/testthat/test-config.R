@@ -8,7 +8,7 @@ test_that("read", {
   expect_equal(cfg$destination$driver, c("RSQLite", "SQLite"))
   expect_equal(cfg$destination$args, list(dbname = "orderly.sqlite"))
 
-  dat <- orderly_db_args("destination", cfg)
+  dat <- orderly_db_args(cfg$destination, cfg)
   expect_identical(dat$driver, RSQLite::SQLite)
   expect_identical(dat$args$dbname, file.path(cfg$path, "orderly.sqlite"))
 })
@@ -17,22 +17,24 @@ test_that("environment variables", {
   path <- tempfile()
   dir.create(path)
 
-  dat <- list(source = list(driver = "RSQLite::SQLite",
+  dat <- list(database =
+                list(source =
+                       list(driver = "RSQLite::SQLite",
                             host = "OURHOST",
                             port = "OURPORT",
                             user = "OURUSER",
                             dbname = "OURDBNAME",
-                            password = "$OURPASSWORD"))
+                            password = "$OURPASSWORD")))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
 
   cfg <- orderly_config(path)
 
-  expect_error(orderly_db_args("source", cfg),
+  expect_error(orderly_db_args(cfg$database$source, cfg),
                "Environment variable 'OURPASSWORD' is not set")
 
   dat <- withr::with_envvar(
     c(OURPASSWORD = "foo"),
-    orderly_db_args("source", cfg))
+    orderly_db_args(cfg$database$source, cfg))
   expect_equal(dat$args$password, "foo")
   expect_equal(dat$args$host, "OURHOST")
 })
@@ -72,8 +74,7 @@ test_that("minimum orderly version is enforced", {
   path <- tempfile()
   dir.create(path)
 
-  dat <- list(source = list(driver = "RSQLite::SQLite"),
-              minimum_orderly_version = "9.9.9")
+  dat <- list(minimum_orderly_version = "9.9.9")
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
 
   expect_error(orderly_config(path),
@@ -86,8 +87,7 @@ test_that("minimum version is a less than relationship", {
   path <- tempfile()
   dir.create(path)
 
-  dat <- list(source = list(driver = "RSQLite::SQLite"),
-              minimum_orderly_version = as.character(packageVersion("orderly")))
+  dat <- list(minimum_orderly_version = as.character(packageVersion("orderly")))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
   cfg <- orderly_config(path)
   expect_is(cfg, "orderly_config")
@@ -98,8 +98,7 @@ test_that("minimum version is a less than relationship", {
 test_that("support declaring api server", {
   path <- tempfile()
   dir.create(path)
-  dat <- list(source = list(driver = "RSQLite::SQLite"),
-              remote = list(
+  dat <- list(remote = list(
                 main = list(
                   driver = "orderly::orderly_remote_path",
                   primary = TRUE,
@@ -146,8 +145,7 @@ test_that("support declaring api server", {
 test_that("api server has only one primary", {
   path <- tempfile()
   dir.create(path)
-  dat <- list(source = list(driver = "RSQLite::SQLite"),
-              remote = list(
+  dat <- list(remote = list(
                 main = list(
                   driver = "orderly::orderly_remote_path",
                   primary = TRUE,
@@ -171,8 +169,7 @@ test_that("api server has only one primary", {
 test_that("remote parse check", {
   path <- tempfile()
   dir.create(path)
-  dat <- list(source = list(driver = "RSQLite::SQLite"),
-              remote = list(
+  dat <- list(remote = list(
                 myhost = list(
                   driver = "orderly::orderly_remote_path",
                   primary = TRUE,
@@ -187,11 +184,9 @@ test_that("no global folder", {
   path <- prepare_orderly_example("global")
   # now we break the orderly_config.yml
   path_config <- file.path(path, "orderly_config.yml")
-  config_lines <- readLines(path_config)
-  # we know the final line (line six) is the global resource folder
-  # so set it to something invalid
-  config_lines[6] <- "  invalid_directory"
-  writeLines(config_lines, path_config)
+  dat <- yaml_read(path_config)
+  dat$global_resources <- "invalid_directory"
+  writeLines(yaml::as.yaml(dat), path_config)
 
   expect_error(
     orderly_config(path = path),
@@ -216,4 +211,47 @@ test_that("vault configuration", {
   expect_error(orderly_config(path = path),
                "orderly_config.yml:vault_server' must be character",
                fixed = TRUE)
+})
+
+
+test_that("can't use both database and source sections", {
+  path <- prepare_orderly_example("minimal")
+  path_config <- file.path(path, "orderly_config.yml")
+  txt <- readLines(path_config)
+  dat <- list(source = list(driver = "RSQLite::SQLite",
+                            dbname = "source.sqlite"))
+  writeLines(c(txt, yaml::as.yaml(dat)), path_config)
+  expect_error(orderly_config(path),
+               "Both 'database' and 'source' fields may not be used",
+               fixed = TRUE)
+})
+
+
+test_that("can read a configuration with no database", {
+  path <- prepare_orderly_example("db0")
+  config <- orderly_config(path)
+  expect_false("database" %in% names(config))
+})
+
+
+test_that("can read a configuration with two databases", {
+  path <- prepare_orderly_example("db2")
+  config <- orderly_config(path)
+  expect_setequal(names(config$database), c("source1", "source2"))
+  expect_equal(config$database$source1$args, list(dbname = "source1.sqlite"))
+  expect_equal(config$database$source2$args, list(dbname = "source2.sqlite"))
+
+  con <- orderly_db("source", config = path)
+  DBI::dbListTables(con$source1)
+  DBI::dbListTables(con$source2)
+})
+
+
+test_that("warn when reading old-style configuration", {
+  path <- withr::with_options(
+    list(orderly.nowarnings = TRUE),
+    prepare_orderly_example("olddb"))
+
+  expect_warning(orderly_config(path),
+                 "Use of 'source' is deprecated and will be removed")
 })
