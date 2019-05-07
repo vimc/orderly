@@ -234,11 +234,9 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   recipe_check_device_stack(prep$n_dev)
   hash_artefacts <- recipe_check_artefacts(info)
 
-  ## check if README.md exists in report directroy AND is not a resource
-  ## If it's a resource it will get hashed with the other resources
-  if (file_exists("README.md", check_case = FALSE) &&
-      !any(grepl("README.md", info$resources, ignore.case = FALSE))) {
-    hash_readme <- hash_files("README.md")
+  if (file_exists("README.md", check_case = FALSE)) {
+    readme <- dir(pattern = "readme.md", ignore.case = TRUE)
+    hash_readme <- hash_files(readme)
   } else {
     hash_readme <- NULL
   }

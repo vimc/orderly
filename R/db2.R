@@ -346,23 +346,17 @@ report_data_import <- function(con, workdir, config) {
   ## TODO: patch this back in for the saved rds I think
   hash_orderly_yml <- hash_files(file.path(workdir, "orderly.yml"), FALSE)
 
-  ## there might be a better way to this.
-  ## At the moment we are repeatedly checking if a readme has been copied
-  ## maybe add a field to the run info saying that we've copied a README?
-  if (file.exists(file.path(workdir, "README.md"))) {
-    readme_name <- "README.md"
-  } else {
-    readme_name <- NULL
-  }
-
   ## NOTE: the hash from 'sources' comes from the resources field.
   file_in <- list(resource = names(dat_rds$meta$hash_resources),
                   global = names(dat_rds$meta$hash_global),
                   script = dat_in$script,
-                  readme = readme_name,
+                  readme = names(dat_rds$meta$hash_readme),
                   orderly_yml = "orderly.yml")
   file_in_name <- unlist(file_in, FALSE, FALSE)
 
+  ## TODO: The 'resources' overloading and 'source' replcement here is
+  ## not ideal - we should separate them out I think.  This should be
+  ## done at the same time as VIMC-2874 and will involve a migration.
   file_in_hash <- c(list_to_character(dat_rds$meta$hash_resources, FALSE),
                     list_to_character(dat_rds$meta$hash_global, FALSE),
                     dat_rds$meta$hash_script,
