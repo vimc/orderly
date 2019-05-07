@@ -61,3 +61,17 @@ prepare_orderly_example("demo", "reference/0.5.18")
 run_orderly_demo("reference/0.5.18")
 withr::with_dir("reference", zip("0.5.18.zip", "0.5.18"))
 unlink("reference/0.5.18", recursive = TRUE)
+
+## 0.6.0 (604dbc4)
+unlink("reference/0.6.0", recursive = TRUE)
+unlink("reference/0.6.0.zip")
+prepare_orderly_example("demo", "reference/0.6.0")
+run_orderly_demo("reference/0.6.0")
+## Edit the output to make it reflect real-world data with the bug:
+i <- dir("reference/0.6.0/archive/use_resource", full.names = TRUE)
+p <- file.path(i, "orderly_run.rds")
+d <- readRDS(p)
+d$meta$hash_readme <- NULL
+saveRDS(d, p)
+withr::with_dir("reference", zip("0.6.0.zip", "0.6.0"))
+unlink("reference/0.6.0", recursive = TRUE)
