@@ -346,15 +346,6 @@ report_data_import <- function(con, workdir, config) {
   ## TODO: patch this back in for the saved rds I think
   hash_orderly_yml <- hash_files(file.path(workdir, "orderly.yml"), FALSE)
 
-  ## there might be a better way to this.
-  ## At the moment we are repeatedly checking if a readme has been copied
-  ## maybe add a field to the run info saying that we've copied a README?
-  if (file.exists(file.path(workdir, "README.md"))) {
-    readme_name <- "README.md"
-  } else {
-    readme_name <- NULL
-  }
-
   ## NOTE: the hash from 'sources' comes from the resources field.
   file_in <- list(resource = names(dat_rds$meta$hash_resources),
                   global = names(dat_rds$meta$hash_global),
