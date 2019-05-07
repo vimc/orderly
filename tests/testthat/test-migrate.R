@@ -287,7 +287,7 @@ test_that("migrate 0.5.18 -> 0.6.0", {
   orderly_migrate(path, to = "0.6.0")
   orderly_rebuild(path)
 
-  expect_is(readRDS(path_orderly_run_rds(p))$meta$data)
+  expect_is(readRDS(path_orderly_run_rds(p))$meta$data, "data.frame")
 })
 
 

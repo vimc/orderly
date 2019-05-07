@@ -24,6 +24,8 @@ test_that("lowercase README.md",  {
   p <- file.path(path, "draft", "example", id)
   expect_true(file.exists(file.path(p, "README.md")))
   orderly_commit(id, config = path)
+  con <- orderly_db("destination", config = path)
+  on.exit(DBI::dbDisconnect(con))
   dat <- DBI::dbReadTable(con, "file_input")
   expect_equal(sum(dat$filename == "README.md"), 1)
 })
