@@ -153,17 +153,6 @@ hash_object <- function(object) {
   digest::digest(object)
 }
 
-to_json <- function(x, auto_unbox = TRUE, ...) {
-  jsonlite::toJSON(x, auto_unbox = auto_unbox)
-}
-
-to_json_string <- function(...) {
-  as.character(to_json(...))
-}
-
-to_json_string_charvec <- function(x) {
-  to_json_string(x %||% character(0), auto_unbox = FALSE)
-}
 
 list_dirs <- function(path) {
   files <- dir(path, full.names = TRUE)
