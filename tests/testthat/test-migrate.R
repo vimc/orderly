@@ -148,7 +148,7 @@ test_that("mixed migration", {
   unlink(path_orderly_archive_version(path))
 
   msg <- capture_messages(
-    orderly_migrate(path, to = curr, verbose = TRUE, dry_run = TRUE))
+    orderly_migrate(path, to = curr, verbose = TRUE))
   expect_true(
     any(grepl(sprintf("[ ok         ]  example/%s", id), msg, fixed = TRUE)))
 })
