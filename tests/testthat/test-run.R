@@ -66,10 +66,10 @@ test_that("run", {
   expect_identical(run$hash_resources, list())
   expect_identical(run$parameters, parameters)
   expect_is(run$date, "character")
-  ## I feel hash_orderly and hash_input have the wrong names here
   expect_identical(run$hash_orderly, info$hash)
-  expect_identical(run$hash_input,
-                   hash_files(file.path(p, "orderly.yml"), FALSE))
+  expect_identical(
+    run$hash_orderly_yml,
+    set_names(as.list(hash_files(file.path(p, "orderly.yml"))), "orderly.yml"))
 
   expect_is(run$hash_data, "list")
   expect_equal(length(run$hash_data), 1)

@@ -241,6 +241,13 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
     hash_readme <- NULL
   }
 
+  if (is.null(info$sources)) {
+    hash_sources <- NULL
+  } else {
+    hash_sources <- resource_info$hash_resources[info$sources]
+  }
+  hash_orderly_yml <- hash_files("orderly.yml")
+  hash_script <- hash_files(info$script)
   hash_data_csv <- con_csv$mset(prep$data)
   hash_data_rds <- con_rds$mset(prep$data)
   stopifnot(identical(hash_data_csv, hash_data_rds))
@@ -257,6 +264,15 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                          "id_requested", "is_latest", "is_pinned")]
   }
 
+  extra_fields <- drop_null(set_names(
+    lapply(config$fields$name, function(x) info[[x]]),
+    config$fields$name))
+  if (length(extra_fields) > 0L) {
+    extra_fields <- as_data_frame(extra_fields)
+  } else {
+    extra_fields <- NULL
+  }
+
   session <- session_info()
   session$git <- info$git
 
@@ -264,17 +280,20 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                name = info$name,
                parameters = parameters,
                date = as.character(Sys.time()),
+               displayname = info$displayname %||% NA_character_,
+               description = info$description %||% NA_character_,
+               extra_fields = extra_fields,
                connection = !is.null(info$connection),
-               ## Don't know what of these two are most useful:
+               packages = info$packages,
                hash_orderly = info$hash,
-               hash_input = hash_files("orderly.yml", FALSE),
-               ## Below here all seems sensible enough to track
-               hash_script = hash_files(info$script, FALSE),
+               hash_orderly_yml = as.list(hash_orderly_yml),
+               hash_script = as.list(hash_script),
                hash_readme = as.list(hash_readme),
                hash_resources = as.list(resource_info$hash_resources),
                hash_global = as.list(resource_info$hash_global),
                hash_data = as.list(hash_data_rds),
                hash_artefacts = as.list(hash_artefacts),
+               artefacts = info$artefacts,
                depends = depends,
                elapsed = as.numeric(elapsed, "secs"),
                git = info$git)
