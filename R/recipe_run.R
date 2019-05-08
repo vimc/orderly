@@ -289,6 +289,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                hash_orderly_yml = as.list(hash_orderly_yml),
                hash_script = as.list(hash_script),
                hash_readme = as.list(hash_readme),
+               hash_sources = as.list(hash_sources),
                hash_resources = as.list(resource_info$hash_resources),
                hash_global = as.list(resource_info$hash_global),
                hash_data = as.list(hash_data_rds),
