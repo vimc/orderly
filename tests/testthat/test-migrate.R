@@ -305,3 +305,19 @@ test_that("migrate 0.6.0 -> 0.6.1", {
     readRDS(path_orderly_run_rds(p))$meta$hash_readme,
     c("README.md" = "499b37b7fbc174e2fd8559ad96a06178"))
 })
+
+
+test_that("migrate 0.6.1 -> 0.6.2", {
+  path <- unpack_reference("0.6.0")
+
+  reports <- subset(orderly_list_archive(path), name == "use_resource")
+  p <- file.path(path, "archive", "use_resource", reports$id[[1]])
+  expect_null(readRDS(path_orderly_run_rds(p))$meta$hash_orderly_yml)
+
+  orderly_migrate(path, to = "0.6.2")
+  orderly_rebuild(path)
+
+  expect_equal(
+    readRDS(path_orderly_run_rds(p))$meta$hash_orderly_yml,
+    c("orderly.yml" = "23f4542f02ad69ddafc6fab2a4391e6c"))
+})
