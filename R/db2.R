@@ -334,7 +334,7 @@ report_data_import <- function(con, workdir, config) {
                       append = TRUE)
   }
 
-  depends <- report_data_find_dependencies(con, dat_rds$meta)
+  depends <- report_data_find_dependencies(con, dat_rds$meta, config)
   if (!is.null(depends)) {
     DBI::dbWriteTable(con, "depends", depends, append = TRUE)
   }
@@ -444,7 +444,7 @@ report_data_add_files <- function(con, hashes, paths, workdir) {
 }
 
 
-report_data_find_dependencies <- function(con, meta) {
+report_data_find_dependencies <- function(con, meta, config) {
   if (is.null(meta$depends) || nrow(meta$depends) == 0L) {
     return(NULL)
   }
@@ -462,8 +462,23 @@ report_data_find_dependencies <- function(con, meta) {
   depends_use <- list_to_integer(
     Map(find_depends, meta$depends$id, meta$depends$filename,
         USE.NAMES = FALSE))
-  ## Was not done before 0.5.0
-  stopifnot(all(!is.na(depends_use)))
+
+  ## Verify that all dependencies are found and return (hopefully)
+  ## helpful messages.  This is not a practical issue for our main
+  ## orderly workflows.
+  if (any(is.na(depends_use))) {
+    err <- unique(meta$depends$id[is.na(depends_use)])
+    is_draft <- vlapply(err, function(id)
+      !is.null(orderly_find_name(id, config, draft = TRUE)))
+    if (any(!is_draft)) {
+      stop("Report uses nonexistant id:\n",
+           paste(sprintf("\t- %s", err[!is_draft]), collapse = "\n"))
+    }
+    if (any(is_draft)) {
+      stop("Report uses draft id - commit first:\n",
+           paste(sprintf("\t- %s", err[is_draft]), collapse = "\n"))
+    }
+  }
 
   data_frame(
     report_version = meta$id,
