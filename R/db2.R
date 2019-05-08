@@ -283,7 +283,9 @@ report_data_import <- function(con, workdir, config) {
     git_sha = dat_rds$git$sha %||% NA_character_,
     git_branch = dat_rds$git$branch %||% NA_character_,
     git_clean = git_clean)
-  report_version <- cbind(report_version, dat_rds$meta$extra_fields)
+  if (!is.null(dat_rds$meta$extra_fields)) {
+    report_version <- cbind(report_version, dat_rds$meta$extra_fields)
+  }
   DBI::dbWriteTable(con, "report_version", report_version, append = TRUE)
 
   if (!is.null(dat_rds$meta$view)) {

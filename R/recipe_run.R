@@ -264,15 +264,13 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                          "id_requested", "is_latest", "is_pinned")]
   }
 
-  if (!is.null(config$fields)) {
-    extra_fields <- drop_null(set_names(
-      lapply(config$fields$name, function(x) info[[x]]),
-      config$fields$name))
-    if (length(extra_fields) > 0L) {
-      extra_fields <- as_data_frame(extra_fields)
-    } else {
-      extra_filds <- NULL
-    }
+  extra_fields <- drop_null(set_names(
+    lapply(config$fields$name, function(x) info[[x]]),
+    config$fields$name))
+  if (length(extra_fields) > 0L) {
+    extra_fields <- as_data_frame(extra_fields)
+  } else {
+    extra_fields <- NULL
   }
 
   session <- session_info()
