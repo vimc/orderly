@@ -240,7 +240,6 @@ report_db_needs_rebuild <- function(config) {
 
 report_data_import <- function(con, workdir, config) {
   dat_rds <- readRDS(path_orderly_run_rds(workdir))
-  dat_in <- recipe_read(workdir, config, FALSE)
   published <- report_is_published(workdir)
   changelog <- changelog_read_json(workdir)
 
@@ -248,6 +247,8 @@ report_data_import <- function(con, workdir, config) {
   stopifnot(!is.null(dat_rds$meta))
   ## Was not done before 0.5.5
   stopifnot(!is.null(dat_rds$meta$connection))
+  ## Was not done before 0.6.2
+  stopifnot(!is.null(dat_rds$meta$hash_orderly_yml))
 
   id <- dat_rds$meta$id
   name <- dat_rds$meta$name
@@ -275,22 +276,14 @@ report_data_import <- function(con, workdir, config) {
     id = id,
     report = dat_rds$meta$name,
     date = dat_rds$meta$date,
-    displayname = dat_in$displayname %||% NA_character_,
-    description = dat_in$description %||% NA_character_,
+    displayname = dat_rds$meta$displayname,
+    description = dat_rds$meta$description,
     published = published,
     connection = dat_rds$meta$connection,
     git_sha = dat_rds$git$sha %||% NA_character_,
     git_branch = dat_rds$git$branch %||% NA_character_,
     git_clean = git_clean)
-
-  if (nrow(config$fields) > 0L) {
-    extra <- drop_null(set_names(
-      lapply(config$fields$name, function(x) dat_in[[x]]),
-      config$fields$name))
-    if (length(extra) > 0L) {
-      report_version <- cbind(report_version, as_data_frame(extra))
-    }
-  }
+  report_version <- cbind(report_version, dat_rds$meta$extra_fields)
   DBI::dbWriteTable(con, "report_version", report_version, append = TRUE)
 
   if (!is.null(dat_rds$meta$view)) {
@@ -320,7 +313,8 @@ report_data_import <- function(con, workdir, config) {
                       append = TRUE)
   }
 
-  if (length(dat_in$packages) > 0L) {
+  packages <- dat_rds$meta$packages
+  if (length(packages) > 0L) {
     r_version <-
       paste(dat_rds$session_info$R.version[c("major", "minor")], collapse = ".")
     pkgs_base <-
@@ -330,9 +324,9 @@ report_data_import <- function(con, workdir, config) {
       unname(dat_rds$session_info[c("otherPkgs", "loadedOnly")]), FALSE),
       "[[", "Version")
     report_version_package <- data_frame(
-      report_version = rep(id, length(dat_in$packages)),
-      package_name = dat_in$packages,
-      package_version = c(pkgs_base, pkgs_other)[dat_in$packages])
+      report_version = rep(id, length(packages)),
+      package_name = packages,
+      package_version = c(pkgs_base, pkgs_other)[packages])
     rownames(report_version_package) <- NULL
     DBI::dbWriteTable(con, "report_version_package", report_version_package,
                       append = TRUE)
@@ -349,21 +343,20 @@ report_data_import <- function(con, workdir, config) {
   ## NOTE: the hash from 'sources' comes from the resources field.
   file_in <- list(resource = names(dat_rds$meta$hash_resources),
                   global = names(dat_rds$meta$hash_global),
-                  script = dat_in$script,
+                  script = names(dat_rds$meta$hash_script),
                   readme = names(dat_rds$meta$hash_readme),
-                  orderly_yml = "orderly.yml")
+                  orderly_yml = names(dat_rds$meta$hash_orderly_yml))
   file_in_name <- unlist(file_in, FALSE, FALSE)
 
-  ## TODO: The 'resources' overloading and 'source' replcement here is
-  ## not ideal - we should separate them out I think.  This should be
-  ## done at the same time as VIMC-2874 and will involve a migration.
   file_in_hash <- c(list_to_character(dat_rds$meta$hash_resources, FALSE),
                     list_to_character(dat_rds$meta$hash_global, FALSE),
-                    dat_rds$meta$hash_script,
+                    list_to_character(dat_rds$meta$hash_script, FALSE),
                     list_to_character(dat_rds$meta$hash_readme, FALSE),
-                    hash_orderly_yml)
+                    list_to_character(dat_rds$meta$hash_orderly_yml))
   file_in_purpose <- rep(names(file_in), lengths(file_in))
-  file_in_purpose[file_in_name %in% dat_in$sources] <- "source"
+  ## TODO: This is not ideal but see VIMC-2903
+  sources <- names(dat_rds$meta$hash_sources)
+  file_in_purpose[file_in_name %in% sources] <- "source"
 
   ## These might be missing:
   sql <- sprintf("SELECT hash from file WHERE hash IN (%s)",
@@ -386,11 +379,12 @@ report_data_import <- function(con, workdir, config) {
   DBI::dbWriteTable(con, "file_input", file_input, append = TRUE)
 
   ## Then artefacts
+  artefacts <- dat_rds$meta$artefacts
   report_version_artefact <- data_frame(
     report_version = id,
-    format = list_to_character(dat_in$artefacts[, "format"], FALSE),
-    description = list_to_character(dat_in$artefacts[, "description"], FALSE),
-    order = seq_len(nrow(dat_in$artefacts)))
+    format = list_to_character(artefacts[, "format"], FALSE),
+    description = list_to_character(artefacts[, "description"], FALSE),
+    order = seq_len(nrow(artefacts)))
 
   DBI::dbWriteTable(con, "report_version_artefact", report_version_artefact,
                     append = TRUE)
@@ -399,10 +393,10 @@ report_data_import <- function(con, workdir, config) {
   tmp <- DBI::dbGetQuery(con, sql, id)
 
   ## We need to do some faffage here:
-  n <- lengths(dat_in$artefacts[, "filenames"])
+  n <- lengths(artefacts[, "filenames"])
   i <- rep(seq_along(n), n)
 
-  artefact_files <- unlist(dat_in$artefacts[, "filenames"], use.names = FALSE)
+  artefact_files <- unlist(artefacts[, "filenames"], use.names = FALSE)
   artefact_hash <-
     list_to_character(dat_rds$meta$hash_artefacts[artefact_files], FALSE)
   report_data_add_files(con, artefact_hash, artefact_files, workdir)
