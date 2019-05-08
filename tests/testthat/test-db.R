@@ -135,3 +135,22 @@ test_that("dialects", {
   expect_error(report_db_dialect(structure(TRUE, class = "other")),
                "Can't determine SQL dialect")
 })
+
+
+test_that("sources are listed in db", {
+  path <- prepare_orderly_example("demo")
+  id <- orderly_run("other", config = path, parameters = list(nmin = 0),
+                    echo = FALSE)
+  orderly_commit(id, config = path)
+
+  con <- orderly_db("destination", config = path)
+  on.exit(DBI::dbDisconnect(con))
+
+  p <- path_orderly_run_rds(file.path(path, "archive", "other", id))
+  expect_equal(readRDS(p)$meta$hash_sources,
+               list("functions.R" = "cceb0c1c68beaa96266c6f2e3445b423"))
+  d <- DBI::dbGetQuery(
+    con, "SELECT * from file_input WHERE report_version = $1", id)
+  expect_false("resource" %in% d$file_purpose)
+  expect_true("source" %in% d$file_purpose)
+})
