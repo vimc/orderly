@@ -49,6 +49,12 @@ test_that("get: invalid config", {
 })
 
 
+test_that("get: fail descend", {
+  expect_error(withr::with_dir(tempdir(), orderly_config_get(NULL, TRUE)),
+               "Reached root")
+})
+
+
 test_that("minimum orderly version is enforced", {
   path <- tempfile()
   dir.create(path)
