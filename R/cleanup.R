@@ -36,7 +36,7 @@ orderly_cleanup_drafts <- function(config, name = NULL, failed_only = FALSE) {
   }
   p <- file.path(path_draft(config$path), d$name, d$id)
   if (failed_only) {
-    p <- p[!file.exists(path_orderly_run_yml(p))]
+    p <- p[!file.exists(path_orderly_run_rds(p))]
   }
   if (length(p) > 0L) {
     orderly_log(if (failed_only) "prune" else "clean", p)
@@ -54,10 +54,11 @@ orderly_cleanup_data <- function(config) {
   ## reports
   used_pub <- unique(data)
   dr <- orderly_list_drafts(config, FALSE)
-  yml <- path_orderly_run_yml(
+  path_rds <- path_orderly_run_rds(
     file.path(path_draft(config$path), dr$name, dr$id))
   used_draft <-
-    unlist(lapply(yml, function(x) yaml_read(x)$hash_data), use.names = FALSE)
+    unlist(lapply(path_rds, function(x)
+      readRDS(x)$meta$hash_data), use.names = FALSE)
   used <- c(used_pub, used_draft)
 
   csv <- orderly_db("csv", config, FALSE)

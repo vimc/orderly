@@ -57,6 +57,6 @@ test_that("unpack failure: missing files", {
   dir.create(file.path(tmp, "orderly.yml"))
   zip <- zip_dir(tmp)
   expect_error(unzip_archive(zip, tempfile(), NULL, id),
-               "Invalid orderly archive: missing files orderly_run.yml",
+               "Invalid orderly archive: missing files orderly_run.rds",
                fixed = TRUE)
 })
