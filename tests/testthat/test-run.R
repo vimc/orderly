@@ -37,9 +37,8 @@ test_that("run", {
   expect_true(file.exists(file.path(p, "mygraph.png")))
   expect_true(file.exists(file.path(p, "script.R")))
   expect_true(file.exists(file.path(p, "orderly.yml")))
-  expect_true(file.exists(file.path(p, "orderly_run.yml")))
   expect_true(file.exists(file.path(p, "orderly_run.rds")))
-  expect_equal(length(dir(p)), 5) # the above are _all_ files produced
+  expect_equal(length(dir(p)), 4) # the above are _all_ files produced
   files <- dir(p)
   cmp <- set_names(hash_files(dir(p, full.names = TRUE), FALSE), files)
 
@@ -58,7 +57,7 @@ test_that("run", {
   expect_identical(readBin(file.path(p, "mygraph.png"), raw(), 8),
                    MAGIC_PNG)
 
-  run <- yaml_read(file.path(p, "orderly_run.yml"))
+  run <- d$meta
   expect_equal(run$id, basename(p))
   expect_equal(run$name, info$name)
   expect_identical(unname(unlist(run$hash_artefacts, use.names = FALSE)),
@@ -133,7 +132,6 @@ test_that("minimal", {
   p <- file.path(path_draft(config$path), res$name, res$id)
   files <- dir(p)
   expect_true(file.exists(file.path(p, "orderly.yml")))
-  expect_true(file.exists(file.path(p, "orderly_run.yml")))
   expect_true(file.exists(file.path(p, "orderly_run.rds")))
   expect_true(file.exists(file.path(p, "script.R")))
   expect_true(file.exists(file.path(p, "mygraph.png")))
@@ -320,8 +318,8 @@ test_that("use artefact", {
                hash_files(path_orig, FALSE))
 
   d <-
-    yaml_read(path_orderly_run_yml(file.path(path_draft(path), "depend", id2)))
-  expect_equal(d$depends[[1]]$hash, hash_files(path_previous, FALSE))
+    readRDS(path_orderly_run_rds(file.path(path_draft(path), "depend", id2)))
+  expect_equal(d$meta$depends$hash, hash_files(path_previous, FALSE))
 
   ## Then rebuild the original:
   id3 <- orderly_run("example", config = path, echo = FALSE)
