@@ -112,12 +112,6 @@ demo_change_time <- function(id, time, path) {
   p <- file.path(path_draft(path), name, id_new)
   stopifnot(file.rename(file.path(path_draft(path), name, id), p))
 
-  yml <- path_orderly_run_yml(p)
-  dat <- yaml_read(yml)
-  dat$date <- as.character(time)
-  dat$id <- id_new
-  writeLines(yaml::as.yaml(dat), yml)
-
   rds <- path_orderly_run_rds(p)
   dat <- readRDS(rds)
   dat$time <- time

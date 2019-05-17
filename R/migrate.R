@@ -21,9 +21,8 @@
 ##' This requires patching previously run versions of the orderly
 ##' metadata and that's not something we want to do lightly.  This
 ##' function uses a relatively safe, and reversible, way of migrating
-##' metadata.  We only modify the \code{orderly_run.rds} files and
-##' leave the human-readable \code{orderly_run.yml} ones alone (at
-##' least for now).
+##' metadata.  We modify the \code{orderly_run.rds} files, but will
+##' create versioned backups as files are changed.
 ##'
 ##' @title Migrate an orderly archive
 ##' @inheritParams orderly_list

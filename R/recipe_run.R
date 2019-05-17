@@ -298,9 +298,6 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                depends = depends,
                elapsed = as.numeric(elapsed, "secs"),
                git = info$git)
-  ## See VIMC-2873; this will come out at some point
-  writeLines(yaml::as.yaml(meta, column.major = FALSE),
-             path_orderly_run_yml(info$workdir))
 
   if (!is.null(info$data)) {
     meta$data <- data_frame(

@@ -25,7 +25,7 @@ unzip_archive <- function(zip, root, name, id) {
                  files, id), call. = FALSE)
   }
 
-  expected <- c("orderly.yml", "orderly_run.yml", "orderly_run.rds")
+  expected <- c("orderly.yml", "orderly_run.rds")
   msg <- !file.exists(file.path(tmp, id, expected))
   if (any(msg)) {
     stop(sprintf("Invalid orderly archive: missing files %s",

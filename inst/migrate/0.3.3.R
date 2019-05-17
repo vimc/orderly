@@ -3,7 +3,7 @@ migrate <- function(data, path, config) {
     return(migration_result(FALSE, data))
   }
 
-  meta <- yaml_read(path_orderly_run_yml(path))
+  meta <- yaml_read(file.path(path, "orderly_run.yml"))
   if (!is.null(meta$depends)) {
     cols <- c("name", "id", "filename", "as", "hash")
     meta$depends <- as.data.frame(set_names(

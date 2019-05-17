@@ -235,10 +235,10 @@ there are the files:
 * `script.R`: this is an exact copy of the script used for the analysis
 * `disp_vs_wt.png` and `distribution.png`: the artefacts created by
    the report
-* `orderly_run.yml`: this is metadata about the run (hash of input
-  files, of the data used, and of the output etc)
-* `orderly_run.rds`: version information on all R packages used (in
-  R's rds format as I don't think we need this from anything but R)
+* `orderly_run.rds`: this is metadata about the run and includes
+  hashes of input files, of the data used, and of the output etc,
+  along with details about the packages used and the state of git.
+  It is stored in R's internal data format.
 
 Every time a report is run it will create a new directory at this
 level with a new id.  Running the report again now might create the

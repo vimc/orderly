@@ -1,3 +1,7 @@
+# 0.6.3
+
+* The `orderly_run.yml` script has now been removed and `orderly_run.rds` is the sole source of truth for the orderly run metadata (VIMC-2873).
+
 # 0.6.0
 
 * Allow multiple databases (or no database) to be be used in the orderly configuration (VIMC-2795)
