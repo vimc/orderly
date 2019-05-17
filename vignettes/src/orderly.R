@@ -22,7 +22,6 @@ orderly_file <- function(...) {
 
 path <- orderly:::prepare_orderly_example("example")
 path_example <- file.path(path, "src", "example")
-orderly:::orderly_default_config_set(orderly:::orderly_config(path))
 
 tree <- function(path, header = path) {
   paste1 <- function(a, b) {
@@ -83,6 +82,11 @@ tree <- function(path, header = path) {
 ## to create the reports.
 
 ## ## Example
+
+## As an example, we have a directory at `path` that contains
+## orderly sources.  Typically this would be in the working directory
+## (and in that case the `config` argument may be omitted) but for this
+## vignette the path will be passed in explicitly.
 
 ## The `orderly.yml` to describe the creation of a report might look like:
 ##+ results = "asis", echo = FALSE
@@ -188,14 +192,14 @@ yaml_output(readLines(file.path(path, "orderly_config.yml")))
 ## Reports are run by *name*.  In the above configuration the report
 ## is called `example` because it is in the directory `src/example`.
 ## A list of report names can be returned by running
-orderly::orderly_list()
+orderly::orderly_list(config = path)
 
 ## If the report requires parameters then these must be passed through
 ## too; in the above case the report takes the parameter `cyl` which
 ## must be passed through as a named list.  So we might run this
 ## report as
 ##+ collapse = TRUE
-id <- orderly::orderly_run("example", list(cyl = 4))
+id <- orderly::orderly_run("example", list(cyl = 4), config = path)
 
 ### need this for later:
 ##+ echo = FALSE, results = "hide"
@@ -244,11 +248,11 @@ plain_output(tree(path, "<root>"))
 ## by other applications.
 
 ## You can see the list of draft reports like so:
-orderly::orderly_list_drafts()
+orderly::orderly_list_drafts(config = path)
 
 ## Once you're happy with a report, then "commit" it with
 ##+ collapse = TRUE
-orderly::orderly_commit(id)
+orderly::orderly_commit(id, config = path)
 
 ## **THIS WILL CHANGE A LITTLE I THINK** - but mostly in how the index
 ## is built and how we might synchronise reports across people and
