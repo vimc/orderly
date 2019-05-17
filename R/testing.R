@@ -11,9 +11,6 @@ create_orderly_demo <- function(path = tempfile()) {
 run_orderly_demo <- function(path) {
   dat <- read_demo_yml(path)
 
-  orderly_default_config_set(orderly_config(path))
-  on.exit(orderly_default_config_set(NULL))
-
   for (i in seq_along(dat)) {
     if (i > 1) {
       orderly_log_break()
@@ -24,10 +21,10 @@ run_orderly_demo <- function(path) {
     if (!is.null(x$before)) {
       withr::with_dir(path, x$before())
     }
-    id <- orderly_run(x$name, x$parameters, echo = FALSE)
+    id <- orderly_run(x$name, x$parameters, echo = FALSE, config = path)
     id_new <- demo_change_time(id, x$time, path)
     if (isTRUE(x$publish)) {
-      orderly_publish(id_new)
+      orderly_publish(id_new, config = path)
     }
   }
 
@@ -128,7 +125,7 @@ demo_change_time <- function(id, time, path) {
     changelog_save_json(changelog, p)
   }
 
-  orderly_commit(id_new, name)
+  orderly_commit(id_new, name, config = path)
 
   id_new
 }

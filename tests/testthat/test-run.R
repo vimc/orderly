@@ -424,9 +424,7 @@ test_that("test_start, test_restart", {
   orderly_test_end()
   expect_equal(getwd(), owd)
   expect_error(orderly_test_end(), "Not running in test mode")
-  withr::with_options(
-    list(orderly.config = orderly_config(path)),
-    expect_error(orderly_test_restart(), "Not running in test mode"))
+  expect_error(orderly_test_restart(), "Not running in test mode")
 })
 
 test_that("test mode artefacts", {

@@ -203,27 +203,6 @@ sql_type <- function(type, name) {
   tr[[match_value(type, names(tr), name)]]
 }
 
-## package level stuff; we need to arrange to try and find the
-## appropriate configuration.
-orderly_default_config_set <- function(x) {
-  if (!is.null(x)) {
-    assert_is(x, "orderly_config")
-  }
-  options(orderly.config = x)
-}
-
-orderly_default_config <- function(locate = FALSE) {
-  cfg <- getOption("orderly.config")
-  if (is.null(cfg)) {
-    if (locate) {
-      cfg <- orderly_locate_config()
-    } else {
-      stop("orderly configuration not found")
-    }
-  }
-  cfg
-}
-
 orderly_locate_config <- function() {
   path <- find_file_descend("orderly_config.yml")
   if (is.null(path)) {
@@ -232,11 +211,12 @@ orderly_locate_config <- function() {
   orderly_config(path)
 }
 
+
 orderly_config_get <- function(x, locate) {
   if (inherits(x, "orderly_config")) {
     x
-  } else if (is.null(x)) {
-    orderly_default_config(locate)
+  } else if (is.null(x) && locate) {
+    orderly_locate_config()
   } else if (is.character(x)) {
     orderly_config(x)
   } else {

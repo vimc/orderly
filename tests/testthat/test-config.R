@@ -48,25 +48,10 @@ test_that("get: invalid config", {
   expect_error(orderly_config_get(1), "Invalid input")
 })
 
-test_that("get: default", {
-  cfg <- orderly_config("example")
-  oo <- orderly_default_config_set(cfg)
-  on.exit(options(oo))
 
-  expect_identical(orderly_default_config(), cfg)
-  expect_identical(orderly_config_get(NULL), cfg)
-
-  orderly_default_config_set(NULL)
-  expect_error(orderly_default_config(),
-               "orderly configuration not found")
-
-  path <- tempfile()
-  dir_create(path)
-  expect_error(with_wd(path, orderly_default_config(TRUE)),
+test_that("get: fail descend", {
+  expect_error(withr::with_dir(tempdir(), orderly_config_get(NULL, TRUE)),
                "Reached root")
-  file.copy(file.path("example/orderly_config.yml"), path)
-  cfg2 <- with_wd(path, orderly_default_config(TRUE))
-  expect_identical(cfg2$path, normalizePath(path))
 })
 
 
