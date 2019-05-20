@@ -8,18 +8,18 @@
 ##'
 ##' @inheritParams orderly_list
 ##' @export
-orderly_commit <- function(id, name = NULL, config = NULL, locate = TRUE) {
-  config <- orderly_config_get(config, locate)
+orderly_commit <- function(id, name = NULL, root = NULL, locate = TRUE) {
+  config <- orderly_config_get(root, locate)
   check_orderly_archive_version(config)
   if (is.null(name)) {
     name <- orderly_find_name(id, config, draft = TRUE, must_work = TRUE)
   } else {
-    if (!file.exists(file.path(path_draft(config$path), name, id))) {
+    if (!file.exists(file.path(path_draft(config$root), name, id))) {
       stop(sprintf("Did not find draft report %s/%s", name, id))
     }
   }
-  workdir <- file.path(path_draft(config$path), name, id)
-  recipe_commit(workdir, config$path)
+  workdir <- file.path(path_draft(config$root), name, id)
+  recipe_commit(workdir, config$root)
 }
 
 recipe_commit <- function(workdir, config) {
@@ -69,7 +69,7 @@ recipe_commit <- function(workdir, config) {
 copy_report <- function(workdir, name, config) {
   assert_is(config, "orderly_config")
   id <- basename(workdir)
-  parent <- path_archive(config$path, name)
+  parent <- path_archive(config$root, name)
   dest <- file.path(parent, id)
   if (file.exists(dest)) {
     ## This situation probably needs help to resolve but I don't know

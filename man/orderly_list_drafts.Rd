@@ -5,13 +5,14 @@
 \alias{orderly_list_archive}
 \title{List draft and archived reports}
 \usage{
-orderly_list_drafts(config = NULL, locate = TRUE)
+orderly_list_drafts(root = NULL, locate = TRUE)
 
-orderly_list_archive(config = NULL, locate = TRUE)
+orderly_list_archive(root = NULL, locate = TRUE)
 }
 \arguments{
-\item{config}{An orderly configuration, or the path to one (or
-\code{NULL} to locate one if \code{locate} is \code{TRUE}).}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
+(the default) to search for one from the current working
+directory if \code{locate} is \code{TRUE}).}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,

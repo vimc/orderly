@@ -46,7 +46,7 @@
 ##'   migrated this might come in helpful.
 ##'
 ##' @export
-orderly_migrate <- function(config = NULL, locate = TRUE, to = NULL,
+orderly_migrate <- function(root = NULL, locate = TRUE, to = NULL,
                             verbose = FALSE, dry_run = FALSE,
                             skip_failed = FALSE) {
   ## We'll skip warnings here - they'll come out as messages rather
@@ -54,8 +54,8 @@ orderly_migrate <- function(config = NULL, locate = TRUE, to = NULL,
   oo <- options(orderly.nowarnings = TRUE)
   on.exit(options(oo))
 
-  config <- orderly_config_get(config, locate)
-  root <- config$path
+  config <- orderly_config_get(root, locate)
+  root <- config$root
 
   migrations <- migrate_plan(root, to)
 
@@ -111,24 +111,24 @@ migrate_apply <- function(root, version, fun, config, verbose, dry_run,
 }
 
 
-migrate_apply1 <- function(path, version, fun, config, dry_run, skip_failed) {
+migrate_apply1 <- function(root, version, fun, config, dry_run, skip_failed) {
   if (skip_failed) {
     return(tryCatch(
-      migrate_apply1(path, version, fun, config, dry_run, FALSE),
-      error = function(e) migrate_skip(e, path, version, config, dry_run)))
+      migrate_apply1(root, version, fun, config, dry_run, FALSE),
+      error = function(e) migrate_skip(e, root, version, config, dry_run)))
   }
-  file <- path_orderly_run_rds_backup(path, version)
+  file <- path_orderly_run_rds_backup(root, version)
 
   ## This should never happen, and the behaviour if it does is not
   ## well defined.  So let's assert here and if it turns out to matter
   ## we'll find out soon enough.
   stopifnot(!file.exists(file))
 
-  file_orig <- path_orderly_run_rds(path)
+  file_orig <- path_orderly_run_rds(root)
   dat <- readRDS(file_orig)
   version_previous <- get_version(dat$archive_version)
   if (version_previous < version) {
-    res <- fun(dat, path, config)
+    res <- fun(dat, root, config)
     res$data$archive_version <- numeric_version(version)
     if (!dry_run) {
       file_copy(file_orig, file)
@@ -148,17 +148,17 @@ migrate_fail_message <- function(name, id, error) {
 }
 
 
-migrate_skip <- function(error, path, version, config, dry_run) {
-  name <- basename(dirname(path))
-  id <- basename(path)
+migrate_skip <- function(error, root, version, config, dry_run) {
+  name <- basename(dirname(root))
+  id <- basename(root)
   migrate_fail_message(name, id, error)
   dest_rel <- file.path(path_archive_broken(), name, id)
-  dest <- file.path(config$path, dest_rel)
+  dest <- file.path(config$root, dest_rel)
   if (dry_run) {
     action <- "would be"
   } else {
     dir.create(dirname(dest), FALSE, TRUE)
-    file_move(path, dest)
+    file_move(root, dest)
     action <- "has been"
   }
   message(sprintf("...this report %s moved to\n\t'%s'",
@@ -206,9 +206,9 @@ read_orderly_archive_version <- function(root) {
 
 
 write_orderly_archive_version <- function(version, root) {
-  path <- path_orderly_archive_version(root)
-  dir.create(dirname(path), FALSE, TRUE)
-  writeLines(as.character(version), path)
+  root <- path_orderly_archive_version(root)
+  dir.create(dirname(root), FALSE, TRUE)
+  writeLines(as.character(version), root)
 }
 
 
@@ -216,7 +216,7 @@ check_orderly_archive_version <- function(config) {
   used <- numeric_version(config$archive_version)
   curr <- cache$current_archive_version
   if (used == "0.0.0" && nrow(orderly_list_archive(config)) == 0L) {
-    write_orderly_archive_version(curr, config$path)
+    write_orderly_archive_version(curr, config$root)
     used <- curr
   }
   if (used < curr) {

@@ -125,12 +125,12 @@ main_do_run <- function(x) {
   main_run <- function() {
     if (pull) {
       if (is.null(ref)) {
-        git_pull(config$path)
+        git_pull(config$root)
       } else {
         stop("Can't use --pull with --ref; perhaps you meant --fetch ?")
       }
     }
-    dat <- orderly_run(name, parameters, config = config, id_file = id_file,
+    dat <- orderly_run(name, parameters, root = config, id_file = id_file,
                        ref = ref, fetch = fetch, message = message,
                        extended_output = TRUE)
     if (commit) {
@@ -147,7 +147,7 @@ main_do_run <- function(x) {
     log <- tempfile()
     ## we should run this with try() so that we can capture logs there
     dat <- capture_log(main_run(), log)
-    dest <- (if (commit) path_archive else path_draft)(config$path)
+    dest <- (if (commit) path_archive else path_draft)(config$root)
     file_copy(log, file.path(dest, name, dat$id, "orderly.log"))
   }
 
@@ -188,11 +188,11 @@ main_args_cleanup <- function(res) {
 }
 
 main_do_cleanup <- function(x) {
-  config <- orderly_config_get(x$options$root, TRUE)
+  root <- x$options$root
   draft <- !x$options$no_draft
   data <- !x$options$no_data
   failed_only <- x$options$failed_only
-  orderly_cleanup(config = config, draft = draft, data = data,
+  orderly_cleanup(root = root, draft = draft, data = data,
                   failed_only = failed_only)
 }
 
@@ -206,9 +206,9 @@ main_args_commit <- function(res) {
 }
 
 main_do_commit <- function(x) {
-  config <- orderly_config_get(x$options$root, TRUE)
+  root <- x$options$root
   id <- x$args
-  orderly_commit(id, config = config)
+  orderly_commit(id, root = root, locate = TRUE)
 }
 
 ## 4. publish
@@ -227,10 +227,10 @@ main_args_publish <- function(res) {
 }
 
 main_do_publish <- function(x) {
-  config <- orderly_config_get(x$options$root, TRUE)
+  root <- x$options$root
   value <- !x$options$unpublish
   id <- x$args
-  orderly_publish(id, value, config = config)
+  orderly_publish(id, value, root = root, locate = TRUE)
 }
 
 ## 4. rebuild
@@ -249,8 +249,9 @@ main_args_rebuild <- function(res) {
 }
 
 main_do_rebuild <- function(x) {
-  config <- orderly_config_get(x$options$root, TRUE)
-  orderly_rebuild(config, if_schema_changed = x$options$if_schema_changed)
+  root <- x$options$root
+  if_schema_changed <- x$options$if_schema_changed
+  orderly_rebuild(root, if_schema_changed = if_schema_changed)
 }
 
 ## 5. list
@@ -271,11 +272,11 @@ main_args_list <- function(res) {
 }
 
 main_do_list <- function(x) {
-  config <- orderly_config_get(x$options$root, TRUE)
+  root <- x$options$root
   switch(x$args,
-         names = writeLines(orderly_list(config)),
-         drafts = print(orderly_list_drafts(config)),
-         archive = print(orderly_list_archive(config)),
+         names = writeLines(orderly_list(root)),
+         drafts = print(orderly_list_drafts(root)),
+         archive = print(orderly_list_archive(root)),
          stop("orderly bug"))
   invisible(NULL)
 }
@@ -301,12 +302,12 @@ main_args_latest <- function(res) {
 }
 
 main_do_latest <- function(x) {
-  config <- orderly_config_get(x$options$root, TRUE)
+  root <- x$options$root
   names <- x$args
   draft <- x$options$draft
   value_if_missing <- x$options$value_if_missing
   must_work <- is.null(value_if_missing)
-  ids <- vcapply(names, orderly_latest, config = config,
+  ids <- vcapply(names, orderly_latest, root = root, locate = TRUE,
                  draft = draft, must_work = must_work,
                  USE.NAMES = FALSE)
   ids[is.na(ids)] <- value_if_missing
@@ -336,10 +337,10 @@ main_args_migrate <- function(res) {
 
 
 main_do_migrate <- function(x) {
-  config <- orderly_config_get(x$options$root, TRUE)
+  root <- x$options$root
   dry_run <- x$options$dry_run
   to <- x$options$to
-  orderly_migrate(config, to = to, dry_run = dry_run)
+  orderly_migrate(root, to = to, dry_run = dry_run)
 }
 
 

@@ -5,16 +5,17 @@
 \alias{pull_archive}
 \title{Download dependent reports}
 \usage{
-pull_dependencies(name, config = NULL, locate = TRUE, remote = NULL)
+pull_dependencies(name, root = NULL, locate = TRUE, remote = NULL)
 
-pull_archive(name, id = "latest", config = NULL, locate = TRUE,
+pull_archive(name, id = "latest", root = NULL, locate = TRUE,
   remote = NULL)
 }
 \arguments{
 \item{name}{Name of the report to download dependencies for}
 
-\item{config}{An orderly configuration, or the path to one (or
-\code{NULL} to locate one if \code{locate} is \code{TRUE}).}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
+(the default) to search for one from the current working
+directory if \code{locate} is \code{TRUE}).}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,

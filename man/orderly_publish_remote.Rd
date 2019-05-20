@@ -4,7 +4,7 @@
 \alias{orderly_publish_remote}
 \title{Publish orderly report on remote server}
 \usage{
-orderly_publish_remote(name, id, value = TRUE, config = NULL,
+orderly_publish_remote(name, id, value = TRUE, root = NULL,
   locate = TRUE, remote = NULL)
 }
 \arguments{
@@ -16,8 +16,9 @@ orderly_publish_remote(name, id, value = TRUE, config = NULL,
 \item{value}{As \code{\link{orderly_publish}}, \code{TRUE} or
 \code{FALSE} to publish or unpublish a report (respectively)}
 
-\item{config}{An orderly configuration, or the path to one (or
-\code{NULL} to locate one if \code{locate} is \code{TRUE}).}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
+(the default) to search for one from the current working
+directory if \code{locate} is \code{TRUE}).}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,

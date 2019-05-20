@@ -16,9 +16,9 @@
 ##'   \code{\link{orderly_test_start}}
 ##' @inheritParams orderly_list
 ##' @export
-orderly_cleanup <- function(name = NULL, config = NULL, locate = TRUE,
+orderly_cleanup <- function(name = NULL, root = NULL, locate = TRUE,
                             draft = TRUE, data = TRUE, failed_only = FALSE) {
-  config <- orderly_config_get(config, locate)
+  config <- orderly_config_get(root, locate)
   if (draft) {
     orderly_cleanup_drafts(config, name, failed_only)
   }
@@ -34,7 +34,7 @@ orderly_cleanup_drafts <- function(config, name = NULL, failed_only = FALSE) {
     assert_character(name)
     d <- d[d$name %in% name, , drop = FALSE]
   }
-  p <- file.path(path_draft(config$path), d$name, d$id)
+  p <- file.path(path_draft(config$root), d$name, d$id)
   if (failed_only) {
     p <- p[!file.exists(path_orderly_run_rds(p))]
   }
@@ -55,7 +55,7 @@ orderly_cleanup_data <- function(config) {
   used_pub <- unique(data)
   dr <- orderly_list_drafts(config, FALSE)
   path_rds <- path_orderly_run_rds(
-    file.path(path_draft(config$path), dr$name, dr$id))
+    file.path(path_draft(config$root), dr$name, dr$id))
   used_draft <-
     unlist(lapply(path_rds, function(x)
       readRDS(x)$meta$hash_data), use.names = FALSE)

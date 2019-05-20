@@ -89,7 +89,7 @@ test_that("secrets", {
   cl$write("/secret/users/alice", list(password = "ALICE"))
   cl$write("/secret/users/bob", list(password = "BOB"))
 
-  config <- list(path = tempfile(),
+  config <- list(root = tempfile(),
                  vault_server = srv$addr)
 
   x <- list(name = "alice",
@@ -120,7 +120,7 @@ test_that("resolve secret env", {
   cl$write("/secret/users/alice", list(password = "ALICE"))
   cl$write("/secret/users/bob", list(password = "BOB"))
 
-  config <- list(path = tempfile(),
+  config <- list(root = tempfile(),
                  vault_server = srv$addr)
 
   x <- list(user = "$ORDERLY_USER",

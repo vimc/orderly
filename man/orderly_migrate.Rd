@@ -4,12 +4,13 @@
 \alias{orderly_migrate}
 \title{Migrate an orderly archive}
 \usage{
-orderly_migrate(config = NULL, locate = TRUE, to = NULL,
+orderly_migrate(root = NULL, locate = TRUE, to = NULL,
   verbose = FALSE, dry_run = FALSE, skip_failed = FALSE)
 }
 \arguments{
-\item{config}{An orderly configuration, or the path to one (or
-\code{NULL} to locate one if \code{locate} is \code{TRUE}).}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
+(the default) to search for one from the current working
+directory if \code{locate} is \code{TRUE}).}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,

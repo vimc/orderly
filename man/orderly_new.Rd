@@ -4,14 +4,15 @@
 \alias{orderly_new}
 \title{Create new report}
 \usage{
-orderly_new(name, config = NULL, locate = TRUE, quiet = FALSE,
+orderly_new(name, root = NULL, locate = TRUE, quiet = FALSE,
   template = NULL)
 }
 \arguments{
 \item{name}{Name of the new report (will be a directory name).}
 
-\item{config}{An orderly configuration, or the path to one (or
-\code{NULL} to locate one if \code{locate} is \code{TRUE}).}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
+(the default) to search for one from the current working
+directory if \code{locate} is \code{TRUE}).}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,

@@ -58,7 +58,7 @@ changelog_read_previous <- function(name, config) {
   ## that is going to end up in the configuration.
   prev <- orderly_latest(name, config, locate = FALSE,
                          draft = FALSE, must_work = FALSE)
-  changelog_read_json(file.path(config$path, "archive", name, prev))
+  changelog_read_json(file.path(config$root, "archive", name, prev))
 }
 
 

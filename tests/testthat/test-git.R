@@ -125,7 +125,7 @@ test_that("detect missing ref", {
 
 test_that("run in detached head", {
   path <- unzip_git_demo()
-  orderly_run("other", list(nmin = 0), config = path, ref = "other",
+  orderly_run("other", list(nmin = 0), root = path, ref = "other",
               echo = FALSE)
 
   expect_equal(orderly_list(path), "minimal")
@@ -178,12 +178,12 @@ test_that("fetch before run", {
   sha1 <- git_ref_to_sha("HEAD", path1)
   sha2 <- git_ref_to_sha("HEAD", path2)
 
-  id1 <- orderly_run("minimal", config = path2, echo = FALSE,
+  id1 <- orderly_run("minimal", root = path2, echo = FALSE,
                      ref = "origin/master")
   expect_equal(git_ref_to_sha("HEAD", path2), sha2)
   expect_equal(git_ref_to_sha("origin/master", path2), sha2)
 
-  id2 <- orderly_run("minimal", config = path2, echo = FALSE,
+  id2 <- orderly_run("minimal", root = path2, echo = FALSE,
                      ref = "origin/master", fetch = TRUE)
 
   expect_equal(git_ref_to_sha("HEAD", path2), sha2)
@@ -209,10 +209,10 @@ test_that("handle failure", {
 
 test_that("git into db", {
   path <- unzip_git_demo()
-  id <- orderly_run("minimal", config = path, echo = FALSE)
-  orderly_commit(id, config = path)
+  id <- orderly_run("minimal", root = path, echo = FALSE)
+  orderly_commit(id, root = path)
 
-  con <- orderly_db("destination", config = path)
+  con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
   d <- DBI::dbReadTable(con, "report_version")
 

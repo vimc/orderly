@@ -10,7 +10,7 @@ test_that("read", {
 
   dat <- orderly_db_args(cfg$destination, cfg)
   expect_identical(dat$driver, RSQLite::SQLite)
-  expect_identical(dat$args$dbname, file.path(cfg$path, "orderly.sqlite"))
+  expect_identical(dat$args$dbname, file.path(cfg$root, "orderly.sqlite"))
 })
 
 test_that("environment variables", {
@@ -88,16 +88,16 @@ test_that("support declaring api server", {
                   driver = "orderly::orderly_remote_path",
                   primary = TRUE,
                   master_only = TRUE,
-                  args = list(path = path)),
+                  args = list(root = path)),
                 other = list(
                   driver = "orderly::orderly_remote_path",
-                  args = list(path = path))))
+                  args = list(root = path))))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
   cfg <- orderly_config(path)
 
   expect_is(cfg$remote, "list")
   expect_equal(cfg$remote$main$args,
-               list(path = path, name = "main"))
+               list(root = path, name = "main"))
 
   cfg <- withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = "main"),
@@ -134,11 +134,11 @@ test_that("api server has only one primary", {
                 main = list(
                   driver = "orderly::orderly_remote_path",
                   primary = TRUE,
-                  args = list(path = path)),
+                  args = list(root = path)),
                 other = list(
                   driver = "orderly::orderly_remote_path",
                   primary = TRUE,
-                  args = list(path = path))))
+                  args = list(root = path))))
 
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
   expect_error(
@@ -158,7 +158,7 @@ test_that("remote parse check", {
                 myhost = list(
                   driver = "orderly::orderly_remote_path",
                   primary = TRUE,
-                  args = list(path = path),
+                  args = list(root = path),
                   master_only = "yeah")))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
   expect_error(orderly_config(path),
@@ -174,7 +174,7 @@ test_that("no global folder", {
   writeLines(yaml::as.yaml(dat), path_config)
 
   expect_error(
-    orderly_config(path = path),
+    orderly_config(root = path),
     "global resource does not exist: 'invalid_directory'",
     fixed = TRUE
   )
@@ -186,14 +186,14 @@ test_that("vault configuration", {
   path_config <- file.path(path, "orderly_config.yml")
   text <- readLines(path_config)
 
-  expect_null(orderly_config(path = path)$vault_server)
+  expect_null(orderly_config(root = path)$vault_server)
 
   url <- "https://vault.example.com"
   writeLines(c(text, sprintf("vault_server: %s", url)), path_config)
-  expect_equal(orderly_config(path = path)$vault_server, url)
+  expect_equal(orderly_config(root = path)$vault_server, url)
 
   writeLines(c(text, sprintf("vault_server: %s", TRUE)), path_config)
-  expect_error(orderly_config(path = path),
+  expect_error(orderly_config(root = path),
                "orderly_config.yml:vault_server' must be character",
                fixed = TRUE)
 })
@@ -226,7 +226,7 @@ test_that("can read a configuration with two databases", {
   expect_equal(config$database$source1$args, list(dbname = "source1.sqlite"))
   expect_equal(config$database$source2$args, list(dbname = "source2.sqlite"))
 
-  con <- orderly_db("source", config = path)
+  con <- orderly_db("source", root = path)
   DBI::dbListTables(con$source1)
   DBI::dbListTables(con$source2)
 })

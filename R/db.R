@@ -12,12 +12,12 @@
 ##'   = "destination"}).  This is primarily intended for internal use.
 ##'
 ##' @export
-orderly_db <- function(type, config = NULL, locate = TRUE, validate = TRUE) {
-  config <- orderly_config_get(config, locate)
+orderly_db <- function(type, root = NULL, locate = TRUE, validate = TRUE) {
+  config <- orderly_config_get(root, locate)
   if (type == "rds") {
-    con <- file_store_rds(path_rds(config$path))
+    con <- file_store_rds(path_rds(config$root))
   } else if (type == "csv") {
-    con <- file_store_csv(path_csv(config$path))
+    con <- file_store_csv(path_csv(config$root))
   } else if (type == "destination") {
     con <- orderly_db_dbi_connect(config$destination, config)
     withCallingHandlers(
@@ -42,7 +42,7 @@ orderly_db_args <- function(x, config) {
   driver <- getExportedValue(x$driver[[1L]], x$driver[[2L]])
 
   args <- withr::with_envvar(
-    orderly_envir_read(config$path),
+    orderly_envir_read(config$root),
     args <- resolve_driver_config(x$args, config))
 
   if (x$driver[[2]] == "SQLite") {
@@ -51,7 +51,7 @@ orderly_db_args <- function(x, config) {
       stop("Cannot use a transient SQLite database with orderly")
     }
     if (is_relative_path(args$dbname)) {
-      args$dbname <- file.path(config$path, args$dbname)
+      args$dbname <- file.path(config$root, args$dbname)
     }
   }
 
@@ -72,16 +72,16 @@ orderly_db_args <- function(x, config) {
 ##'   fast enough to call regularly.
 ##'
 ##' @export
-orderly_rebuild <- function(config = NULL, locate = TRUE, verbose = TRUE,
+orderly_rebuild <- function(root = NULL, locate = TRUE, verbose = TRUE,
                             if_schema_changed = FALSE) {
   ## We'll skip warnings here - they'll come out as messages rather
   ## than warnings.
   oo <- options(orderly.nowarnings = TRUE)
   on.exit(options(oo))
 
-  config <- orderly_config_get(config, locate)
+  config <- orderly_config_get(root, locate)
 
-  if (length(migrate_plan(config$path, to = NULL)) > 0L) {
+  if (length(migrate_plan(config$root, to = NULL)) > 0L) {
     orderly_log("migrate", "archive")
     orderly_migrate(config, locate = FALSE, verbose = verbose)
     ## This should trigger a rebuild, regardless of what anything else thinks

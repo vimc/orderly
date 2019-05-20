@@ -25,7 +25,7 @@ migrate <- function(data, path, config) {
   is_pinned <- id_requested != "latest"
 
   if (any(is_pinned)) {
-    archive <- get_order(config$path)
+    archive <- get_order(config$root)
     tmp <- archive[archive$id < data$meta$id &
                    archive$name %in% data$meta$depends$name, ]
     is_latest <- id_requested %in% tapply(tmp$id, tmp$name, max)
@@ -50,7 +50,7 @@ migrate <- function(data, path, config) {
   ## link.
   d <- data$meta$depends
 
-  p <- unique(file.path(path_archive(config$path), d$name, d$id))
+  p <- unique(file.path(path_archive(config$root), d$name, d$id))
   valid <- lapply(path_orderly_run_rds(p), function(x)
     names(readRDS(x)$meta$hash_artefacts))
   names(valid) <- basename(p)

@@ -5,12 +5,12 @@
 \alias{orderly_data}
 \title{Run a report}
 \usage{
-orderly_run(name, parameters = NULL, envir = NULL, config = NULL,
+orderly_run(name, parameters = NULL, envir = NULL, root = NULL,
   locate = TRUE, echo = TRUE, id_file = NULL, fetch = FALSE,
   ref = NULL, open = FALSE, message = NULL,
   extended_output = FALSE)
 
-orderly_data(name, parameters = NULL, envir = NULL, config = NULL,
+orderly_data(name, parameters = NULL, envir = NULL, root = NULL,
   locate = TRUE)
 }
 \arguments{
@@ -24,8 +24,9 @@ parameters declared in the orderly.yml.}
 by default a new environment will be made with the global
 environment as the parent.}
 
-\item{config}{An orderly configuration, or the path to one (or
-\code{NULL} to locate one if \code{locate} is \code{TRUE}).}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
+(the default) to search for one from the current working
+directory if \code{locate} is \code{TRUE}).}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,

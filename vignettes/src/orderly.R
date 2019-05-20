@@ -85,7 +85,7 @@ tree <- function(path, header = path) {
 
 ## As an example, we have a directory at `path` that contains
 ## orderly sources.  Typically this would be in the working directory
-## (and in that case the `config` argument may be omitted) but for this
+## (and in that case the `root` argument may be omitted) but for this
 ## vignette the path will be passed in explicitly.
 
 ## The `orderly.yml` to describe the creation of a report might look like:
@@ -192,14 +192,14 @@ yaml_output(readLines(file.path(path, "orderly_config.yml")))
 ## Reports are run by *name*.  In the above configuration the report
 ## is called `example` because it is in the directory `src/example`.
 ## A list of report names can be returned by running
-orderly::orderly_list(config = path)
+orderly::orderly_list(root = path)
 
 ## If the report requires parameters then these must be passed through
 ## too; in the above case the report takes the parameter `cyl` which
 ## must be passed through as a named list.  So we might run this
 ## report as
 ##+ collapse = TRUE
-id <- orderly::orderly_run("example", list(cyl = 4), config = path)
+id <- orderly::orderly_run("example", list(cyl = 4), root = path)
 
 ### need this for later:
 ##+ echo = FALSE, results = "hide"
@@ -248,11 +248,11 @@ plain_output(tree(path, "<root>"))
 ## by other applications.
 
 ## You can see the list of draft reports like so:
-orderly::orderly_list_drafts(config = path)
+orderly::orderly_list_drafts(root = path)
 
 ## Once you're happy with a report, then "commit" it with
 ##+ collapse = TRUE
-orderly::orderly_commit(id, config = path)
+orderly::orderly_commit(id, root = path)
 
 ## **THIS WILL CHANGE A LITTLE I THINK** - but mostly in how the index
 ## is built and how we might synchronise reports across people and
@@ -272,7 +272,7 @@ plain_output(tree(path, "<root>"))
 ## should not contain spaces (nor should it change as this will change
 ## the key report id and you'll lose a chain of history), then edit
 ## the file `orderly.yml` within that directory.
-orderly::orderly_new("new", config = path)
+orderly::orderly_new("new", root = path)
 
 ## As a report becomes more complex, the function
 ## `orderly::orderly_test_start` will become useful; this function

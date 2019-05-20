@@ -4,14 +4,15 @@
 \alias{orderly_cleanup}
 \title{Orderly cleanup}
 \usage{
-orderly_cleanup(name = NULL, config = NULL, locate = TRUE,
+orderly_cleanup(name = NULL, root = NULL, locate = TRUE,
   draft = TRUE, data = TRUE, failed_only = FALSE)
 }
 \arguments{
 \item{name}{Optional name; in this case only clean up drafts with this name}
 
-\item{config}{An orderly configuration, or the path to one (or
-\code{NULL} to locate one if \code{locate} is \code{TRUE}).}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
+(the default) to search for one from the current working
+directory if \code{locate} is \code{TRUE}).}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,

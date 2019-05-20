@@ -4,14 +4,15 @@
 \alias{orderly_db}
 \title{Connect to orderly databases}
 \usage{
-orderly_db(type, config = NULL, locate = TRUE, validate = TRUE)
+orderly_db(type, root = NULL, locate = TRUE, validate = TRUE)
 }
 \arguments{
 \item{type}{The type of connection to make (\code{source},
 \code{destination}, \code{csv} or \code{rds}).}
 
-\item{config}{An orderly configuration, or the path to one (or
-\code{NULL} to locate one if \code{locate} is \code{TRUE}).}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
+(the default) to search for one from the current working
+directory if \code{locate} is \code{TRUE}).}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,

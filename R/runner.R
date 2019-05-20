@@ -146,7 +146,7 @@ R6_orderly_runner <- R6::R6Class(
     ## doesn't take too much to do (write one file and write to the
     ## SQL database)
     publish = function(name, id, value = TRUE) {
-      orderly_publish(id, value, name, config = self$config)
+      orderly_publish(id, value, name, root = self$config)
       value
     },
 
@@ -190,7 +190,7 @@ R6_orderly_runner <- R6::R6Class(
 
     cleanup = function(name = NULL, draft = TRUE, data = TRUE,
                        failed_only = FALSE) {
-      orderly_cleanup(name = name, config = self$config, draft = draft,
+      orderly_cleanup(name = name, root = self$config, draft = draft,
                       data = data, failed_only = failed_only)
     },
 
@@ -400,7 +400,7 @@ runner_allow_ref <- function(allow_ref, config) {
     allow_ref <- !(config$server_options$master_only %||% FALSE)
   }
   if (allow_ref) {
-    res <- git_run(c("rev-parse", "HEAD"), root = config$path, check = FALSE)
+    res <- git_run(c("rev-parse", "HEAD"), root = config$root, check = FALSE)
     allow_ref <- res$success
   }
   allow_ref
