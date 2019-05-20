@@ -111,8 +111,8 @@ test_that("publish", {
   runner <- orderly_runner(path)
 
   name <- "example"
-  id <- orderly_run(name, config = path, echo = FALSE)
-  orderly_commit(id, name, config = path)
+  id <- orderly_run(name, path = path, echo = FALSE)
+  orderly_commit(id, name, path = path)
 
   res <- runner$publish(name, id)
 
@@ -129,8 +129,8 @@ test_that("rebuild", {
   runner <- orderly_runner(path)
 
   name <- "example"
-  id <- orderly_run(name, config = path, echo = FALSE)
-  orderly_commit(id, name, config = path)
+  id <- orderly_run(name, path = path, echo = FALSE)
+  orderly_commit(id, name, path = path)
 
   path_db <- file.path(path, "orderly.sqlite")
   file.remove(path_db)
@@ -206,19 +206,19 @@ test_that("cleanup", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
-  id <- orderly_run("example", config = path, echo = FALSE)
-  orderly_commit(id, config = path)
+  id <- orderly_run("example", path = path, echo = FALSE)
+  orderly_commit(id, path = path)
 
   writeLines("1 + 1", file.path(path, "src/example/script.R"))
-  expect_error(orderly_run("example", config = path, echo = FALSE),
+  expect_error(orderly_run("example", path = path, echo = FALSE),
                "Script did not produce")
 
   runner <- orderly_runner(path)
   expect_message(runner$cleanup(), "clean.+draft/example")
   expect_silent(runner$cleanup())
 
-  expect_equal(nrow(orderly_list2(TRUE, config = path)), 0L)
-  expect_equal(orderly_list2(FALSE, config = path)$id, id)
+  expect_equal(nrow(orderly_list2(TRUE, path = path)), 0L)
+  expect_equal(orderly_list2(FALSE, path = path)$id, id)
 })
 
 

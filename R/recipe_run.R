@@ -41,12 +41,12 @@
 ##' @param id_file Write the identifier into a file
 ##' @export
 orderly_run <- function(name, parameters = NULL, envir = NULL,
-                        config = NULL, locate = TRUE, echo = TRUE,
+                        path = NULL, locate = TRUE, echo = TRUE,
                         id_file = NULL, fetch = FALSE, ref = NULL,
                         open = FALSE, message = NULL, extended_output = FALSE) {
   assert_scalar_logical(open)
   envir <- orderly_environment(envir)
-  config <- orderly_config_get(config, locate)
+  config <- orderly_config_get(path, locate)
   check_orderly_archive_version(config)
 
   info <- recipe_prepare(config, name, id_file, ref, fetch, message)
@@ -68,8 +68,8 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
 ##' @export
 ##' @rdname orderly_run
 orderly_data <- function(name, parameters = NULL, envir = NULL,
-                         config = NULL, locate = TRUE) {
-  config <- orderly_config_get(config, locate)
+                         path = NULL, locate = TRUE) {
+  config <- orderly_config_get(path, locate)
   info <- recipe_read(file.path(path_src(config$path), name), config)
   envir <- orderly_environment(envir)
   recipe_data(config, info, parameters, envir)
@@ -92,12 +92,12 @@ orderly_data <- function(name, parameters = NULL, envir = NULL,
 ##' @inheritParams orderly_run
 ##' @export
 orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
-                               config = NULL, locate = TRUE) {
+                               path = NULL, locate = TRUE) {
   if (!is.null(cache$test)) {
     stop("Already running in test mode")
   }
 
-  config <- orderly_config_get(config, locate)
+  config <- orderly_config_get(path, locate)
   ## TODO: support ref here
   info <- recipe_prepare(config, name, id_file = NULL, ref = NULL,
                          fetch = FALSE, message = NULL)
@@ -151,7 +151,7 @@ orderly_test_restart <- function(cleanup = TRUE) {
   parameters <- cache$test$parameters
   config <- cache$test$config
   orderly_test_end(cleanup)
-  orderly_test_start(name, parameters, config = config)
+  orderly_test_start(name, parameters, path = config)
 }
 
 ##' @export

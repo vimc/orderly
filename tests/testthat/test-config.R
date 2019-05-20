@@ -226,7 +226,7 @@ test_that("can read a configuration with two databases", {
   expect_equal(config$database$source1$args, list(dbname = "source1.sqlite"))
   expect_equal(config$database$source2$args, list(dbname = "source2.sqlite"))
 
-  con <- orderly_db("source", config = path)
+  con <- orderly_db("source", path = path)
   DBI::dbListTables(con$source1)
   DBI::dbListTables(con$source2)
 })

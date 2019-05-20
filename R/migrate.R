@@ -46,7 +46,7 @@
 ##'   migrated this might come in helpful.
 ##'
 ##' @export
-orderly_migrate <- function(config = NULL, locate = TRUE, to = NULL,
+orderly_migrate <- function(path = NULL, locate = TRUE, to = NULL,
                             verbose = FALSE, dry_run = FALSE,
                             skip_failed = FALSE) {
   ## We'll skip warnings here - they'll come out as messages rather
@@ -54,7 +54,7 @@ orderly_migrate <- function(config = NULL, locate = TRUE, to = NULL,
   oo <- options(orderly.nowarnings = TRUE)
   on.exit(options(oo))
 
-  config <- orderly_config_get(config, locate)
+  config <- orderly_config_get(path, locate)
   root <- config$path
 
   migrations <- migrate_plan(root, to)

@@ -48,7 +48,7 @@ R6_orderly_remote_path <- R6::R6Class(
     },
 
     publish = function(name, id, value = TRUE) {
-      orderly_publish(id, value = value, name = name, config = self$config)
+      orderly_publish(id, value = value, name = name, path = self$config)
     },
 
     run = function(...) {

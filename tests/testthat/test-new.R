@@ -111,7 +111,7 @@ test_that("custom template copies all files", {
 test_that("missing templates are an error", {
   path <- prepare_orderly_example("minimal")
   expect_error(
-    orderly_new("testing", config = path, template = "foo"),
+    orderly_new("testing", path = path, template = "foo"),
     "Did not find file 'template/foo/orderly.yml' within orderly root")
   expect_false(file.exists(file.path(path, "src", "testing")))
 })

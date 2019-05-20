@@ -21,10 +21,10 @@ run_orderly_demo <- function(path) {
     if (!is.null(x$before)) {
       withr::with_dir(path, x$before())
     }
-    id <- orderly_run(x$name, x$parameters, echo = FALSE, config = path)
+    id <- orderly_run(x$name, x$parameters, echo = FALSE, path = path)
     id_new <- demo_change_time(id, x$time, path)
     if (isTRUE(x$publish)) {
-      orderly_publish(id_new, config = path)
+      orderly_publish(id_new, path = path)
     }
   }
 
@@ -65,7 +65,7 @@ prepare_orderly_example <- function(name, path = tempfile()) {
   } else {
     generator <- fake_db
   }
-  con <- orderly_db("source", config = path)
+  con <- orderly_db("source", path = path)
   on.exit(lapply(con, DBI::dbDisconnect))
   if (length(con) > 0L) {
     generator(con)
@@ -125,7 +125,7 @@ demo_change_time <- function(id, time, path) {
     changelog_save_json(changelog, p)
   }
 
-  orderly_commit(id_new, name, config = path)
+  orderly_commit(id_new, name, path = path)
 
   id_new
 }
@@ -197,8 +197,8 @@ prepare_orderly_git_example <- function(path = tempfile(), run_report = FALSE) {
   git_run(c("commit", "-m", "orderly"), path_upstream)
 
   if (run_report) {
-    id <- orderly_run("minimal", config = path)
-    orderly_commit(id, config = path)
+    id <- orderly_run("minimal", path = path)
+    orderly_commit(id, path = path)
   }
 
   c(origin = path_upstream, local = path)

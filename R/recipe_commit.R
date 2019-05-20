@@ -8,8 +8,8 @@
 ##'
 ##' @inheritParams orderly_list
 ##' @export
-orderly_commit <- function(id, name = NULL, config = NULL, locate = TRUE) {
-  config <- orderly_config_get(config, locate)
+orderly_commit <- function(id, name = NULL, path = NULL, locate = TRUE) {
+  config <- orderly_config_get(path, locate)
   check_orderly_archive_version(config)
   if (is.null(name)) {
     name <- orderly_find_name(id, config, draft = TRUE, must_work = TRUE)

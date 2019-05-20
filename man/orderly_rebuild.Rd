@@ -4,12 +4,13 @@
 \alias{orderly_rebuild}
 \title{Rebuild the report database}
 \usage{
-orderly_rebuild(config = NULL, locate = TRUE, verbose = TRUE,
+orderly_rebuild(path = NULL, locate = TRUE, verbose = TRUE,
   if_schema_changed = FALSE)
 }
 \arguments{
-\item{config}{An orderly configuration, or the path to one (or
-\code{NULL} to locate one if \code{locate} is \code{TRUE}).}
+\item{path}{The path to an orderly root directoy, or \code{NULL}
+(the default) to search for one from the current working
+directory if \code{locate} is \code{TRUE}).}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,

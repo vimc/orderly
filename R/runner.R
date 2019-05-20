@@ -146,7 +146,7 @@ R6_orderly_runner <- R6::R6Class(
     ## doesn't take too much to do (write one file and write to the
     ## SQL database)
     publish = function(name, id, value = TRUE) {
-      orderly_publish(id, value, name, config = self$config)
+      orderly_publish(id, value, name, path = self$config)
       value
     },
 
@@ -190,7 +190,7 @@ R6_orderly_runner <- R6::R6Class(
 
     cleanup = function(name = NULL, draft = TRUE, data = TRUE,
                        failed_only = FALSE) {
-      orderly_cleanup(name = name, config = self$config, draft = draft,
+      orderly_cleanup(name = name, path = self$config, draft = draft,
                       data = data, failed_only = failed_only)
     },
 

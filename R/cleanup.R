@@ -16,9 +16,9 @@
 ##'   \code{\link{orderly_test_start}}
 ##' @inheritParams orderly_list
 ##' @export
-orderly_cleanup <- function(name = NULL, config = NULL, locate = TRUE,
+orderly_cleanup <- function(name = NULL, path = NULL, locate = TRUE,
                             draft = TRUE, data = TRUE, failed_only = FALSE) {
-  config <- orderly_config_get(config, locate)
+  config <- orderly_config_get(path, locate)
   if (draft) {
     orderly_cleanup_drafts(config, name, failed_only)
   }

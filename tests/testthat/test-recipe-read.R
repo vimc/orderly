@@ -167,28 +167,28 @@ test_that("resource case matters", {
 
 test_that("dependencies must be scalar", {
   path <- prepare_orderly_example("depends")
-  id <- orderly_run("example", config = path, echo = FALSE)
+  id <- orderly_run("example", path = path, echo = FALSE)
 
   filename <- file.path(path, "src", "depend", "orderly.yml")
   dat <- yaml_read(filename)
   dat$depends$example$use$previous.rds <- character(0)
   yaml_write(dat, filename)
 
-  expect_error(orderly_run("depend", config = path, echo = FALSE),
+  expect_error(orderly_run("depend", path = path, echo = FALSE),
                "depends:example:use must all be scalar character")
 })
 
 
 test_that("dependencies must exist", {
   path <- prepare_orderly_example("depends")
-  id <- orderly_run("example", config = path, echo = FALSE)
+  id <- orderly_run("example", path = path, echo = FALSE)
 
   filename <- file.path(path, "src", "depend", "orderly.yml")
   dat <- yaml_read(filename)
   dat$depends$example$use$previous.rds <- "unknown.file"
   yaml_write(dat, filename)
 
-  expect_error(orderly_run("depend", config = path, echo = FALSE),
+  expect_error(orderly_run("depend", path = path, echo = FALSE),
                "Did not find file unknown.file at")
 })
 
@@ -198,7 +198,7 @@ test_that("data field is optional", {
   report_path <- file.path(path, "src", "example")
 
   ## expect no error
-  expect_error(orderly_run("example", config = path, echo = FALSE), NA)
+  expect_error(orderly_run("example", path = path, echo = FALSE), NA)
 })
 
 

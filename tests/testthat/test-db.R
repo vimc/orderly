@@ -50,8 +50,8 @@ test_that("rebuild empty database", {
 
 test_that("rebuild nonempty database", {
   path <- prepare_orderly_example("minimal")
-  id <- orderly_run("example", config = path, echo = FALSE)
-  orderly_commit(id, config = path)
+  id <- orderly_run("example", path = path, echo = FALSE)
+  orderly_commit(id, path = path)
   file.remove(file.path(path, "orderly.sqlite"))
   orderly_rebuild(path)
   orderly_rebuild(path)
@@ -72,10 +72,10 @@ test_that("no transient db", {
 
 test_that("db includes parameters", {
   path <- prepare_orderly_example("example")
-  id <- orderly_run("example", parameters = list(cyl = 4), config = path,
+  id <- orderly_run("example", parameters = list(cyl = 4), path = path,
                     echo = FALSE)
-  orderly_commit(id, config = path)
-  con <- orderly_db("destination", config = path)
+  orderly_commit(id, path = path)
+  con <- orderly_db("destination", path = path)
   d <- DBI::dbReadTable(con, "parameters")
   DBI::dbDisconnect(con)
   expect_equal(d, data_frame(id = 1,
@@ -89,9 +89,9 @@ test_that("db includes parameters", {
 test_that("different parameter types are stored correctly", {
   path <- prepare_orderly_example("parameters")
   id <- orderly_run("example", parameters = list(a = 1, b = TRUE, c = "one"),
-                    config = path, echo = FALSE)
-  orderly_commit(id, config = path)
-  con <- orderly_db("destination", config = path)
+                    path = path, echo = FALSE)
+  orderly_commit(id, path = path)
+  con <- orderly_db("destination", path = path)
   d <- DBI::dbReadTable(con, "parameters")
   DBI::dbDisconnect(con)
   expect_equal(d, data_frame(id = 1:3,
@@ -106,8 +106,8 @@ test_that("avoid unserialisable parameters", {
   path <- prepare_orderly_example("parameters")
   t <- Sys.Date()
   id <- orderly_run("example", parameters = list(a = t, b = TRUE, c = "one"),
-                    config = path, echo = FALSE)
-  expect_error(orderly_commit(id, config = path),
+                    path = path, echo = FALSE)
+  expect_error(orderly_commit(id, path = path),
                "Unsupported parameter type")
   expect_error(report_db_parameter_type(t), "Unsupported parameter type")
   expect_error(report_db_parameter_serialise(t), "Unsupported parameter type")
@@ -139,11 +139,11 @@ test_that("dialects", {
 
 test_that("sources are listed in db", {
   path <- prepare_orderly_example("demo")
-  id <- orderly_run("other", config = path, parameters = list(nmin = 0),
+  id <- orderly_run("other", path = path, parameters = list(nmin = 0),
                     echo = FALSE)
-  orderly_commit(id, config = path)
+  orderly_commit(id, path = path)
 
-  con <- orderly_db("destination", config = path)
+  con <- orderly_db("destination", path = path)
   on.exit(DBI::dbDisconnect(con))
 
   p <- path_orderly_run_rds(file.path(path, "archive", "other", id))

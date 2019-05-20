@@ -12,8 +12,8 @@
 ##' @inheritParams orderly_list
 ##' @export
 orderly_publish <- function(id, value = TRUE, name = NULL,
-                            config = NULL, locate = TRUE) {
-  config <- orderly_config_get(config, locate)
+                            path = NULL, locate = TRUE) {
+  config <- orderly_config_get(path, locate)
   if (is.null(name)) {
     name <- orderly_find_name(id, config, draft = FALSE, must_work = TRUE)
   }

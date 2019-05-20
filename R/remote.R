@@ -24,8 +24,8 @@
 ##'
 ##' @inheritParams orderly_list
 ##' @export
-pull_dependencies <- function(name, config = NULL, locate = TRUE, remote = NULL) {
-  config <- orderly_config_get(config, locate)
+pull_dependencies <- function(name, path = NULL, locate = TRUE, remote = NULL) {
+  config <- orderly_config_get(path, locate)
   remote <- get_remote(remote, config)
 
   path <- file.path(path_src(config$path), name)
@@ -44,9 +44,9 @@ pull_dependencies <- function(name, config = NULL, locate = TRUE, remote = NULL)
 ##'
 ##' @param id The identifier (for \code{pull_archive}.  The default is
 ##'   to use the latest report.
-pull_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
+pull_archive <- function(name, id = "latest", path = NULL, locate = TRUE,
                          remote = NULL) {
-  config <- orderly_config_get(config, locate)
+  config <- orderly_config_get(path, locate)
   remote <- get_remote(remote, config)
 
   v <- remote_report_versions(name, config, FALSE, remote)
@@ -87,9 +87,9 @@ pull_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
 ##' @title Push an archive report to a remote location
 ##' @inheritParams pull_dependencies
 ##' @export
-push_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
+push_archive <- function(name, id = "latest", path = NULL, locate = TRUE,
                          remote = NULL) {
-  config <- orderly_config_get(config, locate)
+  config <- orderly_config_get(path, locate)
   remote <- get_remote(remote, config)
 
   if (id == "latest") {
@@ -152,8 +152,8 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
                                open = TRUE, stop_on_error = TRUE,
                                stop_on_timeout = TRUE,
                                progress = TRUE,
-                               config = NULL, locate = TRUE, remote = NULL) {
-  remote <- get_remote(remote, orderly_config_get(config, locate))
+                               path = NULL, locate = TRUE, remote = NULL) {
+  remote <- get_remote(remote, orderly_config_get(path, locate))
   remote$run(name, parameters = parameters, ref = ref,
              timeout = timeout, wait = wait, poll = poll, progress = progress,
              stop_on_error = stop_on_error, stop_on_timeout = stop_on_timeout,
@@ -175,13 +175,13 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
 ##' @inheritParams orderly_run_remote
 ##' @export
 orderly_publish_remote <- function(name, id, value = TRUE,
-                                   config = NULL, locate = TRUE,
+                                   path = NULL, locate = TRUE,
                                    remote = NULL) {
   assert_scalar_character(name)
   assert_scalar_character(id)
   assert_scalar_logical(value)
 
-  config <- orderly_config_get(config, locate)
+  config <- orderly_config_get(path, locate)
   remote <- get_remote(remote, config)
   remote$publish(name, id, value)
 }
@@ -194,8 +194,8 @@ orderly_publish_remote <- function(name, id, value = TRUE,
 ##' @inheritParams orderly_list
 ##' @export
 ##' @rdname default_remote
-set_default_remote <- function(value, config = NULL, locate = TRUE) {
-  config <- orderly_config_get(config, locate)
+set_default_remote <- function(value, path = NULL, locate = TRUE) {
+  config <- orderly_config_get(path, locate)
 
   if (is.null(value)) {
     remote <- NULL
@@ -210,8 +210,8 @@ set_default_remote <- function(value, config = NULL, locate = TRUE) {
 
 
 ##' @rdname default_remote
-get_default_remote <- function(config = NULL, locate = TRUE) {
-  config <- orderly_config_get(config, locate)
+get_default_remote <- function(path = NULL, locate = TRUE) {
+  config <- orderly_config_get(path, locate)
   if (!is.null(cache$default_remote[[config$path]])) {
     return(cache$default_remote[[config$path]])
   }
@@ -259,8 +259,8 @@ load_remote <- function(name, config) {
 
 
 ## Most of these functions can really shrink now?
-remote_report_names <- function(config = NULL, locate = TRUE, remote = NULL) {
-  remote <- get_remote(remote, orderly_config_get(config, locate))
+remote_report_names <- function(path = NULL, locate = TRUE, remote = NULL) {
+  remote <- get_remote(remote, orderly_config_get(path, locate))
   remote$list_reports()
 }
 

@@ -35,9 +35,9 @@
 ##'
 ##' @inheritParams orderly_list
 ##' @export
-orderly_new <- function(name, config = NULL, locate = TRUE, quiet = FALSE,
+orderly_new <- function(name, path = NULL, locate = TRUE, quiet = FALSE,
                         template = NULL) {
-  config <- orderly_config_get(config, locate)
+  config <- orderly_config_get(path, locate)
   assert_scalar_character(name)
   if (grepl("[[:space:]]", name)) {
     stop("'name' cannot contain spaces")

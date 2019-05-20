@@ -53,8 +53,8 @@ test_that("init - no doc", {
 
 test_that("orderly_run_info reports on artefacts", {
   path <- prepare_orderly_example("depends")
-  id1 <- orderly_run("example", config = path, echo = FALSE)
-  id2 <- orderly_run("depend", config = path, echo = FALSE)
+  id1 <- orderly_run("example", path = path, echo = FALSE)
+  id2 <- orderly_run("depend", path = path, echo = FALSE)
 
   d <- readRDS(file.path(path, "draft", "depend", id2, "output.rds"))
   expect_equal(d$depends$id, id1)
@@ -69,8 +69,8 @@ test_that("orderly_run_info errors when not running", {
 
 test_that("orderly_run_info is usable from test_start", {
   path <- prepare_orderly_example("depends")
-  id1 <- orderly_run("example", config = path, echo = FALSE)
-  id2 <- orderly_test_start("depend", config = path)
+  id1 <- orderly_run("example", path = path, echo = FALSE)
+  id2 <- orderly_test_start("depend", path = path)
   on.exit(orderly_test_end())
   info <- orderly_run_info()
   expect_equal(info$depends$id, id1)
@@ -85,11 +85,11 @@ test_that("orderly_run_info is usable from test_start", {
 
 test_that("orderly_run_info: is_latest detects latest version", {
   path <- prepare_orderly_example("depends")
-  id1 <- orderly_run("example", config = path, echo = FALSE)
-  id2 <- orderly_run("example", config = path, echo = FALSE)
+  id1 <- orderly_run("example", path = path, echo = FALSE)
+  id2 <- orderly_run("example", path = path, echo = FALSE)
 
   f <- function() {
-    orderly_test_start("depend", config = path)
+    orderly_test_start("depend", path = path)
     on.exit(orderly_test_end())
     info <- orderly_run_info()
     info
@@ -120,7 +120,7 @@ test_that("orderly_test_start failure resets working directory", {
   txt <- c(readLines(p), "packages: nonexistantpackage")
   writeLines(txt, p)
   wd <- getwd()
-  expect_error(orderly_test_start("example", config = path),
+  expect_error(orderly_test_start("example", path = path),
                "nonexistantpackage")
   expect_equal(getwd(), wd)
 })
@@ -128,7 +128,7 @@ test_that("orderly_test_start failure resets working directory", {
 
 test_that("can't depend on non artefacts", {
   path <- prepare_orderly_example("depends")
-  id <- orderly_run("example", config = path, echo = FALSE)
+  id <- orderly_run("example", path = path, echo = FALSE)
 
   path_yml <- file.path(path, "src", "depend", "orderly.yml")
   d <- yaml_read(path_yml)
@@ -137,15 +137,15 @@ test_that("can't depend on non artefacts", {
   yaml_write(d, path_yml)
 
   expect_error(
-    orderly_run("depend", config = path, echo = FALSE),
+    orderly_run("depend", path = path, echo = FALSE),
     "Dependency file not an artefact of example/.*:\n- 'script.R'")
 })
 
 
 test_that("dependency dir can be used", {
   path <- prepare_orderly_example("demo")
-  id <- orderly_run("use_resource_dir", config = path, echo = FALSE)
-  p <- orderly_commit(id, config = path)
+  id <- orderly_run("use_resource_dir", path = path, echo = FALSE)
+  p <- orderly_commit(id, path = path)
   con <- orderly_db("destination", path)
   on.exit(DBI::dbDisconnect(con))
 
@@ -161,25 +161,25 @@ test_that("dependency dir can be used", {
 test_that("can't commit out of order", {
   path <- prepare_orderly_example("minimal")
 
-  id1 <- orderly_run("example", config = path, echo = FALSE)
-  id2 <- orderly_run("example", config = path, echo = FALSE)
+  id1 <- orderly_run("example", path = path, echo = FALSE)
+  id2 <- orderly_run("example", path = path, echo = FALSE)
 
-  orderly_commit(id2, config = path)
-  expect_error(orderly_commit(id1, config = path),
+  orderly_commit(id2, path = path)
+  expect_error(orderly_commit(id1, path = path),
                "Report id '.+?' is behind existing id '.+?'")
 
   expect_equal(dir(file.path(path, "archive", "example")), id2)
   expect_equal(dir(file.path(path, "draft", "example")), id1)
 
-  id3 <- orderly_run("example", config = path, echo = FALSE)
-  expect_error(orderly_commit(id3, config = path), NA)
+  id3 <- orderly_run("example", path = path, echo = FALSE)
+  expect_error(orderly_commit(id3, path = path), NA)
 })
 
 
 test_that("archive directory is created when needed", {
   path <- prepare_orderly_example("minimal")
   unlink(file.path(path, "archive"), recursive = TRUE)
-  orderly_run("example", config = path, echo = FALSE)
+  orderly_run("example", path = path, echo = FALSE)
   expect_true(file.exists(path_orderly_archive_version(path)))
 })
 

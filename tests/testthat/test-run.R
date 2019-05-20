@@ -143,12 +143,12 @@ test_that("orderly_data", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
-  d <- orderly_data("example", config = path)
+  d <- orderly_data("example", path = path)
   expect_is(d, "environment")
   expect_is(d$dat, "data.frame")
 
   e1 <- new.env(parent = baseenv())
-  e <- orderly_data("example", config = path, envir = e1)
+  e <- orderly_data("example", path = path, envir = e1)
   expect_identical(e, e1)
 
   expect_identical(e$dat, d$dat)
@@ -197,16 +197,17 @@ test_that("close too many devices", {
   info <- recipe_read(file.path(path, "src/example"), config)
   envir <- orderly_environment(NULL)
   info <- recipe_prepare(config, "example")
+  config <- orderly_config(path)
   expect_error(recipe_run(info, NULL, envir, config = config, echo = FALSE),
                "Report closed 1 more devices than it opened")
 })
 
 test_that("included example", {
   path <- prepare_orderly_example("example")
-  id <- orderly_run("example", list(cyl = 4), config = path, echo = FALSE)
-  p <- orderly_commit(id, config = path)
+  id <- orderly_run("example", list(cyl = 4), path = path, echo = FALSE)
+  p <- orderly_commit(id, path = path)
   expect_true(is_directory(p))
-  con <- orderly_db("destination", config = path)
+  con <- orderly_db("destination", path = path)
   on.exit(DBI::dbDisconnect(con))
   dat <- DBI::dbReadTable(con, "report_version")
   expect_equal(dat$description, NA_character_)
@@ -215,11 +216,11 @@ test_that("included example", {
 
 test_that("included other", {
   path <- prepare_orderly_example("other")
-  id <- orderly_run("other", list(nmin = 0), config = path, echo = FALSE)
-  p <- orderly_commit(id, config = path)
+  id <- orderly_run("other", list(nmin = 0), path = path, echo = FALSE)
+  p <- orderly_commit(id, path = path)
   info <- recipe_read(file.path(path_src(path), "other"),
                       orderly_config(path))
-  con <- orderly_db("destination", config = path)
+  con <- orderly_db("destination", path = path)
   on.exit(DBI::dbDisconnect(con))
   dat <- DBI::dbReadTable(con, "report_version")
   expect_equal(dat$description, info$description)
@@ -242,7 +243,7 @@ test_that("connection", {
 
   data <- orderly_data("example",
                        envir = new.env(parent = .GlobalEnv),
-                       config = path)
+                       path = path)
   expect_is(data$con, "SQLiteConnection")
   expect_is(DBI::dbReadTable(data$con, "data"), "data.frame")
   DBI::dbDisconnect(data$con)
@@ -252,8 +253,8 @@ test_that("connection", {
 test_that("connection is saved to db", {
   path <- prepare_orderly_example("minimal")
 
-  id1 <- orderly_run("example", config = path, echo = FALSE)
-  orderly_commit(id1, config = path)
+  id1 <- orderly_run("example", path = path, echo = FALSE)
+  orderly_commit(id1, path = path)
 
   path_example <- file.path(path, "src", "example")
   yml <- file.path(path_example, "orderly.yml")
@@ -261,10 +262,10 @@ test_that("connection is saved to db", {
   dat <- list(connection = list(con = "source"))
   writeLines(c(txt, yaml::as.yaml(dat)), yml)
 
-  id2 <- orderly_run("example", config = path, echo = FALSE)
-  orderly_commit(id2, config = path)
+  id2 <- orderly_run("example", path = path, echo = FALSE)
+  orderly_commit(id2, path = path)
 
-  con <- orderly_db("destination", config = path)
+  con <- orderly_db("destination", path = path)
   on.exit(DBI::dbDisconnect(con))
   d <- DBI::dbGetQuery(con, "SELECT id, connection FROM report_version")
   expect_equal(d$connection[d$id == id1], 0L)
@@ -287,10 +288,10 @@ test_that("no data", {
 
   data <- orderly_data("example",
                        envir = new.env(parent = .GlobalEnv),
-                       config = path)
+                       path = path)
   expect_equal(ls(data, all.names = TRUE), character(0))
 
-  id <- orderly_run("example", config = path, echo = FALSE)
+  id <- orderly_run("example", path = path, echo = FALSE)
   p <- file.path(path_draft(path), "example", id, "data.rds")
   expect_true(file.exists(p))
   expect_equal(readRDS(p), mtcars)
@@ -301,16 +302,16 @@ test_that("use artefact", {
 
   path_example <- file.path(path, "src", "example")
   path_depend <- file.path(path, "src", "depend")
-  id1 <- orderly_run("example", config = path, echo = FALSE)
+  id1 <- orderly_run("example", path = path, echo = FALSE)
   orderly_log_break()
   path_orig <- file.path(path_draft(path), "example", id1, "data.rds")
   expect_true(file.exists(path_orig))
 
   data <- orderly_data("depend",
                        envir = new.env(parent = .GlobalEnv),
-                       config = path)
+                       path = path)
   expect_identical(ls(data), character(0))
-  id2 <- orderly_run("depend", config = path, echo = FALSE)
+  id2 <- orderly_run("depend", path = path, echo = FALSE)
   orderly_log_break()
   path_previous <- file.path(path_draft(path), "depend", id2, "previous.rds")
   expect_true(file.exists(path_previous))
@@ -322,9 +323,9 @@ test_that("use artefact", {
   expect_equal(d$meta$depends$hash, hash_files(path_previous, FALSE))
 
   ## Then rebuild the original:
-  id3 <- orderly_run("example", config = path, echo = FALSE)
+  id3 <- orderly_run("example", path = path, echo = FALSE)
   orderly_log_break()
-  id4 <- orderly_run("depend", config = path, echo = FALSE)
+  id4 <- orderly_run("depend", path = path, echo = FALSE)
   orderly_log_break()
   path_orig2 <- file.path(path_draft(path), "example", id3, "data.rds")
   path_previous2 <- file.path(path_draft(path), "depend", id4, "previous.rds")
@@ -335,32 +336,32 @@ test_that("use artefact", {
               hash_files(path_previous, FALSE))
 
   ## Then we need to commit things and check that it all still works OK.
-  expect_error(orderly_commit(id2, config = path),
+  expect_error(orderly_commit(id2, path = path),
                "Report uses draft id - commit first")
-  p1 <- orderly_commit(id1, config = path)
-  p2 <- orderly_commit(id2, config = path)
-  expect_error(orderly_commit(id4, config = path), id3)
-  p3 <- orderly_commit(id3, config = path)
-  p4 <- orderly_commit(id4, config = path)
+  p1 <- orderly_commit(id1, path = path)
+  p2 <- orderly_commit(id2, path = path)
+  expect_error(orderly_commit(id4, path = path), id3)
+  p3 <- orderly_commit(id3, path = path)
+  p4 <- orderly_commit(id4, path = path)
 })
 
 test_that("Can't commit report using nonexistant id", {
   path <- prepare_orderly_example("depends")
-  id1 <- orderly_run("example", config = path, echo = FALSE)
-  id2 <- orderly_run("depend", config = path, echo = FALSE)
+  id1 <- orderly_run("example", path = path, echo = FALSE)
+  id2 <- orderly_run("depend", path = path, echo = FALSE)
   unlink(file.path(path, "draft", "example", id1), recursive = TRUE)
-  expect_error(orderly_commit(id2, config = path),
+  expect_error(orderly_commit(id2, path = path),
                "Report uses nonexistant id")
 })
 
 test_that("resources", {
   path <- prepare_orderly_example("resources")
-  id <- orderly_run("use_resource", config = path, echo = FALSE)
+  id <- orderly_run("use_resource", path = path, echo = FALSE)
   p <- file.path(path, "draft", "use_resource", id)
   expect_true(file.exists(file.path(p, "meta/data.csv")))
-  p <- orderly_commit(id, config = path)
+  p <- orderly_commit(id, path = path)
 
-  con <- orderly_db("destination", config = path)
+  con <- orderly_db("destination", path = path)
   d <- DBI::dbGetQuery(
     con, "SELECT * FROM file_input WHERE file_purpose = 'resource'")
 
@@ -375,7 +376,7 @@ test_that("markdown", {
   skip_on_appveyor() # See https://github.com/jgm/pandoc/issues/5037
   path <- prepare_orderly_example("knitr")
 
-  id <- orderly_run("example", config = path, echo = FALSE)
+  id <- orderly_run("example", path = path, echo = FALSE)
 
   report <- file.path(path, "draft", "example", id, "report.html")
   expect_true(file.exists(report))
@@ -386,8 +387,8 @@ test_that("database is not loaded unless needed", {
   vars <- c(SOME_ENVVAR = "source.sqlite")
   path <- withr::with_envvar(vars, prepare_orderly_example("nodb"))
 
-  expect_identical(as.list(orderly_data("example", config = path)), list())
-  id <- orderly_run("example", config = path, echo = FALSE)
+  expect_identical(as.list(orderly_data("example", path = path)), list())
+  id <- orderly_run("example", path = path, echo = FALSE)
   expect_true(
     file.exists(file.path(path, "draft", "example", id, "mygraph.png")))
   expect_error(orderly_db("source", path), "SOME_ENVVAR")
@@ -396,7 +397,7 @@ test_that("database is not loaded unless needed", {
 test_that("id file", {
   path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
-  id <- orderly_run("example", config = path, id_file = tmp, echo = FALSE)
+  id <- orderly_run("example", path = path, id_file = tmp, echo = FALSE)
   expect_true(file.exists(tmp))
   expect_equal(readLines(tmp), id)
 })
@@ -406,14 +407,14 @@ test_that("test_start, test_restart", {
   on.exit(setwd(owd))
 
   path <- prepare_orderly_example("minimal")
-  orderly_test_start("example", config = path)
+  orderly_test_start("example", path = path)
 
   expect_equal(normalizePath(dirname(getwd())),
                normalizePath(file.path(path, "draft/example")))
   id <- basename(getwd())
   expect_equal(orderly_list_drafts(path)$id, id)
 
-  expect_error(orderly_test_start("example", config = path),
+  expect_error(orderly_test_start("example", path = path),
                "Already running in test mode")
 
   orderly_test_restart()
@@ -432,7 +433,7 @@ test_that("test mode artefacts", {
   on.exit(setwd(owd))
 
   path <- prepare_orderly_example("minimal")
-  orderly_test_start("example", config = path)
+  orderly_test_start("example", path = path)
   on.exit(orderly_test_end(), add = FALSE)
 
   expect_false(orderly_test_check())
@@ -458,9 +459,9 @@ test_that("test mode end", {
 test_that("run with message", {
   path <- prepare_orderly_example("changelog")
   test_message <- "[label1] test"
-  id <- orderly_run("example", config = path, echo = FALSE,
+  id <- orderly_run("example", path = path, echo = FALSE,
                     message = test_message)
-  p <- orderly_commit(id, config = path)
+  p <- orderly_commit(id, path = path)
 
   expect_equal(changelog_read_json(p),
                data_frame(
@@ -475,7 +476,7 @@ test_that("no unexpected artefact", {
   path_example <- file.path(path, "src", "example")
   # we're not expecting an 'unexpected' message at this point
   # grab all messages...
-  messages <- capture_messages(orderly_run("example", config = path,
+  messages <- capture_messages(orderly_run("example", path = path,
                                            id_file = tmp, echo = FALSE))
   # ...make sure none of the messages contain "unexpected"
   expect_false(any(grep("unexpected", messages)))
@@ -484,9 +485,9 @@ test_that("no unexpected artefact", {
 
 test_that("renamed dependencies are expected", {
   path <- prepare_orderly_example("depends")
-  orderly_run("example", config = path, echo = FALSE)
+  orderly_run("example", path = path, echo = FALSE)
   messages <- capture_messages(
-    orderly_run("depend", config = path, echo = FALSE))
+    orderly_run("depend", path = path, echo = FALSE))
   expect_false(any(grep("unexpected", messages)))
 })
 
@@ -504,7 +505,7 @@ test_that("non-existent package", {
   write(sprintf("packages: %s", "non_existent_package"),
         file = yml_path, append = TRUE)
   # has orderly detected that the package does not exist>
-  expect_error(orderly_run("example", config = path, id_file = tmp,
+  expect_error(orderly_run("example", path = path, id_file = tmp,
                            echo = FALSE),
                "Missing packages: 'non_existent_package'")
 })
@@ -524,7 +525,7 @@ test_that("multiple non-existent packages", {
   write(sprintf("  - %s", "non_existent_package_2"),
         file = yml_path, append = TRUE)
   # has orderly detected that the package does not exist>
-  expect_error(orderly_run("example", config = path, id_file = tmp,
+  expect_error(orderly_run("example", path = path, id_file = tmp,
                            echo = FALSE),
                paste("Missing packages:",
                      "'non_existent_package', 'non_existent_package_2'"))
@@ -533,11 +534,11 @@ test_that("multiple non-existent packages", {
 test_that("use multiple versions of an artefact", {
   path <- prepare_orderly_example("depends")
 
-  id1 <- orderly_run("example", config = path, echo = FALSE)
-  id2 <- orderly_run("example", config = path, echo = FALSE)
-  orderly_commit(id2, config = path)
+  id1 <- orderly_run("example", path = path, echo = FALSE)
+  id2 <- orderly_run("example", path = path, echo = FALSE)
+  orderly_commit(id2, path = path)
 
-  id3 <- orderly_run("depend2", config = path, echo = FALSE)
+  id3 <- orderly_run("depend2", path = path, echo = FALSE)
 
   p1 <- file.path(path, "draft", "depend2", id3,
                   c("previous1.rds", "previous2.rds"))
@@ -569,7 +570,7 @@ test_that("required field OK", {
   minimal_yml <- c(minimal_yml, sprintf("%s: %s", req_fields[2], "character"))
   writeLines(minimal_yml, yml_path)
   
-  id <- orderly_run("example", config = path, id_file = tmp, echo = FALSE)
+  id <- orderly_run("example", path = path, id_file = tmp, echo = FALSE)
   p <- file.path(path_draft(path), "example", id, "mygraph.png")
   expect_true(file.exists(p))
 })
@@ -601,7 +602,7 @@ test_that("missing required field", {
       err_msg <- sprintf("Fields missing from .*: %s",
                         paste(missing_required, collapse = ", ")
                         )
-      expect_error(orderly_run("example", config = path, id_file = tmp,
+      expect_error(orderly_run("example", path = path, id_file = tmp,
                                echo = FALSE),
                    regexp = err_msg)
     }
@@ -630,7 +631,7 @@ test_that("required field wrong type", {
   
   # first required field wont give an error, the second will
   err_msg <- sprintf("'.*orderly.yml:%s' must be character", req_fields[2])
-  expect_error(orderly_run("example", config = path, id_file = tmp, 
+  expect_error(orderly_run("example", path = path, id_file = tmp,
                            echo = FALSE),
                regexp = err_msg)
 })
@@ -650,11 +651,11 @@ test_that("can't commit failed run", {
 
   append_lines('stop("some error")',
                file.path(path, "src", "example", "script.R"))
-  expect_error(orderly_run("example", config = path, echo = FALSE),
+  expect_error(orderly_run("example", path = path, echo = FALSE),
                "some error")
   id <- dir(file.path(path, "draft", "example"))
 
-  expect_error(orderly_commit(id, config = path),
+  expect_error(orderly_commit(id, path = path),
                "Did not find run metadata file for example/")
 })
 
@@ -663,9 +664,9 @@ test_that("can't commit report twice", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
-  id <- orderly_run("example", config = path, echo = FALSE)
+  id <- orderly_run("example", path = path, echo = FALSE)
   dir.create(file.path(path, "archive", "example", id), FALSE, TRUE)
-  expect_error(orderly_commit(id, config = path),
+  expect_error(orderly_commit(id, path = path),
                "Report example/.* appears to have already been copied")
 })
 
@@ -675,7 +676,7 @@ test_that("open after run", {
   mockery::stub(orderly_run, "open_directory", mock)
 
   path <- prepare_orderly_example("minimal")
-  id <- orderly_run("example", config = path, echo = FALSE, open = TRUE)
+  id <- orderly_run("example", path = path, echo = FALSE, open = TRUE)
 
   expect_equal(length(mock), 1)
   args <- mockery::mock_args(mock)[[1]]
@@ -689,9 +690,9 @@ test_that("missing parameters throws an error", {
   path <- prepare_orderly_example("example")
   on.exit(unlink(path, recursive = TRUE))
 
-  expect_error(orderly_run("example", config = path),
+  expect_error(orderly_run("example", path = path),
                "Missing parameters: 'cyl'")
-  expect_error(orderly_run("example", list(cl = 2), config = path),
+  expect_error(orderly_run("example", list(cl = 2), path = path),
                "Missing parameters: 'cyl'")
 })
 
@@ -716,7 +717,7 @@ test_that("modify resources", {
         file = script_path, append = TRUE)
 
   # has orderly detected that the package does not exist>
-  expect_error(orderly_run("use_resource", config = path, id_file = tmp,
+  expect_error(orderly_run("use_resource", path = path, id_file = tmp,
                            echo = FALSE),
                "Script has modified resources: meta/data.csv")
   ## modify 2 resources
@@ -732,7 +733,7 @@ test_that("modify resources", {
         file = script_path, append = TRUE)
 
   # has orderly detected that the package does not exist>
-  expect_error(orderly_run("multiple_resources", config = path, id_file = tmp,
+  expect_error(orderly_run("multiple_resources", path = path, id_file = tmp,
                            echo = FALSE),
                "Script has modified resources: meta/data.csv, meta/data2.csv")
 })
@@ -749,7 +750,7 @@ test_that("delete resources", {
         file = script_path, append = TRUE)
 
   # has orderly detected that the package does not exist>
-  expect_error(orderly_run("use_resource", config = path, id_file = tmp,
+  expect_error(orderly_run("use_resource", path = path, id_file = tmp,
                            echo = FALSE),
                "Script deleted the following resources: meta/data.csv")
   ## delete 2 resources
@@ -768,20 +769,20 @@ test_that("delete resources", {
   error_message <-
     sprintf("Script deleted the following resources: %s, %s",
             "meta/data.csv", "meta/data2.csv")
-  expect_error(orderly_run("multiple_resources", config = path, id_file = tmp,
+  expect_error(orderly_run("multiple_resources", path = path, id_file = tmp,
                            echo = FALSE),
                error_message)
 })
 
 test_that("multiple resources", {
   path <- prepare_orderly_example("resources")
-  id <- orderly_run("multiple_resources", config = path, echo = FALSE)
+  id <- orderly_run("multiple_resources", path = path, echo = FALSE)
   p <- file.path(path, "draft", "multiple_resources", id)
   expect_true(file.exists(file.path(p, "meta/data.csv")))
   expect_true(file.exists(file.path(p, "meta/data2.csv")))
-  p <- orderly_commit(id, config = path)
+  p <- orderly_commit(id, path = path)
 
-  con <- orderly_db("destination", config = path)
+  con <- orderly_db("destination", path = path)
   on.exit(DBI::dbDisconnect(con))
   d <- DBI::dbReadTable(con, "file_input")
   d <- d[d$file_purpose == "resource", ]
@@ -801,7 +802,7 @@ test_that("producing a directory is an error", {
   writeLines(
     'dir.create("mygraph.png")',
     file.path(path, "src", "example", "script.R"))
-  expect_error(orderly_run("example", config = path, echo = FALSE),
+  expect_error(orderly_run("example", path = path, echo = FALSE),
                "Produced a directory artefact: 'mygraph.png'",
                fixed = TRUE)
 })
@@ -809,9 +810,9 @@ test_that("producing a directory is an error", {
 
 test_that("can run report with a view", {
   path <- prepare_orderly_example("demo")
-  id <- orderly_run("view", config = path, echo = FALSE)
-  orderly_commit(id, config = path)
-  con <- orderly_db("destination", config = path)
+  id <- orderly_run("view", path = path, echo = FALSE)
+  orderly_commit(id, path = path)
+  con <- orderly_db("destination", path = path)
   on.exit(DBI::dbDisconnect(con))
   res <- DBI::dbReadTable(con, "report_version_view")
   expect_equal(res$database, "source")
@@ -820,39 +821,39 @@ test_that("can run report with a view", {
 
 test_that("can run a report from orderly with no database", {
   path <- prepare_orderly_example("db0")
-  id <- orderly_run("example", config = path, echo = FALSE)
+  id <- orderly_run("example", path = path, echo = FALSE)
   expect_true(file.exists(
     file.path(path, "draft", "example", id, "mygraph.png")))
-  p <- orderly_commit(id, config = path)
+  p <- orderly_commit(id, path = path)
   expect_true(file.exists(file.path(p, "mygraph.png")))
 })
 
 
 test_that("can run a report from orderly with one (named) database", {
   path <- prepare_orderly_example("db1")
-  id <- orderly_run("example", config = path, echo = FALSE)
+  id <- orderly_run("example", path = path, echo = FALSE)
   expect_true(file.exists(
     file.path(path, "draft", "example", id, "mygraph.png")))
-  p <- orderly_commit(id, config = path)
+  p <- orderly_commit(id, path = path)
   expect_true(file.exists(file.path(p, "mygraph.png")))
 })
 
 
 test_that("can run a report from orderly with two databases", {
   path <- prepare_orderly_example("db2")
-  id <- orderly_run("example", config = path, echo = FALSE)
+  id <- orderly_run("example", path = path, echo = FALSE)
   expect_true(file.exists(
     file.path(path, "draft", "example", id, "mygraph.png")))
-  p <- orderly_commit(id, config = path)
+  p <- orderly_commit(id, path = path)
   expect_true(file.exists(file.path(p, "mygraph.png")))
 })
 
 
 test_that("Can use connections with two databases", {
   path <- prepare_orderly_example("db2")
-  id <- orderly_run("connection", config = path, echo = FALSE)
+  id <- orderly_run("connection", path = path, echo = FALSE)
   expect_true(file.exists(
     file.path(path, "draft", "connection", id, "mygraph.png")))
-  p <- orderly_commit(id, config = path)
+  p <- orderly_commit(id, path = path)
   expect_true(file.exists(file.path(p, "mygraph.png")))
 })

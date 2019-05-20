@@ -12,8 +12,8 @@
 ##'   = "destination"}).  This is primarily intended for internal use.
 ##'
 ##' @export
-orderly_db <- function(type, config = NULL, locate = TRUE, validate = TRUE) {
-  config <- orderly_config_get(config, locate)
+orderly_db <- function(type, path = NULL, locate = TRUE, validate = TRUE) {
+  config <- orderly_config_get(path, locate)
   if (type == "rds") {
     con <- file_store_rds(path_rds(config$path))
   } else if (type == "csv") {
@@ -72,14 +72,14 @@ orderly_db_args <- function(x, config) {
 ##'   fast enough to call regularly.
 ##'
 ##' @export
-orderly_rebuild <- function(config = NULL, locate = TRUE, verbose = TRUE,
+orderly_rebuild <- function(path = NULL, locate = TRUE, verbose = TRUE,
                             if_schema_changed = FALSE) {
   ## We'll skip warnings here - they'll come out as messages rather
   ## than warnings.
   oo <- options(orderly.nowarnings = TRUE)
   on.exit(options(oo))
 
-  config <- orderly_config_get(config, locate)
+  config <- orderly_config_get(path, locate)
 
   if (length(migrate_plan(config$path, to = NULL)) > 0L) {
     orderly_log("migrate", "archive")

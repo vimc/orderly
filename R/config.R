@@ -212,7 +212,7 @@ orderly_locate_config <- function() {
 }
 
 
-orderly_config_get <- function(x, locate) {
+orderly_config_get <- function(x, locate = FALSE) {
   if (inherits(x, "orderly_config")) {
     x
   } else if (is.null(x) && locate) {
