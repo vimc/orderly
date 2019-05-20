@@ -4,7 +4,7 @@ test_that("orderly_demo", {
   path <- create_orderly_demo()
   expect_true(file.exists(path))
 
-  con <- orderly_db("destination", path = path)
+  con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
   ## displayname and description are the only two nullable columns
   ## (VIMC-2357)
@@ -24,9 +24,9 @@ test_that("git demo", {
   capture.output(path2 <- prepare_orderly_git_example(run_report = TRUE))
 
   expect_equal(
-    nrow(orderly_list2(path = path1[["local"]], draft = FALSE)), 0)
+    nrow(orderly_list2(root = path1[["local"]], draft = FALSE)), 0)
   expect_equal(
-    nrow(orderly_list2(path = path2[["local"]], draft = FALSE)), 1)
+    nrow(orderly_list2(root = path2[["local"]], draft = FALSE)), 1)
 })
 
 

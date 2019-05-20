@@ -4,7 +4,7 @@ test_that("global", {
   path <- prepare_orderly_example("global")
   tmp <- tempfile()
   expect_error(
-    orderly_run("example", path = path, id_file = tmp, echo = FALSE),
+    orderly_run("example", root = path, id_file = tmp, echo = FALSE),
     NA # expect no errors
   )
 })
@@ -23,7 +23,7 @@ test_that("missing global file", {
 
   tmp <- tempfile()
   expect_error(
-    orderly_run("example", path = path, id_file = tmp, echo = FALSE),
+    orderly_run("example", root = path, id_file = tmp, echo = FALSE),
                 expected_error)
 })
 
@@ -31,9 +31,9 @@ test_that("missing global file", {
 test_that("global resources end up in db", {
   path <- prepare_orderly_example("global")
   tmp <- tempfile()
-  id <- orderly_run("example", path = path, id_file = tmp, echo = FALSE)
-  orderly_commit(id, path = path)
-  con <- orderly_db("destination", path = path)
+  id <- orderly_run("example", root = path, id_file = tmp, echo = FALSE)
+  orderly_commit(id, root = path)
+  con <- orderly_db("destination", root = path)
   d <- DBI::dbReadTable(con, "file_input")
   DBI::dbDisconnect(con)
   i <- d$file_purpose == "global"

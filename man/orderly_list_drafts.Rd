@@ -5,12 +5,12 @@
 \alias{orderly_list_archive}
 \title{List draft and archived reports}
 \usage{
-orderly_list_drafts(path = NULL, locate = TRUE)
+orderly_list_drafts(root = NULL, locate = TRUE)
 
-orderly_list_archive(path = NULL, locate = TRUE)
+orderly_list_archive(root = NULL, locate = TRUE)
 }
 \arguments{
-\item{path}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

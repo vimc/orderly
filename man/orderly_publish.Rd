@@ -4,7 +4,7 @@
 \alias{orderly_publish}
 \title{Publish a report}
 \usage{
-orderly_publish(id, value = TRUE, name = NULL, path = NULL,
+orderly_publish(id, value = TRUE, name = NULL, root = NULL,
   locate = TRUE)
 }
 \arguments{
@@ -16,7 +16,7 @@ or \code{FALSE}.}
 \item{name}{Optional report name.  If not given, then the name
 will be determined from the \code{id}}
 
-\item{path}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

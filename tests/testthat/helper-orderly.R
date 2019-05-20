@@ -52,10 +52,10 @@ prepare_orderly_remote_example <- function(path = tempfile()) {
 
   prepare_orderly_example("depends", path_remote)
 
-  id1 <- orderly_run("example", path = path_remote, echo = FALSE)
-  id2 <- orderly_run("example", path = path_remote, echo = FALSE)
-  orderly_commit(id1, path = path_remote)
-  orderly_commit(id2, path = path_remote)
+  id1 <- orderly_run("example", root = path_remote, echo = FALSE)
+  id2 <- orderly_run("example", root = path_remote, echo = FALSE)
+  orderly_commit(id1, root = path_remote)
+  orderly_commit(id2, root = path_remote)
   remote_path <- orderly_remote_path(path_remote)
 
   path_local <- prepare_orderly_example("depends")

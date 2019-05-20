@@ -4,14 +4,14 @@
 \alias{orderly_latest}
 \title{Find most recent report}
 \usage{
-orderly_latest(name = NULL, path = NULL, locate = TRUE,
+orderly_latest(name = NULL, root = NULL, locate = TRUE,
   draft = FALSE, must_work = TRUE)
 }
 \arguments{
 \item{name}{Name of the report to find; if \code{NULL} returns the
 most recent report across all names}
 
-\item{path}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

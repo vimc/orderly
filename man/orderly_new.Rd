@@ -4,13 +4,13 @@
 \alias{orderly_new}
 \title{Create new report}
 \usage{
-orderly_new(name, path = NULL, locate = TRUE, quiet = FALSE,
+orderly_new(name, root = NULL, locate = TRUE, quiet = FALSE,
   template = NULL)
 }
 \arguments{
 \item{name}{Name of the new report (will be a directory name).}
 
-\item{path}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

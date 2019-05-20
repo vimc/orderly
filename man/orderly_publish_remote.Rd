@@ -4,7 +4,7 @@
 \alias{orderly_publish_remote}
 \title{Publish orderly report on remote server}
 \usage{
-orderly_publish_remote(name, id, value = TRUE, path = NULL,
+orderly_publish_remote(name, id, value = TRUE, root = NULL,
   locate = TRUE, remote = NULL)
 }
 \arguments{
@@ -16,7 +16,7 @@ orderly_publish_remote(name, id, value = TRUE, path = NULL,
 \item{value}{As \code{\link{orderly_publish}}, \code{TRUE} or
 \code{FALSE} to publish or unpublish a report (respectively)}
 
-\item{path}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

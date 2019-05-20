@@ -5,11 +5,11 @@ test_that("auto copy README.md",  {
   ## in report directory create a file called README.md
   report_path <- file.path(path, "src", "example")
   file.create(file.path(report_path, "README.md"))
-  id <- orderly_run("example", path = path, echo = FALSE)
+  id <- orderly_run("example", root = path, echo = FALSE)
   p <- file.path(path, "draft", "example", id)
   expect_true(file.exists(file.path(p, "README.md")))
-  orderly_commit(id, path = path)
-  con <- orderly_db("destination", path = path)
+  orderly_commit(id, root = path)
+  con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
   dat <- DBI::dbReadTable(con, "file_input")
   expect_equal(sum(dat$filename == "README.md"), 1)
@@ -20,11 +20,11 @@ test_that("lowercase README.md",  {
   ## in report directory create a file called README.md
   report_path <- file.path(path, "src", "example")
   file.create(file.path(report_path, "readme.MD"))
-  id <- orderly_run("example", path = path, echo = FALSE)
+  id <- orderly_run("example", root = path, echo = FALSE)
   p <- file.path(path, "draft", "example", id)
   expect_true(file.exists(file.path(p, "README.md")))
-  orderly_commit(id, path = path)
-  con <- orderly_db("destination", path = path)
+  orderly_commit(id, root = path)
+  con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
   dat <- DBI::dbReadTable(con, "file_input")
   expect_equal(sum(dat$filename == "README.md"), 1)
@@ -46,11 +46,11 @@ test_that("list README.md as resource",  {
 
   file.create(file.path(path_example, "README.md"))
   messages <- capture_messages(
-    id <- orderly_run("example", path = path, echo = FALSE))
+    id <- orderly_run("example", root = path, echo = FALSE))
   # ...make sure none of the messages contain "unexpected"
   expect_true(any(grep("readme", messages)))
-  orderly_commit(id, path = path)
-  con <- orderly_db("destination", path = path)
+  orderly_commit(id, root = path)
+  con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
   dat <- DBI::dbReadTable(con, "file_input")
   expect_equal(sum(dat$filename == "README.md"), 2)
@@ -79,7 +79,7 @@ test_that("list README.md as artefact",  {
            )
   writeLines(yml, file.path(yml_path))
 
-  expect_error(orderly_run("example", path = path),
+  expect_error(orderly_run("example", root = path),
                "README.md should not be listed as an artefact")
 })
 
@@ -87,10 +87,10 @@ test_that("readme db",  {
   path <- prepare_orderly_example("minimal")
   report_path <- file.path(path, "src", "example")
   file.create(file.path(report_path, "README.md"))
-  id <- orderly_run("example", path = path, echo = FALSE)
-  orderly_commit(id, path = path)
+  id <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id, root = path)
 
-  con <- orderly_db("destination", path = path)
+  con <- orderly_db("destination", root = path)
   ## read the file input table
   d <- DBI::dbReadTable(con, "file_input")
   DBI::dbDisconnect(con)

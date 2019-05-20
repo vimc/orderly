@@ -7,7 +7,7 @@
 orderly_run_remote(name, parameters = NULL, ref = NULL,
   timeout = NULL, wait = 3600, poll = 1, open = TRUE,
   stop_on_error = TRUE, stop_on_timeout = TRUE, progress = TRUE,
-  path = NULL, locate = TRUE, remote = NULL)
+  root = NULL, locate = TRUE, remote = NULL)
 }
 \arguments{
 \item{name}{Name of the report}
@@ -44,7 +44,7 @@ complete.}
 \item{progress}{Logical, indicating if a progress spinner should
 be included.}
 
-\item{path}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

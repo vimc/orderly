@@ -142,8 +142,8 @@ test_that("mixed migration", {
 
   ## Need to work around an intentional assertion
   writeLines(curr, path_orderly_archive_version(path))
-  id <- orderly_run("example", path = path, echo = FALSE)
-  orderly_commit(id, path = path)
+  id <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id, root = path)
 
   unlink(path_orderly_archive_version(path))
 
@@ -159,12 +159,12 @@ test_that("require migration", {
   on.exit(options(oo))
 
   path <- unpack_reference("0.3.2")
-  expect_error(orderly_run("example", path = path, echo = FALSE),
+  expect_error(orderly_run("example", root = path, echo = FALSE),
                "orderly archive needs migrating from 0.0.0 =>", fixed = TRUE)
-  expect_error(orderly_run("example", path = path, echo = FALSE),
+  expect_error(orderly_run("example", root = path, echo = FALSE),
                "Run orderly::orderly_migrate() to fix", fixed = TRUE)
   orderly_migrate(path)
-  expect_error(orderly_run("example", path = path, echo = FALSE), NA)
+  expect_error(orderly_run("example", root = path, echo = FALSE), NA)
 })
 
 
@@ -179,7 +179,7 @@ test_that("can't commit old version", {
   orderly_migrate(path)
   orderly_rebuild(path)
   expect_error(
-    orderly_commit(id, path = path),
+    orderly_commit(id, root = path),
     "This report was built with an old version of orderly; please rebuild",
     fixed = TRUE)
 })
@@ -207,11 +207,11 @@ test_that("database migrations", {
   DBI::dbDisconnect(con)
   expect_false("published" %in% names(dat))
 
-  orderly_migrate(path = path)
+  orderly_migrate(root = path)
 
-  id <- orderly_run("minimal", path = path, echo = FALSE)
+  id <- orderly_run("minimal", root = path, echo = FALSE)
   expect_error(
-    orderly_commit(id, path = path),
+    orderly_commit(id, root = path),
     "orderly db needs rebuilding with orderly::orderly_rebuild()")
 
   orderly_rebuild(path)
@@ -220,7 +220,7 @@ test_that("database migrations", {
   dat <- DBI::dbReadTable(con, "report_version")
   DBI::dbDisconnect(con)
 
-  expect_error(orderly_commit(id, path = path), NA)
+  expect_error(orderly_commit(id, root = path), NA)
 })
 
 
@@ -232,9 +232,9 @@ test_that("automatic migrations", {
   DBI::dbDisconnect(con)
   expect_false("published" %in% names(dat))
 
-  expect_true(orderly_rebuild(path = path, if_schema_changed = TRUE))
-  expect_false(orderly_rebuild(path = path, if_schema_changed = TRUE))
-  expect_true(orderly_rebuild(path = path, if_schema_changed = FALSE))
+  expect_true(orderly_rebuild(root = path, if_schema_changed = TRUE))
+  expect_false(orderly_rebuild(root = path, if_schema_changed = TRUE))
+  expect_true(orderly_rebuild(root = path, if_schema_changed = FALSE))
 })
 
 

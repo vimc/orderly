@@ -1,7 +1,7 @@
 test_that("unpack archive", {
   path <- prepare_orderly_example("minimal")
-  id <- orderly_run("example", path = path, echo = FALSE)
-  p <- orderly_commit(id, path = path)
+  id <- orderly_run("example", root = path, echo = FALSE)
+  p <- orderly_commit(id, root = path)
 
   zip <- zip_dir(p)
 

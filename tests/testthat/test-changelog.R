@@ -155,8 +155,8 @@ test_that("append changelog", {
 
   writeLines(c("[label1]", "value1"), path_cl)
 
-  id1 <- orderly_run("example", path = path, echo = FALSE)
-  p1 <- orderly_commit(id1, path = path)
+  id1 <- orderly_run("example", root = path, echo = FALSE)
+  p1 <- orderly_commit(id1, root = path)
 
   l1 <- changelog_read_json(p1)
   expect_equal(l1,
@@ -165,7 +165,7 @@ test_that("append changelog", {
                           from_file = TRUE,
                           report_version = id1))
 
-  con <- orderly_db("destination", path = path)
+  con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
   d <- DBI::dbReadTable(con, "changelog")
   d$from_file <- as.logical(d$from_file)
@@ -175,8 +175,8 @@ test_that("append changelog", {
   txt <- c("[label2]", "value2", readLines(path_cl))
   writeLines(txt, path_cl)
 
-  id2 <- orderly_run("example", path = path, echo = FALSE)
-  p2 <- orderly_commit(id2, path = path)
+  id2 <- orderly_run("example", root = path, echo = FALSE)
+  p2 <- orderly_commit(id2, root = path)
 
   l2 <- changelog_read_json(p2)
   expect_equal(changelog_read_json(p2),
@@ -185,8 +185,8 @@ test_that("append changelog", {
                           from_file = TRUE,
                           report_version = c(id2, id1)))
 
-  id3 <- orderly_run("example", path = path, echo = FALSE)
-  p3 <- orderly_commit(id3, path = path)
+  id3 <- orderly_run("example", root = path, echo = FALSE)
+  p3 <- orderly_commit(id3, root = path)
   expect_equal(changelog_read_json(p3),
                changelog_read_json(p2))
 })
@@ -200,21 +200,21 @@ test_that("label change requires rebuild", {
   path_cl <- path_changelog_txt(path_example)
 
   writeLines(c("[label1]", "value1"), path_cl)
-  id1 <- orderly_run("example", path = path, echo = FALSE)
-  p1 <- orderly_commit(id1, path = path)
+  id1 <- orderly_run("example", root = path, echo = FALSE)
+  p1 <- orderly_commit(id1, root = path)
 
   d <- yaml_read(file.path(path, "orderly_config.yml"))
   d$changelog <- d$changelog[1]
   yaml_write(d, file.path(path, "orderly_config.yml"))
 
   writeLines(c("[label1]", "value2", "[label1]", "value1"), path_cl)
-  id2 <- orderly_run("example", path = path, echo = FALSE)
+  id2 <- orderly_run("example", root = path, echo = FALSE)
   expect_error(
-    orderly_commit(id2, path = path),
+    orderly_commit(id2, root = path),
     "changelog labels have changed: rebuild with orderly::orderly_rebuild")
 
-  orderly_rebuild(path = path)
-  p2 <- orderly_commit(id2, path = path)
+  orderly_rebuild(root = path)
+  p2 <- orderly_commit(id2, root = path)
 })
 
 
@@ -227,7 +227,7 @@ test_that("label values are checked", {
 
   writeLines(c("[label]", "value1"), path_cl)
   expect_error(
-    orderly_run("example", path = path, echo = FALSE),
+    orderly_run("example", root = path, echo = FALSE),
     "Unknown changelog label: 'label'. Use one of 'label1', 'label2'")
 })
 
@@ -239,7 +239,7 @@ test_that("reports can't use changelogs if not enabled", {
   path_cl <- path_changelog_txt(path_example)
   writeLines(c("[label1]", "value1"), path_cl)
   expect_error(
-    orderly_run("example", path = path, echo = FALSE),
+    orderly_run("example", root = path, echo = FALSE),
     "report 'example' uses changelog, but this is not enabled",
     fixed = TRUE)
 })
@@ -251,37 +251,37 @@ test_that("public changelog", {
   name <- "example"
   ids <- character(10)
   for (i in seq_along(ids)) {
-    ids[[i]] <- orderly_run(name, path = path, echo = FALSE,
+    ids[[i]] <- orderly_run(name, root = path, echo = FALSE,
                             message = sprintf("[label1] %d", i))
-    orderly_commit(ids[[i]], path = path)
+    orderly_commit(ids[[i]], root = path)
   }
 
-  con <- orderly_db("destination", path = path)
+  con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
 
-  orderly_publish(ids[[2]], path = path)
+  orderly_publish(ids[[2]], root = path)
   expect_equal(
     DBI::dbReadTable(con, "changelog")$report_version_public,
     rep(c(ids[[2]], NA_character_), c(2, length(ids) - 2)))
 
-  orderly_publish(ids[[6]], path = path)
+  orderly_publish(ids[[6]], root = path)
   expect_equal(
     DBI::dbReadTable(con, "changelog")$report_version_public,
     rep(c(ids[[2]], ids[[6]], NA_character_), c(2, 4, 4)))
 
-  orderly_publish(ids[[5]], path = path)
+  orderly_publish(ids[[5]], root = path)
   expect_equal(
     DBI::dbReadTable(con, "changelog")$report_version_public,
     rep(c(ids[[2]], ids[[5]], ids[[6]], NA_character_), c(2, 3, 1, 4)))
 
-  orderly_publish(ids[[2]], FALSE, path = path)
+  orderly_publish(ids[[2]], FALSE, root = path)
   expect_equal(
     DBI::dbReadTable(con, "changelog")$report_version_public,
     rep(c(ids[[5]], ids[[6]], NA_character_), c(5, 1, 4)))
 
   ## This should all survive a rebuild
   prev <- DBI::dbReadTable(con, "changelog")
-  orderly_rebuild(path = path)
+  orderly_rebuild(root = path)
   expect_equal(DBI::dbReadTable(con, "changelog"), prev)
 })
 
@@ -292,35 +292,35 @@ test_that("public changelog with multiple entries", {
   name <- "example"
   ids <- character(3)
 
-  ids[[1]] <- orderly_run(name, path = path, echo = FALSE,
+  ids[[1]] <- orderly_run(name, root = path, echo = FALSE,
                           message = paste("[label1]", c("a", "b", "c")))
-  ids[[2]] <- orderly_run(name, path = path, echo = FALSE,
+  ids[[2]] <- orderly_run(name, root = path, echo = FALSE,
                           message = paste("[label1]", c("d")))
-  ids[[3]] <- orderly_run(name, path = path, echo = FALSE,
+  ids[[3]] <- orderly_run(name, root = path, echo = FALSE,
                           message = paste("[label1]", c("e", "f")))
   for (i in ids) {
-    orderly_commit(i, path = path)
+    orderly_commit(i, root = path)
   }
 
-  con <- orderly_db("destination", path = path)
+  con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
 
-  orderly_publish(ids[[2]], path = path)
+  orderly_publish(ids[[2]], root = path)
   expect_equal(
     DBI::dbReadTable(con, "changelog")$report_version_public,
     rep(c(ids[[2]], NA_character_), c(4, 2)))
 
-  orderly_publish(ids[[1]], path = path)
+  orderly_publish(ids[[1]], root = path)
   expect_equal(
     DBI::dbReadTable(con, "changelog")$report_version_public,
     rep(c(ids[[1]], ids[[2]], NA_character_), c(3, 1, 2)))
 
-  orderly_publish(ids[[3]], path = path)
+  orderly_publish(ids[[3]], root = path)
   expect_equal(
     DBI::dbReadTable(con, "changelog")$report_version_public,
     rep(c(ids[[1]], ids[[2]], ids[[3]]), c(3, 1, 2)))
 
-  orderly_publish(ids[[2]], FALSE, path = path)
+  orderly_publish(ids[[2]], FALSE, root = path)
   expect_equal(
     DBI::dbReadTable(con, "changelog")$report_version_public,
     rep(c(ids[[1]], ids[[3]]), c(3, 3)))
@@ -334,14 +334,14 @@ test_that("public version has no changelog", {
   ids <- character(4)
   for (i in seq_along(ids)) {
     msg <- if (i != 3) sprintf("[label1] %d", i)
-    ids[[i]] <- orderly_run(name, path = path, echo = FALSE, message = msg)
-    orderly_commit(ids[[i]], path = path)
+    ids[[i]] <- orderly_run(name, root = path, echo = FALSE, message = msg)
+    orderly_commit(ids[[i]], root = path)
   }
 
-  con <- orderly_db("destination", path = path)
+  con <- orderly_db("destination", root = path)
   DBI::dbReadTable(con, "changelog")
 
-  orderly_publish(ids[[3]], path = path)
+  orderly_publish(ids[[3]], root = path)
   expect_equal(
     DBI::dbReadTable(con, "changelog")$report_version_public,
     rep(c(ids[[3]], NA_character_), c(2, 1)))

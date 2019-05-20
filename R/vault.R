@@ -10,7 +10,7 @@ resolve_secrets <- function(x, config) {
     if (any(i)) {
       loadNamespace("vaultr")
       vault <- withr::with_envvar(
-        orderly_envir_read(config$path),
+        orderly_envir_read(config$root),
         vaultr::vault_client(login = TRUE, addr = config$vault_server))
       key <- unname(sub(re, "\\1", x[i]))
       field <- unname(sub(re, "\\2", x[i]))

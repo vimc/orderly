@@ -8,7 +8,7 @@
 \title{Prepare a directory for orderly to use}
 \usage{
 orderly_test_start(name, parameters = NULL, envir = .GlobalEnv,
-  path = NULL, locate = TRUE)
+  root = NULL, locate = TRUE)
 
 orderly_test_end(cleanup = FALSE)
 
@@ -27,7 +27,7 @@ parameters declared in the orderly.yml.}
 by default a new environment will be made with the global
 environment as the parent.}
 
-\item{path}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

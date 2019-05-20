@@ -5,15 +5,15 @@
 \alias{pull_archive}
 \title{Download dependent reports}
 \usage{
-pull_dependencies(name, path = NULL, locate = TRUE, remote = NULL)
+pull_dependencies(name, root = NULL, locate = TRUE, remote = NULL)
 
-pull_archive(name, id = "latest", path = NULL, locate = TRUE,
+pull_archive(name, id = "latest", root = NULL, locate = TRUE,
   remote = NULL)
 }
 \arguments{
 \item{name}{Name of the report to download dependencies for}
 
-\item{path}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

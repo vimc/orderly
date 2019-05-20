@@ -198,7 +198,7 @@ report_db_open_existing <- function(con, config) {
 
 report_db_rebuild <- function(config, verbose = TRUE) {
   assert_is(config, "orderly_config")
-  root <- config$path
+  root <- config$root
   con <- orderly_db("destination", config, validate = FALSE)
   on.exit(DBI::dbDisconnect(con))
 

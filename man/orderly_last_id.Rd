@@ -4,10 +4,10 @@
 \alias{orderly_last_id}
 \title{Get id of last run report}
 \usage{
-orderly_last_id(path = NULL, locate = TRUE, draft = TRUE)
+orderly_last_id(root = NULL, locate = TRUE, draft = TRUE)
 }
 \arguments{
-\item{path}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

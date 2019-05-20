@@ -1,14 +1,14 @@
-orderly_config <- function(path) {
-  filename <- path_orderly_config_yml(path)
+orderly_config <- function(root) {
+  filename <- path_orderly_config_yml(root)
   if (!file.exists(filename)) {
-    stop("Did not find file 'orderly_config.yml' at path ", path)
+    stop("Did not find file 'orderly_config.yml' at path ", root)
   }
   withr::with_envvar(
-    orderly_envir_read(path),
-    orderly_config_read_yaml(filename, path))
+    orderly_envir_read(root),
+    orderly_config_read_yaml(filename, root))
 }
 
-orderly_config_read_yaml <- function(filename, path) {
+orderly_config_read_yaml <- function(filename, root) {
   info <- yaml_read(filename)
   check_fields(info, filename, character(),
                c("destination", "fields", "minimum_orderly_version",
@@ -73,7 +73,7 @@ orderly_config_read_yaml <- function(filename, path) {
 
   info$remote <- config_check_remote(info$remote, filename)
 
-  info$path <- normalizePath(path, mustWork = TRUE)
+  info$root <- normalizePath(root, mustWork = TRUE)
 
   remote_identity <- Sys.getenv("ORDERLY_API_SERVER_IDENTITY", "")
   if (nzchar(remote_identity)) {
@@ -86,10 +86,10 @@ orderly_config_read_yaml <- function(filename, path) {
 
   if (!is.null(info$global_resources)) {
     assert_is_directory(info$global_resources, name = "global resource",
-                        workdir = path)
+                        workdir = root)
   }
 
-  info$archive_version <- read_orderly_archive_version(path)
+  info$archive_version <- read_orderly_archive_version(root)
 
   class(info) <- "orderly_config"
   info
@@ -204,11 +204,11 @@ sql_type <- function(type, name) {
 }
 
 orderly_locate_config <- function() {
-  path <- find_file_descend("orderly_config.yml")
-  if (is.null(path)) {
+  root <- find_file_descend("orderly_config.yml")
+  if (is.null(root)) {
     stop("Reached root without finding 'orderly_config.yml'")
   }
-  orderly_config(path)
+  orderly_config(root)
 }
 
 

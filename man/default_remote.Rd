@@ -5,14 +5,14 @@
 \alias{get_default_remote}
 \title{Set default remote location}
 \usage{
-set_default_remote(value, path = NULL, locate = TRUE)
+set_default_remote(value, root = NULL, locate = TRUE)
 
-get_default_remote(path = NULL, locate = TRUE)
+get_default_remote(root = NULL, locate = TRUE)
 }
 \arguments{
 \item{value}{A string describing a remote, or \code{NULL} to clear}
 
-\item{path}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

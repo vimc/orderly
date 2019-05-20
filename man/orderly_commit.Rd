@@ -4,7 +4,7 @@
 \alias{orderly_commit}
 \title{Commit a generated report}
 \usage{
-orderly_commit(id, name = NULL, path = NULL, locate = TRUE)
+orderly_commit(id, name = NULL, root = NULL, locate = TRUE)
 }
 \arguments{
 \item{id}{The identifier of the report}
@@ -12,7 +12,7 @@ orderly_commit(id, name = NULL, path = NULL, locate = TRUE)
 \item{name}{The name of the report - this can be omitted and the
 name will be determined from the \code{id}.}
 
-\item{path}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

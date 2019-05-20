@@ -21,7 +21,7 @@ R6_orderly_remote_path <- R6::R6Class(
         stop("Does not look like an orderly repository: ", squote(path))
       }
       self$config <- orderly_config(path)
-      self$name <- name %||% self$config$path
+      self$name <- name %||% self$config$root
       lockBinding(quote(config), self)
       lockBinding(quote(name), self)
     },
@@ -36,19 +36,19 @@ R6_orderly_remote_path <- R6::R6Class(
     },
 
     pull = function(name, id, root) {
-      src <- file.path(path_archive(self$config$path), name, id)
+      src <- file.path(path_archive(self$config$root), name, id)
       dest <- file.path(path_archive(root), name, id)
       copy_directory(src, dest, TRUE)
     },
 
     push = function(name, id, root) {
       src <- file.path(path_archive(root), name, id)
-      dest <- file.path(path_archive(self$config$path), name, id)
+      dest <- file.path(path_archive(self$config$root), name, id)
       copy_directory(src, dest, rollback_on_error = TRUE)
     },
 
     publish = function(name, id, value = TRUE) {
-      orderly_publish(id, value = value, name = name, path = self$config)
+      orderly_publish(id, value = value, name = name, root = self$config)
     },
 
     run = function(...) {

@@ -41,12 +41,12 @@
 ##' @param id_file Write the identifier into a file
 ##' @export
 orderly_run <- function(name, parameters = NULL, envir = NULL,
-                        path = NULL, locate = TRUE, echo = TRUE,
+                        root = NULL, locate = TRUE, echo = TRUE,
                         id_file = NULL, fetch = FALSE, ref = NULL,
                         open = FALSE, message = NULL, extended_output = FALSE) {
   assert_scalar_logical(open)
   envir <- orderly_environment(envir)
-  config <- orderly_config_get(path, locate)
+  config <- orderly_config_get(root, locate)
   check_orderly_archive_version(config)
 
   info <- recipe_prepare(config, name, id_file, ref, fetch, message)
@@ -55,7 +55,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   info <- recipe_run(info, parameters, envir, config, echo = echo)
 
   if (open) {
-    open_directory(file.path(config$path, "draft", name, info$id))
+    open_directory(file.path(config$root, "draft", name, info$id))
   }
 
   if (extended_output) {
@@ -68,9 +68,9 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
 ##' @export
 ##' @rdname orderly_run
 orderly_data <- function(name, parameters = NULL, envir = NULL,
-                         path = NULL, locate = TRUE) {
-  config <- orderly_config_get(path, locate)
-  info <- recipe_read(file.path(path_src(config$path), name), config)
+                         root = NULL, locate = TRUE) {
+  config <- orderly_config_get(root, locate)
+  info <- recipe_read(file.path(path_src(config$root), name), config)
   envir <- orderly_environment(envir)
   recipe_data(config, info, parameters, envir)
 }
@@ -92,12 +92,12 @@ orderly_data <- function(name, parameters = NULL, envir = NULL,
 ##' @inheritParams orderly_run
 ##' @export
 orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
-                               path = NULL, locate = TRUE) {
+                               root = NULL, locate = TRUE) {
   if (!is.null(cache$test)) {
     stop("Already running in test mode")
   }
 
-  config <- orderly_config_get(path, locate)
+  config <- orderly_config_get(root, locate)
   ## TODO: support ref here
   info <- recipe_prepare(config, name, id_file = NULL, ref = NULL,
                          fetch = FALSE, message = NULL)
@@ -151,7 +151,7 @@ orderly_test_restart <- function(cleanup = TRUE) {
   parameters <- cache$test$parameters
   config <- cache$test$config
   orderly_test_end(cleanup)
-  orderly_test_start(name, parameters, path = config)
+  orderly_test_start(name, parameters, root = config)
 }
 
 ##' @export
@@ -177,13 +177,13 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
   orderly_log("name", name)
   if (!is.null(ref)) {
     if (fetch) {
-      git_fetch(config$path)
+      git_fetch(config$root)
     }
-    prev <- git_detach_head_at_ref(ref, config$path)
-    on.exit(git_checkout_branch(prev, TRUE, config$path))
+    prev <- git_detach_head_at_ref(ref, config$root)
+    on.exit(git_checkout_branch(prev, TRUE, config$root))
   }
 
-  info <- recipe_read(file.path(path_src(config$path), name), config)
+  info <- recipe_read(file.path(path_src(config$root), name), config)
 
   id <- new_report_id()
   orderly_log("id", id)
@@ -193,7 +193,7 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
   }
 
   info$id <- id
-  info$workdir <- file.path(path_draft(config$path), info$name, id)
+  info$workdir <- file.path(path_draft(config$root), info$name, id)
   info <- recipe_prepare_workdir(info, message, config)
   info$git <- git_info(info$path)
 
@@ -465,7 +465,7 @@ recipe_prepare_workdir <- function(info, message, config) {
   }
 
   if (!is.null(info$global_resources)) {
-    root_path <- normalizePath(config$path, mustWork = TRUE)
+    root_path <- normalizePath(config$root, mustWork = TRUE)
     global_resource_dir <- file.path(root_path, config$global_resources)
     assert_file_exists(x = info$global_resources, check_case = TRUE,
                        workdir = global_resource_dir,

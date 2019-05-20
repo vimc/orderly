@@ -73,7 +73,7 @@ test_that("run: fetch", {
 
   res$target(res)
 
-  id <- orderly_latest("minimal", path = path_local)
+  id <- orderly_latest("minimal", root = path_local)
   d <- readRDS(path_orderly_run_rds(
     file.path(path_local, "archive", "minimal", id)))
   expect_equal(d$git$sha, sha_origin)
@@ -105,7 +105,7 @@ test_that("run: pull before run", {
   expect_null(res$options$ref)
   res$target(res)
 
-  id <- orderly_latest("minimal", path = path_local)
+  id <- orderly_latest("minimal", root = path_local)
   d <- readRDS(path_orderly_run_rds(
     file.path(path_local, "archive", "minimal", id)))
   expect_equal(d$git$sha, sha_origin)
@@ -115,7 +115,7 @@ test_that("run: pull before run", {
 
 test_that("commit", {
   path <- prepare_orderly_example("minimal")
-  id <- orderly_run("example", path = path, echo = FALSE)
+  id <- orderly_run("example", root = path, echo = FALSE)
   args <- c("--root", path, "commit", id)
   res <- main_args(args)
   expect_equal(res$command, "commit")
@@ -128,8 +128,8 @@ test_that("commit", {
 
 test_that("publish", {
   path <- prepare_orderly_example("minimal")
-  id <- orderly_run("example", path = path, echo = FALSE)
-  p <- orderly_commit(id, path = path)
+  id <- orderly_run("example", root = path, echo = FALSE)
+  p <- orderly_commit(id, root = path)
 
   args <- c("--root", path, "publish", id)
   res <- main_args(args)
@@ -146,9 +146,9 @@ test_that("publish", {
 
 test_that("latest", {
   path <- prepare_orderly_example("minimal")
-  id1 <- orderly_run("example", path = path, echo = FALSE)
+  id1 <- orderly_run("example", root = path, echo = FALSE)
   Sys.sleep(0.1)
-  id2 <- orderly_run("example", path = path, echo = FALSE)
+  id2 <- orderly_run("example", root = path, echo = FALSE)
 
   args <- c("--root", path, "latest", "--draft", "example")
   res <- main_args(args)
@@ -271,7 +271,7 @@ test_that("rebuild", {
 
 test_that("cleanup", {
   path <- prepare_orderly_example("minimal")
-  id <- orderly_run("example", path = path, echo = FALSE)
+  id <- orderly_run("example", root = path, echo = FALSE)
 
   res <- main_args(c("--root", path, "cleanup"))
   expect_equal(res$command, "cleanup")
@@ -280,18 +280,18 @@ test_that("cleanup", {
   expect_false(res$options$failed_only)
   expect_identical(res$target, main_do_cleanup)
 
-  expect_equal(nrow(orderly_list2(path = path, draft = TRUE)), 1)
+  expect_equal(nrow(orderly_list2(root = path, draft = TRUE)), 1)
   expect_true(main_do_cleanup(res))
-  expect_equal(nrow(orderly_list2(path = path, draft = TRUE)), 0)
+  expect_equal(nrow(orderly_list2(root = path, draft = TRUE)), 0)
   expect_null(main_do_cleanup(res))
 })
 
 
 test_that("list", {
   path <- prepare_orderly_example("minimal")
-  id1 <- orderly_run("example", path = path, echo = FALSE)
-  id2 <- orderly_run("example", path = path, echo = FALSE)
-  orderly_commit(id2, path = path)
+  id1 <- orderly_run("example", root = path, echo = FALSE)
+  id2 <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id2, root = path)
 
   res <- main_args(c("--root", path, "list", "names"))
   expect_equal(capture.output(res$target(res)), "example")
@@ -331,7 +331,7 @@ test_that("run: message", {
 
   capture.output(res$target(res))
 
-  con <- orderly_db("destination", path = path)
+  con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
   d <- DBI::dbReadTable(con, "changelog")
 

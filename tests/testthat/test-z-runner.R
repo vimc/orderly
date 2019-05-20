@@ -111,8 +111,8 @@ test_that("publish", {
   runner <- orderly_runner(path)
 
   name <- "example"
-  id <- orderly_run(name, path = path, echo = FALSE)
-  orderly_commit(id, name, path = path)
+  id <- orderly_run(name, root = path, echo = FALSE)
+  orderly_commit(id, name, root = path)
 
   res <- runner$publish(name, id)
 
@@ -129,8 +129,8 @@ test_that("rebuild", {
   runner <- orderly_runner(path)
 
   name <- "example"
-  id <- orderly_run(name, path = path, echo = FALSE)
-  orderly_commit(id, name, path = path)
+  id <- orderly_run(name, root = path, echo = FALSE)
+  orderly_commit(id, name, root = path)
 
   path_db <- file.path(path, "orderly.sqlite")
   file.remove(path_db)
@@ -206,19 +206,19 @@ test_that("cleanup", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
-  id <- orderly_run("example", path = path, echo = FALSE)
-  orderly_commit(id, path = path)
+  id <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id, root = path)
 
   writeLines("1 + 1", file.path(path, "src/example/script.R"))
-  expect_error(orderly_run("example", path = path, echo = FALSE),
+  expect_error(orderly_run("example", root = path, echo = FALSE),
                "Script did not produce")
 
   runner <- orderly_runner(path)
   expect_message(runner$cleanup(), "clean.+draft/example")
   expect_silent(runner$cleanup())
 
-  expect_equal(nrow(orderly_list2(TRUE, path = path)), 0L)
-  expect_equal(orderly_list2(FALSE, path = path)$id, id)
+  expect_equal(nrow(orderly_list2(TRUE, root = path)), 0L)
+  expect_equal(orderly_list2(FALSE, root = path)$id, id)
 })
 
 
@@ -367,10 +367,10 @@ test_that("prevent git changes", {
         driver = "orderly::orderly_remote_path",
         primary = TRUE,
         master_only = TRUE,
-        args = list(path = path[["origin"]])),
+        args = list(root = path[["origin"]])),
       other = list(
         driver = "orderly::orderly_remote_path",
-        args = list(path = path[["origin"]]))))
+        args = list(root = path[["origin"]]))))
 
   path_local <- path[["local"]]
   writeLines(yaml::as.yaml(cfg), file.path(path_local, "orderly_config.yml"))
@@ -404,20 +404,20 @@ test_that("prevent git changes", {
 test_that("allow ref logic", {
   path <- unzip_git_demo()
   config <- list(server_options = list(master_only = FALSE),
-                 path = path)
+                 root = path)
 
   expect_false(runner_allow_ref(FALSE, config))
   expect_true(runner_allow_ref(TRUE, config))
   expect_true(runner_allow_ref(NULL, config))
 
   config <- list(server_options = list(master_only = TRUE),
-                 path = path)
+                 root = path)
   expect_false(runner_allow_ref(FALSE, config))
   expect_true(runner_allow_ref(TRUE, config))
   expect_false(runner_allow_ref(NULL, config))
 
   config <- list(server_options = list(master_only = FALSE),
-                 path = tempfile())
+                 root = tempfile())
   expect_false(runner_allow_ref(FALSE, config))
   expect_false(runner_allow_ref(TRUE, config))
   expect_false(runner_allow_ref(NULL, config))

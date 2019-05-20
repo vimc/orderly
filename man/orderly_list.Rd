@@ -4,10 +4,10 @@
 \alias{orderly_list}
 \title{List orderly reports}
 \usage{
-orderly_list(path = NULL, locate = TRUE)
+orderly_list(root = NULL, locate = TRUE)
 }
 \arguments{
-\item{path}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

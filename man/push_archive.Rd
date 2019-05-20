@@ -4,7 +4,7 @@
 \alias{push_archive}
 \title{Push an archive report to a remote location}
 \usage{
-push_archive(name, id = "latest", path = NULL, locate = TRUE,
+push_archive(name, id = "latest", root = NULL, locate = TRUE,
   remote = NULL)
 }
 \arguments{
@@ -13,7 +13,7 @@ push_archive(name, id = "latest", path = NULL, locate = TRUE,
 \item{id}{The identifier (for \code{pull_archive}.  The default is
 to use the latest report.}
 
-\item{path}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

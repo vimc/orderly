@@ -12,12 +12,12 @@
 ##' @inheritParams orderly_list
 ##' @export
 orderly_publish <- function(id, value = TRUE, name = NULL,
-                            path = NULL, locate = TRUE) {
-  config <- orderly_config_get(path, locate)
+                            root = NULL, locate = TRUE) {
+  config <- orderly_config_get(root, locate)
   if (is.null(name)) {
     name <- orderly_find_name(id, config, draft = FALSE, must_work = TRUE)
   }
-  workdir <- file.path(path_archive(config$path), name, id)
+  workdir <- file.path(path_archive(config$root), name, id)
   yml <- path_orderly_published_yml(workdir)
 
   if (file.exists(yml)) {

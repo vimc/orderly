@@ -5,10 +5,10 @@
 \alias{orderly_open_latest}
 \title{Open directory of completed report}
 \usage{
-orderly_open(id, name = NULL, path = NULL, locate = TRUE,
+orderly_open(id, name = NULL, root = NULL, locate = TRUE,
   draft = NULL)
 
-orderly_open_latest(name = NULL, path = NULL, locate = TRUE,
+orderly_open_latest(name = NULL, root = NULL, locate = TRUE,
   draft = FALSE)
 }
 \arguments{
@@ -18,7 +18,7 @@ which case \code{name} and \code{draft} must be specified}
 \item{name}{The name of the report.  Can be omitted if \code{id}
 is not \code{latest}}
 
-\item{path}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directoy, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 
