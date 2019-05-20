@@ -1,3 +1,7 @@
+# 0.6.4
+
+* The `config` argument to exported functions has been renamed to `root` to better reflect what is expected to be passed in (VIMC-2919)
+
 # 0.6.3
 
 * The `orderly_run.yml` script has now been removed and `orderly_run.rds` is the sole source of truth for the orderly run metadata (VIMC-2873).
