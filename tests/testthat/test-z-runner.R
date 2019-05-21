@@ -422,3 +422,27 @@ test_that("allow ref logic", {
   expect_false(runner_allow_ref(TRUE, config))
   expect_false(runner_allow_ref(NULL, config))
 })
+
+
+test_that("backup", {
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id, root = path)
+
+  db_orig <- file.path(path, "orderly.sqlite")
+  dat_orig <- with_sqlite(db_orig, function(con)
+    DBI::dbReadTable(con, "report_version"))
+
+  runner <- orderly_runner(path, backup_period = 1)
+
+  Sys.sleep(1.2)
+  runner$poll()
+
+  db_backup <- path_db_backup(path, "orderly.sqlite")
+  expect_true(file.exists(db_backup))
+
+  dat_backup <- with_sqlite(db_backup, function(con)
+    DBI::dbReadTable(con, "report_version"))
+
+  expect_equal(dat_orig, dat_backup)
+})

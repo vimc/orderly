@@ -503,3 +503,58 @@ test_that("show_question interactive", {
     list(orderly.nolog = TRUE),
     expect_equal(show_question(), FALSE))
 })
+
+
+test_that("periodic", {
+  skip_on_windows() # timing on windows is a pain
+  skip_on_cran() # gc may cause occasional failures here
+  gc() # avoid slow collections during this test
+  x <- 1
+  f <- function() x <<- x + 1
+  g <- periodic(f, 0.1)
+  g()
+  expect_equal(x, 1)
+  Sys.sleep(0.2)
+  g()
+  expect_equal(x, 2)
+  g()
+  expect_equal(x, 2)
+})
+
+
+test_that("protect", {
+  f <- function() {
+    if (x < 0) {
+      stop("negative x")
+    } else {
+      x
+    }
+  }
+  g <- protect(f)
+  x <- 1
+  expect_equal(g(), 1)
+  x <- -1
+  expect_null(g())
+})
+
+
+test_that("backup db", {
+  list_tables <- function(path) {
+    with_sqlite(path, function(con) DBI::dbListTables(con))
+  }
+
+  path <- create_orderly_demo()
+  path_db <- file.path(path, "orderly.sqlite")
+  dest <- file.path(path, "backup.sqlite")
+  dest_prev <- paste0(dest, ".prev")
+
+  sqlite_backup(path_db, dest)
+  expect_true(file.exists(dest))
+  expect_setequal(list_tables(path_db), list_tables(dest))
+
+  sqlite_backup(path_db, dest)
+  expect_true(file.exists(dest))
+  expect_true(file.exists(dest_prev))
+  expect_setequal(list_tables(path_db), list_tables(dest))
+  expect_setequal(list_tables(path_db), list_tables(dest_prev))
+})

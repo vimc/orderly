@@ -1,3 +1,7 @@
+# 0.6.5
+
+* The orderly "runner" (`orderly_runner`) will now periodically backup the destination database, which will be useful in cases where other applications store information in it (VIMC-2882)
+
 # 0.6.4
 
 * The `config` argument to exported functions has been renamed to `root` to better reflect what is expected to be passed in (VIMC-2919)

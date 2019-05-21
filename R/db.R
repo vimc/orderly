@@ -96,3 +96,30 @@ orderly_rebuild <- function(root = NULL, locate = TRUE, verbose = TRUE,
     invisible(FALSE)
   }
 }
+
+
+## From the SQLite docs https://www.sqlite.org/c3ref/backup_finish.html
+##
+## > SQLite holds a write transaction open on the destination database
+## > file for the duration of the backup operation. The source
+## > database is read-locked only while it is being read; it is not
+## > locked continuously for the entire backup operation. Thus, the
+## > backup may be performed on a live source database without
+## > preventing other database connections from reading or writing to
+## > the source database while the backup is underway.
+orderly_backup <- function(config = NULL, locate = TRUE) {
+  config <- orderly_config_get(config, locate)
+  if (config$destination$driver[[1]] == "RSQLite") {
+    curr <- orderly_db_args(config$destination, config)$args$dbname
+
+    dest <- path_db_backup(config$root, curr)
+    dir.create(dirname(dest), FALSE, TRUE)
+
+    prefix <- paste0(config$root, "/")
+    orderly_log("backup", sprintf("%s => %s",
+                                  sub(prefix, "", curr, fixed = TRUE),
+                                  sub(prefix, "", dest, fixed = TRUE)))
+
+    sqlite_backup(curr, dest)
+  }
+}
