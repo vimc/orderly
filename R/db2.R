@@ -159,6 +159,13 @@ report_db_init_create <- function(con, config, dialect) {
 
 
 report_db_open_existing <- function(con, config) {
+  version_db <- DBI::dbReadTable(con, ORDERLY_SCHEMA_TABLE)$schema_version
+  version_package <- ORDERLY_SCHEMA_VERSION
+  if (numeric_version(version_db) < numeric_version(version_package)) {
+    stop("orderly db needs rebuilding with orderly::orderly_rebuild()",
+         call. = FALSE)
+  }
+
   custom_db <- DBI::dbReadTable(con, "custom_fields")$id
   custom_config <- config$fields$name
   custom_msg <- setdiff(custom_config, custom_db)
@@ -185,14 +192,6 @@ report_db_open_existing <- function(con, config) {
               config$changelog$public %||% logical(0))
   if (!ok) {
     stop("changelog labels have changed: rebuild with orderly::orderly_rebuild",
-         call. = FALSE)
-  }
-
-  d <- DBI::dbReadTable(con, ORDERLY_SCHEMA_TABLE)
-  if (numeric_version(d$schema_version) <
-      numeric_version(ORDERLY_SCHEMA_VERSION)) {
-    ## with this approach we can't ever upgrade, but at least we throw
-    stop("orderly db needs rebuilding with orderly::orderly_rebuild()",
          call. = FALSE)
   }
 }
