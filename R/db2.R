@@ -8,7 +8,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-ORDERLY_SCHEMA_VERSION <- "0.0.7"
+ORDERLY_SCHEMA_VERSION <- "0.0.8"
 
 ## These will be used in a few places and even though they're not
 ## super likely to change it would be good
@@ -28,6 +28,7 @@ report_db_schema_read <- function(fields = NULL, dialect = "sqlite") {
 
   d <- set_names(lapply(names(d), preprepare), names(d))
 
+  ## Delete with VIMC-2929
   if (!is.null(fields)) {
     f <- set_names(Map(function(t, n) list(type = t, nullable = n),
                        fields$type, !fields$required),
@@ -104,6 +105,11 @@ report_db_schema_read <- function(fields = NULL, dialect = "sqlite") {
     sql <- c(sql, unlist(lapply(tables, "[[", "sql_fk"), FALSE, FALSE))
   }
   values <- drop_null(lapply(tables, "[[", "values"))
+  if (!is.null(fields)) {
+    values$custom_fields <- data_frame(
+      id = fields$name,
+       description = fields$description)
+  }
 
   list(tables = tables,
        sql = sql,
@@ -153,21 +159,17 @@ report_db_init_create <- function(con, config, dialect) {
 
 
 report_db_open_existing <- function(con, config) {
-  sql <- sprintf("SELECT * FROM %s LIMIT 0", ORDERLY_MAIN_TABLE)
-  d <- DBI::dbGetQuery(con, sql)
-  custom_name <- config$fields$name
-  msg <- setdiff(custom_name, names(d))
-  if (length(msg) > 0L) {
+  custom_db <- DBI::dbReadTable(con, "custom_fields")$id
+  custom_config <- config$fields$name
+  custom_msg <- setdiff(custom_config, custom_db)
+  if (length(custom_msg) > 0L) {
     stop(sprintf("custom fields %s not present in existing database",
-                 paste(squote(msg), collapse = ", ")))
+                 paste(squote(custom_msg), collapse = ", ")))
   }
-
-  schema <- report_db_schema(config$fields, report_db_dialect(con))
-  cols <- names(schema$tables[[ORDERLY_MAIN_TABLE]]$columns)
-  extra <- setdiff(names(d), cols)
-  if (length(extra) > 0L) {
+  custom_extra <- setdiff(custom_db, custom_config)
+  if (length(custom_extra) > 0L) {
     stop(sprintf("custom fields %s in database not present in config",
-                 paste(squote(extra), collapse = ", ")))
+                 paste(squote(custom_extra), collapse = ", ")))
   }
 
   if (!DBI::dbExistsTable(con, "changelog_label")) {
@@ -283,10 +285,22 @@ report_data_import <- function(con, workdir, config) {
     git_sha = dat_rds$git$sha %||% NA_character_,
     git_branch = dat_rds$git$branch %||% NA_character_,
     git_clean = git_clean)
+  ## TODO: Delete with VIMC-2929
   if (!is.null(dat_rds$meta$extra_fields)) {
     report_version <- cbind(report_version, dat_rds$meta$extra_fields)
   }
   DBI::dbWriteTable(con, "report_version", report_version, append = TRUE)
+
+  if (!is.null(dat_rds$meta$extra_fields)) {
+    custom <- vcapply(dat_rds$meta$extra_fields, function(x) as.character(x))
+    custom <- custom[!is.na(custom)]
+    report_version_custom <- data_frame(
+      report_version = id,
+      key = names(custom),
+      value = unname(custom))
+    DBI::dbWriteTable(con, "report_version_custom", report_version_custom,
+                      append = TRUE)
+  }
 
   if (!is.null(dat_rds$meta$view)) {
     report_version_view <- cbind(report_version = id, dat_rds$meta$view,

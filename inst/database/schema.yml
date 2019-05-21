@@ -41,6 +41,19 @@ report_version:
     # NOTE: fields listed in orderly_config.yml will also be
     # included here.
 
+# Custom fields - all coerced into text.
+report_version_custom:
+  columns:
+    - id: {type: SERIAL}
+    - report_version: {fk: report_version.id}
+    - key: {fk: custom_fields.id}
+    - value: {type: TEXT}
+
+custom_fields:
+  columns:
+    - id: {type: TEXT}
+    - description: {type: TEXT, nullable: true}
+
 # The extracted data
 #
 # I think that it would be nice to record the number of rows and

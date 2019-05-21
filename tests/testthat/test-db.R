@@ -16,18 +16,11 @@ test_that("custom fields", {
 
   expect_true(DBI::dbExistsTable(con, "orderly_schema"))
 
-  ## TODO: should the db initialisation here check that the custom
-  ## fields are all OK?  But that will happen rather a lot and that's
-  ## not great either.  But then performance probably does not matter.
-
   config <- orderly_config_get(path)
   expect_error(report_db_init(con, config, TRUE),
                "Table 'orderly_schema' already exists")
 
-  d <- DBI::dbReadTable(con, "report_version")
-  d <- d[setdiff(names(d), "author")]
-  DBI::dbWriteTable(con, "report_version", d, overwrite = TRUE)
-
+  DBI::dbExecute(con, "DELETE FROM custom_fields WHERE id = 'author'")
   expect_error(report_db_init(con, config, FALSE),
                "custom fields 'author' not present in existing database")
 
