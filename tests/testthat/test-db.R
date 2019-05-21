@@ -160,7 +160,15 @@ test_that("backup", {
   path <- create_orderly_demo()
   expect_message(
     orderly_backup(path),
-    "orderly.sqlite => backup/orderly.sqlite",
+    "orderly.sqlite => backup/db/orderly.sqlite",
     fixed = TRUE)
-  expect_true(file.exists(file.path(path, "backup/orderly.sqlite")))
+
+  dest <- path_db_backup(path, "orderly.sqlite")
+  expect_true(file.exists(dest))
+
+  dat_orig <- with_sqlite(file.path(path, "orderly.sqlite"), function(con)
+    DBI::dbReadTable(con, "report_version"))
+  dat_backup <- with_sqlite(dest, function(con)
+    DBI::dbReadTable(con, "report_version"))
+  expect_equal(dat_orig, dat_backup)
 })

@@ -4,7 +4,7 @@
 \alias{orderly_runner}
 \title{Orderly runner}
 \usage{
-orderly_runner(path, allow_ref = NULL)
+orderly_runner(path, allow_ref = NULL, backup_period = 600)
 }
 \arguments{
 \item{path}{Path to use}
@@ -14,9 +14,23 @@ given, then we will look to see if the orderly configuration
 disallows branch changes (based on the
 \code{ORDERLY_API_SERVER_IDENTITY} environment variable and the
 \code{master_only} setting of the relevant server block.}
+
+\item{backup_period}{Period (in seconds) between DB backups.  This
+is a guide only as backups cannot happen while a task is running
+- if more than this many seconds have elapsed when the runner is
+in its idle loop a backup of the db will be performed.  This
+creates a copy of orderly's destination database in
+\code{backup/db} with the same filename as the destination
+database, even if that database typically lives outside of the
+orderly tree.  In case of corruption of the database, this
+backup can be manually moved into place.  This is only needed if
+you are storing information alongside the core orderly tables
+(as done by OrderlyWeb).}
 }
 \description{
-An orderly runner.  This is used to run reports remotely.  It's
-designed to be used in conjunction with montagu-reporting-api, so
-there is no "draft" stage.
+An orderly runner.  This is used to run reports as a server
+process.  It's designed to be used in conjunction with OrderlyWeb,
+so there is no "draft" stage and reports are committed as soon as
+they are run.  This function is not intended for human end users,
+only for creating automated tools for use with orderly.
 }

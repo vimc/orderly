@@ -110,14 +110,16 @@ orderly_rebuild <- function(root = NULL, locate = TRUE, verbose = TRUE,
 orderly_backup <- function(config = NULL, locate = TRUE) {
   config <- orderly_config_get(config, locate)
   if (config$destination$driver[[1]] == "RSQLite") {
-    src <- config$destination$args$dbname
+    curr <- orderly_db_args(config$destination, config)$args$dbname
 
-    ## TODO: make the relative path configurable
-    dest <- file.path("backup", basename(src), fsep = "/")
-    dest_full <- file.path(config$root, dest)
-    dir.create(dirname(dest_full), FALSE, TRUE)
-    orderly_log("backup", sprintf("%s => %s", src, dest))
+    dest <- path_db_backup(config$root, curr)
+    dir.create(dirname(dest), FALSE, TRUE)
 
-    sqlite_backup(src, dest_full)
+    prefix <- paste0(config$root, "/")
+    orderly_log("backup", sprintf("%s => %s",
+                                  sub(prefix, "", curr, fixed = TRUE),
+                                  sub(prefix, "", dest, fixed = TRUE)))
+
+    sqlite_backup(curr, dest)
   }
 }
