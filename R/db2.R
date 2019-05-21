@@ -293,12 +293,12 @@ report_data_import <- function(con, workdir, config) {
   if (!is.null(dat_rds$meta$extra_fields)) {
     custom <- vcapply(dat_rds$meta$extra_fields, function(x) as.character(x))
     custom <- custom[!is.na(custom)]
-    report_version_custom <- data_frame(
+    report_version_custom_fields <- data_frame(
       report_version = id,
       key = names(custom),
       value = unname(custom))
-    DBI::dbWriteTable(con, "report_version_custom", report_version_custom,
-                      append = TRUE)
+    DBI::dbWriteTable(con, "report_version_custom_fields",
+                      report_version_custom_fields, append = TRUE)
   }
 
   if (!is.null(dat_rds$meta$view)) {

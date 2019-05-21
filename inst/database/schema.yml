@@ -42,7 +42,7 @@ report_version:
     # included here.
 
 # Custom fields - all coerced into text.
-report_version_custom:
+report_version_custom_fields:
   columns:
     - id: {type: SERIAL}
     - report_version: {fk: report_version.id}
