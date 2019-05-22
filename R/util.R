@@ -197,10 +197,6 @@ pasteq <- function(x, sep = ", ") {
   paste(squote(x), collapse = ", ")
 }
 
-set_mode <- function(x, mode) {
-  storage.mode(x) <- mode
-  x
-}
 
 capture_log <- function(expr, filename) {
   con <- file(filename, "w")
