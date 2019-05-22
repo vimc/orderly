@@ -31,7 +31,7 @@ report_db_schema_read <- function(fields = NULL, dialect = "sqlite") {
   ## Delete with VIMC-2929
   if (!is.null(fields)) {
     f <- set_names(Map(function(t, n) list(type = t, nullable = n),
-                       fields$type, !fields$required),
+                       rep("character", nrow(fields)), !fields$required),
                    fields$name)
     d[[ORDERLY_MAIN_TABLE]]$columns <- c(d[[ORDERLY_MAIN_TABLE]]$columns, f)
   }

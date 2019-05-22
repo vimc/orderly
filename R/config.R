@@ -98,33 +98,30 @@ orderly_config_read_yaml <- function(filename, root) {
 config_check_fields <- function(x, filename) {
   if (is.null(x)) {
     return(data.frame(name = character(0), required = logical(0),
-                      type = character(0), type_sql = character(0),
                       stringsAsFactors = FALSE))
   }
-  types <- c("character", "numeric")
   assert_named(x, TRUE, sprintf("%s:fields", filename))
   check1 <- function(nm) {
     d <- x[[nm]]
+    ## TODO: See VIMC-2930; "type" can be removed once the reports are
+    ## updated, but it's best to do that in a staged way (deploy
+    ## VIMC-2768, remove entries from the montagu-reports, then remove
+    ## the entry here).
     check_fields(d, sprintf("%s:fields:%s", filename, nm),
-                 c("required", "type"), "description")
+                 "required", c("description", "type"))
     assert_scalar_logical(d$required,
                           sprintf("%s:fields:%s:required", filename, nm))
-    assert_scalar_character(d$type,
-                            sprintf("%s:fields:%s:type", filename, nm))
     if (is.null(d$description)) {
       d$description <- NA_character_
     } else {
       assert_scalar_character(d$description,
                               sprintf("%s:fields:%s:description", filename, nm))
     }
-    d$type_sql <- sql_type(d$type, sprintf("%s:fields:%s:type", filename, nm))
     d
   }
   dat <- lapply(names(x), check1)
   data.frame(name = names(x),
              required = vlapply(dat, "[[", "required"),
-             type = vcapply(dat, "[[", "type"),
-             type_sql = vcapply(dat, "[[", "type_sql"),
              description = vcapply(dat, "[[", "description"),
              stringsAsFactors = FALSE)
 }
@@ -197,11 +194,6 @@ config_check_changelog <- function(x, filename) {
              public = vlapply(x, function(x) x$public, USE.NAMES = FALSE))
 }
 
-sql_type <- function(type, name) {
-  tr <- c(numeric = "DECIMAL",
-          character = "TEXT")
-  tr[[match_value(type, names(tr), name)]]
-}
 
 orderly_locate_config <- function() {
   root <- find_file_descend("orderly_config.yml")
