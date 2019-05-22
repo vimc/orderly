@@ -108,7 +108,7 @@ report_db_schema_read <- function(fields = NULL, dialect = "sqlite") {
   if (!is.null(fields)) {
     values$custom_fields <- data_frame(
       id = fields$name,
-       description = fields$description)
+      description = fields$description)
   }
 
   list(tables = tables,
