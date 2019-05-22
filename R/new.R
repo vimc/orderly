@@ -78,7 +78,7 @@ orderly_new_system <- function(dest, config) {
     fields <- config$fields
     desc <- ifelse(is.na(fields$description), fields$name, fields$description)
     req <- ifelse(fields$required, "required", "optional")
-    str <- sprintf("%s -- %s (%s)", desc, fields$type, req)
+    str <- sprintf("%s -- character (%s)", desc, req)
     str <- vcapply(strwrap(str, prefix = "# ", simplify = FALSE),
                    paste, collapse = "\n")
     ex <- sprintf(ifelse(fields$required, "%s: ~", "# %s:"), fields$name)

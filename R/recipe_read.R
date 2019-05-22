@@ -27,8 +27,7 @@ recipe_read <- function(path, config, validate = TRUE) {
   ## Fill any any missing optional fields:
   i <- !(config$fields$name %in% names(info))
   if (any(i)) {
-    info[config$fields$name[i]] <-
-      lapply(config$fields$type[i], set_mode, x = NA)
+    info[config$fields$name[i]] <- NA_character_
   }
 
   fieldname <- function(name) {
@@ -96,8 +95,7 @@ recipe_read <- function(path, config, validate = TRUE) {
     el <- config$fields[i, ]
     x <- info[[el$name]]
     if (!is.null(x) || el$required) {
-      assert_type(x, el$type, fieldname(el$name))
-      assert_scalar(x, fieldname(el$name))
+      assert_scalar_character(x, fieldname(el$name))
     }
   }
 

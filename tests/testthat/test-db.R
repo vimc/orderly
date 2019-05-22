@@ -16,18 +16,11 @@ test_that("custom fields", {
 
   expect_true(DBI::dbExistsTable(con, "orderly_schema"))
 
-  ## TODO: should the db initialisation here check that the custom
-  ## fields are all OK?  But that will happen rather a lot and that's
-  ## not great either.  But then performance probably does not matter.
-
   config <- orderly_config_get(path)
   expect_error(report_db_init(con, config, TRUE),
                "Table 'orderly_schema' already exists")
 
-  d <- DBI::dbReadTable(con, "report_version")
-  d <- d[setdiff(names(d), "author")]
-  DBI::dbWriteTable(con, "report_version", d, overwrite = TRUE)
-
+  DBI::dbExecute(con, "DELETE FROM custom_fields WHERE id = 'author'")
   expect_error(report_db_init(con, config, FALSE),
                "custom fields 'author' not present in existing database")
 
@@ -171,4 +164,21 @@ test_that("backup", {
   dat_backup <- with_sqlite(dest, function(con)
     DBI::dbReadTable(con, "report_version"))
   expect_equal(dat_orig, dat_backup)
+})
+
+
+test_that("db includes custom fields", {
+  path <- prepare_orderly_example("demo")
+  id <- orderly_run("minimal", root = path, echo = FALSE)
+  orderly_commit(id, root = path)
+  con <- orderly_db("destination", root = path)
+  on.exit(DBI::dbDisconnect(con))
+  d <- DBI::dbReadTable(con, "report_version_custom_fields")
+  expect_equal(d$report_version, rep(id, 3))
+  v <- c("requester", "author", "comment")
+  expect_setequal(d$key, v)
+  expect_equal(d$value[match(v, d$key)],
+               c("Funder McFunderface",
+                 "Researcher McResearcherface",
+                 "This is a comment"))
 })
