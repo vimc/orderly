@@ -165,3 +165,20 @@ test_that("backup", {
     DBI::dbReadTable(con, "report_version"))
   expect_equal(dat_orig, dat_backup)
 })
+
+
+test_that("db includes custom fields", {
+  path <- prepare_orderly_example("demo")
+  id <- orderly_run("minimal", root = path, echo = FALSE)
+  orderly_commit(id, root = path)
+  con <- orderly_db("destination", root = path)
+  on.exit(DBI::dbDisconnect(con))
+  d <- DBI::dbReadTable(con, "report_version_custom_fields")
+  expect_equal(d$report_version, rep(id, 3))
+  v <- c("requester", "author", "comment")
+  expect_setequal(d$key, v)
+  expect_equal(d$value[match(v, d$key)],
+               c("Funder McFunderface",
+                 "Researcher McResearcherface",
+                 "This is a comment"))
+})
