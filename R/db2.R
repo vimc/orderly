@@ -179,14 +179,8 @@ report_db_open_existing <- function(con, config) {
                  paste(squote(custom_extra), collapse = ", ")))
   }
 
-  if (!DBI::dbExistsTable(con, "changelog_label")) {
-    ## This DB needs rebuilding, but this at least will give a
-    ## sensible error message:
-    label <- data_frame(label = character(0), public = logical(0))
-  } else {
-    label <- DBI::dbReadTable(con, "changelog_label")
-    label$public <- as.logical(label$public)
-  }
+  label <- DBI::dbReadTable(con, "changelog_label")
+  label$public <- as.logical(label$public)
   ok <- setequal(label$id, config$changelog$id) &&
     identical(label$public[match(label$id, config$changelog$id)],
               config$changelog$public %||% logical(0))
