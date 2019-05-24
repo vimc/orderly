@@ -41,37 +41,10 @@ unaltered.
 
 Messages can be provided to orderly run and these are required to be in the format `[label] value`.
 
-Once a report is run (via `orderly::orderly_run()`, or via `orderly
-run` on the command line), the given changelog, along with any
+Once a report is run (via `orderly::orderly_run()`, or via `orderly run` on the command line), the given changelog, along with any
 message, is compared with the last commited version of this report,
 and entries that are introduced on this round are identified.  We add
-the report id to the entries and end up with a
-[JSON](https://en.wikipedia.org/wiki/JSON) version of the changelog, called `changelog.json`, which might look like:
-
-```json
-[
-  {
-    "report_version": "20181105-152224-a42aaa47",
-    "from_file": false,
-    "label": "public",
-    "value": "Rerunning as requested"
-  },
-  {
-    "report_version": "20181105-152224-a42aaa47",
-    "from_file": true,
-    "label": "public",
-    "value": "Started working with new version of the data.  This includes everything sent up to 2018-10-10"
-  },
-  {
-    "report_version": "20181105-100427-ef29376c",
-    "from_file": true,
-    "label": "internal",
-    "value": "Fixed incorrect plotting"
-  }
-]
-```
-
-Here, two report versions are present (`20181105-100427-ef29376c` and `20181105-152224-a42aaa47`) and the message is interleaved with the information from the changelog file.
+the report id to the entries, and a randomly generated unique id to each new entry.  This is saved in `orderly_run.rds` along with other report metadata.
 
 ## Details
 
@@ -87,8 +60,8 @@ When preparing to run an orderly report:
 
 1. we read in the plaintext changelog if it exists
 1. parse all messages provided and add as if they were a changelog entry `from_file` of `FALSE`
-1. we look for the "latest" archived version of this report and read a `changelog.json` file if it exists.  Alternatively we can use a remote copy of orderly via the api here (not implemented yet).
+1. we look for the "latest" archived version of this report and read the changelog from that reports `orderly_run.rds` file.  Alternatively we can use a remote copy of orderly via the api here (not implemented yet).
 1. filter the previous previous changelog to remove any `from_file = FALSE` entries and confirm that our new changelog can be prepended to the previous
-1. add the `id` to the "new" entries and prepend this - save the resulting data as `changelog.json`
+1. add the `id` to the "new" entries and prepend this - save the resulting data into the new report's `orderly_run.yml`
 
 For checking against the API, we will use `GET reports/:name/versions/version/latest/changelog/` with the current report name as `:name`.
