@@ -179,7 +179,7 @@ test_that("append changelog", {
   id1 <- orderly_run("example", root = path, echo = FALSE)
   p1 <- orderly_commit(id1, root = path)
 
-  l1 <- changelog_read_json(p1)
+  l1 <- readRDS(path_orderly_run_rds(p1))$meta$changelog
   expect_equal(l1[names(l1) != "id"],
                data_frame(label = "label1",
                           value = "value1",
@@ -200,7 +200,7 @@ test_that("append changelog", {
   id2 <- orderly_run("example", root = path, echo = FALSE)
   p2 <- orderly_commit(id2, root = path)
 
-  l2 <- changelog_read_json(p2)
+  l2 <- readRDS(path_orderly_run_rds(p2))$meta$changelog
   expect_equal(l2[names(l2) != "id"],
                data_frame(label = c("label2", "label1"),
                           value = c("value2", "value1"),
@@ -210,8 +210,8 @@ test_that("append changelog", {
 
   id3 <- orderly_run("example", root = path, echo = FALSE)
   p3 <- orderly_commit(id3, root = path)
-  expect_equal(changelog_read_json(p3),
-               changelog_read_json(p2))
+  l3 <- readRDS(path_orderly_run_rds(p3))$meta$changelog
+  expect_equal(l3, l2)
 })
 
 

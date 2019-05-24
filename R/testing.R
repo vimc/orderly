@@ -119,10 +119,10 @@ demo_change_time <- function(id, time, path) {
   dat$meta$date <- as.character(time)
   saveRDS(dat, rds)
 
-  changelog <- changelog_read_json(p)
+  changelog <- dat$meta$changelog
   if (!is.null(changelog)) {
     changelog$report_version[changelog$report_version == id] <- id_new
-    changelog_save_json(changelog, p)
+    dat$meta$changelog <- changelog
   }
 
   orderly_commit(id_new, name, root = path)

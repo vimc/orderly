@@ -236,7 +236,6 @@ report_db_needs_rebuild <- function(config) {
 report_data_import <- function(con, workdir, config) {
   dat_rds <- readRDS(path_orderly_run_rds(workdir))
   published <- report_is_published(workdir)
-  changelog <- changelog_read_json(workdir)
 
   ## Was not done before 0.3.3
   stopifnot(!is.null(dat_rds$meta))
@@ -416,6 +415,7 @@ report_data_import <- function(con, workdir, config) {
     filename = artefact_files)
   DBI::dbWriteTable(con, "file_artefact", file_artefact, append = TRUE)
 
+  changelog <- dat_rds$meta$changelog
   if (!is.null(changelog)) {
     changelog <- changelog[changelog$report_version == id, , drop = FALSE]
     if (nrow(changelog) > 0L) {
