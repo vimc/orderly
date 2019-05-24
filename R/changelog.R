@@ -48,7 +48,12 @@ changelog_compare <- function(new, old) {
          call. = FALSE)
   }
 
-  new[i, , drop = FALSE]
+  ret <- new[i, , drop = FALSE]
+  if (length(i) > 0L) {
+    ret <- cbind(id = ids::random_id(length(i)), ret,
+                 stringsAsFactors = FALSE)
+  }
+  ret
 }
 
 

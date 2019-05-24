@@ -55,30 +55,51 @@ test_that("changelog consistency: no new entries", {
 
 
 test_that("changelog consistency: all from file", {
-  d <- data_frame(from_file = c(TRUE, TRUE, TRUE),
+  d <- data_frame(id = ids::random_id(3),
+                  from_file = c(TRUE, TRUE, TRUE),
                   label = c("a", "b", "c"),
                   value = c("x", "y", "z"))
 
   ## All four possible cases here:
   expect_equal(changelog_compare(d, d), d[integer(0), ])
-  expect_equal(changelog_compare(d, d[2:3, ]), d[1, ])
-  expect_equal(changelog_compare(d, d[3, ]), d[1:2, ])
-  expect_equal(changelog_compare(d, NULL), d)
+
+  res <- changelog_compare(d[-1], d[2:3, ])
+  expect_equal(res[-1], d[1, -1])
+  expect_match(res$id, "^[[:xdigit:]]{32}")
+
+  res <- changelog_compare(d[-1], d[3, ])
+  expect_equal(res[-1], d[1:2, -1])
+  expect_match(res$id, "^[[:xdigit:]]{32}")
+
+  res <- changelog_compare(d[-1], NULL)
+  expect_equal(res[-1], d[-1])
+  expect_match(res$id, "^[[:xdigit:]]{32}")
 })
 
 
 test_that("changelog consistency: incl from file", {
-  d <- data_frame(from_file = c(TRUE, FALSE, TRUE),
+  d <- data_frame(id = ids::random_id(3),
+                  from_file = c(TRUE, FALSE, TRUE),
                   label = c("a", "b", "c"),
                   value = c("x", "y", "z"))
   e <- d[-2, ]
 
   ## All four possible cases here:
   expect_equal(changelog_compare(e, d), d[integer(0), ])
-  expect_equal(changelog_compare(e, d[2:3, ]), d[1, ])
-  ## This can't actully happen
-  expect_equal(changelog_compare(e, d[3, ]), d[1, ])
-  expect_equal(changelog_compare(e, NULL), e)
+
+  res <- changelog_compare(e[-1], d[2:3, ])
+  expect_equal(res[-1], d[1, -1])
+  expect_match(res$id, "^[[:xdigit:]]{32}")
+
+  res <- changelog_compare(e[-1], d[3, ])
+  expect_equal(res[-1], d[1, -1])
+  expect_match(res$id, "^[[:xdigit:]]{32}")
+  expect_false(res$id %in% d$id)
+
+  res <- changelog_compare(e[-1], NULL)
+  expect_equal(res[-1], e[-1])
+  expect_match(res$id, "^[[:xdigit:]]{32}")
+  expect_false(any(res$id %in% d$id))
 })
 
 
@@ -159,18 +180,19 @@ test_that("append changelog", {
   p1 <- orderly_commit(id1, root = path)
 
   l1 <- changelog_read_json(p1)
-  expect_equal(l1,
+  expect_equal(l1[names(l1) != "id"],
                data_frame(label = "label1",
                           value = "value1",
                           from_file = TRUE,
                           report_version = id1))
+  expect_match(l1$id, "^[[:xdigit:]]{32}$")
 
   con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
   d <- DBI::dbReadTable(con, "changelog")
   d$from_file <- as.logical(d$from_file)
   expect_equal(d[names(l1)], l1)
-  expect_setequal(names(d), c(names(l1), "id", "report_version_public"))
+  expect_setequal(names(d), c(names(l1), "report_version_public"))
 
   txt <- c("[label2]", "value2", readLines(path_cl))
   writeLines(txt, path_cl)
@@ -179,11 +201,12 @@ test_that("append changelog", {
   p2 <- orderly_commit(id2, root = path)
 
   l2 <- changelog_read_json(p2)
-  expect_equal(changelog_read_json(p2),
+  expect_equal(l2[names(l2) != "id"],
                data_frame(label = c("label2", "label1"),
                           value = c("value2", "value1"),
                           from_file = TRUE,
                           report_version = c(id2, id1)))
+  expect_equal(l2$id[[2]], l1$id)
 
   id3 <- orderly_run("example", root = path, echo = FALSE)
   p3 <- orderly_commit(id3, root = path)
