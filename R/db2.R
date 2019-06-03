@@ -419,6 +419,11 @@ report_data_import <- function(con, workdir, config) {
   if (!is.null(changelog)) {
     changelog <- changelog[changelog$report_version == id, , drop = FALSE]
     if (nrow(changelog) > 0L) {
+      prev <- DBI::dbGetQuery(con, "SELECT max(ordering) FROM changelog")[[1]]
+      if (is.na(prev)) {
+        prev <- 0L
+      }
+      changelog$ordering <- seq_len(nrow(changelog)) + prev
       DBI::dbWriteTable(con, "changelog", changelog, append = TRUE)
     }
   }

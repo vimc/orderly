@@ -193,6 +193,7 @@ changelog:
     - label: {type: TEXT, fk: changelog_label.id}
     - value: {type: TEXT}
     - from_file: {type: BOOLEAN}
+    - ordering: {type: INTEGER}
 
 parameters_type:
   columns:

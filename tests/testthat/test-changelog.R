@@ -192,7 +192,8 @@ test_that("append changelog", {
   d <- DBI::dbReadTable(con, "changelog")
   d$from_file <- as.logical(d$from_file)
   expect_equal(d[names(l1)], l1)
-  expect_setequal(names(d), c(names(l1), "report_version_public"))
+  expect_setequal(names(d), c(names(l1), "ordering", "report_version_public"))
+  expect_equal(d$ordering, 1L)
 
   txt <- c("[label2]", "value2", readLines(path_cl))
   writeLines(txt, path_cl)
@@ -207,6 +208,8 @@ test_that("append changelog", {
                           from_file = TRUE,
                           report_version = c(id2, id1)))
   expect_equal(l2$id[[2]], l1$id)
+
+  expect_setequal(DBI::dbReadTable(con, "changelog")$ordering, 1:2)
 
   id3 <- orderly_run("example", root = path, echo = FALSE)
   p3 <- orderly_commit(id3, root = path)
