@@ -233,21 +233,28 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
 
   recipe_check_device_stack(prep$n_dev)
   hash_artefacts <- recipe_check_artefacts(info)
+  size_artefacts <- file_size(names(hash_artefacts))
 
+  ## TODO: this should go into the preparation (orderly_prepare_data
+  ## or similar)
   if (file_exists("README.md", check_case = FALSE)) {
     readme <- dir(pattern = "readme.md", ignore.case = TRUE)
-    hash_readme <- hash_files(readme)
+    info_readme <- file_info(readme)
   } else {
-    hash_readme <- NULL
+    info_readme <- NULL
   }
 
+  ## and this too...
   if (is.null(info$sources)) {
-    hash_sources <- NULL
+    info_sources <- NULL
   } else {
-    hash_sources <- resource_info$hash_resources[info$sources]
+    info_sources <- file_info(info$sources)
   }
-  hash_orderly_yml <- hash_files("orderly.yml")
-  hash_script <- hash_files(info$script)
+
+  ## This will move into the prep eventually...
+  info_orderly_yml <- file_info("orderly.yml")
+  info_script <- file_info(info$script)
+
   hash_data_csv <- con_csv$mset(prep$data)
   hash_data_rds <- con_rds$mset(prep$data)
   stopifnot(identical(hash_data_csv, hash_data_rds))
@@ -276,6 +283,40 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   session <- session_info()
   session$git <- info$git
 
+  if (is.null(resource_info$hash_resources)) {
+    info_resources <- NULL
+  } else {
+    ## TODO: fix this upstream and that will help the
+    ## source-as-global problem
+    resources <- setdiff(names(resource_info$hash_resources),
+                         info_sources$filename)
+    info_resources <- file_info(resources)
+  }
+  if (is.null(resource_info$hash_global)) {
+    info_global <- NULL
+  } else {
+    info_global <- file_info(names(resource_info$hash_global))
+  }
+
+  file_info_inputs <- file_in_data(
+    orderly_yml = info_orderly_yml,
+    script = info_script,
+    readme = info_readme,
+    source = info_sources,
+    resource = info_resources)
+
+  artefacts <- data_frame(
+    format = list_to_character(info$artefacts[, "format"], FALSE),
+    description = list_to_character(info$artefacts[, "description"], FALSE),
+    order = seq_len(nrow(info$artefacts)))
+
+  n <- lengths(info$artefacts[, "filenames"])
+  file_info_artefacts <- data_frame(
+    order = rep(seq_along(n), n),
+    filename = names(hash_artefacts),
+    file_hash = unname(hash_artefacts),
+    file_size = file_size(names(hash_artefacts)))
+
   meta <- list(id = info$id,
                name = info$name,
                parameters = parameters,
@@ -285,27 +326,26 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                extra_fields = extra_fields,
                connection = !is.null(info$connection),
                packages = info$packages,
-               hash_orderly = info$hash,
-               hash_orderly_yml = as.list(hash_orderly_yml),
-               hash_script = as.list(hash_script),
-               hash_readme = as.list(hash_readme),
-               hash_sources = as.list(hash_sources),
-               hash_resources = as.list(resource_info$hash_resources),
-               hash_global = as.list(resource_info$hash_global),
-               hash_data = as.list(hash_data_rds),
-               hash_artefacts = as.list(hash_artefacts),
-               artefacts = info$artefacts,
+               file_info_inputs = file_info_inputs,
+               file_info_artefacts = file_info_artefacts,
+               artefacts = artefacts,
                depends = depends,
                elapsed = as.numeric(elapsed, "secs"),
                changelog = info$changelog,
                git = info$git)
 
+  ## All the information about data - it's a little more complicated
+  ## than the other types of inputs because there are *two* sizes at
+  ## present.  We should probably drop the csv one tbh and render to
+  ## csv as required?
   if (!is.null(info$data)) {
     meta$data <- data_frame(
       name = names(info$data),
       database = vcapply(info$data, "[[", "database", USE.NAMES = FALSE),
       query = vcapply(info$data, "[[", "query", USE.NAMES = FALSE),
-      hash = unname(hash_data_rds))
+      hash = unname(hash_data_rds),
+      size_csv = file_size(orderly_db("csv", config)$filename(hash_data_rds)),
+      size_rds = file_size(orderly_db("rds", config)$filename(hash_data_csv)))
   }
 
   if (!is.null(info$views)) {

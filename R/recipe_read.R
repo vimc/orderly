@@ -285,7 +285,8 @@ recipe_read_check_depends <- function(x, filename, config, validate) {
 
       ## VIMC-2017: check that a file is actually an artefact
       meta <- readRDS(path_orderly_run_rds(el$path))
-      ok <- el$filename %in% names(meta$meta$hash_artefacts)
+      i <- match(el$filename, meta$meta$file_info_artefacts$filename)
+      ok <- !is.na(i)
       if (any(!ok)) {
         stop(sprintf(
           "Dependency %s not an artefact of %s/%s:\n%s",
@@ -295,9 +296,16 @@ recipe_read_check_depends <- function(x, filename, config, validate) {
           call. = FALSE)
       }
 
-      el$hash <- hash_files(filename_full, FALSE)
+      el$hash <- meta$meta$file_info_artefacts$file_hash[i]
+      if (el$hash != hash_files(filename_full, FALSE)) {
+        ## TODO: this requires a test...
+        stop(sprintf(
+          "Validation of dependency %s failed: artefact has been modified",
+          el$filename),
+          call. = FALSE)
+      }
 
-      el$time <- readRDS(path_orderly_run_rds(el$path))$time
+      el$time <- meta$time
 
       ## Is this considered to be the "latest" copy of a dependency?
       el$is_latest <- el$id == "latest" ||

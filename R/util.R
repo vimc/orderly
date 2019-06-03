@@ -31,6 +31,11 @@ vcapply <- function(X, FUN, ...) {
 }
 
 
+vnapply <- function(X, FUN, ...) {
+  vapply(X, FUN, numeric(1), ...)
+}
+
+
 viapply <- function(X, FUN, ...) {
   vapply(X, FUN, integer(1), ...)
 }
@@ -562,6 +567,11 @@ list_to_character <- function(x, named = TRUE) {
 }
 
 
+list_to_numeric <- function(x, named = TRUE) {
+  vnapply(x, identity, USE.NAMES = named)
+}
+
+
 list_to_integer <- function(x, named = TRUE) {
   viapply(x, identity, USE.NAMES = named)
 }
@@ -688,4 +698,28 @@ protect <- function(fun) {
   function() {
     tryCatch(fun(), error = function(e) NULL)
   }
+}
+
+
+## Does not exist in older R (< 3.3.0 I think)
+file_size <- function(path) {
+  file.info(path, extra_cols = FALSE)$size
+}
+
+
+file_info <- function(path) {
+  data_frame(filename = path,
+             file_hash = hash_files(path, FALSE),
+             file_size = file_size(path))
+}
+
+
+file_in_data <- function(...) {
+  d <- list(...)
+  n <- viapply(d, NROW, USE.NAMES = FALSE)
+  ret <- cbind(file_purpose = rep(names(d), n),
+               do.call("rbind", d),
+               stringsAsFactors = FALSE)
+  rownames(ret) <- NULL
+  ret
 }
