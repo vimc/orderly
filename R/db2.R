@@ -345,8 +345,10 @@ report_data_import <- function(con, workdir, config) {
     DBI::dbWriteTable(con, "depends", depends, append = TRUE)
   }
 
-  ## TODO: patch this back in for the saved rds I think
-  hash_orderly_yml <- hash_files(file.path(workdir, "orderly.yml"), FALSE)
+  ## NOTE: The [[1]] is here because of the as.list() done as we
+  ## import into the metadata.  That should come off at some point,
+  ## but will require another migration...
+  hash_orderly_yml <- dat_rds$meta$hash_orderly_yml[[1]]
 
   ## NOTE: the hash from 'sources' comes from the resources field.
   file_in <- list(resource = names(dat_rds$meta$hash_resources),
