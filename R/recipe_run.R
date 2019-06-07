@@ -303,7 +303,8 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
     script = info_script,
     readme = info_readme,
     source = info_sources,
-    resource = info_resources)
+    resource = info_resources,
+    global = info_global)
 
   artefacts <- data_frame(
     format = list_to_character(info$artefacts[, "format"], FALSE),
