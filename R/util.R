@@ -31,11 +31,6 @@ vcapply <- function(X, FUN, ...) {
 }
 
 
-vnapply <- function(X, FUN, ...) {
-  vapply(X, FUN, numeric(1), ...)
-}
-
-
 viapply <- function(X, FUN, ...) {
   vapply(X, FUN, integer(1), ...)
 }
@@ -564,11 +559,6 @@ drop_null <- function(x) {
 
 list_to_character <- function(x, named = TRUE) {
   vcapply(x, identity, USE.NAMES = named)
-}
-
-
-list_to_numeric <- function(x, named = TRUE) {
-  vnapply(x, identity, USE.NAMES = named)
 }
 
 
