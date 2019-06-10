@@ -707,7 +707,10 @@ file_size <- function(path) {
 }
 
 
-file_info <- function(path) {
+file_info <- function(path, workdir = NULL) {
+  if (!is.null(workdir)) {
+    return(withr::with_dir(workdir, file_info(path)))
+  }
   data_frame(filename = path,
              file_hash = hash_files(path, FALSE),
              file_size = file_size(path))

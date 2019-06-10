@@ -233,7 +233,6 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
 
   recipe_check_device_stack(prep$n_dev)
   hash_artefacts <- recipe_check_artefacts(info)
-  size_artefacts <- file_size(names(hash_artefacts))
 
   ## TODO: this should go into the preparation (orderly_prepare_data
   ## or similar)

@@ -346,3 +346,49 @@ test_that("migrate 0.6.1 -> 0.6.7", {
   expect_true(all(names(changelog) %in% names(cmp)))
   expect_equivalent(changelog, cmp[i, names(changelog)])
 })
+
+
+test_that("migrate => 0.6.8", {
+  path <- unpack_reference("0.6.0")
+
+  con <- orderly_db("destination", path, validate = FALSE)
+
+  old <- list(file = DBI::dbReadTable(con, "file"),
+              file_artefact = DBI::dbReadTable(con, "file_artefact"),
+              file_input = DBI::dbReadTable(con, "file_input"),
+              data = DBI::dbReadTable(con, "data"))
+  DBI::dbDisconnect(con)
+
+  orderly_migrate(path, to = "0.6.8")
+  orderly_rebuild(path)
+
+  con <- orderly_db("destination", path)
+  new <- list(file = DBI::dbReadTable(con, "file"),
+              file_artefact = DBI::dbReadTable(con, "file_artefact"),
+              file_input = DBI::dbReadTable(con, "file_input"),
+              data = DBI::dbReadTable(con, "data"))
+  DBI::dbDisconnect(con)
+
+  expect_setequal(old$file$hash, new$file$hash)
+  expect_equal(old$file$size[match(new$file$hash, old$file$hash)],
+               new$file$size)
+
+  expect_setequal(new$data$hash, old$data$hash)
+  expect_equal(old$data$size_csv[match(new$data$hash, old$data$hash)],
+               new$data$size_csv)
+  expect_equal(old$data$size_rds[match(new$data$hash, old$data$hash)],
+               new$data$size_rds)
+
+  expect_equal(old$file_artefact, new$file_artefact)
+
+  i <- order(old$file_input$report_version,
+             old$file_input$filename,
+             old$file_input$file_purpose)
+  j <- order(new$file_input$report_version,
+             new$file_input$filename,
+             new$file_input$file_purpose)
+  old_file_input <- old$file_input[i, -1]
+  new_file_input <- new$file_input[j, -1]
+  rownames(old_file_input) <- rownames(new_file_input) <- NULL
+  expect_equal(old_file_input, new_file_input)
+})
