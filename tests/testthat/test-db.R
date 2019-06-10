@@ -226,10 +226,11 @@ test_that("db includes file information", {
                description = "A graph of things",
                order = 1))
 
+  filenames <- c("orderly.yml", "script.R", "mygraph.png", "mygraph.pdf")
   file <- DBI::dbReadTable(con, "file")
   expect_equal(file,
                data_frame(hash = c("26f10ce8e0dba5993709b8bc6262fb6f",
                                    "eda0ed142005488307e065831ad66f72",
                                    artefact_hash),
-                          size = c(269L, 175L, 37853L, 4926L)))
+                          size = file_size(file.path(p, filenames))))
 })
