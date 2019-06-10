@@ -299,7 +299,6 @@ test_that("migrate 0.6.0 -> 0.6.1", {
   expect_null(readRDS(path_orderly_run_rds(p))$meta$hash_readme)
 
   orderly_migrate(path, to = "0.6.1")
-  orderly_rebuild(path)
 
   expect_equal(
     readRDS(path_orderly_run_rds(p))$meta$hash_readme,
@@ -315,7 +314,6 @@ test_that("migrate 0.6.1 -> 0.6.2", {
   expect_null(readRDS(path_orderly_run_rds(p))$meta$hash_orderly_yml)
 
   orderly_migrate(path, to = "0.6.2")
-  orderly_rebuild(path)
 
   expect_equal(
     readRDS(path_orderly_run_rds(p))$meta$hash_orderly_yml,
