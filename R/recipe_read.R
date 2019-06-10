@@ -298,9 +298,8 @@ recipe_read_check_depends <- function(x, filename, config, validate) {
 
       el$hash <- meta$meta$file_info_artefacts$file_hash[i]
       if (el$hash != hash_files(filename_full, FALSE)) {
-        ## TODO: this requires a test...
         stop(sprintf(
-          "Validation of dependency %s failed: artefact has been modified",
+          "Validation of dependency '%s' failed: artefact has been modified",
           el$filename),
           call. = FALSE)
       }

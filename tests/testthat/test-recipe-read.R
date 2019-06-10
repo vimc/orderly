@@ -318,3 +318,17 @@ test_that("warn old style db", {
     recipe_read(file.path(path, "src", "connection"), cfg),
     "Use of strings for connection: is deprecated")
 })
+
+
+test_that("detect modified artefacts", {
+  path <- prepare_orderly_example("demo")
+  id <- orderly_run("other", parameters = list(nmin = 0),
+                    echo = FALSE, root = path)
+  p <- orderly_commit(id, root = path)
+  writeLines(character(0), file.path(p, "summary.csv"))
+
+  cfg <- orderly_config(path)
+  expect_error(
+    recipe_read(file.path(path, "src", "use_dependency"), config = cfg),
+    "Validation of dependency 'summary.csv' failed: artefact has been modified")
+})
