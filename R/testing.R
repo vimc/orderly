@@ -1,3 +1,27 @@
+##' Set up one of the orderly examples included with the package.
+##' These are not intended to be starting points for new orderly
+##' repositories, but are used in the package examples and vignettes.
+##' @title Set up an orderly example
+##'
+##' @param name Name of the example
+##'
+##' @param path Destination to create the example - if it exists
+##'   already it must be an empty directory.  By default, creates a
+##'   new temporary directory
+##'
+##' @return Returns the path to the orderly example
+##' @examples
+##' # Create a new copy of the "minimal" example
+##' path <- orderly::orderly_example("minimal")
+##' dir(path)
+##'
+##' # Example reports within this repository:
+##' orderly::orderly_list(path)
+orderly_example <- function(name, path = tempfile()) {
+  prepare_orderly_example(name, path)
+}
+
+
 ## Create an example set that includes some orderly runs (compared
 ## with prepare_orderly_example below that simply prepares the
 ## source).  This is used to create a set of data for testing the API.
