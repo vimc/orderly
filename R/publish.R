@@ -50,6 +50,7 @@ legacy_report_db_publish <- function(name, id, value, config) {
   for (k in which(new != prev)) {
     DBI::dbExecute(con, sql, list(p[[k]], dat$id[[k]]))
   }
+  invisible(value)
 }
 
 
