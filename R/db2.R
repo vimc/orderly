@@ -211,16 +211,7 @@ report_db_rebuild <- function(config, verbose = TRUE) {
     }
   }
 
-  if (!is.null(config$changelog)) {
-    sql <- paste("SELECT distinct report_version.report",
-                 "  FROM changelog",
-                 "  JOIN report_version",
-                 "    ON report_version.id = changelog.report_version")
-    reports <- DBI::dbGetQuery(con, sql)[[1]]
-    for (r in reports) {
-      report_db_update_changelog_published(con, r)
-    }
-  }
+  legacy_report_db_rebuild_published(config)
 }
 
 
@@ -235,7 +226,6 @@ report_db_needs_rebuild <- function(config) {
 
 report_data_import <- function(con, workdir, config) {
   dat_rds <- readRDS(path_orderly_run_rds(workdir))
-  published <- report_is_published(workdir)
 
   ## Was not done before 0.3.3
   stopifnot(!is.null(dat_rds$meta))
@@ -270,7 +260,7 @@ report_data_import <- function(con, workdir, config) {
     date = dat_rds$meta$date,
     displayname = dat_rds$meta$displayname,
     description = dat_rds$meta$description,
-    published = published,
+    published = FALSE, # TODO: this eventually comes out
     connection = dat_rds$meta$connection,
     git_sha = dat_rds$git$sha %||% NA_character_,
     git_branch = dat_rds$git$branch %||% NA_character_,
@@ -479,53 +469,6 @@ report_db_destroy <- function(con, config) {
     for (t in drop) {
       DBI::dbRemoveTable(con, t)
     }
-  }
-}
-
-
-report_db_publish <- function(con, id, name, value) {
-  sql <- "UPDATE report_version SET published = $1 WHERE id = $2"
-  DBI::dbExecute(con, sql, list(value, id))
-  report_db_update_changelog_published(con, name)
-}
-
-
-report_db_update_changelog_published <- function(con, name) {
-  sql <- "SELECT id FROM report_version WHERE report = $1 and published"
-  published <- DBI::dbGetQuery(con, sql, name)$id
-
-  sql <- paste("SELECT",
-               "  changelog.id, report_version, report_version_public,",
-               "    published",
-               "  FROM changelog",
-               "  JOIN report_version",
-               "    ON report_version.id = changelog.report_version",
-               "  JOIN changelog_label",
-               "    ON changelog_label.id = changelog.label",
-               " WHERE report_version.report = $1",
-               "   AND changelog_label.public",
-               " ORDER BY report_version")
-  dat <- DBI::dbGetQuery(con, sql, list(name))
-  dat$published <- dat$published == 1
-
-  p <- rep(NA_character_, nrow(dat))
-  for (i in seq_len(nrow(dat))) {
-    j <- dat$report_version[[i]] <= published
-    if (!any(j)) {
-      break
-    }
-    p[[i]] <- published[[min(which(j))]]
-  }
-
-  prev <- dat$report_version_public
-  new <- p
-  ## Replace NAs with empty strings for ease of the next comparison
-  prev[is.na(prev)] <- ""
-  new[is.na(new)] <- ""
-
-  sql <- "UPDATE changelog SET report_version_public = $1 WHERE id = $2"
-  for (k in which(new != prev)) {
-    DBI::dbExecute(con, sql, list(p[[k]], dat$id[[k]]))
   }
 }
 

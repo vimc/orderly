@@ -285,22 +285,22 @@ test_that("public changelog", {
   con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
 
-  orderly_publish(ids[[2]], root = path)
+  legacy_orderly_publish(name, ids[[2]], root = path)
   expect_equal(
     DBI::dbReadTable(con, "changelog")$report_version_public,
     rep(c(ids[[2]], NA_character_), c(2, length(ids) - 2)))
 
-  orderly_publish(ids[[6]], root = path)
+  legacy_orderly_publish(name, ids[[6]], root = path)
   expect_equal(
     DBI::dbReadTable(con, "changelog")$report_version_public,
     rep(c(ids[[2]], ids[[6]], NA_character_), c(2, 4, 4)))
 
-  orderly_publish(ids[[5]], root = path)
+  legacy_orderly_publish(name, ids[[5]], root = path)
   expect_equal(
     DBI::dbReadTable(con, "changelog")$report_version_public,
     rep(c(ids[[2]], ids[[5]], ids[[6]], NA_character_), c(2, 3, 1, 4)))
 
-  orderly_publish(ids[[2]], FALSE, root = path)
+  legacy_orderly_publish(name, ids[[2]], FALSE, root = path)
   expect_equal(
     DBI::dbReadTable(con, "changelog")$report_version_public,
     rep(c(ids[[5]], ids[[6]], NA_character_), c(5, 1, 4)))
@@ -331,22 +331,22 @@ test_that("public changelog with multiple entries", {
   con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
 
-  orderly_publish(ids[[2]], root = path)
+  legacy_orderly_publish(name, ids[[2]], root = path)
   expect_equal(
     DBI::dbReadTable(con, "changelog")$report_version_public,
     rep(c(ids[[2]], NA_character_), c(4, 2)))
 
-  orderly_publish(ids[[1]], root = path)
+  legacy_orderly_publish(name, ids[[1]], root = path)
   expect_equal(
     DBI::dbReadTable(con, "changelog")$report_version_public,
     rep(c(ids[[1]], ids[[2]], NA_character_), c(3, 1, 2)))
 
-  orderly_publish(ids[[3]], root = path)
+  legacy_orderly_publish(name, ids[[3]], root = path)
   expect_equal(
     DBI::dbReadTable(con, "changelog")$report_version_public,
     rep(c(ids[[1]], ids[[2]], ids[[3]]), c(3, 1, 2)))
 
-  orderly_publish(ids[[2]], FALSE, root = path)
+  legacy_orderly_publish(name, ids[[2]], FALSE, root = path)
   expect_equal(
     DBI::dbReadTable(con, "changelog")$report_version_public,
     rep(c(ids[[1]], ids[[3]]), c(3, 3)))
@@ -367,7 +367,7 @@ test_that("public version has no changelog", {
   con <- orderly_db("destination", root = path)
   DBI::dbReadTable(con, "changelog")
 
-  orderly_publish(ids[[3]], root = path)
+  legacy_orderly_publish(name, ids[[3]], root = path)
   expect_equal(
     DBI::dbReadTable(con, "changelog")$report_version_public,
     rep(c(ids[[3]], NA_character_), c(2, 1)))
