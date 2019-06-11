@@ -1,13 +1,14 @@
 legacy_orderly_publish <- function(name, id, value = TRUE, root = NULL) {
-  path <- file.path(root, "archive", name, id)
+  config <- orderly_config_get(root)
+  path <- file.path(config$root, "archive", name, id)
   yaml_write(list(published = value),
              file.path(path, "orderly_published.yml"))
-  legacy_report_db_publish(name, id, value, root)
+  legacy_report_db_publish(name, id, value, config)
 }
 
 
-legacy_report_db_publish <- function(name, id, value, root) {
-  con <- orderly_db("destination", root)
+legacy_report_db_publish <- function(name, id, value, config) {
+  con <- orderly_db("destination", config)
   on.exit(DBI::dbDisconnect(con))
 
   sql <- "UPDATE report_version SET published = $1 WHERE id = $2"
@@ -62,8 +63,10 @@ legacy_report_db_rebuild_published <- function(config) {
     reports$yml <- file.path(root, "archive", reports$name, reports$id,
                              "orderly_published.yml")
     for (i in which(file.exists(reports$yml))) {
+      name <- reports$name[[i]]
+      id <- reports$id[[i]]
       value <- yaml_read(reports$yml[[i]])$published
-      legacy_report_db_publish(reports$name[[i]], reports$id[[i]], value, root)
+      legacy_report_db_publish(name, id, value, config)
     }
   }
 }
