@@ -321,3 +321,28 @@ test_that("migrate 0.6.1 -> 0.6.2", {
     readRDS(path_orderly_run_rds(p))$meta$hash_orderly_yml,
     c("orderly.yml" = "23f4542f02ad69ddafc6fab2a4391e6c"))
 })
+
+
+test_that("migrate 0.6.1 -> 0.6.7", {
+  path <- unpack_reference("0.6.0")
+
+  reports <- subset(orderly_list_archive(path), name == "changelog")
+  p <- file.path(path, "archive", "changelog", reports$id[[2]])
+  expect_null(readRDS(path_orderly_run_rds(p))$meta$changelog)
+
+  orderly_migrate(path, to = "0.6.7")
+  orderly_rebuild(path)
+
+  changelog <- readRDS(path_orderly_run_rds(p))$meta$changelog
+  expect_is(changelog, "data.frame")
+  expect_true("id" %in% names(changelog))
+  con <- orderly_db("destination", root = path)
+  on.exit(DBI::dbDisconnect(con))
+
+  cmp <- DBI::dbReadTable(con, "changelog")
+  cmp$from_file <- as.logical(cmp$from_file)
+  i <- match(changelog$id, cmp$id)
+  expect_false(any(is.na(i)))
+  expect_true(all(names(changelog) %in% names(cmp)))
+  expect_equivalent(changelog, cmp[i, names(changelog)])
+})

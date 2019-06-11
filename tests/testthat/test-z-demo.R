@@ -16,6 +16,9 @@ test_that("orderly_demo", {
   expect_false(any(is.na(d$description[d$report == "other"])))
   expect_true(all(is.na(d$displayname[d$report == "minimal"])))
   expect_true(all(is.na(d$description[d$report == "minimal"])))
+
+  ## Ensure that the time manipulation affects the changelog too
+  expect_true(nrow(DBI::dbReadTable(con, "changelog")) > 0)
 })
 
 

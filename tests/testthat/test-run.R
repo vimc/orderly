@@ -463,10 +463,12 @@ test_that("run with message", {
                     message = test_message)
   p <- orderly_commit(id, root = path)
 
-  expect_equal(changelog_read_json(p),
+  d <- readRDS(path_orderly_run_rds(p))$meta$changelog
+  expect_equal(d[names(d) != "id"],
                data_frame(
                  label = "label1", value = "test", from_file = FALSE,
                  report_version = id))
+  expect_match(d$id, "^[[:xdigit:]]{32}")
 })
 
 

@@ -48,7 +48,12 @@ changelog_compare <- function(new, old) {
          call. = FALSE)
   }
 
-  new[i, , drop = FALSE]
+  ret <- new[i, , drop = FALSE]
+  if (length(i) > 0L) {
+    ret <- cbind(id = ids::random_id(length(i)), ret,
+                 stringsAsFactors = FALSE)
+  }
+  ret
 }
 
 
@@ -58,7 +63,11 @@ changelog_read_previous <- function(name, config) {
   ## that is going to end up in the configuration.
   prev <- orderly_latest(name, config, locate = FALSE,
                          draft = FALSE, must_work = FALSE)
-  changelog_read_json(file.path(config$root, "archive", name, prev))
+  if (is.na(prev)) {
+    return(NULL)
+  }
+  path <- file.path(config$root, "archive", name, prev)
+  readRDS(path_orderly_run_rds(path))$meta$changelog
 }
 
 
@@ -137,20 +146,4 @@ changelog_message_parse <- function(txt) {
   data_frame(label = label,
              value = value,
              from_file = FALSE)
-}
-
-
-changelog_save_json <- function(dat, path) {
-  if (!is.null(dat)) {
-    writeLines(jsonlite::toJSON(dat), path_changelog_json(path))
-  }
-}
-
-
-changelog_read_json <- function(path) {
-  filename <- path_changelog_json(path)
-  if (!file.exists(filename)) {
-    return(NULL)
-  }
-  jsonlite::fromJSON(filename)
 }

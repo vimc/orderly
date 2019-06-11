@@ -66,11 +66,6 @@ path_changelog_txt <- function(path, type) {
 }
 
 
-path_changelog_json <- function(path, type) {
-  file.path(path, "changelog.json")
-}
-
-
 path_db_backup <- function(root, file) {
   file.path(root, "backup", "db", basename(file), fsep = "/")
 }

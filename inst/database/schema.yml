@@ -187,12 +187,13 @@ changelog_label:
 
 changelog:
   columns:
-    - id: {type: SERIAL}
+    - id: {type: TEXT}
     - report_version: {fk: report_version.id}
     - report_version_public: {fk: report_version.id, nullable: true}
     - label: {type: TEXT, fk: changelog_label.id}
     - value: {type: TEXT}
     - from_file: {type: BOOLEAN}
+    - ordering: {type: INTEGER}
 
 parameters_type:
   columns:
