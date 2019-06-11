@@ -12,6 +12,30 @@
 ##'   = "destination"}).  This is primarily intended for internal use.
 ##'
 ##' @export
+##' @examples
+##' # Create an orderly that has a single commited report:
+##' path <- orderly::orderly_example("minimal")
+##' id <- orderly::orderly_run("example", root = path)
+##' orderly::orderly_commit(id, root = path)
+##'
+##' # The source database holds the data that might be accessible via
+##' # the 'data' entry in orderly.yml:
+##' db <- orderly::orderly_db("source", root = path)
+##' # This is a list, with one connection per database listed in the
+##' # orderly_config.yml (an empty list if none are specified):
+##' db
+##' DBI::dbListTables(db$source)
+##' head(DBI::dbReadTable(db$source, "data"))
+##' DBI::dbDisconnect(db)
+##'
+##' # The destination database holds information about the archived
+##' # reports:
+##' db <- orderly::orderly_db("destination", root = path)
+##' DBI::dbListTables(db)
+##'
+##' # These tables are documented online:
+##' # https://vimc.github.io/orderly/schema
+##' DBI::dbReadTable(db, "report_version")
 orderly_db <- function(type, root = NULL, locate = TRUE, validate = TRUE) {
   config <- orderly_config_get(root, locate)
   if (type == "rds") {
