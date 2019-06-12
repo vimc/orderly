@@ -241,8 +241,6 @@ report_data_import <- function(con, workdir, config) {
   stopifnot(!is.null(dat_rds$meta))
   ## Was not done before 0.5.5
   stopifnot(!is.null(dat_rds$meta$connection))
-  ## Was not done before 0.6.2
-  stopifnot(!is.null(dat_rds$meta$hash_orderly_yml))
 
   id <- dat_rds$meta$id
   name <- dat_rds$meta$name
@@ -302,20 +300,19 @@ report_data_import <- function(con, workdir, config) {
   }
 
   ## Then see if the data is known:
-  hash_data <- list_to_character(dat_rds$meta$hash_data)
-  if (length(hash_data) > 0L) {
+  data <- dat_rds$meta$data
+  if (!is.null(data) && nrow(data) > 0L) {
     sql_data <- sprintf("SELECT hash FROM data WHERE hash IN (%s)",
-                        paste(dquote(hash_data), collapse = ", "))
-    msg <- setdiff(hash_data, DBI::dbGetQuery(con, sql_data)$hash)
+                        paste(dquote(data$hash), collapse = ", "))
+    msg <- setdiff(data$hash, DBI::dbGetQuery(con, sql_data)$hash)
     if (length(msg)) {
-      data <- data_frame(
-        hash = msg,
-        size_csv = file.size(orderly_db("csv", config)$filename(msg)),
-        size_rds = file.size(orderly_db("rds", config)$filename(msg)))
-      DBI::dbWriteTable(con, "data", data, append = TRUE)
+      i <- data$hash %in% msg & !duplicated(data$hash)
+      cols <- c("hash", "size_csv", "size_rds")
+      DBI::dbWriteTable(con, "data", data[i, cols], append = TRUE)
     }
 
-    report_version_data <- cbind(report_version = id, dat_rds$meta$data,
+    report_version_data <- cbind(report_version = id,
+                                 data[c("name", "database", "query", "hash")],
                                  stringsAsFactors = FALSE)
     DBI::dbWriteTable(con, "report_version_data", report_version_data,
                       append = TRUE)
@@ -345,74 +342,30 @@ report_data_import <- function(con, workdir, config) {
     DBI::dbWriteTable(con, "depends", depends, append = TRUE)
   }
 
-  ## TODO: patch this back in for the saved rds I think
-  hash_orderly_yml <- hash_files(file.path(workdir, "orderly.yml"), FALSE)
-
-  ## NOTE: the hash from 'sources' comes from the resources field.
-  file_in <- list(resource = names(dat_rds$meta$hash_resources),
-                  global = names(dat_rds$meta$hash_global),
-                  script = names(dat_rds$meta$hash_script),
-                  readme = names(dat_rds$meta$hash_readme),
-                  orderly_yml = names(dat_rds$meta$hash_orderly_yml))
-  file_in_name <- unlist(file_in, FALSE, FALSE)
-
-  file_in_hash <- c(list_to_character(dat_rds$meta$hash_resources, FALSE),
-                    list_to_character(dat_rds$meta$hash_global, FALSE),
-                    list_to_character(dat_rds$meta$hash_script, FALSE),
-                    list_to_character(dat_rds$meta$hash_readme, FALSE),
-                    list_to_character(dat_rds$meta$hash_orderly_yml))
-  file_in_purpose <- rep(names(file_in), lengths(file_in))
-  ## TODO: This is not ideal but see VIMC-2903
-  sources <- names(dat_rds$meta$hash_sources)
-  file_in_purpose[file_in_name %in% sources] <- "source"
-
-  ## These might be missing:
-  sql <- sprintf("SELECT hash from file WHERE hash IN (%s)",
-                 paste(dquote(unique(file_in_hash)), collapse = ", "))
-
-  hash_msg <- setdiff(file_in_hash, DBI::dbGetQuery(con, sql)$hash)
-
-  i <- file_in_hash %in% hash_msg & !duplicated(file_in_hash)
-  if (any(i)) {
-    file <- data_frame(hash = file_in_hash[i],
-                       size = file.size(file.path(workdir, file_in_name[i])))
-    DBI::dbWriteTable(con, "file", file, append = TRUE)
-  }
-
-  file_input <- data_frame(
+  ## Inputs:
+  report_data_add_files(con, dat_rds$meta$file_info_inputs)
+  file_input <- cbind(
     report_version = id,
-    file_hash = file_in_hash,
-    filename = file_in_name,
-    file_purpose = file_in_purpose)
+    dat_rds$meta$file_info_inputs[c("file_hash", "filename", "file_purpose")],
+    stringsAsFactors = FALSE)
   DBI::dbWriteTable(con, "file_input", file_input, append = TRUE)
 
-  ## Then artefacts
-  artefacts <- dat_rds$meta$artefacts
-  report_version_artefact <- data_frame(
+  ## Artefacts:
+  report_data_add_files(con, dat_rds$meta$file_info_artefacts)
+  report_version_artefact <- cbind(
     report_version = id,
-    format = list_to_character(artefacts[, "format"], FALSE),
-    description = list_to_character(artefacts[, "description"], FALSE),
-    order = seq_len(nrow(artefacts)))
-
+    dat_rds$meta$artefacts,
+    stringsAsFactors = FALSE)
   DBI::dbWriteTable(con, "report_version_artefact", report_version_artefact,
                     append = TRUE)
+
   sql <- paste("SELECT id FROM report_version_artefact",
                "WHERE report_version = $1 ORDER BY 'order'")
-  tmp <- DBI::dbGetQuery(con, sql, id)
+  artefact_id <- DBI::dbGetQuery(con, sql, id)$id
 
-  ## We need to do some faffage here:
-  n <- lengths(artefacts[, "filenames"])
-  i <- rep(seq_along(n), n)
-
-  artefact_files <- unlist(artefacts[, "filenames"], use.names = FALSE)
-  artefact_hash <-
-    list_to_character(dat_rds$meta$hash_artefacts[artefact_files], FALSE)
-  report_data_add_files(con, artefact_hash, artefact_files, workdir)
-
-  file_artefact <- data_frame(
-    artefact = tmp$id[i],
-    file_hash = artefact_hash,
-    filename = artefact_files)
+  file_artefact <- cbind(
+    artefact = artefact_id[dat_rds$meta$file_info_artefacts$order],
+    dat_rds$meta$file_info_artefacts[c("file_hash", "filename")])
   DBI::dbWriteTable(con, "file_artefact", file_artefact, append = TRUE)
 
   changelog <- dat_rds$meta$changelog
@@ -443,14 +396,14 @@ report_data_import <- function(con, workdir, config) {
 }
 
 
-report_data_add_files <- function(con, hashes, paths, workdir) {
+report_data_add_files <- function(con, files) {
   sql <- sprintf("SELECT hash from file WHERE hash IN (%s)",
-                 paste(dquote(unique(hashes)), collapse = ", "))
-  hash_msg <- setdiff(hashes, DBI::dbGetQuery(con, sql)$hash)
-  i <- hashes %in% hash_msg & !duplicated(hashes)
+                 paste(dquote(unique(files$file_hash)), collapse = ", "))
+  hash_msg <- setdiff(files$file_hash, DBI::dbGetQuery(con, sql)$hash)
+  i <- files$file_hash %in% hash_msg & !duplicated(files$file_hash)
   if (any(i)) {
-    file <- data_frame(hash = hashes[i],
-                       size = file.size(file.path(workdir, paths[i])))
+    file <- data_frame(hash = files$file_hash[i],
+                       size = files$file_size[i])
     DBI::dbWriteTable(con, "file", file, append = TRUE)
   }
 }

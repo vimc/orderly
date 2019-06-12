@@ -58,7 +58,7 @@ orderly_cleanup_data <- function(config) {
     file.path(path_draft(config$root), dr$name, dr$id))
   used_draft <-
     unlist(lapply(path_rds, function(x)
-      readRDS(x)$meta$hash_data), use.names = FALSE)
+      readRDS(x)$meta$data$hash), use.names = FALSE)
   used <- c(used_pub, used_draft)
 
   csv <- orderly_db("csv", config, FALSE)

@@ -689,3 +689,30 @@ protect <- function(fun) {
     tryCatch(fun(), error = function(e) NULL)
   }
 }
+
+
+## Does not exist in older R (< 3.3.0 I think)
+file_size <- function(path) {
+  file.info(path, extra_cols = FALSE)$size
+}
+
+
+file_info <- function(path, workdir = NULL) {
+  if (!is.null(workdir)) {
+    return(withr::with_dir(workdir, file_info(path)))
+  }
+  data_frame(filename = path,
+             file_hash = hash_files(path, FALSE),
+             file_size = file_size(path))
+}
+
+
+file_in_data <- function(...) {
+  d <- list(...)
+  n <- viapply(d, NROW, USE.NAMES = FALSE)
+  ret <- cbind(file_purpose = rep(names(d), n),
+               do.call("rbind", d),
+               stringsAsFactors = FALSE)
+  rownames(ret) <- NULL
+  ret
+}
