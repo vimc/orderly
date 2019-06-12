@@ -52,3 +52,19 @@ orderly root.  If that is not found, then a copy from the orderly
 package is used.  This can always be used by using \code{template
 = "system"}.
 }
+\examples{
+path <- orderly::orderly_example("minimal")
+
+# Create a new report with the name "myreport" in this orderly
+# repository:
+orderly::orderly_new("myreport", root = path)
+
+# The directory will be initialised with a orderly.yml file
+# containing documentation
+dir(file.path(path, "src", "myreport"))
+readLines(file.path(path, "src", "myreport", "orderly.yml"))
+}
+\seealso{
+\code{\link{orderly_init}} for initialising a new orderly
+  repository.
+}
