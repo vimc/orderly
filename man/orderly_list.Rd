@@ -20,3 +20,15 @@ parents until it finds an \code{orderly_config.yml} file.}
 List the \emph{names} of reports known to orderly.  These are the
 \emph{source} names, not the results of running reports.
 }
+\examples{
+# The orderly demo, with lots of potential reports:
+path <- orderly::orderly_example("demo")
+
+# Reports that _could_ be run:
+orderly::orderly_list(path)
+}
+\seealso{
+\code{\link{orderly_list_archive}} and
+  \code{\link{orderly_list_draft}}, which list archived
+  (committed) and draft reports and their versions.
+}
