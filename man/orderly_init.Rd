@@ -18,5 +18,25 @@ of making these directories noticeable by git.}
 be suppressed.}
 }
 \description{
-Initialise an orderly store
+Initialise an orderly store.  This is a helper function that
+automates getting started with using orderly for a new project.
+It is not required to use - you can create the orderly structure
+yourself (all that is compulsary is the \code{orderly_config.yml}
+file).
+}
+\examples{
+# Initialise a new orderly repository in an temporary directory:
+path <- orderly::orderly_init(tempfile())
+
+# This has created the directory skeleton that you need to get
+# started using orderly:
+dir(path)
+
+# As instructed, the next thing to do is to edit the
+# orderly_config.yml file to match your needs:
+readLines(file.path(path, "orderly_config.yml"))
+}
+\seealso{
+\code{\link{orderly_new}} for creating new reports within
+  a configured orderly repository.
 }
