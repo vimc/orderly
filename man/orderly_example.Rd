@@ -4,7 +4,8 @@
 \alias{orderly_example}
 \title{Set up an orderly example}
 \usage{
-orderly_example(name, path = tempfile())
+orderly_example(name, path = tempfile(), run_demo = FALSE,
+  quiet = FALSE)
 }
 \arguments{
 \item{name}{Name of the example}
@@ -12,6 +13,13 @@ orderly_example(name, path = tempfile())
 \item{path}{Destination to create the example - if it exists
 already it must be an empty directory.  By default, creates a
 new temporary directory}
+
+\item{run_demo}{Logical, indicating if the example is configured
+as a "demo" (i.e., with a set of reports to be run and
+committed), should these be run?}
+
+\item{quiet}{Logical, indicating if informational messages should
+be suppressed when running the demo.}
 }
 \value{
 Returns the path to the orderly example

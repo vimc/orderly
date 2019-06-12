@@ -9,6 +9,13 @@
 ##'   already it must be an empty directory.  By default, creates a
 ##'   new temporary directory
 ##'
+##' @param run_demo Logical, indicating if the example is configured
+##'   as a "demo" (i.e., with a set of reports to be run and
+##'   committed), should these be run?
+##'
+##' @param quiet Logical, indicating if informational messages should
+##'   be suppressed when running the demo.
+##'
 ##' @return Returns the path to the orderly example
 ##' @examples
 ##' # Create a new copy of the "minimal" example
@@ -17,8 +24,13 @@
 ##'
 ##' # Example reports within this repository:
 ##' orderly::orderly_list(path)
-orderly_example <- function(name, path = tempfile()) {
-  prepare_orderly_example(name, path)
+orderly_example <- function(name, path = tempfile(), run_demo = FALSE,
+                            quiet = FALSE) {
+  path <- prepare_orderly_example(name, path)
+  if (run_demo && file.exists(path_demo_yml(path))) {
+    run_orderly_demo(path, quiet)
+  }
+  path
 }
 
 
@@ -26,13 +38,17 @@ orderly_example <- function(name, path = tempfile()) {
 ## with prepare_orderly_example below that simply prepares the
 ## source).  This is used to create a set of data for testing the API.
 ## See inst/demo/demo.yml for more information.
-create_orderly_demo <- function(path = tempfile()) {
-  prepare_orderly_example("demo", path)
-  run_orderly_demo(path)
+create_orderly_demo <- function(path = tempfile(), quiet = FALSE) {
+  orderly_example("demo", path, TRUE, quiet)
 }
 
 
-run_orderly_demo <- function(path) {
+run_orderly_demo <- function(path, quiet = FALSE) {
+  if (quiet) {
+    oo <- options(orderly.nolog = TRUE)
+    on.exit(options(oo))
+  }
+
   dat <- read_demo_yml(path)
 
   for (i in seq_along(dat)) {
@@ -105,7 +121,7 @@ read_demo_yml <- function(path) {
     sys.source(before, e)
   }
 
-  dat <- yaml_read(file.path(path, "demo.yml"))
+  dat <- yaml_read(path_demo_yml(path))
   ## Push time back so that we don't end up with time in the future
   day <- 60 * 60 * 24
   t <- Sys.time() - 365 * day
