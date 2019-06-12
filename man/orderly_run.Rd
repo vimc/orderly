@@ -59,3 +59,7 @@ some careful use of \code{.gitignore} to exclude \code{draft},
 tree will revert back to the original branch at completion (or
 failure to complete) the report.
 }
+\seealso{
+\code{\link{orderly_log}} for controlling display of log
+  messages (not just R output)
+}

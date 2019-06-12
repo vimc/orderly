@@ -34,6 +34,10 @@
 ##' @inheritParams orderly_list
 ##' @param echo Print the result of running the R code to the console
 ##' @param id_file Write the identifier into a file
+##'
+##' @seealso \code{\link{orderly_log}} for controlling display of log
+##'   messages (not just R output)
+##'
 ##' @export
 orderly_run <- function(name, parameters = NULL, envir = NULL,
                         root = NULL, locate = TRUE, echo = TRUE,
