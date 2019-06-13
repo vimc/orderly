@@ -1,3 +1,7 @@
+# 0.?.?
+
+* Remove arguments `open` and `extended_output` from `orderly_run` as these were not widely used (VIMC-2945)
+
 # 0.6.6
 
 * The database schema now represents the "custom" fields in a way that makes it more obvious which fields are in fact custom, using new tables `custom_fields` (holding metadata about the fields) and `report_version_custom_fields` (linking these to the report versions) (VIMC-2768)
