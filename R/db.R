@@ -26,7 +26,7 @@
 ##' db
 ##' DBI::dbListTables(db$source)
 ##' head(DBI::dbReadTable(db$source, "data"))
-##' DBI::dbDisconnect(db)
+##' DBI::dbDisconnect(db$source)
 ##'
 ##' # The destination database holds information about the archived
 ##' # reports:
