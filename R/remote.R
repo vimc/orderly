@@ -163,32 +163,6 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
              open = open)
 }
 
-##' Publish a report on a remote server
-##'
-##' @title Publish orderly report on remote server
-##'
-##' @param name Name of the report (unlike
-##'   \code{\link{orderly_publish}} this must be provided sorry)
-##'
-##' @param id The report id
-##'
-##' @param value As \code{\link{orderly_publish}}, \code{TRUE} or
-##'   \code{FALSE} to publish or unpublish a report (respectively)
-##'
-##' @inheritParams orderly_run_remote
-##' @export
-orderly_publish_remote <- function(name, id, value = TRUE,
-                                   root = NULL, locate = TRUE,
-                                   remote = NULL) {
-  assert_scalar_character(name)
-  assert_scalar_character(id)
-  assert_scalar_logical(value)
-
-  config <- orderly_config_get(root, locate)
-  remote <- get_remote(remote, config)
-  remote$publish(name, id, value)
-}
-
 
 ##' Set and get default remote locations
 ##'
@@ -289,6 +263,5 @@ implements_remote <- function(x) {
     is.function(x$list_reports) &&
     is.function(x$list_versions) &&
     is.function(x$pull) &&
-    is.function(x$publish) &&
     is.function(x$run)
 }

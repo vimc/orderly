@@ -132,19 +132,6 @@ test_that("orderly_run", {
 })
 
 
-test_that("orderly_publish", {
-  dat <- prepare_orderly_remote_example()
-
-  p <- file.path(dat$path_remote, "archive", "example", dat$id1)
-  orderly_publish_remote("example", dat$id1, root = dat$config)
-  expect_equal(yaml_read(path_orderly_published_yml(p)),
-               list(published = TRUE))
-  orderly_publish_remote("example", dat$id1, FALSE, root = dat$config)
-  expect_equal(yaml_read(path_orderly_published_yml(p)),
-               list(published = FALSE))
-})
-
-
 ## TODO: this doesn't make much sense without a second remote too.
 test_that("set_default", {
   dat <- prepare_orderly_remote_example()

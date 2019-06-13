@@ -1,6 +1,14 @@
-# 0.?.?
+# 0.7.2
 
 * Functions `pull_archive` and `pull_dependencies` have been deprecated in favour of `orderly_pull_archive` and `orderly_pull_dependencies` (respectively).  Similarly, `set_default_remote` becomes `orderly_default_remote_set` and `orderly_default_remote_get` is exported.  `unzip_archive` becomes `orderly_unzip_archive` (VIMC-2944).
+
+# 0.7.1
+
+* Remove arguments `open` and `extended_output` from `orderly_run` as these were not widely used (VIMC-2945)
+
+# 0.7.0
+
+* The concept of "publishing" a report has been removed from `orderly` in preparation for it to be implemented entirely in [`OrderlyWeb`](https://github.com/vimc/orderly-web) (in the meantime it will be provided by [`orderly.server`](https://github.com/vimc/orderly.server) (VIMC-2941)
 
 # 0.6.6
 

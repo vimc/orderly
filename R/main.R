@@ -130,34 +130,33 @@ main_do_run <- function(x) {
         stop("Can't use --pull with --ref; perhaps you meant --fetch ?")
       }
     }
-    dat <- orderly_run(name, parameters, root = config, id_file = id_file,
-                       ref = ref, fetch = fetch, message = message,
-                       extended_output = TRUE)
+    id <- orderly_run(name, parameters, root = config, id_file = id_file,
+                      ref = ref, fetch = fetch, message = message)
     if (commit) {
-      orderly_commit(dat$id, name, config)
+      orderly_commit(id, name, config)
     }
-    dat
+    id
   }
 
   if (print_log) {
     sink(stderr(), type = "output")
     on.exit(sink(NULL, type = "output"))
-    dat <- main_run()
+    id <- main_run()
   } else {
     log <- tempfile()
     ## we should run this with try() so that we can capture logs there
-    dat <- capture_log(main_run(), log)
+    id <- capture_log(main_run(), log)
     dest <- (if (commit) path_archive else path_draft)(config$root)
-    file_copy(log, file.path(dest, name, dat$id, "orderly.log"))
+    file_copy(log, file.path(dest, name, id, "orderly.log"))
   }
 
   if (commit) {
-    slack_post_success(dat, config)
+    path_rds <- path_orderly_run_rds(
+      file.path(config$root, "archive", name, id))
+    slack_post_success(readRDS(path_rds), config)
   }
 
-  ## TODO: is it useful to write this to some location (rather than
-  ## stderr) to indicate what was done?
-  message("id:", dat$id)
+  message("id:", id)
 }
 
 ## 2. orderly cleanup [--draft]
@@ -211,27 +210,6 @@ main_do_commit <- function(x) {
   orderly_commit(id, root = root, locate = TRUE)
 }
 
-## 4. publish
-main_args_publish <- function(res) {
-  opts <- list(
-    optparse::make_option("--unpublish",
-                          help = "Set the report to unpublished",
-                          type = "logical",
-                          default = FALSE,
-                          action = "store_true",
-                          dest = "unpublish"))
-  parser <- optparse::OptionParser(
-    option_list = opts,
-    usage = "%prog [--root=ROOT] publish [options] <id>")
-  opts_subcommand(res, parser, main_do_publish, 1L)
-}
-
-main_do_publish <- function(x) {
-  root <- x$options$root
-  value <- !x$options$unpublish
-  id <- x$args
-  orderly_publish(id, value, root = root, locate = TRUE)
-}
 
 ## 4. rebuild
 main_args_rebuild <- function(res) {
@@ -388,8 +366,6 @@ main_args_commands <- function() {
                   args = main_args_run),
        commit = list(name = "commit a report",
                    args = main_args_commit),
-       publish = list(name = "publish a report",
-                      args = main_args_publish),
        list = list(name = "list reports",
                    args = main_args_list),
        latest = list(name = "find most recent report",
