@@ -55,3 +55,29 @@ To quit run \code{orderly_test_end()} (or enter \code{Q}, like
 \code{browser}).  To test if all artefacts have been created run
 \code{orderly_test_check()}.
 }
+\examples{
+
+path <- orderly::orderly_example("minimal")
+orderly::orderly_test_start("example", root = path)
+
+# R is now running from the newly created draft directory for this
+# report:
+getwd()
+
+# The data in the orderly example is now available to use
+dat
+
+# Check to see which artefacts have been created so far:
+orderly::orderly_test_check()
+
+# Manually the code that this report has in its script
+png("mygraph.png")
+par(mar = c(15, 4, .5, .5))
+barplot(setNames(dat$number, dat$name), las = 2)
+dev.off()
+
+orderly::orderly_test_check()
+
+# Revert back to the original directory:
+orderly::orderly_test_end()
+}

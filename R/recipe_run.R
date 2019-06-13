@@ -84,6 +84,15 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
 
 ##' @export
 ##' @rdname orderly_run
+##' @examples
+##' # The function orderly_data does all the preparation work that
+##' # orderly_run does, but does not run the report but instead
+##' # returns the created environment with all the data and parameters
+##' # set.
+##' env <- orderly::orderly_data("other", list(nmin = 0.2), root = path)
+##' ls(env)
+##' env$nmin
+##' env$extract
 orderly_data <- function(name, parameters = NULL, envir = NULL,
                          root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
@@ -108,6 +117,31 @@ orderly_data <- function(name, parameters = NULL, envir = NULL,
 ##' @title Prepare a directory for orderly to use
 ##' @inheritParams orderly_run
 ##' @export
+##' @examples
+##'
+##' path <- orderly::orderly_example("minimal")
+##' orderly::orderly_test_start("example", root = path)
+##'
+##' # R is now running from the newly created draft directory for this
+##' # report:
+##' getwd()
+##'
+##' # The data in the orderly example is now available to use
+##' dat
+##'
+##' # Check to see which artefacts have been created so far:
+##' orderly::orderly_test_check()
+##'
+##' # Manually the code that this report has in its script
+##' png("mygraph.png")
+##' par(mar = c(15, 4, .5, .5))
+##' barplot(setNames(dat$number, dat$name), las = 2)
+##' dev.off()
+##'
+##' orderly::orderly_test_check()
+##'
+##' # Revert back to the original directory:
+##' orderly::orderly_test_end()
 orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
                                root = NULL, locate = TRUE) {
   if (!is.null(cache$test)) {
@@ -115,7 +149,6 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
   }
 
   config <- orderly_config_get(root, locate)
-  ## TODO: support ref here
   info <- recipe_prepare(config, name, id_file = NULL, ref = NULL,
                          fetch = FALSE, message = NULL)
   owd <- setwd(info$workdir)
