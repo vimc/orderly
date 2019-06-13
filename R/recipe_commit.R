@@ -84,9 +84,3 @@ copy_report <- function(workdir, name, config) {
   file_copy(workdir, parent, recursive = TRUE)
   dest
 }
-
-
-report_is_published <- function(workdir) {
-  published_yml <- path_orderly_published_yml(workdir)
-  file.exists(published_yml) && yaml_read(published_yml)$published
-}

@@ -47,10 +47,6 @@ R6_orderly_remote_path <- R6::R6Class(
       copy_directory(src, dest, rollback_on_error = TRUE)
     },
 
-    publish = function(name, id, value = TRUE) {
-      orderly_publish(id, value = value, name = name, root = self$config)
-    },
-
     run = function(...) {
       stop("'orderly_remote_path' remotes do not run")
     }

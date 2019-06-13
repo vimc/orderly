@@ -106,23 +106,6 @@ test_that("run: error", {
   expect_equal(res$status, "error")
 })
 
-test_that("publish", {
-  path <- prepare_orderly_example("minimal")
-  runner <- orderly_runner(path)
-
-  name <- "example"
-  id <- orderly_run(name, root = path, echo = FALSE)
-  orderly_commit(id, name, root = path)
-
-  res <- runner$publish(name, id)
-
-  path_yml <- path_orderly_published_yml(file.path(path, "archive", name, id))
-  expect_true(file.exists(path_yml))
-  expect_equal(yaml_read(path_yml), list(published = TRUE))
-
-  res <- runner$publish(name, id, FALSE)
-  expect_equal(yaml_read(path_yml), list(published = FALSE))
-})
 
 test_that("rebuild", {
   path <- prepare_orderly_example("minimal")

@@ -24,7 +24,7 @@ run_orderly_demo <- function(path) {
     id <- orderly_run(x$name, x$parameters, echo = FALSE, root = path)
     id_new <- demo_change_time(id, x$time, path)
     if (isTRUE(x$publish)) {
-      orderly_publish(id_new, root = path)
+      legacy_orderly_publish(x$name, id_new, TRUE, path)
     }
   }
 

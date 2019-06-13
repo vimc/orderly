@@ -126,23 +126,6 @@ test_that("commit", {
   expect_equal(nrow(orderly_list_archive(path)), 1)
 })
 
-test_that("publish", {
-  path <- prepare_orderly_example("minimal")
-  id <- orderly_run("example", root = path, echo = FALSE)
-  p <- orderly_commit(id, root = path)
-
-  args <- c("--root", path, "publish", id)
-  res <- main_args(args)
-  expect_equal(res$command, "publish")
-  expect_equal(res$args, id)
-  expect_false(res$options$unpublish)
-  expect_identical(res$target, main_do_publish)
-
-  res$target(res)
-  file <- path_orderly_published_yml(p)
-  expect_true(file.exists(file))
-  expect_equal(yaml_read(file), list(published = TRUE))
-})
 
 test_that("latest", {
   path <- prepare_orderly_example("minimal")
