@@ -24,7 +24,7 @@ test_that("end-to-end", {
 
   dest <- file.path(path, "archive", name, id)
   unlink(dest, recursive = TRUE)
-  pull_archive(name, id, root = path, remote = remote)
+  orderly_pull_archive(name, id, root = path, remote = remote)
   expect_true(file.exists(dest))
 
   orderly_run_remote(name, root = path, remote = remote)
