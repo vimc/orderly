@@ -28,13 +28,8 @@
 ##' @param fetch Logical, indicating if git should be fetched before
 ##'   checking out the reference \code{ref}.
 ##'
-##' @param open Open the directory after running?
-##'
 ##' @param message An optional character string containing a message
 ##'   explaining why the report was run
-##'
-##' @param extended_output Return detailed output about the run
-##'   (similar to the contents of \code{orderly_run.rds}).
 ##'
 ##' @inheritParams orderly_list
 ##' @param echo Print the result of running the R code to the console
@@ -43,8 +38,7 @@
 orderly_run <- function(name, parameters = NULL, envir = NULL,
                         root = NULL, locate = TRUE, echo = TRUE,
                         id_file = NULL, fetch = FALSE, ref = NULL,
-                        open = FALSE, message = NULL, extended_output = FALSE) {
-  assert_scalar_logical(open)
+                        message = NULL) {
   envir <- orderly_environment(envir)
   config <- orderly_config_get(root, locate)
   check_orderly_archive_version(config)
@@ -54,15 +48,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
 
   info <- recipe_run(info, parameters, envir, config, echo = echo)
 
-  if (open) {
-    open_directory(file.path(config$root, "draft", name, info$id))
-  }
-
-  if (extended_output) {
-    info
-  } else {
-    info$id
-  }
+  info$id
 }
 
 ##' @export

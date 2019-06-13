@@ -7,8 +7,7 @@
 \usage{
 orderly_run(name, parameters = NULL, envir = NULL, root = NULL,
   locate = TRUE, echo = TRUE, id_file = NULL, fetch = FALSE,
-  ref = NULL, open = FALSE, message = NULL,
-  extended_output = FALSE)
+  ref = NULL, message = NULL)
 
 orderly_data(name, parameters = NULL, envir = NULL, root = NULL,
   locate = TRUE)
@@ -42,13 +41,8 @@ checking out the reference \code{ref}.}
 
 \item{ref}{A git reference to use for this run (see Details)}
 
-\item{open}{Open the directory after running?}
-
 \item{message}{An optional character string containing a message
 explaining why the report was run}
-
-\item{extended_output}{Return detailed output about the run
-(similar to the contents of \code{orderly_run.rds}).}
 }
 \description{
 Run a report.  The \code{orderly_data} function is for testing the
