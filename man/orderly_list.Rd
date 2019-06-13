@@ -29,6 +29,6 @@ orderly::orderly_list(path)
 }
 \seealso{
 \code{\link{orderly_list_archive}} and
-  \code{\link{orderly_list_draft}}, which list archived
+  \code{\link{orderly_list_drafts}}, which list archived
   (committed) and draft reports and their versions.
 }

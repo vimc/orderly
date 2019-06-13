@@ -2,13 +2,21 @@
 % Please edit documentation in R/db.R
 \name{orderly_rebuild}
 \alias{orderly_rebuild}
-\title{Rebuild the report database
-  @inheritParams orderly_list}
+\title{Rebuild the report database}
 \usage{
 orderly_rebuild(root = NULL, locate = TRUE, verbose = TRUE,
   if_schema_changed = FALSE)
 }
 \arguments{
+\item{root}{The path to an orderly root directoy, or \code{NULL}
+(the default) to search for one from the current working
+directory if \code{locate} is \code{TRUE}).}
+
+\item{locate}{Logical, indicating if the configuration should be
+searched for.  If \code{TRUE} and \code{config} is not given,
+then orderly looks in the working directory and up through its
+parents until it finds an \code{orderly_config.yml} file.}
+
 \item{verbose}{Logical, indicating if information about the
 rebuild should be printed as it runs}
 

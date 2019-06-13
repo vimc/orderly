@@ -20,7 +20,7 @@ VERSION_ID_RE <- "^([0-9]{8}-[0-9]{6})-([[:xdigit:]]{4})([[:xdigit:]]{4})$"
 ##'   parents until it finds an \code{orderly_config.yml} file.
 ##'
 ##' @seealso \code{\link{orderly_list_archive}} and
-##'   \code{\link{orderly_list_draft}}, which list archived
+##'   \code{\link{orderly_list_drafts}}, which list archived
 ##'   (committed) and draft reports and their versions.
 ##'
 ##' @export

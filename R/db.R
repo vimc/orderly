@@ -97,7 +97,8 @@ orderly_db_args <- function(x, config) {
 ##' \code{orderly_rebuild} function.
 ##'
 ##' @title Rebuild the report database
-##'   @inheritParams orderly_list
+##'
+##' @inheritParams orderly_list
 ##'
 ##' @param verbose Logical, indicating if information about the
 ##'   rebuild should be printed as it runs
