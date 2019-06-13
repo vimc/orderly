@@ -1,3 +1,7 @@
+# 0.7.0
+
+* The concept of "publishing" a report has been removed from `orderly` in preparation for it to be implemented entirely in [`OrderlyWeb`](https://github.com/vimc/orderly-web) (in the meantime it will be provided by [`orderly.server`](https://github.com/vimc/orderly.server) (VIMC-2941)
+
 # 0.6.6
 
 * The database schema now represents the "custom" fields in a way that makes it more obvious which fields are in fact custom, using new tables `custom_fields` (holding metadata about the fields) and `report_version_custom_fields` (linking these to the report versions) (VIMC-2768)

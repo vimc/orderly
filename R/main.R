@@ -211,27 +211,6 @@ main_do_commit <- function(x) {
   orderly_commit(id, root = root, locate = TRUE)
 }
 
-## 4. publish
-main_args_publish <- function(res) {
-  opts <- list(
-    optparse::make_option("--unpublish",
-                          help = "Set the report to unpublished",
-                          type = "logical",
-                          default = FALSE,
-                          action = "store_true",
-                          dest = "unpublish"))
-  parser <- optparse::OptionParser(
-    option_list = opts,
-    usage = "%prog [--root=ROOT] publish [options] <id>")
-  opts_subcommand(res, parser, main_do_publish, 1L)
-}
-
-main_do_publish <- function(x) {
-  root <- x$options$root
-  value <- !x$options$unpublish
-  id <- x$args
-  orderly_publish(id, value, root = root, locate = TRUE)
-}
 
 ## 4. rebuild
 main_args_rebuild <- function(res) {
@@ -388,8 +367,6 @@ main_args_commands <- function() {
                   args = main_args_run),
        commit = list(name = "commit a report",
                    args = main_args_commit),
-       publish = list(name = "publish a report",
-                      args = main_args_publish),
        list = list(name = "list reports",
                    args = main_args_list),
        latest = list(name = "find most recent report",

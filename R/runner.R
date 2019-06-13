@@ -161,14 +161,6 @@ R6_orderly_runner <- R6::R6Class(
       list(status = status, queue = queue, current = current)
     },
 
-    ## This one could quite easily move into the montagu api; it
-    ## doesn't take too much to do (write one file and write to the
-    ## SQL database)
-    publish = function(name, id, value = TRUE) {
-      orderly_publish(id, value, name, root = self$config)
-      value
-    },
-
     rebuild = function() {
       orderly_rebuild(self$config, FALSE, FALSE)
     },

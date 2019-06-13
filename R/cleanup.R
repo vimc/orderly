@@ -50,7 +50,7 @@ orderly_cleanup_data <- function(config) {
   on.exit(DBI::dbDisconnect(con))
   data <- DBI::dbGetQuery(con, "SELECT hash from report_version_data")[[1]]
 
-  ## Determine all used data sets in *both* draft and published
+  ## Determine all used data sets in *both* draft and committed (archived)
   ## reports
   used_pub <- unique(data)
   dr <- orderly_list_drafts(config, FALSE)
