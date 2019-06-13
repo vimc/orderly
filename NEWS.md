@@ -1,3 +1,7 @@
+# 0.7.1
+
+* Remove arguments `open` and `extended_output` from `orderly_run` as these were not widely used (VIMC-2945)
+
 # 0.7.0
 
 * The concept of "publishing" a report has been removed from `orderly` in preparation for it to be implemented entirely in [`OrderlyWeb`](https://github.com/vimc/orderly-web) (in the meantime it will be provided by [`orderly.server`](https://github.com/vimc/orderly.server) (VIMC-2941)
