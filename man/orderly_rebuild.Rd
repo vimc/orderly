@@ -2,21 +2,13 @@
 % Please edit documentation in R/db.R
 \name{orderly_rebuild}
 \alias{orderly_rebuild}
-\title{Rebuild the report database}
+\title{Rebuild the report database
+  @inheritParams orderly_list}
 \usage{
 orderly_rebuild(root = NULL, locate = TRUE, verbose = TRUE,
   if_schema_changed = FALSE)
 }
 \arguments{
-\item{root}{The path to an orderly root directoy, or \code{NULL}
-(the default) to search for one from the current working
-directory if \code{locate} is \code{TRUE}).}
-
-\item{locate}{Logical, indicating if the configuration should be
-searched for.  If \code{TRUE} and \code{config} is not given,
-then orderly looks in the working directory and up through its
-parents until it finds an \code{orderly_config.yml} file.}
-
 \item{verbose}{Logical, indicating if information about the
 rebuild should be printed as it runs}
 
@@ -26,5 +18,41 @@ be safe to use in (say) deployment scripts because it will be
 fast enough to call regularly.}
 }
 \description{
-Rebuild the report database
+Rebuild the report database.  This is necessary when the orderly
+  database schema changes, and you will be prompted to run this
+  function after upgrading orderly in that case.
+}
+\details{
+The report database (orderly's "destination" database) is
+essentially an index over all the metadata associated with
+reports.  It is used by orderly itself, and can be used by
+applications that extend orderly (e.g.,
+\href{https://github.com/vimc/orderly-web}{OrderlyWeb}).  All the
+data in this database can be rebuilt from files stored with the
+committed (archive) orderly reports, using the
+\code{orderly_rebuild} function.
+}
+\examples{
+path <- orderly::orderly_example("minimal")
+id <- orderly::orderly_run("example", root = path)
+orderly::orderly_commit(id, root = path)
+
+con <- orderly::orderly_db("destination", root = path)
+DBI::dbReadTable(con, "report_version")
+DBI::dbDisconnect(con)
+
+# The database can be removed and will be rebuilt if requested
+# (this is only a good idea if you do not extend the database with
+# your own fields - only the fields that orderly looks after can
+# be recovered!)
+file.remove(file.path(path, "orderly.sqlite"))
+orderly::orderly_rebuild(path)
+file.exists(file.path(path, "orderly.sqlite"))
+con <- orderly::orderly_db("destination", root = path)
+DBI::dbReadTable(con, "report_version")
+DBI::dbDisconnect(con)
+
+# It is safe to rebuild a database repeatedly, though this can be
+# slow with larger databases.
+orderly::orderly_rebuild(path)
 }
