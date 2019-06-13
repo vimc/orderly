@@ -9,7 +9,7 @@
 ##' @param name Name of the expected report
 ##' @param id Id of the expected report
 ##' @export
-unzip_archive <- function(zip, root, name, id) {
+orderly_unzip_archive <- function(zip, root, name, id) {
   tmp <- tempfile()
   on.exit(unlink(tmp, recursive = TRUE))
   res <- utils::unzip(zip, exdir = tmp)

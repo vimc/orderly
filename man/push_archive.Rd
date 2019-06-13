@@ -10,7 +10,7 @@ push_archive(name, id = "latest", root = NULL, locate = TRUE,
 \arguments{
 \item{name}{Name of the report to download dependencies for}
 
-\item{id}{The identifier (for \code{pull_archive}.  The default is
+\item{id}{The identifier (for \code{orderly_pull_archive}.  The default is
 to use the latest report.}
 
 \item{root}{The path to an orderly root directoy, or \code{NULL}

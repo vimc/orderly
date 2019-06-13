@@ -1,16 +1,17 @@
 ##' Download dependent reports.
 ##'
-##' The \code{pull_archive} function pulls report directly (without it
-##' being a dependent report).
+##' The \code{orderly_pull_archive} function pulls report directly
+##' (without it being a dependent report).
 ##'
 ##' After setting your username up you can run
-##' \code{pull_dependencies("reportname")} to pull the
+##' \code{orderly_pull_dependencies("reportname")} to pull the
 ##' \emph{dependencies} of \code{"reportname"} down so that
 ##' \code{"reportname"} can be run, or you can run
-##' \code{pull_archive("reportname")} to pull a copy of
+##' \code{orderly_pull_archive("reportname")} to pull a copy of
 ##' \code{"reportname"} that has been run on the remote server.
 ##'
 ##' @title Download dependent reports
+##'
 ##' @param name Name of the report to download dependencies for
 ##'
 ##' @param remote Description of the location.  Typically this is a
@@ -24,7 +25,8 @@
 ##'
 ##' @inheritParams orderly_list
 ##' @export
-pull_dependencies <- function(name, root = NULL, locate = TRUE, remote = NULL) {
+orderly_pull_dependencies <- function(name, root = NULL, locate = TRUE,
+                                      remote = NULL) {
   config <- orderly_config_get(root, locate)
   remote <- get_remote(remote, config)
 
@@ -33,19 +35,20 @@ pull_dependencies <- function(name, root = NULL, locate = TRUE, remote = NULL) {
 
   for (i in seq_len(nrow(depends))) {
     if (!isTRUE(depends$draft[[i]])) {
-      pull_archive(depends$name[[i]], depends$id[[i]], config, FALSE, remote)
+      orderly_pull_archive(depends$name[[i]], depends$id[[i]], config,
+                           FALSE, remote)
     }
   }
 }
 
 
 ##' @export
-##' @rdname pull_dependencies
+##' @rdname orderly_pull_dependencies
 ##'
-##' @param id The identifier (for \code{pull_archive}.  The default is
+##' @param id The identifier (for \code{orderly_pull_archive}.  The default is
 ##'   to use the latest report.
-pull_archive <- function(name, id = "latest", root = NULL, locate = TRUE,
-                         remote = NULL) {
+orderly_pull_archive <- function(name, id = "latest", root = NULL,
+                                 locate = TRUE, remote = NULL) {
   config <- orderly_config_get(root, locate)
   remote <- get_remote(remote, config)
 
@@ -85,7 +88,7 @@ pull_archive <- function(name, id = "latest", root = NULL, locate = TRUE,
 ##' before running centrally.
 ##'
 ##' @title Push an archive report to a remote location
-##' @inheritParams pull_dependencies
+##' @inheritParams orderly_pull_dependencies
 ##' @export
 push_archive <- function(name, id = "latest", root = NULL, locate = TRUE,
                          remote = NULL) {
@@ -144,7 +147,7 @@ push_archive <- function(name, id = "latest", root = NULL, locate = TRUE,
 ##'   used.  This cannot be used if the remote has \code{master_only}
 ##'   set.
 ##'
-##' @inheritParams pull_dependencies
+##' @inheritParams orderly_pull_dependencies
 ##'
 ##' @export
 orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
@@ -167,8 +170,8 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
 ##' @param value A string describing a remote, or \code{NULL} to clear
 ##' @inheritParams orderly_list
 ##' @export
-##' @rdname default_remote
-set_default_remote <- function(value, root = NULL, locate = TRUE) {
+##' @rdname orderly_default_remote
+orderly_default_remote_set <- function(value, root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
 
   if (is.null(value)) {
@@ -183,8 +186,9 @@ set_default_remote <- function(value, root = NULL, locate = TRUE) {
 }
 
 
-##' @rdname default_remote
-get_default_remote <- function(root = NULL, locate = TRUE) {
+##' @rdname orderly_default_remote
+##' @export
+orderly_default_remote_get <- function(root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
   if (!is.null(cache$default_remote[[config$root]])) {
     return(cache$default_remote[[config$root]])
@@ -192,13 +196,15 @@ get_default_remote <- function(root = NULL, locate = TRUE) {
   if (length(config$remote) > 0L) {
     return(get_remote(names(config$remote)[[1L]], config))
   }
-  stop("default remote has not been set yet: use 'orderly::set_default_remote'")
+  msg <- paste("default remote has not been set yet:",
+               "use 'orderly::orderly_default_remote_set'")
+  stop(msg)
 }
 
 
 get_remote <- function(remote, config) {
   if (is.null(remote)) {
-    return(get_default_remote(config))
+    return(orderly_default_remote_get(config))
   }
   if (implements_remote(remote)) {
     return(remote)
