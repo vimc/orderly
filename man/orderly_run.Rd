@@ -59,6 +59,34 @@ some careful use of \code{.gitignore} to exclude \code{draft},
 tree will revert back to the original branch at completion (or
 failure to complete) the report.
 }
+\examples{
+path <- orderly::orderly_example("demo")
+
+# To run most reports, provide the report name (and the path if
+# not running in the working directory, as is the case here):
+id <- orderly::orderly_run("minimal", root = path)
+
+# Every report gets a unique identifier, based on the time (it is
+# ISO 8601 time with random hex appended to end)
+id
+
+# After being run, a report is a "draft" and will exist in the
+# drafts directory:
+orderly::orderly_list_drafts(root = path)
+
+# Draft reports are always stored in the path
+# <root>/draft/<name>/<id>, so we have
+dir(file.path(path, "draft", "minimal", id))
+
+# which contains the files when the report was run.
+
+# If a report has parameters, then these must be passed in as a
+# named list.
+id <- orderly::orderly_run("other", list(nmin = 0.2), root = path)
+
+# These parameters can be used in SQL queries or in the report
+# code.
+}
 \seealso{
 \code{\link{orderly_log}} for controlling display of log
   messages (not just R output)

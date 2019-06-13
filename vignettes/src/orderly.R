@@ -247,6 +247,11 @@ plain_output(tree(path, "<root>"))
 ## exactly the data as used, while the csv version is more easily read
 ## by other applications.
 
+## We store the copies of files as run by orderly so that even if the
+## input files change we can still easily get back to previous
+## versions of the inputs, along side the outputs, and these are safe
+## from any changes to the underlying source.
+
 ## You can see the list of draft reports like so:
 orderly::orderly_list_drafts(root = path)
 
