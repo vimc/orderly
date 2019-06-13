@@ -17,6 +17,7 @@
 ##'   be suppressed when running the demo.
 ##'
 ##' @return Returns the path to the orderly example
+##' @export
 ##' @examples
 ##' # Create a new copy of the "minimal" example
 ##' path <- orderly::orderly_example("minimal")
