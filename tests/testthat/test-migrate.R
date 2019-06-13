@@ -54,7 +54,7 @@ test_that("failed migrations are rolled back", {
   }
 
   config <- orderly_config(path)
-  expect_error(migrate_apply(path, "0.3.3", fun, config, FALSE, FALSE, FALSE),
+  expect_error(migrate_apply(path, "0.3.3", fun, config, FALSE, FALSE),
                "some sort of migration failure")
   cmp <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
   expect_equal(cmp[basename(names(cmp)) != "orderly_archive_version"], hash)
@@ -78,7 +78,7 @@ test_that("failed migrations can be skipped", {
 
   patch_orderly_config(path)
   config <- orderly_config(path)
-  migrate_apply(path, "0.3.3", fun, config, FALSE, FALSE, TRUE)
+  migrate_apply(path, "0.3.3", fun, config, FALSE, TRUE)
 
   id <- "20170805-220525-1dc8fb81"
 
@@ -109,7 +109,7 @@ test_that("failed migrations warned in dry run", {
   patch_orderly_config(path)
   config <- orderly_config(path)
   expect_message(
-    migrate_apply(path, "0.3.3", fun, config, FALSE, TRUE, TRUE),
+    migrate_apply(path, "0.3.3", fun, config, TRUE, TRUE),
     "this report would be moved to")
 })
 

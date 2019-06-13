@@ -142,7 +142,7 @@ orderly_rebuild <- function(root = NULL, locate = TRUE, verbose = TRUE,
 
   if (length(migrate_plan(config$root, to = NULL)) > 0L) {
     orderly_log("migrate", "archive")
-    orderly_migrate(config, locate = FALSE, verbose = verbose)
+    orderly_migrate(config, locate = FALSE)
     ## This should trigger a rebuild, regardless of what anything else thinks
     if_schema_changed <- FALSE
   }
