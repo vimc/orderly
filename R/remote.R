@@ -225,7 +225,7 @@ orderly_default_remote_set <- function(value, root = NULL, locate = TRUE) {
 
   if (is.null(value)) {
     remote <- NULL
-  } else if (implements_remote(value)) {
+  } else {
     remote <- get_remote(value, config)
   }
 
