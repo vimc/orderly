@@ -49,14 +49,3 @@ set_default_remote <- function(...) {
   .Deprecated("orderly_default_remote_set")
   orderly_default_remote_set(...)
 }
-
-
-##' @details For \code{unzip_archive} use
-##' \code{\link{orderly_unzip_archive}}
-##' @rdname orderly-deprecated
-##' @export
-unzip_archive <- function(...) {
-  ## this one is not really used much (just in montagu-r)
-  .Deprecated("orderly_unzip_archive")
-  orderly_unzip_archive(...)
-}

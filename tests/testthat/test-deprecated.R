@@ -29,17 +29,3 @@ test_that("default_remote_set", {
     set_default_remote(NULL, path),
     "orderly_default_remote_set")
 })
-
-
-test_that("unzip_archive", {
-  path <- prepare_orderly_example("minimal")
-  id <- orderly_run("example", root = path, echo = FALSE)
-  p <- orderly_commit(id, root = path)
-  zip <- zip_dir(p)
-  root <- tempfile()
-  expect_warning(
-    unzip_archive(zip, root, "example", id),
-    "orderly_unzip_archive")
-  res <- file.path(root, "archive", "example")
-  expect_equal(dir(res), id)
-})

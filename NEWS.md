@@ -1,3 +1,7 @@
+# 0.7.3
+
+* Function `orderly_unzip_archive` / `unzip_archive` has been removed in preparation for release.
+
 # 0.7.2
 
 * Functions `pull_archive` and `pull_dependencies` have been deprecated in favour of `orderly_pull_archive` and `orderly_pull_dependencies` (respectively).  Similarly, `set_default_remote` becomes `orderly_default_remote_set` and `orderly_default_remote_get` is exported.  `unzip_archive` becomes `orderly_unzip_archive` (VIMC-2944).
