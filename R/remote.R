@@ -171,20 +171,53 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
 }
 
 
-##' Set and get default remote locations
+##' Set and get default remote locations.  Default locations are
+##' specific to an orderly repository (based on the path of the
+##' repository) so there is no interaction between different orderly
+##' projects.
 ##'
 ##' @title Set default remote location
-##' @param value A string describing a remote, or \code{NULL} to clear
+##'
+##' @param value A string describing a remote, a remote object, or
+##'   \code{NULL} to clear
+##'
 ##' @inheritParams orderly_list
 ##' @export
 ##' @rdname orderly_default_remote
+##' @examples
+##' # Same setup as in ?orderly_remote_path, with a remote orderly:
+##' path_remote <- orderly::orderly_example("demo")
+##' id <- orderly::orderly_run("other", list(nmin = 0),
+##'                            root = path_remote, echo = FALSE)
+##' orderly::orderly_commit(id, root = path_remote)
+##' id <- orderly::orderly_run("use_dependency",
+##'                            root = path_remote, echo = FALSE)
+##' orderly::orderly_commit(id, root = path_remote)
+##'
+##' # And a local orderly
+##' path_local <- orderly::orderly_example("demo")
+##'
+##' # We'll create a an object to interact with this remote using
+##' # orderly_remote_path.
+##' remote <- orderly::orderly_remote_path(path_remote)
+##'
+##' # There is no remote set by default:
+##' try(orderly::orderly_default_remote_get(root = path_local))
+##'
+##' # We can set one:
+##' orderly::orderly_default_remote_set(remote, root = path_local)
+##'
+##' # and now we can retrieve it:
+##' orderly::orderly_default_remote_get(root = path_local)
+##'
+##' # Note that this has not affected the other orderly:
+##' try(orderly::orderly_default_remote_get(root = path_remote))
 orderly_default_remote_set <- function(value, root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
 
   if (is.null(value)) {
     remote <- NULL
-  } else {
-    assert_scalar_character(value)
+  } else if (implements_remote(value)) {
     remote <- get_remote(value, config)
   }
 
