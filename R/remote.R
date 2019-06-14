@@ -25,6 +25,13 @@
 ##'
 ##' @inheritParams orderly_list
 ##' @export
+##'
+##' @seealso \code{\link{orderly_remote_path}}, which implements the
+##'   remote interface for orderly repositories at a local path.  See
+##'   also \href{https://github.com/vimc/orderly-web}{OrderlyWeb} for
+##'   a system for hosting orderly repositories over an HTTP API.
+##'
+##' @example man-roxygen/example-remote.R
 orderly_pull_dependencies <- function(name, root = NULL, locate = TRUE,
                                       remote = NULL) {
   config <- orderly_config_get(root, locate)
