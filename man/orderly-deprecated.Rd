@@ -5,7 +5,6 @@
 \alias{pull_archive}
 \alias{pull_dependencies}
 \alias{set_default_remote}
-\alias{unzip_archive}
 \title{Deprecated functions}
 \usage{
 pull_archive(...)
@@ -13,8 +12,6 @@ pull_archive(...)
 pull_dependencies(...)
 
 set_default_remote(...)
-
-unzip_archive(...)
 }
 \arguments{
 \item{...}{Arguments that will be passed through to the current
@@ -37,8 +34,5 @@ For \code{pull_dependencies} use
 
 For \code{set_default_remote} use
 \code{\link{orderly_default_remote_set}}
-
-For \code{unzip_archive} use
-\code{\link{orderly_unzip_archive}}
 }
 \keyword{internal}
