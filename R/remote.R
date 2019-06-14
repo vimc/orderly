@@ -116,7 +116,8 @@ push_archive <- function(name, id = "latest", root = NULL, locate = TRUE,
 }
 
 
-##' Run a report on a remote server.
+##' Run a report on a remote server.  Note that this is only supported
+##' for remotes using OrderlyWeb at present.
 ##'
 ##' @title Run a report on a remote server
 ##'
@@ -135,7 +136,7 @@ push_archive <- function(name, id = "latest", root = NULL, locate = TRUE,
 ##' @param poll Period to poll the server for results (in seconds)
 ##'
 ##' @param open Logical, indicating if the report should be opened in
-##'   a browser on completion
+##'   a browser on completion (if supported by the remote)
 ##'
 ##' @param stop_on_error Logical, indicating if we should throw an
 ##'   error if the report fails.  If you set this to \code{FALSE} it
@@ -157,6 +158,13 @@ push_archive <- function(name, id = "latest", root = NULL, locate = TRUE,
 ##' @inheritParams orderly_pull_dependencies
 ##'
 ##' @export
+##' @examples
+##' path_remote <- orderly::orderly_example("demo")
+##' path_local <- orderly::orderly_example("demo")
+##' remote <- orderly::orderly_remote_path(path_remote)
+##' # Currently, path remotes don't support run
+##' try(orderly::orderly_run_remote(
+##'   "minimal", remote = remote, root = path_local))
 orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
                                timeout = NULL, wait = 3600, poll = 1,
                                open = TRUE, stop_on_error = TRUE,

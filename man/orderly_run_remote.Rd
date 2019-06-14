@@ -29,7 +29,7 @@ for it and instead thrown an error.}
 \item{poll}{Period to poll the server for results (in seconds)}
 
 \item{open}{Logical, indicating if the report should be opened in
-a browser on completion}
+a browser on completion (if supported by the remote)}
 
 \item{stop_on_error}{Logical, indicating if we should throw an
 error if the report fails.  If you set this to \code{FALSE} it
@@ -63,5 +63,14 @@ for this orderly repository is used - by default that is the
 first listed remote.}
 }
 \description{
-Run a report on a remote server.
+Run a report on a remote server.  Note that this is only supported
+for remotes using OrderlyWeb at present.
+}
+\examples{
+path_remote <- orderly::orderly_example("demo")
+path_local <- orderly::orderly_example("demo")
+remote <- orderly::orderly_remote_path(path_remote)
+# Currently, path remotes don't support run
+try(orderly::orderly_run_remote(
+  "minimal", remote = remote, root = path_local))
 }
