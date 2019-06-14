@@ -83,40 +83,6 @@ orderly_latest <- function(name = NULL, root = NULL, locate = TRUE,
   latest_id(ids)
 }
 
-##' Open the directory for a completed orderly report
-##'
-##' @title Open directory of completed report
-##'
-##' @param id The identifier of the report - can be \code{latest}, in
-##'   which case \code{name} and \code{draft} must be specified
-##'
-##' @param name The name of the report.  Can be omitted if \code{id}
-##'   is not \code{latest}
-##'
-##' @param draft Logical, indicating if a draft report should be
-##'   found.  Practically only useful when \code{id = "latest"} but
-##'   might be useful to ensure presence of a particular type of
-##'   report.
-##'
-##' @inheritParams orderly_list
-##'
-##' @export
-##' @author Rich FitzJohn
-orderly_open <- function(id, name = NULL, root = NULL, locate = TRUE,
-                         draft = NULL) {
-  root <- orderly_locate(id, name, root, locate, draft, TRUE)
-  open_directory(root)
-}
-
-##' @export
-##' @rdname orderly_open
-orderly_open_latest <- function(name = NULL, root = NULL, locate = TRUE,
-                                draft = FALSE) {
-  id <- orderly_latest(name, root, locate, draft, TRUE)
-  root <- orderly_locate(id, name, root, locate, draft, TRUE)
-  open_directory(root)
-}
-
 ##' Find the last id that was run
 ##' @title Get id of last run report
 ##' @inheritParams orderly_list
@@ -213,8 +179,7 @@ latest_id <- function(ids) {
 }
 
 ## This is annoyingly similar to orderly_find_report, but allows for
-## draft and name to be NULL.  It's used only in tests and in the
-## orderly_open function
+## draft and name to be NULL.  It's used only in tests
 orderly_locate <- function(id, name, root = NULL, locate = TRUE,
                            draft = NULL, must_work = TRUE) {
   config <- orderly_config_get(root, locate)
