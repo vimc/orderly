@@ -133,8 +133,6 @@ orderly_find_name <- function(id, config, locate = FALSE, draft = TRUE,
 orderly_find_report <- function(id, name, config, locate = FALSE,
                                 draft = TRUE, must_work = FALSE) {
   config <- orderly_config_get(config, locate)
-  ## TODO: I don't think that the treatment of draft is OK here - we
-  ## should allow reports to roll over into archive gracefully.
   path <-
     file.path((if (draft) path_draft else path_archive)(config$root), name)
   if (id == "latest") {
@@ -176,42 +174,6 @@ latest_id <- function(ids) {
   }
 
   ids
-}
-
-## This is annoyingly similar to orderly_find_report, but allows for
-## draft and name to be NULL.  It's used only in tests
-orderly_locate <- function(id, name, root = NULL, locate = TRUE,
-                           draft = NULL, must_work = TRUE) {
-  config <- orderly_config_get(root, locate)
-  if (id == "latest") {
-    if (is.null(name)) {
-      stop("name must be given for id = 'latest'")
-    }
-    if (is.null(draft)) {
-      stop("draft must be given for id = 'latest'")
-    }
-    id <- orderly_latest(name, config, locate, draft, must_work)
-  } else {
-    if (is.null(draft)) {
-      for (draft in c(FALSE, TRUE)) {
-        name <- orderly_find_name(id, config, locate, draft, FALSE)
-        if (!is.null(name)) {
-          break
-        }
-      }
-      if (is.null(name) && must_work) {
-        stop(sprintf("Did not find report %s (draft or archive)", id))
-      }
-    } else {
-      name <- orderly_find_name(id, config, locate, draft, must_work)
-    }
-  }
-  if (is.null(id) || is.null(name)) {
-    NULL
-  } else {
-    path <- (if (draft) path_draft else path_archive)(config$root)
-    file.path(path, name, id)
-  }
 }
 
 
