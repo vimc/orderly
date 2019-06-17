@@ -155,19 +155,6 @@ test_that("Behaviour with rogue files", {
 })
 
 
-test_that("orderly_last_id", {
-  path <- prepare_orderly_example("minimal")
-  id1 <- orderly_run("example", root = path, echo = FALSE)
-  id2 <- orderly_run("example", root = path, echo = FALSE)
-  expect_equal(orderly_last_id(root = path), id2)
-  expect_identical(orderly_last_id(root = path, draft = FALSE),
-                   NA_character_)
-  orderly_commit(id2, root = path)
-  expect_equal(orderly_last_id(root = path), id1)
-  expect_equal(orderly_last_id(root = path, draft = FALSE), id2)
-})
-
-
 test_that("orderly_find_report", {
   path <- prepare_orderly_example("minimal")
   id1 <- orderly_run("example", root = path, echo = FALSE)

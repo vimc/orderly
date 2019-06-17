@@ -83,20 +83,6 @@ orderly_latest <- function(name = NULL, root = NULL, locate = TRUE,
   latest_id(ids)
 }
 
-##' Find the last id that was run
-##' @title Get id of last run report
-##' @inheritParams orderly_list
-##' @param draft Find draft reports?
-##' @export
-orderly_last_id <- function(root = NULL, locate = TRUE, draft = TRUE) {
-  config <- orderly_config_get(root, locate)
-  path <- if (draft) path_draft else path_archive
-  check <- list_dirs(path(config$root))
-
-  d <- orderly_list2(draft, config, FALSE)
-  latest_id(d$id)
-}
-
 
 orderly_list2 <- function(draft, root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
