@@ -80,35 +80,6 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
 }
 
 
-##' Push an archive report to a remote location.
-##'
-##' This is experimental and only supported using
-##' \code{\link{orderly_remote_path}} remotes.  It might be useful for
-##' doing something like sharing preliminary artefacts peer-to-peer
-##' before running centrally.
-##'
-##' @title Push an archive report to a remote location
-##' @inheritParams orderly_pull_dependencies
-##' @export
-push_archive <- function(name, id = "latest", root = NULL, locate = TRUE,
-                         remote = NULL) {
-  config <- orderly_config_get(root, locate)
-  remote <- get_remote(remote, config)
-
-  if (id == "latest") {
-    id <- orderly_latest(name, config, FALSE)
-  }
-
-  v <- remote_report_versions(name, config, FALSE, remote)
-  if (id %in% v) {
-    orderly_log("push", sprintf("%s:%s already exists, skipping", name, id))
-  } else {
-    orderly_log("push", sprintf("%s:%s", name, id))
-    remote$push(name, id, config$root)
-  }
-}
-
-
 ##' Run a report on a remote server.
 ##'
 ##' @title Run a report on a remote server
