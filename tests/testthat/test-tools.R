@@ -6,7 +6,7 @@ test_that("unpack archive", {
   zip <- zip_dir(p)
 
   root <- tempfile()
-  unzip_archive(zip, root, "example", id)
+  orderly_unzip_archive(zip, root, "example", id)
   res <- file.path(root, "archive", "example")
   expect_equal(dir(res), id)
   expect_equal(sort(dir(file.path(res, id), recursive = TRUE)),
@@ -22,7 +22,7 @@ test_that("unpack report failure: corrupt download", {
   ## This test might be platform dependent as a sane unzip function
   ## would have caught this.
   expect_error(suppressWarnings(
-    unzip_archive(zip, tempfile(), NULL, NULL)),
+    orderly_unzip_archive(zip, tempfile(), NULL, NULL)),
     "Corrupt zip file? No files extracted",
     fixed = TRUE)
 })
@@ -34,7 +34,7 @@ test_that("unpack failure: not an orderly archive", {
   file.create(file.path(tmp, c("a", "b")))
   zip <- tempfile(fileext = ".zip")
   withr::with_dir(tmp, zip(zip, dir(), extras = "-q"))
-  expect_error(unzip_archive(zip, tempfile(), NULL, NULL),
+  expect_error(orderly_unzip_archive(zip, tempfile(), NULL, NULL),
                "Invalid orderly archive")
 })
 
@@ -45,7 +45,7 @@ test_that("unpack failure: not expected id", {
   dir.create(tmp, FALSE, TRUE)
   dir.create(file.path(tmp, "orderly.yml"))
   zip <- zip_dir(tmp)
-  expect_error(unzip_archive(zip, tempfile(), NULL, "other"),
+  expect_error(orderly_unzip_archive(zip, tempfile(), NULL, "other"),
                sprintf("This is archive '%s' but expected 'other'", id),
                fixed = TRUE)
 })
@@ -57,7 +57,7 @@ test_that("unpack failure: missing files", {
   dir.create(tmp, FALSE, TRUE)
   dir.create(file.path(tmp, "orderly.yml"))
   zip <- zip_dir(tmp)
-  expect_error(unzip_archive(zip, tempfile(), NULL, id),
+  expect_error(orderly_unzip_archive(zip, tempfile(), NULL, id),
                "Invalid orderly archive: missing files orderly_run.rds",
                fixed = TRUE)
 })

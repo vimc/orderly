@@ -1,4 +1,15 @@
-unzip_archive <- function(zip, root, name, id) {
+##' Unzip an orderly archive into place.  This exists to work around
+##' an alarming number of failure modes that \code{\link{unzip}} can
+##' suffer.  This should rarely be needed to be used from user code
+##' and exists to support remotes.
+##'
+##' @title Unzip orderly archive into place
+##' @param zip Path to a zip file
+##' @param root Orderly root
+##' @param name Name of the expected report
+##' @param id Id of the expected report
+##' @export
+orderly_unzip_archive <- function(zip, root, name, id) {
   tmp <- tempfile()
   on.exit(unlink(tmp, recursive = TRUE))
   res <- utils::unzip(zip, exdir = tmp)
