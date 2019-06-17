@@ -90,3 +90,24 @@ patch_orderly_config <- function(path) {
   dat$source <- NULL
   writeLines(yaml::as.yaml(dat), p)
 }
+
+
+## Quieten down the SQLite warning about unused connections as it
+## makes testing for silentness dependent on the order of tests.
+##
+## ?RSQLite::SQLite says
+##
+## > Connections are automatically cleaned-up after they're deleted and
+## > reclaimed by the GC. You can use ‘DBI::dbDisconnect()’ to
+## > terminate the connection early, but it will not actually close
+## > until all open result sets have been closed (and you'll get a
+## > warning message to this effect).
+##
+## which suggests that there's no good reason to need to disconnect,
+## and we do try to but it's a bit of a faff.
+local({
+  suppressWarnings({
+    DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+    gc()
+  })
+})
