@@ -1,6 +1,7 @@
 # 0.7.3
 
 * Function `orderly_unzip_archive` / `unzip_archive` has been removed in preparation for release.
+* Function `push_archive` (previously marked as experimental and not implemented for anything other than file remotes) has been removed.  We may reconsider this again in the future.
 
 # 0.7.2
 

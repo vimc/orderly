@@ -70,41 +70,6 @@ test_that("pull report: already done", {
 })
 
 
-test_that("push report (path)", {
-  ours <- prepare_orderly_example("demo")
-  id <- orderly_run("multifile-artefact", root = ours, echo = FALSE)
-  orderly_commit(id, root = ours)
-
-  theirs <- prepare_orderly_example("demo")
-
-  remote <- orderly_remote_path(theirs)
-  push_archive("multifile-artefact", "latest", ours, remote = remote)
-
-  d <- orderly_list_archive(theirs)
-  expect_equal(d$name, "multifile-artefact")
-  expect_true(d$id %in% orderly_list_archive(ours)$id)
-})
-
-
-test_that("push report: already done", {
-  path1 <- prepare_orderly_example("minimal")
-  path2 <- prepare_orderly_example("minimal")
-
-  id <- orderly_run("example", root = path1, echo = FALSE)
-  orderly_commit(id, root = path1)
-
-  remote <- orderly_remote_path(path2)
-
-  expect_message(
-    push_archive("example", id, path1, remote = remote),
-    sprintf("\\[ push\\s+ \\]  example:%s\\s*$", id))
-
-  expect_message(
-    push_archive("example", id, path1, remote = remote),
-    sprintf("\\[ push\\s+ \\]  example:%s already exists", id))
-})
-
-
 test_that("remote_report_names", {
   dat <- prepare_orderly_remote_example()
   expect_equal(remote_report_names(dat$config),
