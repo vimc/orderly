@@ -95,6 +95,21 @@ orderly_list_archive <- function(root = NULL, locate = TRUE) {
 ##'
 ##' @inheritParams orderly_list
 ##' @export
+##' @examples
+##' path <- orderly::orderly_example("minimal")
+##' id1 <- orderly::orderly_run("example", root = path, echo = FALSE)
+##' id2 <- orderly::orderly_run("example", root = path, echo = FALSE)
+##'
+##' # With no reports committed there is no latest report:
+##' orderly::orderly_latest("example", root = path, must_work = FALSE)
+##'
+##' # Commit the first report and it will be reported as latest:
+##' orderly::orderly_commit(id1, root = path)
+##' orderly::orderly_latest("example", root = path)
+##'
+##' # Commit the second report and it will be reported as latest instead:
+##' orderly::orderly_commit(id2, root = path)
+##' orderly::orderly_latest("example", root = path)
 orderly_latest <- function(name = NULL, root = NULL, locate = TRUE,
                            draft = FALSE, must_work = TRUE) {
   config <- orderly_config_get(root, locate)
