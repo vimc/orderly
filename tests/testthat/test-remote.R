@@ -76,9 +76,28 @@ test_that("pull from old remote", {
   path_local <- prepare_orderly_example("demo")
   path_remote <- unpack_reference("0.6.0")
 
-  expect_error(
+  ## In order to make this work we do need to update the data table.
+  ## This will stop being a problem shortly.
+  ##
+  ## Once we get a further migration we should disable importing of
+  ## all files prior to archive version 0.6.8 because of this problem.
+  db_local <- orderly_db("destination", root = path_local)
+  db_remote <- orderly_db("destination", root = path_remote, validate = FALSE)
+  tbl_data <- DBI::dbReadTable(db_remote, "data")
+  DBI::dbWriteTable(db_local, "data", tbl_data, append = TRUE)
+  DBI::dbDisconnect(db_local)
+  DBI::dbDisconnect(db_remote)
+
+  expect_message(
     orderly_pull_archive("minimal", root = path_local, remote = path_remote),
-    "Report needs migrating")
+    "^\\[ migrate")
+
+  contents <- orderly_list_archive(path_local)
+  expect_equal(nrow(contents), 1)
+  path <- file.path(path_local, "archive", "minimal", contents$id)
+  expect_equal(
+    readRDS(path_orderly_run_rds(path))$archive_version,
+    numeric_version(read_orderly_archive_version(path_local)))
 })
 
 

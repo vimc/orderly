@@ -240,15 +240,6 @@ report_data_import <- function(con, name, id, config) {
   workdir <- file.path(config$root, "archive", name, id)
   dat_rds <- readRDS(path_orderly_run_rds(workdir))
 
-  archive_version <- read_orderly_archive_version(config$root)
-  stopifnot(!is.null(dat_rds$archive_version))
-  if (dat_rds$archive_version < archive_version) {
-    stop("Report needs migrating")
-  } else if (dat_rds$archive_version > archive_version) {
-    stop("Report was created with orderly more recent than this, upgrade!")
-  }
-
-
   sql_name <- "SELECT name FROM report WHERE name = $1"
   if (nrow(DBI::dbGetQuery(con, sql_name, name)) == 0L) {
     DBI::dbWriteTable(con, "report", data_frame(name = name), append = TRUE)
