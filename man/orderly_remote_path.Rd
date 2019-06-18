@@ -16,7 +16,7 @@ Create a "handle" for interacting with orderly repositories that
 are hosted at a different path.  This might be useful in cases
 where you have access to an orderly repository via a network mount
 or a syncronised folder (e.g., Dropbox, Box, etc).  More
-generally, \code{orderly_remote_path} is implements an interface
+generally, \code{orderly_remote_path} implements an interface
 used by orderly to abstract over different ways that orderly
 repositories might be hosted remotely, including over HTTP APIs.
 }

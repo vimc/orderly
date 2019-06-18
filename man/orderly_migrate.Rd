@@ -48,7 +48,7 @@ metadata.  We modify the \code{orderly_run.rds} files, but will
 create versioned backups as files are changed.
 }
 \examples{
-# Without an orderly repository created by a prevoius version of
+# Without an orderly repository created by a previous version of
 # orderly, this function does nothing interesting:
 path <- orderly::orderly_example("minimal")
 orderly::orderly_migrate(path)

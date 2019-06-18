@@ -23,10 +23,12 @@ orderly_log(topic, value)
   This allows patterns like:
 
 \preformatted{if (!orderly::orderly_log_off()) {
-  orderly::orderly_log_on()
+  on.exit(orderly::orderly_log_on())
 }
 }
-to disable logging within a function
+
+to disable logging within a function (the \code{on.exit} block
+  will be run when the function exits.
 }
 \description{
 Start and stop the orderly log.  When active, some actions will

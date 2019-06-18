@@ -193,7 +193,7 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
 ##' @export
 ##' @rdname orderly_default_remote
 ##' @examples
-##' # Same setup as in ?orderly_remote_path, with a remote orderly:
+##' # Same setup as in orderly_remote_path, with a remote orderly:
 ##' path_remote <- orderly::orderly_example("demo")
 ##' id <- orderly::orderly_run("other", list(nmin = 0),
 ##'                            root = path_remote, echo = FALSE)

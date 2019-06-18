@@ -86,7 +86,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
 ##' @rdname orderly_run
 ##' @examples
 ##' # The function orderly_data does all the preparation work that
-##' # orderly_run does, but does not run the report but instead
+##' # orderly_run does, but does not run the report; instead it
 ##' # returns the created environment with all the data and parameters
 ##' # set.
 ##' env <- orderly::orderly_data("other", list(nmin = 0.2), root = path)

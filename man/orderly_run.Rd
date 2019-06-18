@@ -87,7 +87,7 @@ id <- orderly::orderly_run("other", list(nmin = 0.2), root = path)
 # These parameters can be used in SQL queries or in the report
 # code.
 # The function orderly_data does all the preparation work that
-# orderly_run does, but does not run the report but instead
+# orderly_run does, but does not run the report; instead it
 # returns the created environment with all the data and parameters
 # set.
 env <- orderly::orderly_data("other", list(nmin = 0.2), root = path)
