@@ -95,6 +95,7 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
     path <- file.path(config$root, "archive", name, id)
     withCallingHandlers({
       remote$pull(name, id, config$root)
+      orderly_pull_resolve_dependencies(path, remote, config)
       report_db_import(name, id, config)
     }, error = function(e) unlink(path, recursive = TRUE))
   }
@@ -297,4 +298,20 @@ implements_remote <- function(x) {
     is.function(x$list_versions) &&
     is.function(x$pull) &&
     is.function(x$run)
+}
+
+
+orderly_pull_resolve_dependencies <- function(path, remote, config) {
+  d <- readRDS(path_orderly_run_rds(path))
+  depends <- d$meta$depends
+  if (NROW(depends) > 0L) { # NROW(x) is 0 for x = NULL
+    depends <- depends[!duplicated(depends$id), c("name", "id"), drop = FALSE]
+    orderly_log("depends",
+                paste(sprintf("%s/%s", depends$name, depends$id),
+                      collapse = ", "))
+    for (i in seq_len(nrow(depends))) {
+      orderly_pull_archive(depends$name[[i]], depends$id[[i]], root = config,
+                           locate = FALSE, remote = remote)
+    }
+  }
 }
