@@ -10,7 +10,7 @@ orderly_db(type, root = NULL, locate = TRUE, validate = TRUE)
 \item{type}{The type of connection to make (\code{source},
 \code{destination}, \code{csv} or \code{rds}).}
 
-\item{root}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

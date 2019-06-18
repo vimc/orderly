@@ -12,7 +12,7 @@ orderly_commit(id, name = NULL, root = NULL, locate = TRUE)
 \item{name}{The name of the report - this can be omitted and the
 name will be determined from the \code{id}.}
 
-\item{root}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

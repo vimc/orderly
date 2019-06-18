@@ -70,7 +70,7 @@ tree <- function(path, header = path) {
 ## * we apply the reporting scripts to different subsets of the data
 ## * the code that we use to generate the scripts changes
 ##
-## (among other more pathalogical reasons such as the packages that
+## (among other more pathological reasons such as the packages that
 ## we're using changing behaviour, etc)
 ##
 ## We would like to be able to generate reports easily from the
@@ -316,7 +316,7 @@ orderly::orderly_new("new", root = path)
 ##     password: $MY_PASSWORD
 ## ```
 
-## environment varaibles, as used this way **must** begin with a
+## environment variables, as used this way **must** begin with a
 ## dollar sign and consist only of uppercase letters, numbers and the
 ## underscore character.  You can then set the environment variables
 ## in an `.Renviron` (either within the project or in your home
@@ -352,5 +352,5 @@ orderly::orderly_new("new", root = path)
 
 ## would look up the field `password` at the path
 ## `/secret/users/database_user`.  This can be stored in
-## `orderly_config.yml`, in the contents of an environment varaible or
+## `orderly_config.yml`, in the contents of an environment variable or
 ## in `orderly_envir.yml`.

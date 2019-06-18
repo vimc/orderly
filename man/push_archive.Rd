@@ -13,7 +13,7 @@ push_archive(name, id = "latest", root = NULL, locate = TRUE,
 \item{id}{The identifier (for \code{orderly_pull_archive}.  The default is
 to use the latest report.}
 
-\item{root}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

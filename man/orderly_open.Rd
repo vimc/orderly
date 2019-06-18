@@ -18,7 +18,7 @@ which case \code{name} and \code{draft} must be specified}
 \item{name}{The name of the report.  Can be omitted if \code{id}
 is not \code{latest}}
 
-\item{root}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

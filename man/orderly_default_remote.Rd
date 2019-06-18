@@ -13,7 +13,7 @@ orderly_default_remote_get(root = NULL, locate = TRUE)
 \item{value}{A string describing a remote, a remote object, or
 \code{NULL} to clear}
 
-\item{root}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

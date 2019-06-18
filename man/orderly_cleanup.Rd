@@ -10,7 +10,7 @@ orderly_cleanup(name = NULL, root = NULL, locate = TRUE,
 \arguments{
 \item{name}{Optional name; in this case only clean up drafts with this name}
 
-\item{root}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

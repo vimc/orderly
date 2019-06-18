@@ -1,7 +1,7 @@
 ##' Initialise an orderly store.  This is a helper function that
 ##' automates getting started with using orderly for a new project.
 ##' It is not required to use - you can create the orderly structure
-##' yourself (all that is compulsary is the \code{orderly_config.yml}
+##' yourself (all that is compulsory is the \code{orderly_config.yml}
 ##' file).
 ##'
 ##' @title Initialise an orderly store

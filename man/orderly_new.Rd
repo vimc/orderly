@@ -10,7 +10,7 @@ orderly_new(name, root = NULL, locate = TRUE, quiet = FALSE,
 \arguments{
 \item{name}{Name of the new report (will be a directory name).}
 
-\item{root}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

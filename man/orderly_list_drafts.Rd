@@ -10,7 +10,7 @@ orderly_list_drafts(root = NULL, locate = TRUE)
 orderly_list_archive(root = NULL, locate = TRUE)
 }
 \arguments{
-\item{root}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

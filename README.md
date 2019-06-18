@@ -71,7 +71,7 @@ It then stores metadata alongside the analysis including [md5 hashes](https://en
 In the [MRC Centre for Global Infectious Disease Analysis](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis) we use `orderly` on two major projects:
 
 - The [Vaccine Impact Modelling Consortium](https://www.vaccineimpact.org/)
-- Our part of the response to the 2018-2019 ebola outbreak in DRC
+- Our part of the response to the 2018-2019 Ebola outbreak in the Democratic Republic of Congo
 
 The workflows we have developed here are oriented towards collaborative groups of researchers - other workflows are possible (indeed `orderly` is also designed to support a _decentralised_ workflow, though this has not been used in practice yet).
 

@@ -8,7 +8,7 @@ orderly_migrate(root = NULL, locate = TRUE, to = NULL,
   dry_run = FALSE, skip_failed = FALSE)
 }
 \arguments{
-\item{root}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 

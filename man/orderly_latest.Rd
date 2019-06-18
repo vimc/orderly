@@ -11,7 +11,7 @@ orderly_latest(name = NULL, root = NULL, locate = TRUE,
 \item{name}{Name of the report to find; if \code{NULL} returns the
 most recent report across all names}
 
-\item{root}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 
