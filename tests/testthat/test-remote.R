@@ -68,3 +68,33 @@ test_that("pull_dependencies counts dependencies", {
                               remote = dat$remote),
     "\\[ depends\\s+ \\]  depend has 1 dependency")
 })
+
+
+## These need dealing with properly, but check that they trigger
+## correctly here:
+test_that("pull from old remote", {
+  path_local <- prepare_orderly_example("demo")
+  path_remote <- unpack_reference("0.6.0")
+
+  expect_error(
+    orderly_pull_archive("minimal", root = path_local, remote = path_remote),
+    "Report needs migrating")
+})
+
+
+## These need dealing with properly, but check that they trigger
+## correctly here:
+test_that("pull from new remote", {
+  dat <- prepare_orderly_remote_example()
+
+  p <- path_orderly_run_rds(
+    file.path(dat$path_remote, "archive", "example", dat$id2))
+  d <- readRDS(p)
+  d$archive_version <- numeric_version("100.100.100")
+  saveRDS(d, p)
+
+  expect_error(
+    orderly_pull_archive("example", dat$id2, root = dat$path_local,
+                         remote = dat$remote),
+    "Report was created with orderly more recent than this, upgrade!")
+})
