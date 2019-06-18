@@ -1,3 +1,7 @@
+# 0.7.7
+
+* Pulling from remotes now imports the report into the local orderly db, and also pulls all dependent reports (VIMC-2855).
+
 # 0.7.6
 
 * Detection of modified dependencies has been improved (VIMC-2997).
@@ -5,10 +9,6 @@
 # 0.7.5
 
 * Fixes notifications to slack on report completion (VIMC-2992).
-
-# 0.7.4
-
-* The database configuration in `orderly_config.yml` now has an "args" section, rather than guessing arguments.  Old configurations are valid, with a warning to update (VIMC-1986).
 
 # 0.7.3
 
