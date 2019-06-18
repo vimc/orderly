@@ -84,11 +84,19 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
   }
 
   dest <- file.path(path_archive(config$root), name, id)
+  label <- sprintf("%s:%s", name, id)
   if (file.exists(dest)) {
-    orderly_log("pull", sprintf("%s:%s already exists, skipping", name, id))
+    orderly_log("pull", sprintf("%s already exists, skipping", label))
   } else {
-    orderly_log("pull", sprintf("%s:%s", name, id))
-    remote$pull(name, id, config$root)
+    orderly_log("pull", label)
+    ## TODO (VIMC-2953): it would be might to have the remote pull
+    ## into a temporary directory and handle the copy ourselves for
+    ## easier rollback and less logic.
+    path <- file.path(config$root, "archive", name, id)
+    withCallingHandlers({
+      remote$pull(name, id, config$root)
+      report_db_import(name, id, config)
+    }, error = function(e) unlink(path, recursive = TRUE))
   }
 }
 

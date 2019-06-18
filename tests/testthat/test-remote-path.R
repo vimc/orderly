@@ -36,6 +36,11 @@ test_that("pull report", {
   d <- orderly_list_archive(path2)
   expect_equal(d$name, "multifile-artefact")
   expect_true(d$id %in% orderly_list_archive(path1)$id)
+
+  ## Pulled report is now in the db:
+  con <- orderly_db("destination", root = path2)
+  on.exit(DBI::dbDisconnect(con))
+  expect_equal(DBI::dbReadTable(con, "report_version")$id, id)
 })
 
 
