@@ -1,16 +1,3 @@
-## The assumption at this point is that we'll update the *rds* only
-## and not the yaml, and no other files in the directory.  The
-## rationale here is that the yaml is too hard to edit (roundtripping
-## through R is lossy without careful serialisation/deserialisation
-## and so unlikely to work well in all cases).  The new database
-## addition code only reads from the rds so this is the bit that we
-## really want in anycase.  Perhaps a future version will regenerate
-## the yml from the rds?
-##
-## However, the path will be allowed to come through and in some cases
-## we might add new files.
-
-
 ##' Migrate an orderly archive.  This is needed periodically when the
 ##' orderly archive version changes.  If you get a message like
 ##' \code{orderly archive needs migrating from a.b.c => x.y.z} then
@@ -30,9 +17,6 @@
 ##' @param to The version to migrate to.  The default is the current
 ##'   archive version; this is almost always what is wanted.
 ##'
-##' @param verbose Logical, indicating if extra noisy output from the
-##'   migration should be given.
-##'
 ##' @param dry_run Logical, indicating if we should try running the
 ##'   migration but not actually applying it.  This is intended
 ##'   primarily for developing new migrations and will probably not
@@ -46,8 +30,13 @@
 ##'   migrated this might come in helpful.
 ##'
 ##' @export
+##' @examples
+##' # Without an orderly repository created by a previous version of
+##' # orderly, this function does nothing interesting:
+##' path <- orderly::orderly_example("minimal")
+##' orderly::orderly_migrate(path)
 orderly_migrate <- function(root = NULL, locate = TRUE, to = NULL,
-                            verbose = FALSE, dry_run = FALSE,
+                            dry_run = FALSE,
                             skip_failed = FALSE) {
   ## We'll skip warnings here - they'll come out as messages rather
   ## than warnings.
@@ -61,7 +50,7 @@ orderly_migrate <- function(root = NULL, locate = TRUE, to = NULL,
 
   for (v in names(migrations)) {
     f <- source_to_function(migrations[[v]], "migrate", topenv())
-    migrate_apply(root, v, f, config, verbose, dry_run, skip_failed)
+    migrate_apply(root, v, f, config, dry_run, skip_failed)
   }
 }
 
@@ -80,8 +69,7 @@ migrate_plan <- function(root, to = NULL) {
 }
 
 
-migrate_apply <- function(root, version, fun, config, verbose, dry_run,
-                          skip_failed) {
+migrate_apply <- function(root, version, fun, config, dry_run, skip_failed) {
   ## This ensures we work through all reports in order of creation
   ## (based on id).
   archive <- orderly_list_archive(root, FALSE)

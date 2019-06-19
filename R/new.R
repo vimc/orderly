@@ -34,7 +34,22 @@
 ##'   orderly's builtin template.
 ##'
 ##' @inheritParams orderly_list
+##'
+##' @seealso \code{\link{orderly_init}} for initialising a new orderly
+##'   repository.
+##'
 ##' @export
+##' @examples
+##' path <- orderly::orderly_example("minimal")
+##'
+##' # Create a new report with the name "myreport" in this orderly
+##' # repository:
+##' orderly::orderly_new("myreport", root = path)
+##'
+##' # The directory will be initialised with a orderly.yml file
+##' # containing documentation
+##' dir(file.path(path, "src", "myreport"))
+##' readLines(file.path(path, "src", "myreport", "orderly.yml"))
 orderly_new <- function(name, root = NULL, locate = TRUE, quiet = FALSE,
                         template = NULL) {
   config <- orderly_config_get(root, locate)

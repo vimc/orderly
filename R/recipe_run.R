@@ -34,7 +34,38 @@
 ##' @inheritParams orderly_list
 ##' @param echo Print the result of running the R code to the console
 ##' @param id_file Write the identifier into a file
+##'
+##' @seealso \code{\link{orderly_log}} for controlling display of log
+##'   messages (not just R output)
+##'
 ##' @export
+##' @examples
+##' path <- orderly::orderly_example("demo")
+##'
+##' # To run most reports, provide the report name (and the path if
+##' # not running in the working directory, as is the case here):
+##' id <- orderly::orderly_run("minimal", root = path)
+##'
+##' # Every report gets a unique identifier, based on the time (it is
+##' # ISO 8601 time with random hex appended to end)
+##' id
+##'
+##' # After being run, a report is a "draft" and will exist in the
+##' # drafts directory:
+##' orderly::orderly_list_drafts(root = path)
+##'
+##' # Draft reports are always stored in the path
+##' # <root>/draft/<name>/<id>, so we have
+##' dir(file.path(path, "draft", "minimal", id))
+##'
+##' # which contains the files when the report was run.
+##'
+##' # If a report has parameters, then these must be passed in as a
+##' # named list.
+##' id <- orderly::orderly_run("other", list(nmin = 0.2), root = path)
+##'
+##' # These parameters can be used in SQL queries or in the report
+##' # code.
 orderly_run <- function(name, parameters = NULL, envir = NULL,
                         root = NULL, locate = TRUE, echo = TRUE,
                         id_file = NULL, fetch = FALSE, ref = NULL,
@@ -53,6 +84,15 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
 
 ##' @export
 ##' @rdname orderly_run
+##' @examples
+##' # The function orderly_data does all the preparation work that
+##' # orderly_run does, but does not run the report; instead it
+##' # returns the created environment with all the data and parameters
+##' # set.
+##' env <- orderly::orderly_data("other", list(nmin = 0.2), root = path)
+##' ls(env)
+##' env$nmin
+##' env$extract
 orderly_data <- function(name, parameters = NULL, envir = NULL,
                          root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
@@ -77,6 +117,31 @@ orderly_data <- function(name, parameters = NULL, envir = NULL,
 ##' @title Prepare a directory for orderly to use
 ##' @inheritParams orderly_run
 ##' @export
+##' @examples
+##'
+##' path <- orderly::orderly_example("minimal")
+##' orderly::orderly_test_start("example", root = path)
+##'
+##' # R is now running from the newly created draft directory for this
+##' # report:
+##' getwd()
+##'
+##' # The data in the orderly example is now available to use
+##' dat
+##'
+##' # Check to see which artefacts have been created so far:
+##' orderly::orderly_test_check()
+##'
+##' # Manually the code that this report has in its script
+##' png("mygraph.png")
+##' par(mar = c(15, 4, .5, .5))
+##' barplot(setNames(dat$number, dat$name), las = 2)
+##' dev.off()
+##'
+##' orderly::orderly_test_check()
+##'
+##' # Revert back to the original directory:
+##' orderly::orderly_test_end()
 orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
                                root = NULL, locate = TRUE) {
   if (!is.null(cache$test)) {
@@ -84,7 +149,6 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
   }
 
   config <- orderly_config_get(root, locate)
-  ## TODO: support ref here
   info <- recipe_prepare(config, name, id_file = NULL, ref = NULL,
                          fetch = FALSE, message = NULL)
   owd <- setwd(info$workdir)
@@ -722,9 +786,27 @@ recipe_current_run_clear <- function() {
 }
 
 
-##' Get information on current orderly run
+##' This function allows inspection of some of orderly's metadata
+##'   during an orderly run.  The format returned is internal to
+##'   orderly and subject to change.  It is designed to be used either
+##'   within report code, or in conjunction with
+##'   \code{\link{orderly_test_start}}
+##'
 ##' @title Information on current orderly run
+##'
 ##' @export
+##' @examples
+##' path <- orderly::orderly_example("depends")
+##'
+##' # This example uses orderly_run_info within its script, saving the
+##' # output to "output.rds"
+##' readLines(file.path(path, "src", "depend", "script.R"))
+##'
+##' orderly::orderly_run("example", root = path)
+##' id <- orderly::orderly_run("depend", root = path)
+##'
+##' # This is the contents:
+##' readRDS(file.path(path, "draft", "depend", id, "output.rds"))
 orderly_run_info <- function() {
   info <- recipe_current_run_get()
   if (is.null(info)) {

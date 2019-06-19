@@ -12,7 +12,7 @@ orderly_commit(id, name = NULL, root = NULL, locate = TRUE)
 \item{name}{The name of the report - this can be omitted and the
 name will be determined from the \code{id}.}
 
-\item{root}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 
@@ -23,4 +23,17 @@ parents until it finds an \code{orderly_config.yml} file.}
 }
 \description{
 Commit a generated report
+}
+\examples{
+# In a new example orderly, run a report
+path <- orderly::orderly_example("minimal")
+id <- orderly::orderly_run("example", root = path)
+
+# To commit it, all we need is the report id
+orderly::orderly_commit(id, root = path)
+
+# The report is now committed, and as such could be used as a
+# depenency in another report and is not subject to deletion by
+# orderly::orderly_cleanup
+orderly::orderly_list_archive(root = path)
 }

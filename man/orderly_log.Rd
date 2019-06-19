@@ -4,7 +4,7 @@
 \alias{orderly_log_on}
 \alias{orderly_log_off}
 \alias{orderly_log}
-\title{Start and stop log}
+\title{Orderly logging and diagnostic messages}
 \usage{
 orderly_log_on()
 
@@ -23,21 +23,66 @@ orderly_log(topic, value)
   This allows patterns like:
 
 \preformatted{if (!orderly::orderly_log_off()) {
-  orderly::orderly_log_on()
+  on.exit(orderly::orderly_log_on())
 }
 }
-to disable logging within a function
+
+to disable logging within a function (the \code{on.exit} block
+  will be run when the function exits.
 }
 \description{
 Start and stop the orderly log.  When active, some actions will
 print diagnostic information to the message stream.  This is set
 to be on by default.
-
-Send an entry to the orderly log.  This is designed primarily for
-use with packages that build off of orderly, so that they can log
-in a consistent way.
 }
 \details{
-The interface here will change by adding arguments.  Future versions
-may support logging to a file.
+The function \code{orderly_log} is designed to be used from
+applications that extend orderly, while the functions
+\code{orderly_log_on} and \code{orderly_log_off} can be used by
+applications or users to enable and disable log messages.
+
+The interface here may expand by adding arguments or change
+behaviour based on global options Future versions may support
+logging to a file, or adding timestamps, or logging in json
+format, etc.
+}
+\examples{
+# We are going to log things below
+logging_was_enabled <- orderly::orderly_log_on()
+
+path <- orderly::orderly_example("minimal")
+
+# By default we get both orderly log messages (e.g.,
+# "[name] example") and the output of R when it runs the report:
+orderly::orderly_run("example", root = path)
+
+# Passing FALSE to the echo argument suppresses R's output but not
+# orderly messages:
+orderly::orderly_run("example", root = path, echo = FALSE)
+
+# Disabling the log suppresses orderly's messages but still
+# displays R's output:
+orderly::orderly_log_off()
+orderly::orderly_run("example", root = path)
+
+# And using both will prevent all output
+orderly::orderly_run("example", root = path, echo = FALSE)
+
+# About orderly log messages:
+# Orderly log messages have the form "[title] message"
+orderly::orderly_log_on()
+orderly::orderly_log("title", "message")
+
+# If logging is disabled they are not printed:
+orderly::orderly_log_off()
+orderly::orderly_log("title", "message")
+
+# Restore to previous settings:
+if (logging_was_enabled) {
+  orderly::orderly_log_on()
+}
+}
+\seealso{
+\code{\link{orderly_run}}, which makes use of these log
+  messages
 }

@@ -66,3 +66,8 @@ path_changelog_txt <- function(path, type) {
 path_db_backup <- function(root, file) {
   file.path(root, "backup", "db", basename(file), fsep = "/")
 }
+
+
+path_demo_yml <- function(root) {
+  file.path(root, "demo.yml")
+}

@@ -12,6 +12,30 @@
 ##'   = "destination"}).  This is primarily intended for internal use.
 ##'
 ##' @export
+##' @examples
+##' # Create an orderly that has a single commited report:
+##' path <- orderly::orderly_example("minimal")
+##' id <- orderly::orderly_run("example", root = path)
+##' orderly::orderly_commit(id, root = path)
+##'
+##' # The source database holds the data that might be accessible via
+##' # the 'data' entry in orderly.yml:
+##' db <- orderly::orderly_db("source", root = path)
+##' # This is a list, with one connection per database listed in the
+##' # orderly_config.yml (an empty list if none are specified):
+##' db
+##' DBI::dbListTables(db$source)
+##' head(DBI::dbReadTable(db$source, "data"))
+##' DBI::dbDisconnect(db$source)
+##'
+##' # The destination database holds information about the archived
+##' # reports:
+##' db <- orderly::orderly_db("destination", root = path)
+##' DBI::dbListTables(db)
+##'
+##' # These tables are documented online:
+##' # https://vimc.github.io/orderly/schema
+##' DBI::dbReadTable(db, "report_version")
 orderly_db <- function(type, root = NULL, locate = TRUE, validate = TRUE) {
   config <- orderly_config_get(root, locate)
   if (type == "rds") {
@@ -59,8 +83,21 @@ orderly_db_args <- function(x, config) {
 }
 
 
-##' Rebuild the report database
+##' Rebuild the report database.  This is necessary when the orderly
+##'   database schema changes, and you will be prompted to run this
+##'   function after upgrading orderly in that case.
+##'
+##' The report database (orderly's "destination" database) is
+##' essentially an index over all the metadata associated with
+##' reports.  It is used by orderly itself, and can be used by
+##' applications that extend orderly (e.g.,
+##' \href{https://github.com/vimc/orderly-web}{OrderlyWeb}).  All the
+##' data in this database can be rebuilt from files stored with the
+##' committed (archive) orderly reports, using the
+##' \code{orderly_rebuild} function.
+##'
 ##' @title Rebuild the report database
+##'
 ##' @inheritParams orderly_list
 ##'
 ##' @param verbose Logical, indicating if information about the
@@ -72,6 +109,29 @@ orderly_db_args <- function(x, config) {
 ##'   fast enough to call regularly.
 ##'
 ##' @export
+##' @examples
+##' path <- orderly::orderly_example("minimal")
+##' id <- orderly::orderly_run("example", root = path)
+##' orderly::orderly_commit(id, root = path)
+##'
+##' con <- orderly::orderly_db("destination", root = path)
+##' DBI::dbReadTable(con, "report_version")
+##' DBI::dbDisconnect(con)
+##'
+##' # The database can be removed and will be rebuilt if requested
+##' # (this is only a good idea if you do not extend the database with
+##' # your own fields - only the fields that orderly looks after can
+##' # be recovered!)
+##' file.remove(file.path(path, "orderly.sqlite"))
+##' orderly::orderly_rebuild(path)
+##' file.exists(file.path(path, "orderly.sqlite"))
+##' con <- orderly::orderly_db("destination", root = path)
+##' DBI::dbReadTable(con, "report_version")
+##' DBI::dbDisconnect(con)
+##'
+##' # It is safe to rebuild a database repeatedly, though this can be
+##' # slow with larger databases.
+##' orderly::orderly_rebuild(path)
 orderly_rebuild <- function(root = NULL, locate = TRUE, verbose = TRUE,
                             if_schema_changed = FALSE) {
   ## We'll skip warnings here - they'll come out as messages rather
@@ -83,7 +143,7 @@ orderly_rebuild <- function(root = NULL, locate = TRUE, verbose = TRUE,
 
   if (length(migrate_plan(config$root, to = NULL)) > 0L) {
     orderly_log("migrate", "archive")
-    orderly_migrate(config, locate = FALSE, verbose = verbose)
+    orderly_migrate(config, locate = FALSE)
     ## This should trigger a rebuild, regardless of what anything else thinks
     if_schema_changed <- FALSE
   }

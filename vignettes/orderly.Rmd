@@ -71,7 +71,7 @@ reports might change because:
 * we apply the reporting scripts to different subsets of the data
 * the code that we use to generate the scripts changes
 
-(among other more pathalogical reasons such as the packages that
+(among other more pathological reasons such as the packages that
 we're using changing behaviour, etc)
 
 We would like to be able to generate reports easily from the
@@ -258,6 +258,11 @@ version is faster to read and write, usually smaller, and is
 exactly the data as used, while the csv version is more easily read
 by other applications.
 
+We store the copies of files as run by orderly so that even if the
+input files change we can still easily get back to previous
+versions of the inputs, along side the outputs, and these are safe
+from any changes to the underlying source.
+
 You can see the list of draft reports like so:
 ``` {r }
 orderly::orderly_list_drafts(root = path)
@@ -328,7 +333,7 @@ database:
     password: $MY_PASSWORD
 ```
 
-environment varaibles, as used this way **must** begin with a
+environment variables, as used this way **must** begin with a
 dollar sign and consist only of uppercase letters, numbers and the
 underscore character.  You can then set the environment variables
 in an `.Renviron` (either within the project or in your home
@@ -364,5 +369,5 @@ password: VAULT:/secret/users/database_user:password
 
 would look up the field `password` at the path
 `/secret/users/database_user`.  This can be stored in
-`orderly_config.yml`, in the contents of an environment varaible or
+`orderly_config.yml`, in the contents of an environment variable or
 in `orderly_envir.yml`.

@@ -25,6 +25,13 @@
 ##'
 ##' @inheritParams orderly_list
 ##' @export
+##'
+##' @seealso \code{\link{orderly_remote_path}}, which implements the
+##'   remote interface for orderly repositories at a local path.  See
+##'   also \href{https://github.com/vimc/orderly-web}{OrderlyWeb} for
+##'   a system for hosting orderly repositories over an HTTP API.
+##'
+##' @example man-roxygen/example-remote.R
 orderly_pull_dependencies <- function(name, root = NULL, locate = TRUE,
                                       remote = NULL) {
   config <- orderly_config_get(root, locate)
@@ -80,7 +87,8 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
 }
 
 
-##' Run a report on a remote server.
+##' Run a report on a remote server.  Note that this is only supported
+##' for remotes using OrderlyWeb at present.
 ##'
 ##' @title Run a report on a remote server
 ##'
@@ -99,7 +107,7 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
 ##' @param poll Period to poll the server for results (in seconds)
 ##'
 ##' @param open Logical, indicating if the report should be opened in
-##'   a browser on completion
+##'   a browser on completion (if supported by the remote)
 ##'
 ##' @param stop_on_error Logical, indicating if we should throw an
 ##'   error if the report fails.  If you set this to \code{FALSE} it
@@ -121,6 +129,13 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
 ##' @inheritParams orderly_pull_dependencies
 ##'
 ##' @export
+##' @examples
+##' path_remote <- orderly::orderly_example("demo")
+##' path_local <- orderly::orderly_example("demo")
+##' remote <- orderly::orderly_remote_path(path_remote)
+##' # Currently, path remotes don't support run
+##' try(orderly::orderly_run_remote(
+##'   "minimal", remote = remote, root = path_local))
 orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
                                timeout = NULL, wait = 3600, poll = 1,
                                open = TRUE, stop_on_error = TRUE,
@@ -135,20 +150,53 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
 }
 
 
-##' Set and get default remote locations
+##' Set and get default remote locations.  Default locations are
+##' specific to an orderly repository (based on the path of the
+##' repository) so there is no interaction between different orderly
+##' projects.
 ##'
 ##' @title Set default remote location
-##' @param value A string describing a remote, or \code{NULL} to clear
+##'
+##' @param value A string describing a remote, a remote object, or
+##'   \code{NULL} to clear
+##'
 ##' @inheritParams orderly_list
 ##' @export
 ##' @rdname orderly_default_remote
+##' @examples
+##' # Same setup as in orderly_remote_path, with a remote orderly:
+##' path_remote <- orderly::orderly_example("demo")
+##' id <- orderly::orderly_run("other", list(nmin = 0),
+##'                            root = path_remote, echo = FALSE)
+##' orderly::orderly_commit(id, root = path_remote)
+##' id <- orderly::orderly_run("use_dependency",
+##'                            root = path_remote, echo = FALSE)
+##' orderly::orderly_commit(id, root = path_remote)
+##'
+##' # And a local orderly
+##' path_local <- orderly::orderly_example("demo")
+##'
+##' # We'll create a an object to interact with this remote using
+##' # orderly_remote_path.
+##' remote <- orderly::orderly_remote_path(path_remote)
+##'
+##' # There is no remote set by default:
+##' try(orderly::orderly_default_remote_get(root = path_local))
+##'
+##' # We can set one:
+##' orderly::orderly_default_remote_set(remote, root = path_local)
+##'
+##' # and now we can retrieve it:
+##' orderly::orderly_default_remote_get(root = path_local)
+##'
+##' # Note that this has not affected the other orderly:
+##' try(orderly::orderly_default_remote_get(root = path_remote))
 orderly_default_remote_set <- function(value, root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
 
   if (is.null(value)) {
     remote <- NULL
   } else {
-    assert_scalar_character(value)
     remote <- get_remote(value, config)
   }
 

@@ -34,3 +34,8 @@ so there is no "draft" stage and reports are committed as soon as
 they are run.  This function is not intended for human end users,
 only for creating automated tools for use with orderly.
 }
+\examples{
+
+path <- orderly::orderly_example("demo")
+runner <- orderly::orderly_runner(path)
+}

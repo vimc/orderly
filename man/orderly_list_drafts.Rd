@@ -10,7 +10,7 @@ orderly_list_drafts(root = NULL, locate = TRUE)
 orderly_list_archive(root = NULL, locate = TRUE)
 }
 \arguments{
-\item{root}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 
@@ -23,4 +23,34 @@ parents until it finds an \code{orderly_config.yml} file.}
 List draft and archived reports.  This returns a data.frame with
 columns \code{name} (see \code{\link{orderly_list}} and \code{id}.
 It will expand in future.
+}
+\examples{
+# The orderly demo, with lots of potential reports:
+path <- orderly::orderly_example("demo")
+
+# Reports that _could_ be run:
+orderly::orderly_list(path)
+
+# Run a report twice:
+id1 <- orderly::orderly_run("minimal", root = path)
+id2 <- orderly::orderly_run("minimal", root = path)
+
+# We can see both drafts:
+orderly::orderly_list_drafts(path)
+
+# Nothing is in the archive:
+orderly::orderly_list_archive(path)
+
+# Commit a report:
+orderly::orderly_commit(id2, root = path)
+
+# Only one draft now
+orderly::orderly_list_drafts(path)
+
+# And the second report is in the archive:
+orderly::orderly_list_archive(path)
+}
+\seealso{
+\code{\link{orderly_list}}, which lists the names of
+  source reports that can be run
 }

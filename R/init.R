@@ -1,4 +1,9 @@
-##' Initialise an orderly store
+##' Initialise an orderly store.  This is a helper function that
+##' automates getting started with using orderly for a new project.
+##' It is not required to use - you can create the orderly structure
+##' yourself (all that is compulsory is the \code{orderly_config.yml}
+##' file).
+##'
 ##' @title Initialise an orderly store
 ##'
 ##' @param root The root of the store; this must be an empty directory
@@ -12,6 +17,21 @@
 ##'   be suppressed.
 ##'
 ##' @export
+##'
+##' @seealso \code{\link{orderly_new}} for creating new reports within
+##'   a configured orderly repository.
+##'
+##' @examples
+##' # Initialise a new orderly repository in an temporary directory:
+##' path <- orderly::orderly_init(tempfile())
+##'
+##' # This has created the directory skeleton that you need to get
+##' # started using orderly:
+##' dir(path)
+##'
+##' # As instructed, the next thing to do is to edit the
+##' # orderly_config.yml file to match your needs:
+##' readLines(file.path(path, "orderly_config.yml"))
 orderly_init <- function(root, doc = TRUE, quiet = FALSE) {
   if (file.exists(root)) {
     if (!file.info(root)$isdir || length(dir(root)) > 0) {

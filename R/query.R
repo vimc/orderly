@@ -10,7 +10,7 @@ VERSION_ID_RE <- "^([0-9]{8}-[0-9]{6})-([[:xdigit:]]{4})([[:xdigit:]]{4})$"
 ##'
 ##' @title List orderly reports
 ##'
-##' @param root The path to an orderly root directoy, or \code{NULL}
+##' @param root The path to an orderly root directory, or \code{NULL}
 ##'   (the default) to search for one from the current working
 ##'   directory if \code{locate} is \code{TRUE}).
 ##'
@@ -19,7 +19,17 @@ VERSION_ID_RE <- "^([0-9]{8}-[0-9]{6})-([[:xdigit:]]{4})([[:xdigit:]]{4})$"
 ##'   then orderly looks in the working directory and up through its
 ##'   parents until it finds an \code{orderly_config.yml} file.
 ##'
+##' @seealso \code{\link{orderly_list_archive}} and
+##'   \code{\link{orderly_list_drafts}}, which list archived
+##'   (committed) and draft reports and their versions.
+##'
 ##' @export
+##' @examples
+##' # The orderly demo, with lots of potential reports:
+##' path <- orderly::orderly_example("demo")
+##'
+##' # Reports that _could_ be run:
+##' orderly::orderly_list(path)
 orderly_list <- function(root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
   basename(list_dirs(path_src(config$root)))
@@ -30,8 +40,38 @@ orderly_list <- function(root = NULL, locate = TRUE) {
 ##' It will expand in future.
 ##'
 ##' @title List draft and archived reports
+##'
 ##' @inheritParams orderly_list
+##'
+##' @seealso \code{\link{orderly_list}}, which lists the names of
+##'   source reports that can be run
+##'
 ##' @export
+##' @examples
+##' # The orderly demo, with lots of potential reports:
+##' path <- orderly::orderly_example("demo")
+##'
+##' # Reports that _could_ be run:
+##' orderly::orderly_list(path)
+##'
+##' # Run a report twice:
+##' id1 <- orderly::orderly_run("minimal", root = path)
+##' id2 <- orderly::orderly_run("minimal", root = path)
+##'
+##' # We can see both drafts:
+##' orderly::orderly_list_drafts(path)
+##'
+##' # Nothing is in the archive:
+##' orderly::orderly_list_archive(path)
+##'
+##' # Commit a report:
+##' orderly::orderly_commit(id2, root = path)
+##'
+##' # Only one draft now
+##' orderly::orderly_list_drafts(path)
+##'
+##' # And the second report is in the archive:
+##' orderly::orderly_list_archive(path)
 orderly_list_drafts <- function(root = NULL, locate = TRUE) {
   orderly_list2(TRUE, root, locate)
 }
@@ -55,6 +95,21 @@ orderly_list_archive <- function(root = NULL, locate = TRUE) {
 ##'
 ##' @inheritParams orderly_list
 ##' @export
+##' @examples
+##' path <- orderly::orderly_example("minimal")
+##' id1 <- orderly::orderly_run("example", root = path, echo = FALSE)
+##' id2 <- orderly::orderly_run("example", root = path, echo = FALSE)
+##'
+##' # With no reports committed there is no latest report:
+##' orderly::orderly_latest("example", root = path, must_work = FALSE)
+##'
+##' # Commit the first report and it will be reported as latest:
+##' orderly::orderly_commit(id1, root = path)
+##' orderly::orderly_latest("example", root = path)
+##'
+##' # Commit the second report and it will be reported as latest instead:
+##' orderly::orderly_commit(id2, root = path)
+##' orderly::orderly_latest("example", root = path)
 orderly_latest <- function(name = NULL, root = NULL, locate = TRUE,
                            draft = FALSE, must_work = TRUE) {
   config <- orderly_config_get(root, locate)

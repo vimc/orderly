@@ -7,7 +7,7 @@
 orderly_list(root = NULL, locate = TRUE)
 }
 \arguments{
-\item{root}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 
@@ -19,4 +19,16 @@ parents until it finds an \code{orderly_config.yml} file.}
 \description{
 List the \emph{names} of reports known to orderly.  These are the
 \emph{source} names, not the results of running reports.
+}
+\examples{
+# The orderly demo, with lots of potential reports:
+path <- orderly::orderly_example("demo")
+
+# Reports that _could_ be run:
+orderly::orderly_list(path)
+}
+\seealso{
+\code{\link{orderly_list_archive}} and
+  \code{\link{orderly_list_drafts}}, which list archived
+  (committed) and draft reports and their versions.
 }

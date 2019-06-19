@@ -11,7 +11,7 @@ orderly_latest(name = NULL, root = NULL, locate = TRUE,
 \item{name}{Name of the report to find; if \code{NULL} returns the
 most recent report across all names}
 
-\item{root}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 
@@ -27,4 +27,20 @@ returns \code{NA_character_}.}
 }
 \description{
 Find most recent version of an orderly report
+}
+\examples{
+path <- orderly::orderly_example("minimal")
+id1 <- orderly::orderly_run("example", root = path, echo = FALSE)
+id2 <- orderly::orderly_run("example", root = path, echo = FALSE)
+
+# With no reports committed there is no latest report:
+orderly::orderly_latest("example", root = path, must_work = FALSE)
+
+# Commit the first report and it will be reported as latest:
+orderly::orderly_commit(id1, root = path)
+orderly::orderly_latest("example", root = path)
+
+# Commit the second report and it will be reported as latest instead:
+orderly::orderly_commit(id2, root = path)
+orderly::orderly_latest("example", root = path)
 }

@@ -10,7 +10,7 @@ orderly_new(name, root = NULL, locate = TRUE, quiet = FALSE,
 \arguments{
 \item{name}{Name of the new report (will be a directory name).}
 
-\item{root}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 
@@ -51,4 +51,20 @@ We first look for a file \code{orderly/template.yml} within the
 orderly root.  If that is not found, then a copy from the orderly
 package is used.  This can always be used by using \code{template
 = "system"}.
+}
+\examples{
+path <- orderly::orderly_example("minimal")
+
+# Create a new report with the name "myreport" in this orderly
+# repository:
+orderly::orderly_new("myreport", root = path)
+
+# The directory will be initialised with a orderly.yml file
+# containing documentation
+dir(file.path(path, "src", "myreport"))
+readLines(file.path(path, "src", "myreport", "orderly.yml"))
+}
+\seealso{
+\code{\link{orderly_init}} for initialising a new orderly
+  repository.
 }

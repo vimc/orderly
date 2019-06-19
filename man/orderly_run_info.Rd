@@ -7,5 +7,22 @@
 orderly_run_info()
 }
 \description{
-Get information on current orderly run
+This function allows inspection of some of orderly's metadata
+  during an orderly run.  The format returned is internal to
+  orderly and subject to change.  It is designed to be used either
+  within report code, or in conjunction with
+  \code{\link{orderly_test_start}}
+}
+\examples{
+path <- orderly::orderly_example("depends")
+
+# This example uses orderly_run_info within its script, saving the
+# output to "output.rds"
+readLines(file.path(path, "src", "depend", "script.R"))
+
+orderly::orderly_run("example", root = path)
+id <- orderly::orderly_run("depend", root = path)
+
+# This is the contents:
+readRDS(file.path(path, "draft", "depend", id, "output.rds"))
 }

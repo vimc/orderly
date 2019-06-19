@@ -5,10 +5,10 @@
 \title{Migrate an orderly archive}
 \usage{
 orderly_migrate(root = NULL, locate = TRUE, to = NULL,
-  verbose = FALSE, dry_run = FALSE, skip_failed = FALSE)
+  dry_run = FALSE, skip_failed = FALSE)
 }
 \arguments{
-\item{root}{The path to an orderly root directoy, or \code{NULL}
+\item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
 directory if \code{locate} is \code{TRUE}).}
 
@@ -19,9 +19,6 @@ parents until it finds an \code{orderly_config.yml} file.}
 
 \item{to}{The version to migrate to.  The default is the current
 archive version; this is almost always what is wanted.}
-
-\item{verbose}{Logical, indicating if extra noisy output from the
-migration should be given.}
 
 \item{dry_run}{Logical, indicating if we should try running the
 migration but not actually applying it.  This is intended
@@ -49,4 +46,10 @@ metadata and that's not something we want to do lightly.  This
 function uses a relatively safe, and reversible, way of migrating
 metadata.  We modify the \code{orderly_run.rds} files, but will
 create versioned backups as files are changed.
+}
+\examples{
+# Without an orderly repository created by a previous version of
+# orderly, this function does nothing interesting:
+path <- orderly::orderly_example("minimal")
+orderly::orderly_migrate(path)
 }

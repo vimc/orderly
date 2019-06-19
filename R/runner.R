@@ -27,6 +27,10 @@
 ##'   (as done by OrderlyWeb).
 ##'
 ##' @export
+##' @examples
+##'
+##' path <- orderly::orderly_example("demo")
+##' runner <- orderly::orderly_runner(path)
 orderly_runner <- function(path, allow_ref = NULL, backup_period = 600) {
   R6_orderly_runner$new(path, allow_ref, backup_period)
 }
