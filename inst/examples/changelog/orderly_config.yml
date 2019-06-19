@@ -1,7 +1,8 @@
 database:
   source:
     driver: RSQLite::SQLite
-    dbname: source.sqlite
+    args:
+      dbname: source.sqlite
 
 changelog:
   label1:

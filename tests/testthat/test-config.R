@@ -20,11 +20,12 @@ test_that("environment variables", {
   dat <- list(database =
                 list(source =
                        list(driver = "RSQLite::SQLite",
-                            host = "OURHOST",
-                            port = "OURPORT",
-                            user = "OURUSER",
-                            dbname = "OURDBNAME",
-                            password = "$OURPASSWORD")))
+                            args = list(
+                              host = "OURHOST",
+                              port = "OURPORT",
+                              user = "OURUSER",
+                              dbname = "OURDBNAME",
+                              password = "$OURPASSWORD"))))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
 
   cfg <- orderly_config(path)
