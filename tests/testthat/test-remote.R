@@ -51,3 +51,52 @@ test_that("pull dependencies", {
   expect_equal(orderly_list_archive(dat$config),
                data_frame(name = "example", id = c(dat$id2, id3)))
 })
+
+test_that("migrate dependencies on pull", {
+  ## create an out of date remote
+  ## could be any version, we pick the earliest
+  path <- unpack_reference("0.3.2")
+  # now create a local repo
+  dat <- prepare_orderly_remote_example()
+  ## check archive versions
+  expect_equal(read_orderly_archive_version(path), "0.0.0")
+  expect_equal(read_orderly_archive_version(root = dat$path_local), "0.6.8")
+
+  # delete the local dependency...
+  unlink(file.path(dat$path_local, "archive", "example"), recursive = TRUE)
+  # ..and pull the out of date version
+  w_msg <- c("Use of 'source' is deprecated and will be removed in a",
+               "future orderly version - please use 'database' instead.",
+               "See the main package vignette for details.")
+  expect_warning(orderly_pull_dependencies("depend",
+                                           root = dat$path_local,
+                                           remote = path),
+                 paste(strwrap(paste(w_msg, collapse = " ")), collapse = "\n"))
+
+  # we should get an error here since the report is out of date
+  e_msg <- c("Dependency file not an artefact of",
+             "example/20170802-182227-5fd9e7ca:\n- 'data.rds'")
+  expect_error(orderly_run("depend", root = dat$config, echo = FALSE),
+               paste(e_msg, collapse = " "))
+
+  # try to update the local archive; this will do nothing...
+  orderly_migrate(root = dat$config)
+  # ...so we get the same error message
+  expect_error(orderly_run("depend", root = dat$config, echo = FALSE),
+               paste(e_msg, collapse = " "))
+
+  # delete the local dependency
+  unlink(file.path(dat$path_local, "archive", "example"), recursive = TRUE)
+  # update the remote archive...
+  orderly_migrate(root = path)
+  expect_equal(read_orderly_archive_version(path), "0.6.8")
+
+  # ...and pull the updated version
+  expect_warning(orderly_pull_dependencies("depend",
+                                           root = dat$path_local,
+                                           remote = path),
+                 paste(strwrap(paste(w_msg, collapse = " ")), collapse = "\n"))
+  # now this should work
+  id <- orderly_run("depend", root = dat$config, echo = FALSE)
+
+})
