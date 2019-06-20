@@ -40,10 +40,15 @@ orderly_pull_dependencies <- function(name, root = NULL, locate = TRUE,
   path <- file.path(path_src(config$root), name)
   depends <- recipe_read(path, config, FALSE)$depends
 
-  for (i in seq_len(nrow(depends))) {
-    if (!isTRUE(depends$draft[[i]])) {
-      orderly_pull_archive(depends$name[[i]], depends$id[[i]], config,
-                           FALSE, remote)
+  if (is.null(depends)) {
+    orderly_log("warning",
+                sprintf("%s has no dependencies", name))
+  } else {
+    for (i in seq_len(nrow(depends))) {
+      if (!isTRUE(depends$draft[[i]])) {
+        orderly_pull_archive(depends$name[[i]], depends$id[[i]], config,
+                             FALSE, remote)
+      }
     }
   }
 }
