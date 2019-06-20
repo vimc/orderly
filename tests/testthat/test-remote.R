@@ -58,9 +58,6 @@ test_that("migrate dependencies on pull", {
   path <- unpack_reference("0.3.2")
   # now create a local repo
   dat <- prepare_orderly_remote_example()
-  ## check archive versions
-  expect_equal(read_orderly_archive_version(path), "0.0.0")
-  expect_equal(read_orderly_archive_version(root = dat$path_local), "0.6.8")
 
   # delete the local dependency...
   unlink(file.path(dat$path_local, "archive", "example"), recursive = TRUE)
@@ -98,5 +95,4 @@ test_that("migrate dependencies on pull", {
                  paste(strwrap(paste(w_msg, collapse = " ")), collapse = "\n"))
   # now this should work
   id <- orderly_run("depend", root = dat$config, echo = FALSE)
-
 })
