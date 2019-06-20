@@ -168,6 +168,12 @@ file_copy <- function(..., overwrite = TRUE) {
 }
 
 
+file_copy_with_path <- function(src, dest) {
+  dir.create(dirname(dest), FALSE, TRUE)
+  file_copy(src, dest)
+}
+
+
 file_move <- function(from, to) {
   ok <- file.rename(from, to)
   if (any(!ok)) {
@@ -698,6 +704,9 @@ file_size <- function(path) {
 
 
 file_info <- function(path, workdir = NULL) {
+  if (is.null(path)) {
+    return(NULL)
+  }
   if (!is.null(workdir)) {
     return(withr::with_dir(workdir, file_info(path)))
   }

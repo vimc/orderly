@@ -200,7 +200,6 @@ test_that("use artefact", {
   path_example <- file.path(path, "src", "example")
   path_depend <- file.path(path, "src", "depend")
   id1 <- orderly_run("example", root = path, echo = FALSE)
-  orderly_log_break()
   path_orig <- file.path(path_draft(path), "example", id1, "data.rds")
   expect_true(file.exists(path_orig))
 
@@ -209,7 +208,6 @@ test_that("use artefact", {
                        root = path)
   expect_identical(ls(data), character(0))
   id2 <- orderly_run("depend", root = path, echo = FALSE)
-  orderly_log_break()
   path_previous <- file.path(path_draft(path), "depend", id2, "previous.rds")
   expect_true(file.exists(path_previous))
   expect_equal(hash_files(path_previous, FALSE),
@@ -221,9 +219,7 @@ test_that("use artefact", {
 
   ## Then rebuild the original:
   id3 <- orderly_run("example", root = path, echo = FALSE)
-  orderly_log_break()
   id4 <- orderly_run("depend", root = path, echo = FALSE)
-  orderly_log_break()
   path_orig2 <- file.path(path_draft(path), "example", id3, "data.rds")
   path_previous2 <- file.path(path_draft(path), "depend", id4, "previous.rds")
 
@@ -589,57 +585,55 @@ test_that("orderly_environment", {
   expect_error(orderly_environment(list()), "'envir' must be an environment")
 })
 
-test_that("modify resources", {
-  ## modify 1 resource
+test_that("modify one resource", {
   path <- prepare_orderly_example("resources")
-  tmp <- tempfile()
   path_example <- file.path(path, "src", "use_resource")
   script_path <- file.path(path_example, "script.R")
 
-  # add a line to script.R that modifies a resource
+  ## add a line to script.R that modifies a resource
   write(sprintf("write.csv(x = c(1, 2, 3), file = 'meta/data.csv')"),
         file = script_path, append = TRUE)
 
-  # has orderly detected that the package does not exist>
-  expect_error(orderly_run("use_resource", root = path, id_file = tmp,
-                           echo = FALSE),
-               "Script has modified resources: meta/data.csv")
-  ## modify 2 resources
+  expect_error(
+    orderly_run("use_resource", root = path, echo = FALSE),
+    "Script has modified input: meta/data.csv")
+})
+
+
+test_that("modify multiple resources", {
   path <- prepare_orderly_example("resources")
-  tmp <- tempfile()
   path_example <- file.path(path, "src", "multiple_resources")
   script_path <- file.path(path_example, "script.R")
 
-  # add a line to script.R that modifies a resource
   write(sprintf("write.csv(x = c(1, 2, 3), file = 'meta/data.csv')"),
         file = script_path, append = TRUE)
   write(sprintf("write.csv(x = c('Hello', 'World'), file = 'meta/data2.csv')"),
         file = script_path, append = TRUE)
 
-  # has orderly detected that the package does not exist>
-  expect_error(orderly_run("multiple_resources", root = path, id_file = tmp,
-                           echo = FALSE),
-               "Script has modified resources: meta/data.csv, meta/data2.csv")
+  expect_error(
+    orderly_run("multiple_resources", root = path, echo = FALSE),
+    "Script has modified inputs: meta/data.csv, meta/data2.csv")
 })
 
-test_that("delete resources", {
+
+test_that("delete a resource", {
   ## delete 1 resource
   path <- prepare_orderly_example("resources")
-  tmp <- tempfile()
   path_example <- file.path(path, "src", "use_resource")
   script_path <- file.path(path_example, "script.R")
 
-  # add a line to script.R that modifies a resource
+  ## add a line to script.R that deletes a resource
   write(sprintf("file.remove('meta/data.csv')"),
         file = script_path, append = TRUE)
 
-  # has orderly detected that the package does not exist>
-  expect_error(orderly_run("use_resource", root = path, id_file = tmp,
-                           echo = FALSE),
-               "Script deleted the following resources: meta/data.csv")
-  ## delete 2 resources
+  expect_error(
+    orderly_run("use_resource", root = path, echo = FALSE),
+    "Script deleted input: meta/data.csv")
+})
+
+
+test_that("delete multiple resources", {
   path <- prepare_orderly_example("resources")
-  tmp <- tempfile()
   path_example <- file.path(path, "src", "multiple_resources")
   script_path <- file.path(path_example, "script.R")
 
@@ -649,14 +643,14 @@ test_that("delete resources", {
   write(sprintf("file.remove('meta/data2.csv')"),
         file = script_path, append = TRUE)
 
-  # has orderly detected that the package does not exist>
   error_message <-
-    sprintf("Script deleted the following resources: %s, %s",
+    sprintf("Script deleted inputs: %s, %s",
             "meta/data.csv", "meta/data2.csv")
-  expect_error(orderly_run("multiple_resources", root = path, id_file = tmp,
-                           echo = FALSE),
-               error_message)
+  expect_error(
+    orderly_run("multiple_resources", root = path, echo = FALSE),
+    error_message)
 })
+
 
 test_that("multiple resources", {
   path <- prepare_orderly_example("resources")
