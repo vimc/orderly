@@ -168,12 +168,6 @@ file_copy <- function(..., overwrite = TRUE) {
 }
 
 
-file_copy_with_path <- function(src, dest) {
-  dir.create(dirname(dest), FALSE, TRUE)
-  file_copy(src, dest)
-}
-
-
 file_move <- function(from, to) {
   ok <- file.rename(from, to)
   if (any(!ok)) {
@@ -527,20 +521,6 @@ copy_directory <- function(src, as, rollback_on_error = FALSE) {
   if (rollback_on_error) {
     on.exit()
   }
-}
-
-expand_directory_list <- function(files) {
-  if (is.null(files)) {
-    return(NULL)
-  }
-  i <- is_directory(files)
-  extra <- unlist(lapply(files[i], list_all_files), use.names = FALSE)
-  union(files[!i], extra)
-}
-
-list_all_files <- function(path) {
-  sort_c(dir(path, recursive = TRUE, full.names = TRUE, all.files = TRUE,
-             no.. = TRUE))
 }
 
 
