@@ -284,33 +284,13 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   recipe_check_device_stack(prep$n_dev)
   hash_artefacts <- recipe_check_artefacts(info)
 
-  ## TODO: this should go into the preparation (orderly_prepare_data
-  ## or similar)
-  if (file_exists("README.md", check_case = FALSE)) {
-    readme <- dir(pattern = "readme.md", ignore.case = TRUE)
-    info_readme <- file_info(readme)
-  } else {
-    info_readme <- NULL
-  }
-
-  ## and this too...
-  if (is.null(info$sources)) {
-    info_sources <- NULL
-  } else {
-    info_sources <- file_info(info$sources)
-  }
-
-  ## This will move into the prep eventually...
-  info_orderly_yml <- file_info("orderly.yml")
-  info_script <- file_info(info$script)
-
   hash_data_csv <- con_csv$mset(prep$data)
   hash_data_rds <- con_rds$mset(prep$data)
   stopifnot(identical(hash_data_csv, hash_data_rds))
 
-  post_run_resources <- get_resource_info(info)
-  compare_resource_hashes(resource_info$hash_resources,
-                          post_run_resources$hash_resources)
+  ## Ensure that inputs were not modified when the report was run:
+  recipe_check_file_inputs(info)
+  recipe_check_depends(info)
 
   if (is.null(info$depends)) {
     depends <- NULL
@@ -331,29 +311,6 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
 
   session <- session_info()
   session$git <- info$git
-
-  if (is.null(resource_info$hash_resources)) {
-    info_resources <- NULL
-  } else {
-    ## TODO: fix this upstream and that will help the
-    ## source-as-global problem
-    resources <- setdiff(names(resource_info$hash_resources),
-                         info_sources$filename)
-    info_resources <- file_info(resources)
-  }
-  if (is.null(resource_info$hash_global)) {
-    info_global <- NULL
-  } else {
-    info_global <- file_info(names(resource_info$hash_global))
-  }
-
-  file_info_inputs <- file_in_data(
-    orderly_yml = info_orderly_yml,
-    script = info_script,
-    readme = info_readme,
-    source = info_sources,
-    resource = info_resources,
-    global = info_global)
 
   artefacts <- data_frame(
     format = list_to_character(info$artefacts[, "format"], FALSE),
@@ -376,7 +333,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                extra_fields = extra_fields,
                connection = !is.null(info$connection),
                packages = info$packages,
-               file_info_inputs = file_info_inputs,
+               file_info_inputs = info$inputs,
                file_info_artefacts = file_info_artefacts,
                artefacts = artefacts,
                depends = depends,
@@ -490,97 +447,26 @@ recipe_prepare_workdir <- function(info, message, config) {
   }
   src <- normalizePath(info$path, mustWork = TRUE)
   dir_create(info$workdir)
-  owd <- setwd(info$workdir)
-  on.exit(setwd(owd))
+  info$owd <- setwd(info$workdir)
+  on.exit(setwd(info$owd))
 
+  ## TODO: this supports a script in a subdirectory, but I don't think
+  ## that is supported yet, and it's not clear it's a desirable thing
+  ## because that makes working directories a little less clear.
   dir.create(dirname(info$script), FALSE, TRUE)
-
   file_copy(file.path(src, info$script), info$script)
   file_copy(file.path(src, "orderly.yml"), "orderly.yml")
 
-  # README logic:
-  # if there's a readme we copy it
-  # if they also list it as a resource let them know that's redundant (edited)
-  # if they also list it as an artefact then error
-  src_files <- dir(src)
-  readme_file <- src_files[tolower(src_files) == "readme.md"]
-  ## Two readme files e.g. README.md and Readme.MD can happen on unix systems
-  ## I t is not clear what we should do here.
-  if (length(readme_file) == 1) {
-    ## we copy the readme.md file to README.md irrespective of what
-    ## case filename the user has used
-    file_copy(file.path(src, readme_file), "README.md")
-    ## now check if README is a resource
-    if (length(info$resources) > 0) {
-      if (any(grepl("README.md", info$resources, ignore.case = FALSE))) {
-        ## WARNING
-        orderly_log("readme",
-                    "README.md should not be listed as a resource")
-      }
-    }
-    ## now check if README is an artefact
-    expected <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
-    if (length(expected) > 0) {
-      if (any(grepl("README.md", expected, ignore.case = FALSE))) {
-        stop("README.md should not be listed as an artefact")
-      }
-    }
-  }
-  
-  if (!is.null(info$resources)) {
-    dir_create(dirname(info$resources))
-    ## There's a bit of awfulness in R's path handling to deal with here.
-    path_resources_src <- file.path(src, info$resources)
-    i <- is_directory(path_resources_src)
-    file_copy(path_resources_src[!i], info$resources[!i])
-    for (j in which(i)) {
-      file_copy(path_resources_src[j], dirname(info$resources[j]),
-                recursive = TRUE)
-    }
-  }
+  info <- recipe_copy_readme(info, src)
+  info <- recipe_copy_sources(info, src)
+  info <- recipe_copy_resources(info, src)
+  info <- recipe_copy_global(info, config)
+  info <- recipe_copy_depends(info)
 
-  if (!is.null(info$depends)) {
-    dep_src <- file.path(info$depends$path, info$depends$filename)
-    dep_dst <- file.path(info$workdir, info$depends$as)
-    dir_create(dirname(dep_dst))
-    info$depends$id_requested <- info$depends$id
-    info$depends$id <- basename(info$depends$path)
-
-    str <- sprintf("%s@%s:%s -> %s",
-                   info$depends$name,
-                   info$depends$id,
-                   info$depends$filename,
-                   info$depends$as)
-    orderly_log("depends", str)
-    file_copy(dep_src, dep_dst)
-  }
-
-  if (!is.null(info$global_resources)) {
-    root_path <- normalizePath(config$root, mustWork = TRUE)
-    global_resource_dir <- file.path(root_path, config$global_resources)
-    assert_file_exists(x = info$global_resources, check_case = TRUE,
-                       workdir = global_resource_dir,
-                       name = sprintf("Global resources in '%s'",
-                                      global_resource_dir))
-
-    path_global_recs <- file.path(global_resource_dir, info$global_resources)
-    dest_resources_src <- file.path(info$workdir, info$global_resources)
-    file_copy(path_global_recs, info$workdir, recursive = TRUE)
-  }
-
-  ## if we are using resources or global resources...
-  if (!is.null(info$resources) || !is.null(info$global_resources)) {
-    ## ...hash the resources + calculate the file size,
-    ## before we the report has a chance to modify them
-    resource_info <- get_resource_info(info)
-  } else {
-    resource_info <- NULL
-  }
-
+  info$inputs <- recipe_file_inputs(info)
   info$changelog <- changelog_load(src, message, info, config)
 
-  info$owd <- owd
-  info$resource_info <- resource_info
+  recipe_check_unique_inputs(info)
   info
 }
 
@@ -620,6 +506,7 @@ recipe_exists_artefacts <- function(info, id) {
 }
 
 recipe_unexpected_artefacts <- function(info, id) {
+  ## TODO: filter out globals
   # expected artefacts
   expected <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
   # expected resources
@@ -728,48 +615,6 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
   ret
 }
 
-get_resource_info <- function(info) {
-  hash_resources <- hash_files(expand_directory_list(info$resources))
-  if (length(hash_resources) > 0L) {
-    orderly_log("resources",
-                sprintf("%s: %s", names(hash_resources), hash_resources))
-  } else {
-    hash_resources <- NULL
-  }
-
-  hash_global <- hash_files(expand_directory_list(info$global_resources))
-  if (length(hash_global) > 0L) {
-    orderly_log("global",
-                sprintf("%s: %s", names(hash_global), hash_global))
-  } else {
-    hash_global <- NULL
-  }
-  list(hash_resources = hash_resources, hash_global = hash_global)
-}
-
-compare_resource_hashes <- function(pre_run_hashes, post_run_hashes) {
-  ## compare resource hashes here
-  found <- names(post_run_hashes)
-  expected <- names(pre_run_hashes)
-
-  ## we expected a resource but can't find it.
-  not_found <- which(!(expected %in% found))
-  if (any(not_found)) {
-    stop("Script deleted the following resources: ",
-         paste(expected[not_found], collapse = ", "))
-  }
-
-  ## at this point the set of found == the set of expected
-  found_hash <- post_run_hashes[found] ## put the hashes in the same order
-  expected_hash <- pre_run_hashes[found]
-  hash_miss <- which(found_hash != expected_hash)
-  if (any(hash_miss)) {
-    stop("Script has modified resources: ",
-         paste(found[hash_miss], collapse = ", "))
-  }
-}
-
-
 
 recipe_current_run_set <- function(info) {
   cache$current <- info
@@ -819,4 +664,194 @@ orderly_run_info <- function() {
 test_mode_end <- function(env = .GlobalEnv) {
   suppressWarnings(rm(list = "Q", envir = env))
   tryCatch(orderly_test_end(), error = function(e) NULL)
+}
+
+
+recipe_file_inputs <- function(info) {
+  file_in_data(
+    orderly_yml = file_info("orderly.yml"),
+    script = file_info(info$script),
+    readme = file_info(info$readme),
+    source = file_info(info$sources),
+    ## TODO: What we really should do is not have put the sources in
+    ## here in the first place, then this bit would not be necessary.
+    resource = file_info(info$resources),
+    global = file_info(info$global_resources))
+}
+
+
+recipe_check_file_inputs <- function(info) {
+  pre <- info$inputs
+  post <- recipe_file_inputs(info)
+  recipe_check_hashes(pre, post, "input", "inputs")
+}
+
+
+recipe_check_depends <- function(info) {
+  pre <- info$depends
+  if (!is.null(info$depends)) {
+    pre <- data_frame(filename = info$depends$as,
+                      file_hash = info$depends$hash)
+    post <- file_info(info$depends$as)[c("filename", "file_hash")]
+    recipe_check_hashes(pre, post, "dependency", "dependencies")
+  }
+}
+
+
+recipe_check_hashes <- function(pre, post, name1, name2) {
+  if (identical(pre, post)) {
+    return(NULL)
+  }
+
+  missing <- post$filename[is.na(post$file_hash)]
+  if (length(missing) > 0L) {
+    stop(sprintf("Script deleted %s: %s",
+                 ngettext(length(missing), name1, name2),
+                 paste(missing, collapse = ", ")),
+         call. = FALSE)
+  }
+
+  changed <- pre$filename[!(pre$file_hash %in% post$file_hash)]
+  if (length(changed) > 0L) {
+    stop(sprintf("Script has modified %s: %s",
+                 ngettext(length(changed), name1, name2),
+                 paste(changed, collapse = ", ")),
+         call. = FALSE)
+  }
+}
+
+
+recipe_copy_readme <- function(info, src) {
+  ## README logic:
+  ## * if there's a readme we copy it
+  ## * any casing is OK as input, but we always store in canonical case
+  ## * if they also list it as a resource let them know that's redundant
+  ## * if they also list it as an artefact then error
+  src_files <- dir(src)
+  readme_file <- src_files[tolower(src_files) == "readme.md"]
+
+  ## Two readme files e.g. README.md and Readme.MD can happen on unix
+  ## systems; it is not clear what we should do here, so we just
+  ## ignore the readme silently for now.
+  if (length(readme_file) == 1) {
+    ## we copy the readme.md file to README.md irrespective of what
+    ## case filename the user has used
+    file_copy(file.path(src, readme_file), "README.md")
+    info$readme <- "README.md"
+
+    ## now check if README is a resource
+    if (length(info$resources) > 0) {
+      i <- grepl("README.md", info$resources, ignore.case = FALSE)
+      if (any(i)) {
+        ## WARNING
+        orderly_log("readme",
+                    "README.md should not be listed as a resource")
+        info$resources <- info$resources[!i]
+      }
+    }
+
+    ## now check if README is an artefact
+    artefact_files <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
+    if (any(grepl("README.md", artefact_files, ignore.case = TRUE))) {
+      stop("README.md should not be listed as an artefact")
+    }
+  }
+
+  info
+}
+
+
+## TODO (VIMC-20??): we need to organise where these files are coming
+## from in the read section, so if a source is actually global we
+## don't copy it here - but this should be done as a check during
+## read.  We also need to ensure that source files are not listed as
+## resources too, I think.
+recipe_copy_sources <- function(info, src) {
+  if (length(info$sources) > 0L) {
+    dir_create(dirname(info$sources))
+    orderly_log("sources", info$sources)
+    file_copy(file.path(src, info$sources), info$sources)
+  }
+  info
+}
+
+
+recipe_copy_resources <- function(info, src) {
+  if (length(info$resources) > 0L) {
+    resources <- info$resources
+    i <- is_directory(file.path(src, resources))
+    if (any(i)) {
+      resources <- as.list(resources)
+      resources[i] <- lapply(resources[i], function(p)
+        file.path(p, dir(file.path(src, p),
+                         recursive = TRUE, all.files = TRUE)))
+      resources <- unlist(resources)
+    }
+    info$resources <- resources
+
+    dir_create(dirname(info$resources))
+    orderly_log("resource", info$resources)
+    file_copy(file.path(src, info$resources), info$resources)
+  }
+  info
+}
+
+
+recipe_copy_global <- function(info, config) {
+  if (!is.null(info$global_resources)) {
+    global_path <- file.path(config$root, config$global_resources)
+    assert_file_exists(
+      info$global_resources, check_case = TRUE, workdir = global_path,
+      name = sprintf("Global resources in '%s'", global_path))
+
+    global_src <- file.path(global_path, info$global_resources)
+    ## See VIMC-2961: the copy here is different to sources and
+    ## resources because we can't rename files as they're copied; we
+    ## don't support directories and we're pretty limited in how
+    ## copying can happen.  I believe the "." that is the destination
+    ## of the copy will strip all leading path fragments (path/to/x
+    ## becoming x).
+    if (any(is_directory(global_src))) {
+      stop("global resources cannot yet be directories")
+    }
+    orderly_log("global", info$global_resources)
+    file_copy(global_src, ".", recursive = TRUE)
+  }
+  info
+}
+
+recipe_copy_depends <- function(info) {
+  if (!is.null(info$depends)) {
+    dep_src <- file.path(info$depends$path, info$depends$filename)
+    dep_dst <- file.path(info$workdir, info$depends$as)
+    info$depends$id_requested <- info$depends$id
+    info$depends$id <- basename(info$depends$path)
+
+    str <- sprintf("%s@%s:%s -> %s",
+                   info$depends$name,
+                   info$depends$id,
+                   info$depends$filename,
+                   info$depends$as)
+    orderly_log("depends", str)
+    dir_create(dirname(dep_dst))
+    file_copy(dep_src, dep_dst)
+  }
+  info
+}
+
+
+recipe_check_unique_inputs <- function(info) {
+  tmp <- rbind(
+    info$inputs[c("filename", "file_purpose")],
+    data_frame(filename = info$depends$as,
+               file_purpose = rep("depends", NROW(info$depends))))
+  err <- tmp[tmp$filename %in% tmp$filename[duplicated(tmp$filename)], ]
+  if (nrow(err) > 0L) {
+    err <- split(err$file_purpose, err$filename)
+    details <- sprintf("\n  - %s: %s",
+                       names(err), vcapply(err, paste, collapse = ", "))
+    stop(sprintf("Orderly configuration implies duplicate files:%s",
+                 paste(details, collapse = "")),
+         call. = FALSE)
+  }
 }

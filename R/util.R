@@ -138,15 +138,11 @@ dir_create <- function(x) {
 }
 
 hash_files <- function(filenames, named = TRUE) {
-  if (is.null(filenames)) {
-    set_names(character(0), if (named) character(0) else NULL)
-  } else {
-    h <- tools::md5sum(filenames)
-    if (!named) {
-      names(h) <- NULL
-    }
-    h
+  h <- tools::md5sum(filenames)
+  if (!named) {
+    names(h) <- NULL
   }
+  h
 }
 
 hash_object <- function(object) {
@@ -523,20 +519,6 @@ copy_directory <- function(src, as, rollback_on_error = FALSE) {
   }
 }
 
-expand_directory_list <- function(files) {
-  if (is.null(files)) {
-    return(NULL)
-  }
-  i <- is_directory(files)
-  extra <- unlist(lapply(files[i], list_all_files), use.names = FALSE)
-  union(files[!i], extra)
-}
-
-list_all_files <- function(path) {
-  sort_c(dir(path, recursive = TRUE, full.names = TRUE, all.files = TRUE,
-             no.. = TRUE))
-}
-
 
 ordered_map_to_list <- function(x) {
   ## This should not happen, but this is what would happen if we had
@@ -698,6 +680,9 @@ file_size <- function(path) {
 
 
 file_info <- function(path, workdir = NULL) {
+  if (is.null(path)) {
+    return(NULL)
+  }
   if (!is.null(workdir)) {
     return(withr::with_dir(workdir, file_info(path)))
   }

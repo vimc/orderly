@@ -45,3 +45,20 @@ test_that("global resources end up in db", {
                hash_files(file.path(path, "global", "data.csv"), FALSE))
   expect_equal(d$filename[i], "data.csv")
 })
+
+
+## We can relax this once VIMC-2961 is resolved
+test_that("directories of global resources are forbidden", {
+  path <- prepare_orderly_example("global")
+  p_global <- file.path(path, "global", "dir")
+  dir.create(p_global)
+
+  p_orderly <- file.path(path, "src", "example", "orderly.yml")
+  d <- yaml_read(p_orderly)
+  d$global_resources <- "dir"
+  yaml_write(d, p_orderly)
+
+  expect_error(
+    orderly_run("example", root = path),
+    "global resources cannot yet be directories")
+})
