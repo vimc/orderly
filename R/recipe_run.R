@@ -809,7 +809,7 @@ recipe_copy_global <- function(info, config) {
     ## of the copy will strip all leading path fragments (path/to/x
     ## becoming x).
     if (any(is_directory(global_src))) {
-      stop("directory global resources not yet handled")
+      stop("global resources cannot yet be directories")
     }
     orderly_log("global", info$global_resources)
     file_copy(global_src, ".", recursive = TRUE)

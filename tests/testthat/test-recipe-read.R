@@ -332,3 +332,18 @@ test_that("detect modified artefacts", {
     recipe_read(file.path(path, "src", "use_dependency"), config = cfg),
     "Validation of dependency 'summary.csv' failed: artefact has been modified")
 })
+
+
+test_that("sources and resources are exclusive", {
+  path <- orderly_example("demo")
+
+  p <- file.path(path, "src", "other", "orderly.yml")
+  d <- yaml_read(p)
+  d$resources <- d$sources
+  yaml_write(d, p)
+
+  config <- orderly_config(path)
+  expect_error(
+    recipe_read(file.path(path, "src", "other"), config),
+    "Do not list source files \\(sources\\) as resources:\\s+- functions\\.R")
+})

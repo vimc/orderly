@@ -234,8 +234,9 @@ recipe_read_check_sources <- function(sources, resources, filename, path) {
   assert_file_exists(sources, workdir = path, name = "Source file")
   err <- intersect(sources, resources)
   if (length(err)) {
-    stop("Do not list source files (sources) as resources:%s",
-         paste(sprintf("\n  - %s", err), collapse = ""))
+    stop(sprintf("Do not list source files (sources) as resources:%s",
+                 paste(sprintf("\n  - %s", err), collapse = "")),
+         call. = FALSE)
   }
 }
 
