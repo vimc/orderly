@@ -452,6 +452,7 @@ recipe_prepare_workdir <- function(info, message, config) {
 
   ## TODO: this supports a script in a subdirectory, but I don't think
   ## that is supported yet, and it's not clear it's a desirable thing
+  ## because that makes working directories a little less clear.
   dir.create(dirname(info$script), FALSE, TRUE)
   file_copy(file.path(src, info$script), info$script)
   file_copy(file.path(src, "orderly.yml"), "orderly.yml")
@@ -464,6 +465,8 @@ recipe_prepare_workdir <- function(info, message, config) {
 
   info$inputs <- recipe_file_inputs(info)
   info$changelog <- changelog_load(src, message, info, config)
+
+  recipe_check_unique_inputs(info)
   info
 }
 
@@ -834,4 +837,21 @@ recipe_copy_depends <- function(info) {
     file_copy(dep_src, dep_dst)
   }
   info
+}
+
+
+recipe_check_unique_inputs <- function(info) {
+  tmp <- rbind(
+    info$inputs[c("filename", "file_purpose")],
+    data_frame(filename = info$depends$as,
+               file_purpose = rep("depends", NROW(info$depends))))
+  err <- tmp[tmp$filename %in% tmp$filename[duplicated(tmp$filename)], ]
+  if (nrow(err) > 0L) {
+    err <- split(err$file_purpose, err$filename)
+    details <- sprintf("\n  - %s: %s",
+                       names(err), vcapply(err, paste, collapse = ", "))
+    stop(sprintf("Orderly configuration implies duplicate files:%s",
+                 paste(details, collapse = "")),
+         call. = FALSE)
+  }
 }

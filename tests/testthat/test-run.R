@@ -735,3 +735,19 @@ test_that("Can use connections with two databases", {
   p <- orderly_commit(id, root = path)
   expect_true(file.exists(file.path(p, "mygraph.png")))
 })
+
+
+test_that("prevent duplicate filenames", {
+  path <- prepare_orderly_example("depends")
+  id1 <- orderly_run("example", root = path, echo = FALSE)
+
+  p <- file.path(path, "src", "depend", "orderly.yml")
+  d <- yaml_read(p)
+  d$resources <- "previous.rds"
+  yaml_write(d, p)
+  file.create(file.path(path, "src", "depend", "previous.rds"))
+
+  expect_error(
+    orderly_run("depend", root = path, echo = FALSE),
+    "Orderly configuration implies duplicate files:\\s+- previous.rds:")
+})
