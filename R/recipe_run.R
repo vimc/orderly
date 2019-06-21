@@ -457,6 +457,7 @@ recipe_prepare_workdir <- function(info, message, config) {
   file_copy(file.path(src, "orderly.yml"), "orderly.yml")
 
   info <- recipe_copy_readme(info, src)
+  info <- recipe_copy_sources(info, src)
   info <- recipe_copy_resources(info, src)
   info <- recipe_copy_global(info, config)
   info <- recipe_copy_depends(info)
@@ -669,6 +670,8 @@ recipe_file_inputs <- function(info) {
     script = file_info(info$script),
     readme = file_info(info$readme),
     source = file_info(info$sources),
+    ## TODO: What we really should do is not have put the sources in
+    ## here in the first place, then this bit would not be necessary.
     resource = file_info(info$resources),
     global = file_info(info$global_resources))
 }
@@ -757,6 +760,21 @@ recipe_copy_readme <- function(info, src) {
 }
 
 
+## TODO (VIMC-20??): we need to organise where these files are coming
+## from in the read section, so if a source is actually global we
+## don't copy it here - but this should be done as a check during
+## read.  We also need to ensure that source files are not listed as
+## resources too, I think.
+recipe_copy_sources <- function(info, src) {
+  if (length(info$sources) > 0L) {
+    dir_create(dirname(info$sources))
+    orderly_log("sources", info$sources)
+    file_copy(file.path(src, info$sources), info$sources)
+  }
+  info
+}
+
+
 recipe_copy_resources <- function(info, src) {
   if (length(info$resources) > 0L) {
     resources <- info$resources
@@ -768,12 +786,11 @@ recipe_copy_resources <- function(info, src) {
                          recursive = TRUE, all.files = TRUE)))
       resources <- unlist(resources)
     }
-
-    dir_create(dirname(resources))
-    orderly_log("resource", resources)
-    file_copy(file.path(src, resources), resources)
-
     info$resources <- resources
+
+    dir_create(dirname(info$resources))
+    orderly_log("resource", info$resources)
+    file_copy(file.path(src, info$resources), info$resources)
   }
   info
 }
@@ -782,19 +799,22 @@ recipe_copy_resources <- function(info, src) {
 recipe_copy_global <- function(info, config) {
   if (!is.null(info$global_resources)) {
     global_path <- file.path(config$root, config$global_resources)
-
     assert_file_exists(
       info$global_resources, check_case = TRUE, workdir = global_path,
       name = sprintf("Global resources in '%s'", global_path))
 
-    orderly_log("global", info$global_resources)
     global_src <- file.path(global_path, info$global_resources)
-    dir_create(dirname(info$global_resources))
-    file_copy(global_src, ".", recursive = TRUE)
-
-    if (any(is_directory(info$global_resources))) {
+    ## See VIMC-2961: the copy here is different to sources and
+    ## resources because we can't rename files as they're copied; we
+    ## don't support directories and we're pretty limited in how
+    ## copying can happen.  I believe the "." that is the destination
+    ## of the copy will strip all leading path fragments (path/to/x
+    ## becoming x).
+    if (any(is_directory(global_src))) {
       stop("directory global resources not yet handled")
     }
+    orderly_log("global", info$global_resources)
+    file_copy(global_src, ".", recursive = TRUE)
   }
   info
 }
@@ -803,7 +823,6 @@ recipe_copy_depends <- function(info) {
   if (!is.null(info$depends)) {
     dep_src <- file.path(info$depends$path, info$depends$filename)
     dep_dst <- file.path(info$workdir, info$depends$as)
-    dir_create(dirname(dep_dst))
     info$depends$id_requested <- info$depends$id
     info$depends$id <- basename(info$depends$path)
 
@@ -813,6 +832,7 @@ recipe_copy_depends <- function(info) {
                    info$depends$filename,
                    info$depends$as)
     orderly_log("depends", str)
+    dir_create(dirname(dep_dst))
     file_copy(dep_src, dep_dst)
   }
   info

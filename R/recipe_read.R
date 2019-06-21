@@ -47,11 +47,11 @@ recipe_read <- function(path, config, validate = TRUE) {
   if (!is.null(info$packages)) {
     assert_character(info$packages, fieldname("packages"))
   }
+
+  recipe_read_check_sources(info$sources, info$resources, filename, path)
   if (!is.null(info$sources)) {
     assert_character(info$sources, fieldname("sources"))
     assert_file_exists(file.path(path, info$sources))
-    ## TODO: check relative path
-    info$resources <- c(info$resources, info$sources)
   }
   if (!is.null(info$connection)) {
     if (length(config$database) == 0L) {
@@ -224,6 +224,21 @@ recipe_read_check_resources <- function(x, filename, path) {
   ## being used.
   x
 }
+
+
+recipe_read_check_sources <- function(sources, resources, filename, path) {
+  if (is.null(sources)) {
+    return()
+  }
+  assert_character(sources, sprintf("%s:%s", filename, "sources"))
+  assert_file_exists(sources, workdir = path, name = "Source file")
+  err <- intersect(sources, resources)
+  if (length(err)) {
+    stop("Do not list source files (sources) as resources:%s",
+         paste(sprintf("\n  - %s", err), collapse = ""))
+  }
+}
+
 
 recipe_read_check_depends <- function(x, filename, config, validate) {
   ## TODO: this is going to assume that the artefacts are all in place
