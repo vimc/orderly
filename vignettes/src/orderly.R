@@ -165,20 +165,22 @@ yaml_output(readLines(file.path(path, "orderly_config.yml")))
 ## contains a field `driver` which must declare a DBI-compatible
 ## driver (realistically this is going to be `RSQLite::SQLite` for a
 ## local SQLite database and `RPostgres::Posgres` for accessing a
-## postgres database), and then any arguments to be passed through to
-## `DBI::dbConnect` along with the driver.  For SQLite this is just
-## going to be `dbname` but for postgres this will include `host`,
-## `port`, `user`, `dbname` and `password`.  For example:
+## postgres database), and then a block `args` which contains any
+## arguments to be passed through to `DBI::dbConnect` along with the
+## driver.  For SQLite this is just going to be `dbname` but for
+## postgres this will include `host`, `port`, `user`, `dbname` and
+## `password`.  For example:
 
 ## ```yaml
 ## database:
 ##   source:
 ##     driver: RSQLite::SQLite
-##     host: dbhost
-##     port: 5432
-##     user: myusername
-##     password: s3cret
-##     dbname: mydb
+##     args:
+##       host: dbhost
+##       port: 5432
+##       user: myusername
+##       password: s3cret
+##       dbname: mydb
 ## ```
 
 ## In order to run anything (as below) the working directory must be
@@ -296,11 +298,12 @@ orderly::orderly_new("new", root = path)
 ## database:
 ##   source:
 ##     driver: RPostgres::Postgres
-##     host: localhost
-##     port: 5432
-##     user: myuser
-##     dbname: databasename
-##     password: p4ssw0rd
+##     args:
+##       host: localhost
+##       port: 5432
+##       user: myuser
+##       dbname: databasename
+##       password: p4ssw0rd
 ## ```
 
 ## you might write
@@ -309,11 +312,12 @@ orderly::orderly_new("new", root = path)
 ## database:
 ##   source:
 ##     driver: RPostgres::Postgres
-##     host: $MY_DBHOST
-##     port: $MY_DBPORT
-##     user: $MY_DBUSER
-##     dbname: $MY_DBNAME
-##     password: $MY_PASSWORD
+##     args:
+##       host: $MY_DBHOST
+##       port: $MY_DBPORT
+##       user: $MY_DBUSER
+##       dbname: $MY_DBNAME
+##       password: $MY_PASSWORD
 ## ```
 
 ## environment variables, as used this way **must** begin with a

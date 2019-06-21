@@ -20,11 +20,12 @@ test_that("environment variables", {
   dat <- list(database =
                 list(source =
                        list(driver = "RSQLite::SQLite",
-                            host = "OURHOST",
-                            port = "OURPORT",
-                            user = "OURUSER",
-                            dbname = "OURDBNAME",
-                            password = "$OURPASSWORD")))
+                            args = list(
+                              host = "OURHOST",
+                              port = "OURPORT",
+                              user = "OURUSER",
+                              dbname = "OURDBNAME",
+                              password = "$OURPASSWORD"))))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
 
   cfg <- orderly_config(path)
@@ -239,4 +240,21 @@ test_that("warn when reading old-style configuration", {
 
   expect_warning(orderly_config(path),
                  "Use of 'source' is deprecated and will be removed")
+})
+
+
+test_that("warn when reading old-style db config", {
+  path <- prepare_orderly_example("minimal")
+  content <- c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    dbname: source.sqlite")
+  writeLines(content, file.path(path, "orderly_config.yml"))
+  expect_warning(
+    orderly_config(path),
+    "Please move your database arguments")
+  withr::with_options(
+    list(orderly.nowarnings = TRUE),
+    expect_warning(orderly_config(path), NA))
 })

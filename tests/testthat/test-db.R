@@ -57,7 +57,7 @@ test_that("no transient db", {
   config <- list(destination = list(
                    driver = c("RSQLite", "SQLite"),
                    args = list(dbname = ":memory:")),
-                 root = ".")
+                 root = tempdir())
   expect_error(orderly_db_args(config$destination, config = config),
                "Cannot use a transient SQLite database with orderly")
 })
