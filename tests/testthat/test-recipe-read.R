@@ -309,7 +309,9 @@ test_that("warn old style db", {
 
   file.rename(file.path(path, "orderly_config.yml.new"),
               file.path(path, "orderly_config.yml"))
-  cfg <- orderly_config(path)
+  expect_warning(
+    cfg <- orderly_config(path),
+    "Please move your database arguments")
 
   expect_warning(
     recipe_read(file.path(path, "src", "example"), cfg),

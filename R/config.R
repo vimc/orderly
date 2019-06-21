@@ -25,13 +25,24 @@ orderly_config_read_yaml <- function(filename, root) {
   driver_config <- function(name) {
     if (identical(name, "destination") && is.null(info[[name]])) {
       dat <- list(driver = "RSQLite::SQLite",
-                  dbname = "orderly.sqlite")
+                  args = list(dbname = "orderly.sqlite"))
     } else {
       dat <- info[[name]]
     }
     label <- sprintf("%s:%s:driver", filename, paste(name, collapse = ":"))
     driver <- check_symbol_from_str(dat$driver, label)
-    args <- dat[setdiff(names(dat), "driver")]
+    if ("args" %in% names(dat)) {
+      args <- dat$args
+    } else {
+      if (!info$database_old_style) {
+        msg <- c("Please move your database arguments within an 'args'",
+                 "block, as detecting them will be deprecated in a future",
+                 "orderly version.  See the main package vignette for",
+                 "details.  Reported for: ", label)
+        orderly_warning(flow_text(msg))
+      }
+      args <- dat[setdiff(names(dat), "driver")]
+    }
     list(driver = driver, args = args)
   }
 
@@ -44,14 +55,14 @@ orderly_config_read_yaml <- function(filename, root) {
              "future orderly version - please use 'database' instead.",
              "See the main package vignette for details.")
     orderly_warning(flow_text(msg))
-    info$database <- list(source = driver_config("source"))
     info$database_old_style <- TRUE
+    info$database <- list(source = driver_config("source"))
   } else if (!is.null(info$database)) {
     assert_named(info$database, unique = TRUE)
+    info$database_old_style <- FALSE
     for (nm in names(info$database)) {
       info$database[[nm]] <- driver_config(c("database", nm))
     }
-    info$database_old_style <- FALSE
   }
   info$destination <- driver_config("destination")
 

@@ -1,7 +1,9 @@
 context("migrations")
 
-
 test_that("0.3.2 -> 0.3.3", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
   path <- unpack_reference("0.3.2")
   cmp <- unpack_reference("0.4.8")
   orderly_migrate(path, to = "0.3.3")
@@ -22,6 +24,9 @@ test_that("0.3.2 -> 0.3.3", {
 
 
 test_that("roll back migration", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
   path <- unpack_reference("0.3.2")
   hash <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
   orderly_migrate(path, to = "0.3.3")
@@ -62,6 +67,9 @@ test_that("failed migrations are rolled back", {
 
 
 test_that("failed migrations can be skipped", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
   path <- unpack_reference("0.3.2")
   hash <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
 
@@ -92,6 +100,9 @@ test_that("failed migrations can be skipped", {
 
 
 test_that("failed migrations warned in dry run", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
   path <- unpack_reference("0.3.2")
   hash <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
 
@@ -115,6 +126,9 @@ test_that("failed migrations warned in dry run", {
 
 
 test_that("dry run", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
   path <- unpack_reference("0.3.2")
   hash <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
   orderly_migrate(path, to = "0.3.3", dry_run = TRUE)
@@ -125,6 +139,9 @@ test_that("dry run", {
 
 
 test_that("migrate_plan default is used", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
   path <- unpack_reference("0.3.2")
   expect_equal(migrate_plan(path), available_migrations())
   expect_equal(migrate_plan(path, to = "0.0.1"),
@@ -169,6 +186,9 @@ test_that("require migration", {
 
 
 test_that("can't commit old version", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
   path <- unpack_reference("0.3.2")
   patch_orderly_config(path)
   contents <- orderly_list_archive(path)
@@ -186,6 +206,9 @@ test_that("can't commit old version", {
 
 
 test_that("don't migrate new orderly", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
   path <- prepare_orderly_example("minimal")
   p <- path_orderly_archive_version(path)
   unlink(p)
@@ -225,6 +248,9 @@ test_that("database migrations", {
 
 
 test_that("automatic migrations", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
   path <- unpack_reference("0.5.1")
   patch_orderly_config(path)
   con <- orderly_db("destination", path, validate = FALSE)
@@ -239,6 +265,9 @@ test_that("automatic migrations", {
 
 
 test_that("migrate 0.5.4 -> 0.5.5", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
   path <- unpack_reference("0.5.4")
   orderly_migrate(path, to = "0.5.5")
   orderly_rebuild(path)
@@ -254,10 +283,13 @@ test_that("migrate 0.5.4 -> 0.5.5", {
 
 
 test_that("rebuild db with incorrect schema information", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
   path <- unpack_reference("0.5.17")
   patch_orderly_config(path)
   con <- orderly_db("destination", path, validate = FALSE)
-  on.exit(DBI::dbDisconnect(con))
+  on.exit(DBI::dbDisconnect(con), add = TRUE)
 
   DBI::dbExecute(
     con,
@@ -292,6 +324,9 @@ test_that("migrate 0.5.18 -> 0.6.0", {
 
 
 test_that("migrate 0.6.0 -> 0.6.1", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
   path <- unpack_reference("0.6.0")
 
   reports <- subset(orderly_list_archive(path), name == "use_resource")
@@ -307,6 +342,9 @@ test_that("migrate 0.6.0 -> 0.6.1", {
 
 
 test_that("migrate 0.6.1 -> 0.6.2", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
   path <- unpack_reference("0.6.0")
 
   reports <- subset(orderly_list_archive(path), name == "use_resource")
@@ -322,6 +360,9 @@ test_that("migrate 0.6.1 -> 0.6.2", {
 
 
 test_that("migrate 0.6.1 -> 0.6.7", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
   path <- unpack_reference("0.6.0")
 
   reports <- subset(orderly_list_archive(path), name == "changelog")
@@ -335,7 +376,7 @@ test_that("migrate 0.6.1 -> 0.6.7", {
   expect_is(changelog, "data.frame")
   expect_true("id" %in% names(changelog))
   con <- orderly_db("destination", root = path)
-  on.exit(DBI::dbDisconnect(con))
+  on.exit(DBI::dbDisconnect(con), add = TRUE)
 
   cmp <- DBI::dbReadTable(con, "changelog")
   cmp$from_file <- as.logical(cmp$from_file)
@@ -347,6 +388,9 @@ test_that("migrate 0.6.1 -> 0.6.7", {
 
 
 test_that("migrate => 0.6.8", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
   path <- unpack_reference("0.6.0")
 
   con <- orderly_db("destination", path, validate = FALSE)

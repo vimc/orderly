@@ -5,8 +5,9 @@ test_that("set env", {
   cfg <- c("database:",
            "  source:",
            "    driver: RSQLite::SQLite",
-           "    dbname: source.sqlite",
-           "    user: $MY_USER")
+           "    args:",
+           "      dbname: source.sqlite",
+           "      user: $MY_USER")
   writeLines(cfg, file.path(path, "orderly_config.yml"))
 
   config <- orderly_config(path)

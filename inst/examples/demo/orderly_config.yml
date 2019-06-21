@@ -1,7 +1,9 @@
 database:
   source:
     driver: RSQLite::SQLite
-    dbname: source.sqlite
+    args:
+      dbname: source.sqlite
+
 fields:
   requester:
     required: true
