@@ -715,8 +715,6 @@ recipe_check_hashes <- function(pre, post, name1, name2) {
                  paste(changed, collapse = ", ")),
          call. = FALSE)
   }
-
-  stop("This should never happen")
 }
 
 
