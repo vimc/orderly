@@ -138,15 +138,11 @@ dir_create <- function(x) {
 }
 
 hash_files <- function(filenames, named = TRUE) {
-  if (is.null(filenames)) {
-    set_names(character(0), if (named) character(0) else NULL)
-  } else {
-    h <- tools::md5sum(filenames)
-    if (!named) {
-      names(h) <- NULL
-    }
-    h
+  h <- tools::md5sum(filenames)
+  if (!named) {
+    names(h) <- NULL
   }
+  h
 }
 
 hash_object <- function(object) {
