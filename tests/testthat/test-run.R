@@ -664,15 +664,13 @@ test_that("multiple resources", {
   h1 <- hash_files(file.path(path, "src", "multiple_resources", "meta", "data.csv"), FALSE)
   h2 <- hash_files(file.path(path, "src", "multiple_resources", "meta", "data2.csv"), FALSE)
 
-
   con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
   d <- DBI::dbReadTable(con, "file_input")
   d <- d[d$file_purpose == "resource", ]
 
   expect_identical(d$filename, c("meta/data.csv", "meta/data2.csv"))
-  expect_identical(d$file_hash, c(h1,
-                                  h2))
+  expect_identical(d$file_hash, c(h1, h2))
   expect_true(file.exists(file.path(p, "meta/data.csv")))
   expect_true(file.exists(file.path(p, "meta/data2.csv")))
 })

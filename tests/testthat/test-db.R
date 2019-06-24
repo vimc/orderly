@@ -130,9 +130,6 @@ test_that("dialects", {
 })
 
 
-
-
-
 test_that("sources are listed in db", {
   path <- prepare_orderly_example("demo")
   id <- orderly_run("other", root = path, parameters = list(nmin = 0),
@@ -146,7 +143,6 @@ test_that("sources are listed in db", {
   info <- readRDS(p)$meta$file_info_inputs
 
   h <- hash_files(file.path(path, "archive", "other", id, "functions.R"), FALSE)
-
 
   expect_equal(info$filename[info$file_purpose == "source"], "functions.R")
   expect_equal(info$file_hash[info$file_purpose == "source"], h)
