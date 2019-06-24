@@ -1,4 +1,5 @@
 test_that("unpack archive", {
+  testthat::skip_on_cran()
   path <- prepare_orderly_example("minimal")
   id <- orderly_run("example", root = path, echo = FALSE)
   p <- orderly_commit(id, root = path)
@@ -15,7 +16,7 @@ test_that("unpack archive", {
 
 
 test_that("unpack report failure: corrupt download", {
-  skip_on_cran()
+  testthat::skip_on_cran()
   bytes <- as.raw(c(0x50, 0x4b, 0x05, 0x06, rep(0x00, 18L)))
   zip <- tempfile()
   writeBin(bytes, zip)
@@ -29,6 +30,7 @@ test_that("unpack report failure: corrupt download", {
 
 
 test_that("unpack failure: not an orderly archive", {
+  testthat::skip_on_cran()
   tmp <- file.path(tempfile(), "parent")
   dir.create(tmp, FALSE, TRUE)
   file.create(file.path(tmp, c("a", "b")))
@@ -40,6 +42,7 @@ test_that("unpack failure: not an orderly archive", {
 
 
 test_that("unpack failure: not expected id", {
+  testthat::skip_on_cran()
   id <- new_report_id()
   tmp <- file.path(tempfile(), id)
   dir.create(tmp, FALSE, TRUE)
@@ -52,6 +55,7 @@ test_that("unpack failure: not expected id", {
 
 
 test_that("unpack failure: missing files", {
+  testthat::skip_on_cran()
   id <- new_report_id()
   tmp <- file.path(tempfile(), id)
   dir.create(tmp, FALSE, TRUE)

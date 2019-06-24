@@ -140,6 +140,7 @@ test_that("latest", {
 
 
 test_that("Behaviour with rogue files", {
+  testthat::skip_on_cran()
   path <- prepare_orderly_example("minimal")
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("example", root = path, echo = FALSE)
