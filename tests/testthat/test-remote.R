@@ -53,11 +53,18 @@ test_that("pull dependencies", {
 })
 
 
-test_that("pull_dependencies with no dependencies", {
+test_that("pull_dependencies counts dependencies", {
   dat <- prepare_orderly_remote_example()
 
   expect_message(
     orderly_pull_dependencies("example", root = dat$config,
                               remote = dat$remote),
-    "\\[ warning\\s+ \\]  example has no dependencies")
+    "\\[ depends\\s+ \\]  example has 0 dependencies")
+
+  id <- orderly_run("example", root = dat$path_remote, echo = FALSE)
+  orderly_commit(id, root = dat$path_remote)
+  expect_message(
+    orderly_pull_dependencies("depend", root = dat$config,
+                              remote = dat$remote),
+    "\\[ depends\\s+ \\]  depend has 1 dependency")
 })
