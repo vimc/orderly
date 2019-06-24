@@ -1,6 +1,7 @@
 context("orderly_runner")
 
 test_that("runner queue", {
+  testthat::skip_on_cran()
   queue <- runner_queue()
   expect_equal(queue$status(""), list(state = "unknown", id = NA_character_))
   expect_null(queue$next_queued())
@@ -45,6 +46,7 @@ test_that("runner queue", {
 })
 
 test_that("run: success", {
+  testthat::skip_on_cran()
   skip_on_appveyor()
   path <- prepare_orderly_example("interactive")
 
@@ -89,6 +91,7 @@ test_that("run: success", {
 })
 
 test_that("run: error", {
+  testthat::skip_on_cran()
   skip_on_appveyor()
 
   path <- prepare_orderly_example("interactive")
@@ -122,6 +125,7 @@ test_that("rebuild", {
 })
 
 test_that("run in branch (local)", {
+  testthat::skip_on_cran()
   skip_on_appveyor()
   path <- unzip_git_demo()
   runner <- orderly_runner(path)
@@ -139,6 +143,7 @@ test_that("run in branch (local)", {
 })
 
 test_that("fetch / detach / pull", {
+  testthat::skip_on_cran()
   path <- prepare_orderly_git_example()
   path1 <- path[["origin"]]
   path2 <- path[["local"]]
@@ -171,6 +176,7 @@ test_that("fetch / detach / pull", {
 })
 
 test_that("prevent git change", {
+  testthat::skip_on_cran()
   path <- unzip_git_demo()
   runner <- orderly_runner(path, FALSE)
   expect_error(runner$queue("other", ref = "other"),
@@ -178,6 +184,7 @@ test_that("prevent git change", {
 })
 
 test_that("Can't git change", {
+  testthat::skip_on_cran()
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
   expect_error(runner$queue("other", ref = "other"),
@@ -186,6 +193,7 @@ test_that("Can't git change", {
 
 
 test_that("cleanup", {
+  testthat::skip_on_cran()
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
@@ -206,6 +214,7 @@ test_that("cleanup", {
 
 
 test_that("kill", {
+  testthat::skip_on_cran()
   skip_on_windows()
   skip_on_appveyor()
   path <- prepare_orderly_example("interactive")
@@ -221,6 +230,7 @@ test_that("kill", {
 })
 
 test_that("kill - wrong process", {
+  testthat::skip_on_cran()
   skip_on_windows()
   skip_on_appveyor()
   path <- prepare_orderly_example("interactive")
@@ -237,6 +247,7 @@ test_that("kill - wrong process", {
 })
 
 test_that("kill - no process", {
+  testthat::skip_on_cran()
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
   key <- "virtual_plant"
@@ -245,6 +256,7 @@ test_that("kill - no process", {
 })
 
 test_that("timeout", {
+  testthat::skip_on_cran()
   skip_on_windows()
   skip_on_appveyor()
   path <- prepare_orderly_example("interactive")
@@ -258,6 +270,7 @@ test_that("timeout", {
 })
 
 test_that("queue_status", {
+  testthat::skip_on_cran()
   skip_on_windows()
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
@@ -297,6 +310,7 @@ test_that("queue_status", {
 
 
 test_that("queue status", {
+  testthat::skip_on_cran()
   skip_on_windows()
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
@@ -337,6 +351,7 @@ test_that("queue status", {
 
 
 test_that("prevent git changes", {
+  testthat::skip_on_cran()
   skip_on_windows()
   path <- prepare_orderly_git_example()
 
@@ -386,6 +401,7 @@ test_that("prevent git changes", {
 
 
 test_that("allow ref logic", {
+  testthat::skip_on_cran()
   path <- unzip_git_demo()
   config <- list(server_options = list(master_only = FALSE),
                  root = path)
@@ -409,6 +425,7 @@ test_that("allow ref logic", {
 
 
 test_that("backup", {
+  testthat::skip_on_cran()
   path <- prepare_orderly_example("minimal")
   id <- orderly_run("example", root = path, echo = FALSE)
   orderly_commit(id, root = path)

@@ -40,6 +40,7 @@ test_that("run: id-file", {
 })
 
 test_that("run: ref", {
+  testthat::skip_on_cran()
   path <- unzip_git_demo()
 
   pars <- as.character(jsonlite::toJSON(list(nmin = 0), auto_unbox = TRUE))
@@ -82,6 +83,7 @@ test_that("run: fetch", {
 
 
 test_that("run: pull & ref don't go together", {
+  testthat::skip_on_cran()
   path <- unzip_git_demo()
   args <- c("--root", path, "run", "--ref", "origin/master", "--pull",
             "minimal")

@@ -177,7 +177,6 @@ demo_change_time <- function(id, time, path) {
 ##
 ## After building this we have two branches 'master' with
 build_git_demo <- function() {
-  testthat::skip_on_cran()
   path <- prepare_orderly_example("demo", file.path(tempfile(), "demo"))
 
   dir.create(file.path(path, "extra"))
@@ -213,7 +212,6 @@ build_git_demo <- function() {
 }
 
 unzip_git_demo <- function(path = tempfile()) {
-  testthat::skip_on_cran()
   tmp <- tempfile()
   dir.create(tmp, FALSE, TRUE)
   demo <- getOption("orderly.server.demo", build_git_demo())
@@ -227,7 +225,6 @@ unzip_git_demo <- function(path = tempfile()) {
 }
 
 prepare_orderly_git_example <- function(path = tempfile(), run_report = FALSE) {
-  testthat::skip_on_cran()
   path_upstream <- file.path(path, "upstream")
   unzip_git_demo(path)
   unzip_git_demo(path_upstream)

@@ -1,6 +1,7 @@
 context("git")
 
 test_that("status", {
+  testthat::skip_on_cran()
   path <- unzip_git_demo()
   expect_equal(git_status(path),
                list(success = TRUE, code = 0,
@@ -15,6 +16,7 @@ test_that("status", {
 })
 
 test_that("branches", {
+  testthat::skip_on_cran()
   path <- unzip_git_demo()
   sha1 <- git_ref_to_sha("master", path)
   sha2 <- git_ref_to_sha("other", path)
@@ -33,6 +35,7 @@ test_that("branches", {
 })
 
 test_that("detch head & restore", {
+  testthat::skip_on_cran()
   path <- unzip_git_demo()
   prev <- git_detach_head_at_ref("other", path)
   expect_equal(prev, "master")
@@ -47,6 +50,7 @@ test_that("detch head & restore", {
 
 
 test_that("detach head checks", {
+  testthat::skip_on_cran()
   path <- unzip_git_demo()
   filename <- file.path(path, "dirty")
   file.create(filename)
@@ -60,6 +64,7 @@ test_that("detach head checks", {
 
 
 test_that("fetch / detach / pull", {
+  testthat::skip_on_cran()
   path <- prepare_orderly_git_example()
   path1 <- path[["origin"]]
   path2 <- path[["local"]]
@@ -85,6 +90,7 @@ test_that("fetch / detach / pull", {
 
 
 test_that("checkout_branch checks", {
+  testthat::skip_on_cran()
   path <- unzip_git_demo()
   filename <- file.path(path, "dirty")
   file.create(filename)
@@ -94,6 +100,7 @@ test_that("checkout_branch checks", {
 
 
 test_that("detect missing ref", {
+  testthat::skip_on_cran()
   path <- prepare_orderly_git_example()
   path1 <- path[["origin"]]
   path2 <- path[["local"]]
@@ -124,6 +131,7 @@ test_that("detect missing ref", {
 })
 
 test_that("run in detached head", {
+  testthat::skip_on_cran()
   path <- unzip_git_demo()
   orderly_run("other", list(nmin = 0), root = path, ref = "other",
               echo = FALSE)
@@ -141,6 +149,7 @@ test_that("run in detached head", {
 })
 
 test_that("run missing ref", {
+  testthat::skip_on_cran()
   path <- prepare_orderly_git_example()
   path1 <- path[["origin"]]
   path2 <- path[["local"]]
@@ -172,6 +181,7 @@ test_that("run missing ref", {
 
 
 test_that("fetch before run", {
+  testthat::skip_on_cran()
   path <- prepare_orderly_git_example()
   path1 <- path[["origin"]]
   path2 <- path[["local"]]
@@ -198,6 +208,7 @@ test_that("fetch before run", {
 
 
 test_that("handle failure", {
+  testthat::skip_on_cran()
   path <- prepare_orderly_git_example()
   r <- git_run("unknown-command", root = path[["origin"]])
   expect_false(r$success)
@@ -208,6 +219,7 @@ test_that("handle failure", {
 
 
 test_that("git into db", {
+  testthat::skip_on_cran()
   path <- unzip_git_demo()
   id <- orderly_run("minimal", root = path, echo = FALSE)
   orderly_commit(id, root = path)
