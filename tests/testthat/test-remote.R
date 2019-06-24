@@ -96,7 +96,7 @@ test_that("migrate dependencies on pull", {
                  paste(strwrap(paste(w_msg, collapse = " ")), collapse = "\n"))
   # now this should work
   id <- orderly_run("depend", root = dat$config, echo = FALSE)
-
+})
 
 test_that("pull_dependencies counts dependencies", {
   dat <- prepare_orderly_remote_example()
