@@ -60,6 +60,7 @@ test_that("run: ref", {
 
 
 test_that("run: fetch", {
+  testthat::skip_on_cran()
   path <- prepare_orderly_git_example()
   path_local <- path[["local"]]
   path_origin <- path[["origin"]]
@@ -95,6 +96,7 @@ test_that("run: pull & ref don't go together", {
 
 
 test_that("run: pull before run", {
+  testthat::skip_on_cran()
   path <- prepare_orderly_git_example()
   path_local <- path[["local"]]
   path_origin <- path[["origin"]]
