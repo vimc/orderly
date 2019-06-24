@@ -26,7 +26,7 @@ With `orderly` we have two main hopes:
 
 One often-touted goal of R over point-and-click analyses packages is that if an analysis is scripted it is more reproducible.  However, essentially all analyses depend on external resources - packages, data, code, and R itself; any change in these external resources might change the results.  Preventing such changes in external resources is not always possible, but *tracking* changes should be straightforward - all we need to know is what is being used.
 
-For example, while reproducible research [has become synonymous with literate programming](https://cran.r-project.org/web/views/ReproducibleResearch.html) this approach often increases the number of external resources.  A typical [`knitr`](https://CRAN.R-project.org/package=knitr) document will depend on:
+For example, while reproducible research [has become synonymous with literate programming](https://CRAN.R-project.org/view=ReproducibleResearch) this approach often increases the number of external resources.  A typical [`knitr`](https://CRAN.R-project.org/package=knitr) document will depend on:
 
 * the source file (`.Rmd` or `.Rnw`)
 * templates used for styling
