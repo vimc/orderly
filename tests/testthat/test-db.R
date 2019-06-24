@@ -130,6 +130,9 @@ test_that("dialects", {
 })
 
 
+
+
+
 test_that("sources are listed in db", {
   path <- prepare_orderly_example("demo")
   id <- orderly_run("other", root = path, parameters = list(nmin = 0),
@@ -142,9 +145,11 @@ test_that("sources are listed in db", {
   p <- path_orderly_run_rds(file.path(path, "archive", "other", id))
   info <- readRDS(p)$meta$file_info_inputs
 
+  h <- hash_files(file.path(path, "archive", "other", id, "functions.R"), FALSE)
+  
+  
   expect_equal(info$filename[info$file_purpose == "source"], "functions.R")
-  expect_equal(info$file_hash[info$file_purpose == "source"],
-               "cceb0c1c68beaa96266c6f2e3445b423")
+  expect_equal(info$file_hash[info$file_purpose == "source"], h)
 
   d <- DBI::dbGetQuery(
     con, "SELECT * from file_input WHERE report_version = $1", id)
@@ -196,6 +201,7 @@ test_that("db includes file information", {
   on.exit(DBI::dbDisconnect(con))
 
   file_input <- DBI::dbReadTable(con, "file_input")
+  
   expect_equal(
     file_input,
     data_frame(id = 1:2,
@@ -228,6 +234,7 @@ test_that("db includes file information", {
 
   filenames <- c("orderly.yml", "script.R", "mygraph.png", "mygraph.pdf")
   file <- DBI::dbReadTable(con, "file")
+  
   expect_equal(file,
                data_frame(hash = c("26f10ce8e0dba5993709b8bc6262fb6f",
                                    "eda0ed142005488307e065831ad66f72",
