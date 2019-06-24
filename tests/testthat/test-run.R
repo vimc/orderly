@@ -253,13 +253,15 @@ test_that("resources", {
   p <- file.path(path, "draft", "use_resource", id)
   expect_true(file.exists(file.path(p, "meta/data.csv")))
   p <- orderly_commit(id, root = path)
+  
+  h <- hash_files(file.path(path, "src", "use_resource", "meta", "data.csv"), FALSE)
 
   con <- orderly_db("destination", root = path)
   d <- DBI::dbGetQuery(
     con, "SELECT * FROM file_input WHERE file_purpose = 'resource'")
 
   expect_identical(d$filename, "meta/data.csv")
-  expect_identical(d$file_hash, "0bec5bf6f93c547bc9c6774acaf85e1a")
+  expect_identical(d$file_hash, h)
   expect_true(file.exists(file.path(p, "meta/data.csv")))
 })
 
@@ -651,7 +653,6 @@ test_that("delete multiple resources", {
     error_message)
 })
 
-
 test_that("multiple resources", {
   path <- prepare_orderly_example("resources")
   id <- orderly_run("multiple_resources", root = path, echo = FALSE)
@@ -659,6 +660,10 @@ test_that("multiple resources", {
   expect_true(file.exists(file.path(p, "meta/data.csv")))
   expect_true(file.exists(file.path(p, "meta/data2.csv")))
   p <- orderly_commit(id, root = path)
+  
+  h1 <- hash_files(file.path(path, "src", "multiple_resources", "meta", "data.csv"), FALSE)
+  h2 <- hash_files(file.path(path, "src", "multiple_resources", "meta", "data2.csv"), FALSE)
+  
 
   con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
@@ -666,8 +671,8 @@ test_that("multiple resources", {
   d <- d[d$file_purpose == "resource", ]
 
   expect_identical(d$filename, c("meta/data.csv", "meta/data2.csv"))
-  expect_identical(d$file_hash, c("0bec5bf6f93c547bc9c6774acaf85e1a",
-                                  "15bd0276ba238a412caf3e8dcd289751"))
+  expect_identical(d$file_hash, c(h1,
+                                  h2))
   expect_true(file.exists(file.path(p, "meta/data.csv")))
   expect_true(file.exists(file.path(p, "meta/data2.csv")))
 })

@@ -34,7 +34,7 @@ test_that("branches", {
                "Git reference 'unknown' not found")
 })
 
-test_that("detch head & restore", {
+test_that("detach head & restore", {
   testthat::skip_on_cran()
   path <- unzip_git_demo()
   prev <- git_detach_head_at_ref("other", path)
