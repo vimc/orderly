@@ -10,14 +10,15 @@
 #   database:
 #     source:
 #       driver: RPostgres::Postgres
-#       host: localhost
-#       port: 5432
-#       user: myuser
-#       dbname: databasename
-#       password: p4ssw0rd
+#       args:
+#         host: localhost
+#         port: 5432
+#         user: myuser
+#         dbname: databasename
+#         password: p4ssw0rd
 #
-# All arguments other than driver are optional and will be passed
-# through during the 'DBI::dbConnect()' call.
+# All arguments in the "args" block will be passed through during the
+# 'DBI::dbConnect()' call.
 #
 # If using SQLite, then the "dbname" argument will be interpreted
 # relative to the orderly root if not absolute .  Be sure to exclude
@@ -35,7 +36,8 @@ database: ~
 #
 #   destination:
 #     driver: RSQLite::SQLite
-#     dbname: different.sqlite
+#     args:
+#       dbname: different.sqlite
 
 # In addition, it may contain a 'fields' section defining custom
 # fields, for example:

@@ -1,11 +1,12 @@
 # This is what we'll set up via docker
 destination:
   driver: RPostgres::Postgres
-  host: orderly-db
-  port: 5432
-  user: postgres
-  dbname: orderly
-  password: schemaspy
+  args:
+    host: orderly-db
+    port: 5432
+    user: postgres
+    dbname: orderly
+    password: schemaspy
 
 # Compatible with montagu-reports, but later we'll need this to be
 # tuneable I think.

@@ -344,7 +344,8 @@ test_that("prevent git changes", {
     database = list(
       source = list(
         driver = "RSQLite::SQLite",
-        dbname = "dbname: source.sqlite")),
+        args = list(
+          dbname = "dbname: source.sqlite"))),
     remote = list(
       main = list(
         driver = "orderly::orderly_remote_path",

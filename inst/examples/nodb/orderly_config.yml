@@ -1,4 +1,5 @@
 database:
   source:
     driver: RSQLite::SQLite
-    dbname: $SOME_ENVVAR
+    args:
+      dbname: $SOME_ENVVAR

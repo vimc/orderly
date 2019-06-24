@@ -48,12 +48,12 @@ test_that("list README.md as resource",  {
   messages <- capture_messages(
     id <- orderly_run("example", root = path, echo = FALSE))
   # ...make sure none of the messages contain "unexpected"
-  expect_true(any(grep("readme", messages)))
+  expect_true(any(grep("should not be listed as a resource", messages)))
   orderly_commit(id, root = path)
   con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
   dat <- DBI::dbReadTable(con, "file_input")
-  expect_equal(sum(dat$filename == "README.md"), 2)
+  expect_equal(sum(dat$filename == "README.md"), 1)
 })
 
 test_that("list README.md as artefact",  {
