@@ -40,10 +40,16 @@ orderly_pull_dependencies <- function(name, root = NULL, locate = TRUE,
   path <- file.path(path_src(config$root), name)
   depends <- recipe_read(path, config, FALSE)$depends
 
-  for (i in seq_len(nrow(depends))) {
-    if (!isTRUE(depends$draft[[i]])) {
-      orderly_pull_archive(depends$name[[i]], depends$id[[i]], config,
-                           FALSE, remote)
+  msg <- sprintf("%s has %d %s", name, NROW(depends),
+                 ngettext(NROW(depends), "dependency", "dependencies"))
+  orderly_log("depends", msg)
+
+  if (!is.null(depends)) {
+    for (i in seq_len(nrow(depends))) {
+      if (!isTRUE(depends$draft[[i]])) {
+        orderly_pull_archive(depends$name[[i]], depends$id[[i]], config,
+                             FALSE, remote)
+      }
     }
   }
 }
