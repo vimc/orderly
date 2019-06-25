@@ -7,6 +7,8 @@ RUN apt-get update && apt-get -y install \
   sqlite3 \
   wget
 
+RUN sed  -i'' '/mran.microsoft.com/d' /usr/local/lib/R/etc/Rprofile.site
+
 # R package dependencies, including a few extras that we'll want handy
 RUN install2.r \
   DBI \
