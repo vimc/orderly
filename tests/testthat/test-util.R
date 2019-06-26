@@ -347,6 +347,7 @@ test_that("sys_which", {
 
 
 test_that("zip_dir", {
+  testthat::skip_on_cran()
   mockery::stub(zip_dir, "utils::zip", function(...) -1)
   expect_error(zip_dir(tempfile()), "error running zip")
 })

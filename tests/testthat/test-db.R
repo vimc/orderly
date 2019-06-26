@@ -142,9 +142,10 @@ test_that("sources are listed in db", {
   p <- path_orderly_run_rds(file.path(path, "archive", "other", id))
   info <- readRDS(p)$meta$file_info_inputs
 
+  h <- hash_files(file.path(path, "archive", "other", id, "functions.R"), FALSE)
+
   expect_equal(info$filename[info$file_purpose == "source"], "functions.R")
-  expect_equal(info$file_hash[info$file_purpose == "source"],
-               "cceb0c1c68beaa96266c6f2e3445b423")
+  expect_equal(info$file_hash[info$file_purpose == "source"], h)
 
   d <- DBI::dbGetQuery(
     con, "SELECT * from file_input WHERE report_version = $1", id)
@@ -191,17 +192,18 @@ test_that("db includes file information", {
   path <- prepare_orderly_example("demo")
   id <- orderly_run("multifile-artefact", root = path, echo = FALSE)
   p <- orderly_commit(id, root = path)
-
+  h1 <- hash_files(file.path(path, "src", "multifile-artefact", "orderly.yml"), FALSE)
+  h2 <- hash_files(file.path(path, "src", "multifile-artefact", "script.R"), FALSE)
   con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
 
   file_input <- DBI::dbReadTable(con, "file_input")
+
   expect_equal(
     file_input,
     data_frame(id = 1:2,
                report_version = id,
-               file_hash = c("26f10ce8e0dba5993709b8bc6262fb6f",
-                             "eda0ed142005488307e065831ad66f72"),
+               file_hash = c(h1, h2),
                filename = c("orderly.yml", "script.R"),
                file_purpose = c("orderly_yml", "script")))
 
@@ -217,6 +219,7 @@ test_that("db includes file information", {
                file_hash = artefact_hash,
                filename = c("mygraph.png", "mygraph.pdf")))
 
+
   report_version_artefact <- DBI::dbReadTable(con, "report_version_artefact")
   expect_equal(
     report_version_artefact,
@@ -228,9 +231,9 @@ test_that("db includes file information", {
 
   filenames <- c("orderly.yml", "script.R", "mygraph.png", "mygraph.pdf")
   file <- DBI::dbReadTable(con, "file")
+
   expect_equal(file,
-               data_frame(hash = c("26f10ce8e0dba5993709b8bc6262fb6f",
-                                   "eda0ed142005488307e065831ad66f72",
+               data_frame(hash = c(h1, h2,
                                    artefact_hash),
                           size = file_size(file.path(p, filenames))))
 })
