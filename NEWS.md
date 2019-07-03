@@ -1,3 +1,7 @@
+# 0.7.5
+
+* Fixes notifications to slack on report completion (VIMC-2992).
+
 # 0.7.4
 
 * The database configuration in `orderly_config.yml` now has an "args" section, rather than guessing arguments.  Old configurations are valid, with a warning to update (VIMC-1986).
