@@ -196,10 +196,67 @@ test_that("main interface", {
 
 
 test_that("exit on no httr", {
-  dat <- list(elapsed = 10,
-              id = "20181213-123456-fedcba98",
-              name = "example")
+  dat <- list(meta = list(elapsed = 10,
+                          id = "20181213-123456-fedcba98",
+                          name = "example"))
   url <- "https://httpbin.org/post"
   mockery::stub(do_slack_post_success, "requireNamespace", FALSE)
   expect_null(do_slack_post_success(url, dat))
+})
+
+
+## This changed to trigger VIMC-2992; this test will fail if the
+## underlying data changes again, while the above tests with mock data
+## will continue to work.
+test_that("slack payload is correct given actual run data", {
+  path <- prepare_orderly_git_example()[["origin"]]
+  path1 <- path[["origin"]]
+  id <- orderly_run("minimal", root = path1, echo = FALSE)
+  p <- file.path(path1, "draft", "minimal", id)
+  dat <- readRDS(path_orderly_run_rds(p))
+
+  server_url <- "https://example.com"
+  server_is_primary <- FALSE
+  server_name <- "myserver"
+
+  d <- slack_data(dat, server_name, server_url, server_is_primary)
+
+  report_url <- sprintf("%s/reports/%s/%s/", server_url, "minimal", id)
+  git_info <- sprintf("%s@%s", dat$git$branch, dat$git$sha_short)
+
+  expect_equal(d$username, "orderly")
+  expect_equal(d$icon_emoji, ":ambulance:")
+  expect_equal(length(d$attachments), 1L)
+
+  a <- d$attachments[[1]]
+  expect_setequal(names(a),
+                  c("title", "text", "color", "fallback", "fields", "actions"))
+
+  expect_equal(a$title, "Ran report 'minimal'")
+  expect_match(a$text, "on server \\*myserver\\* in [0-9]+(.[0-9]+)? secs")
+  expect_equal(a$color, "warning")
+  expect_equal(a$fallback,
+               sprintf("Ran 'minimal' as '%s'; view at %s", id, report_url))
+  expect_equal(
+    a$fields,
+    list(
+      list(title = "id", value = sprintf("`%s`", id), short = TRUE),
+      list(title = "git", value = git_info, short = TRUE)))
+  expect_equal(
+    a$actions,
+    list(list(
+      name = "link", type = "button", text = ":clipboard: View report",
+      style = "primary", url = report_url)))
+
+  skip_if_no_internet()
+  slack_url <- "https://httpbin.org/post"
+  r <- do_slack_post_success(slack_url, d)
+
+  str <- httr::content(r, "text", encoding = "UTF-8")
+  cmp <- jsonlite::fromJSON(str, FALSE)$json
+
+  expect_setequal(names(d), names(cmp))
+  expect_equal(d$username, cmp$username)
+  expect_equal(d$icon_emoji, cmp$icon_emoji)
+  expect_setequal(names(d$attachments[[1]]), names(cmp$attachments[[1]]))
 })
