@@ -4,13 +4,14 @@ test_that("slack payload is correct", {
   server_url <- "https://example.com"
   server_is_primary <- FALSE
   server_name <- "myserver"
-  dat <- list(elapsed = 10,
-              git = NULL,
-              id = "20181213-123456-fedcba98",
-              name = "example")
+  dat <- list(meta = list(elapsed = 10,
+                          id = "20181213-123456-fedcba98",
+                          name = "example"),
+              git = NULL)
   d <- slack_data(dat, server_name, server_url, server_is_primary)
 
-  report_url <- sprintf("%s/reports/%s/%s/", server_url, dat$name, dat$id)
+  report_url <- sprintf("%s/reports/%s/%s/", server_url,
+                        dat$meta$name, dat$meta$id)
   expect_equal(
     d,
     list(
@@ -21,9 +22,9 @@ test_that("slack payload is correct", {
         text = "on server *myserver* in 10 secs",
         color = "warning",
         fallback = sprintf("Ran '%s' as '%s'; view at %s",
-                           dat$name, dat$id, report_url),
+                           dat$meta$name, dat$meta$id, report_url),
         fields = list(list(
-          title = "id", value = sprintf("`%s`", dat$id), short = TRUE)),
+          title = "id", value = sprintf("`%s`", dat$meta$id), short = TRUE)),
         actions = list(list(
           name = "link", type = "button", text = ":clipboard: View report",
           style = "primary", url = report_url))))))
@@ -46,28 +47,28 @@ test_that("git information is collected correctly", {
   server_url <- "https://example.com"
   server_is_primary <- FALSE
   server_name <- "myserver"
-  dat <- list(elapsed = 10,
-              git = NULL,
-              id = "20181213-123456-fedcba98",
-              name = "example")
+  dat <- list(meta = list(elapsed = 10,
+                          id = "20181213-123456-fedcba98",
+                          name = "example"),
+              git = NULL)
   d <- slack_data(dat, server_name, server_url, server_is_primary)
 
   expect_equal(length(d$attachments[[1]]$fields), 1L)
 
-  dat <- list(elapsed = 10,
-              git = list(branch = "master", sha_short = "abcdefg"),
-              id = "20181213-123456-fedcba98",
-              name = "example")
+  dat <- list(meta = list(elapsed = 10,
+                          id = "20181213-123456-fedcba98",
+                          name = "example"),
+              git = list(branch = "master", sha_short = "abcdefg"))
   d <- slack_data(dat, server_name, server_url, server_is_primary)
   expect_equal(length(d$attachments[[1]]$fields), 2L)
   expect_equal(d$attachments[[1]]$fields[[2L]],
                list(title = "git", value = "master@abcdefg", short = TRUE))
 
-  dat <- list(elapsed = 10,
+  dat <- list(meta = list(elapsed = 10,
+                          id = "20181213-123456-fedcba98",
+                          name = "example"),
               git = list(branch = "master", sha_short = "abcdefg",
-                         github_url = "https://github.com/vimc/repo"),
-              id = "20181213-123456-fedcba98",
-              name = "example")
+                         github_url = "https://github.com/vimc/repo"))
   d <- slack_data(dat, server_name, server_url, server_is_primary)
   expect_equal(
     d$attachments[[1]]$fields[[2]]$value,
@@ -81,11 +82,11 @@ test_that("git information works in detached head mode", {
   server_is_primary <- FALSE
   server_name <- "myserver"
 
-  dat <- list(elapsed = 10,
+  dat <- list(meta = list(elapsed = 10,
+                          id = "20181213-123456-fedcba98",
+                          name = "example"),
               git = list(branch = NULL, sha_short = "abcdefg",
-                         github_url = "https://github.com/vimc/repo"),
-              id = "20181213-123456-fedcba98",
-              name = "example")
+                         github_url = "https://github.com/vimc/repo"))
   d <- slack_data(dat, server_name, server_url, server_is_primary)
   expect_equal(
     d$attachments[[1]]$fields[[2]]$value,
@@ -97,10 +98,10 @@ test_that("primary server changes colour", {
   server_url <- "https://example.com"
   server_is_primary <- FALSE
   server_name <- "myserver"
-  dat <- list(elapsed = 10,
-              git = NULL,
-              id = "20181213-123456-fedcba98",
-              name = "example")
+  dat <- list(meta = list(elapsed = 10,
+                          id = "20181213-123456-fedcba98",
+                          name = "example"),
+              git = NULL)
   d1 <- slack_data(dat, server_name, server_url, TRUE)
   d2 <- slack_data(dat, server_name, server_url, FALSE)
   expect_equal(d1$attachments[[1]]$color, "good")
@@ -116,10 +117,10 @@ test_that("sending messages is not a failure", {
   server_url <- "https://example.com"
   server_is_primary <- FALSE
   server_name <- "myserver"
-  dat <- list(elapsed = 10,
-              git = NULL,
-              id = "20181213-123456-fedcba98",
-              name = "example")
+  dat <- list(meta = list(elapsed = 10,
+                          id = "20181213-123456-fedcba98",
+                          name = "example"),
+              git = NULL)
   d <- slack_data(dat, server_name, server_url, server_is_primary)
 
   slack_url <- "https://httpbin.org/status/403"
@@ -130,10 +131,10 @@ test_that("sending messages is not a failure", {
 
 test_that("main interface", {
   skip_if_no_internet()
-  dat <- list(elapsed = 10,
-              git = NULL,
-              id = "20181213-123456-fedcba98",
-              name = "example")
+  dat <- list(meta = list(elapsed = 10,
+                          id = "20181213-123456-fedcba98",
+                          name = "example"),
+              git = NULL)
   config <- list(remote_identity = "myserver",
                  remote = list(
                    myserver = list(
@@ -167,10 +168,10 @@ test_that("main interface", {
     "    primary: true"),
     file.path(path, "orderly_config.yml"))
 
-  dat <- list(elapsed = 10,
-              git = NULL,
-              id = "20181213-123456-fedcba98",
-              name = "example")
+  dat <- list(meta = list(elapsed = 10,
+                          id = "20181213-123456-fedcba98",
+                          name = "example"),
+              git = NULL)
 
   config <- withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = "production"),
