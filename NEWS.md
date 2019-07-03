@@ -1,3 +1,7 @@
+# 0.7.6
+
+* Detection of modified dependencies has been improved (VIMC-2997).
+
 # 0.7.5
 
 * Fixes notifications to slack on report completion (VIMC-2992).
