@@ -12,26 +12,27 @@ slack_post_success <- function(dat, config) {
 
 
 slack_data <- function(dat, remote_name, remote_url, remote_is_primary) {
-  elapsed <- format(as.difftime(dat$elapsed, units = "secs"), digits = 2)
-  if (is.null(dat$git)) {
-    git <- NULL
-  } else {
-    branch <- dat$git$branch %||% "(detached)"
-    sha <- dat$git$sha_short
-    if (!is.null(dat$git$github_url)) {
-      sha <- sprintf("<%s/tree/%s|%s>", dat$git$github_url, sha, sha)
+  id <- dat$meta$id
+  name <- dat$meta$name
+  elapsed <- format(as.difftime(dat$meta$elapsed, units = "secs"), digits = 2)
+  git <- dat$git
+
+  if (!is.null(git)) {
+    branch <- git$branch %||% "(detached)"
+    sha <- git$sha_short
+    if (!is.null(git$github_url)) {
+      sha <- sprintf("<%s/tree/%s|%s>", git$github_url, sha, sha)
     }
-    if (!is.null(dat$git$github_url) && !is.null(dat$git$branch)) {
-      branch <- sprintf("<%s/tree/%s|%s>", dat$git$github_url, branch, branch)
+    if (!is.null(git$github_url) && !is.null(git$branch)) {
+      branch <- sprintf("<%s/tree/%s|%s>", git$github_url, branch, branch)
     }
     git <- sprintf("%s@%s", branch, sha)
   }
-  id <- dat$id
 
-  report_url <- sprintf("%s/reports/%s/%s/", remote_url, dat$name, id)
-  title <- sprintf("Ran report '%s'", dat$name)
+  report_url <- sprintf("%s/reports/%s/%s/", remote_url, name, id)
+  title <- sprintf("Ran report '%s'", name)
   text <- sprintf("on server *%s* in %s", remote_name, elapsed)
-  fallback <- sprintf("Ran '%s' as '%s'; view at %s", dat$name, id, report_url)
+  fallback <- sprintf("Ran '%s' as '%s'; view at %s", name, id, report_url)
   ## NOTE: 'warning' is actually quite a nice yellow colour
   col <- if (remote_is_primary) "good" else "warning"
 

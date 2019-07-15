@@ -332,7 +332,33 @@ test_that("detect modified artefacts", {
   cfg <- orderly_config(path)
   expect_error(
     recipe_read(file.path(path, "src", "use_dependency"), config = cfg),
-    "Validation of dependency 'summary.csv' failed: artefact has been modified")
+    paste("Validation of dependency 'summary.csv' (other/latest) failed:",
+          "artefact has been modified"), fixed = TRUE)
+})
+
+
+test_that("modified artefacts when more than one used", {
+  path <- prepare_orderly_example("demo")
+
+  id <- orderly_run("multifile-artefact", echo = FALSE, root = path)
+  p <- orderly_commit(id, root = path)
+
+  ## Modify artefact
+  writeLines(character(0), file.path(p, "mygraph.pdf"))
+
+  path_yml <- file.path(path, "src", "use_dependency", "orderly.yml")
+  yml <- yaml_read(path_yml)
+  yml$depends <- list(
+    "multifile-artefact" = list(id = "latest",
+                                use = list(mygraph.png = "mygraph.png",
+                                           mygraph.pdf = "mygraph.pdf")))
+  yaml_write(yml, path_yml)
+
+  cfg <- orderly_config(path)
+  expect_error(
+    recipe_read(file.path(path, "src", "use_dependency"), config = cfg),
+    paste("Validation of dependency 'mygraph.pdf' (multifile-artefact/latest)",
+          "failed: artefact has been modified"), fixed = TRUE)
 })
 
 
