@@ -1,18 +1,19 @@
-orderly_config <- function(path) {
-  filename <- path_orderly_config_yml(path)
+orderly_config <- function(root) {
+  filename <- path_orderly_config_yml(root)
   if (!file.exists(filename)) {
-    stop("Did not find file 'orderly_config.yml' at path ", path)
+    stop("Did not find file 'orderly_config.yml' at path ", root)
   }
   withr::with_envvar(
-    orderly_envir_read(path),
-    orderly_config_read_yaml(filename, path))
+    orderly_envir_read(root),
+    orderly_config_read_yaml(filename, root))
 }
 
-orderly_config_read_yaml <- function(filename, path) {
+orderly_config_read_yaml <- function(filename, root) {
   info <- yaml_read(filename)
-  check_fields(info, filename, "source",
+  check_fields(info, filename, character(),
                c("destination", "fields", "minimum_orderly_version",
-                 "api_server", "vault_server"))
+                 "remote", "vault_server", "global_resources",
+                 "changelog", "source", "database"))
 
   ## There's heaps of really boring validation to do here that I am
   ## going to skip.  The drama that we will have is that there are
@@ -22,19 +23,52 @@ orderly_config_read_yaml <- function(filename, path) {
   ## cannot be totally opaque when reading information in.
 
   driver_config <- function(name) {
-    if (name == "destination" && is.null(info[[name]])) {
-      info[[name]] <- list(driver = "RSQLite::SQLite",
-                           dbname = "orderly.sqlite")
+    if (identical(name, "destination") && is.null(info[[name]])) {
+      dat <- list(driver = "RSQLite::SQLite",
+                  args = list(dbname = "orderly.sqlite"))
+    } else {
+      dat <- info[[name]]
     }
-    driver <- check_symbol_from_str(info[[name]]$driver,
-                                    sprintf("%s:%s:driver", filename, name))
-    args <- info[[name]][setdiff(names(info[[name]]), "driver")]
+    label <- sprintf("%s:%s:driver", filename, paste(name, collapse = ":"))
+    driver <- check_symbol_from_str(dat$driver, label)
+    if ("args" %in% names(dat)) {
+      args <- dat$args
+    } else {
+      if (!info$database_old_style) {
+        msg <- c("Please move your database arguments within an 'args'",
+                 "block, as detecting them will be deprecated in a future",
+                 "orderly version.  See the main package vignette for",
+                 "details.  Reported for: ", label)
+        orderly_warning(flow_text(msg))
+      }
+      args <- dat[setdiff(names(dat), "driver")]
+    }
     list(driver = driver, args = args)
   }
 
   info$fields <- config_check_fields(info$fields, filename)
-  info$source <- driver_config("source")
+  if (!is.null(info$source)) {
+    if (!is.null(info$database)) {
+      stop("Both 'database' and 'source' fields may not be used")
+    }
+    msg <- c("Use of 'source' is deprecated and will be removed in a",
+             "future orderly version - please use 'database' instead.",
+             "See the main package vignette for details.")
+    orderly_warning(flow_text(msg))
+    info$database_old_style <- TRUE
+    info$database <- list(source = driver_config("source"))
+  } else if (!is.null(info$database)) {
+    assert_named(info$database, unique = TRUE)
+    info$database_old_style <- FALSE
+    for (nm in names(info$database)) {
+      info$database[[nm]] <- driver_config(c("database", nm))
+    }
+  }
   info$destination <- driver_config("destination")
+
+  if (!is.null(info$changelog)) {
+    info$changelog <- config_check_changelog(info$changelog, filename)
+  }
 
   v <- info$minimum_orderly_version
   if (!is.null(v) && utils::packageVersion("orderly") < v) {
@@ -48,20 +82,25 @@ orderly_config_read_yaml <- function(filename, path) {
                             sprintf("%s:vault_server", filename))
   }
 
-  api_server <- info$api_server
-  if (!is.null(api_server)) {
-    info$api_server <- config_check_api_server(api_server, filename)
+  info$remote <- config_check_remote(info$remote, filename)
+
+  info$root <- normalizePath(root, mustWork = TRUE)
+
+  remote_identity <- Sys.getenv("ORDERLY_API_SERVER_IDENTITY", "")
+  if (nzchar(remote_identity)) {
+    info$remote_identity <-
+      match_value(remote_identity, names(info$remote))
+    excl <- c("driver", "args", "name")
+    server_options <- info$remote[[remote_identity]]
+    info$server_options <- server_options[setdiff(names(server_options), excl)]
   }
 
-  info$path <- normalizePath(path, mustWork = TRUE)
-
-  api_server_identity <- Sys.getenv("ORDERLY_API_SERVER_IDENTITY", "")
-  if (nzchar(api_server_identity)) {
-    info$api_server_identity <-
-      match_value(api_server_identity, names(info$api_server))
+  if (!is.null(info$global_resources)) {
+    assert_is_directory(info$global_resources, name = "global resource",
+                        workdir = root)
   }
 
-  info$archive_version <- read_orderly_archive_version(path)
+  info$archive_version <- read_orderly_archive_version(root)
 
   class(info) <- "orderly_config"
   info
@@ -70,134 +109,117 @@ orderly_config_read_yaml <- function(filename, path) {
 config_check_fields <- function(x, filename) {
   if (is.null(x)) {
     return(data.frame(name = character(0), required = logical(0),
-                      type = character(0), type_sql = character(0),
                       stringsAsFactors = FALSE))
   }
-  types <- c("character", "numeric")
   assert_named(x, TRUE, sprintf("%s:fields", filename))
   check1 <- function(nm) {
     d <- x[[nm]]
+    ## TODO: See VIMC-2930; "type" can be removed once the reports are
+    ## updated, but it's best to do that in a staged way (deploy
+    ## VIMC-2768, remove entries from the montagu-reports, then remove
+    ## the entry here).
     check_fields(d, sprintf("%s:fields:%s", filename, nm),
-                 c("required", "type"), "description")
+                 "required", c("description", "type"))
     assert_scalar_logical(d$required,
                           sprintf("%s:fields:%s:required", filename, nm))
-    assert_scalar_character(d$type,
-                            sprintf("%s:fields:%s:type", filename, nm))
     if (is.null(d$description)) {
       d$description <- NA_character_
     } else {
       assert_scalar_character(d$description,
                               sprintf("%s:fields:%s:description", filename, nm))
     }
-    d$type_sql <- sql_type(d$type, sprintf("%s:fields:%s:type", filename, nm))
     d
   }
   dat <- lapply(names(x), check1)
   data.frame(name = names(x),
              required = vlapply(dat, "[[", "required"),
-             type = vcapply(dat, "[[", "type"),
-             type_sql = vcapply(dat, "[[", "type_sql"),
              description = vcapply(dat, "[[", "description"),
              stringsAsFactors = FALSE)
 }
 
-config_check_api_server <- function(dat, filename) {
+
+config_check_remote <- function(dat, filename) {
   if (is.null(dat)) {
     return(NULL)
   }
-
   assert_named(dat, unique = TRUE)
 
   check1 <- function(name) {
-    server <- dat[[name]]
-    check_fields(server,
-                 sprintf("%s:api_server:%s", filename, name),
-                 c("host", "port"),
-                 c("basic", "username", "password",
-                   "slack_url", "allow_ref", "primary"))
-
-    check_field <- function(nm, required, fn) {
-      x <- server[[nm]]
-      if (required || !is.null(x)) {
-        fn(x, sprintf("%s:api_server:%s:%s", filename, name, nm))
-      }
+    remote <- dat[[name]]
+    check_fields(remote, sprintf("%s:remote:%s", filename, name),
+                 c("driver", "args"),
+                 c("url", "slack_url", "primary", "master_only"))
+    field_name <- function(nm) {
+      sprintf("%s:remote:%s:%s", filename, name, nm)
     }
+    assert_scalar_character(remote$driver, field_name("driver"))
+    assert_named(remote$args, name = field_name("args"))
+    remote <- resolve_env(remote, error = FALSE)
+    remote$args <- resolve_env(remote$args, error = FALSE, default = NULL)
 
-    server <- resolve_env(server, error = FALSE)
-    if (is.null(server$basic)) {
-      server$basic <- FALSE
+    ## optionals:
+    if (!is.null(remote$url)) {
+      assert_scalar_character(remote$url, field_name("url"))
+      remote$url <- sub("/$", "", remote$url)
+    }
+    if (!is.null(remote$slack_url)) {
+      assert_scalar_character(remote$slack_url, field_name("slack_url"))
+    }
+    if (is.null(remote$primary)) {
+      remote$primary <- FALSE
     } else {
-      check_field("basic", TRUE, assert_scalar_logical)
+      assert_scalar_logical(remote$primary, field_name("primary"))
     }
-    ## check_field("port", TRUE, assert_scalar_integer)
-    check_field("host", TRUE, assert_scalar_character)
-    check_field("username", FALSE, assert_scalar_character)
-    check_field("password", FALSE, assert_scalar_character)
-
-    check_field("slack_url", FALSE, assert_scalar_character)
-    check_field("allow_ref", FALSE, assert_scalar_logical)
-    check_field("primary", FALSE, assert_scalar_logical)
-
-    if (requireNamespace("montagu", quietly = TRUE)) {
-      server$server <- montagu::montagu_server(
-        name, server$host, server$port, server$basic,
-        server$username, server$password)
+    if (is.null(remote$master_only)) {
+      remote$master_only <- FALSE
+    } else {
+      assert_scalar_logical(remote$master_only, field_name("master_only"))
     }
 
-    server
+    remote$driver <- check_symbol_from_str(remote$driver, field_name("driver"))
+    remote$args <- c(remote$args, list(name = name))
+    remote$name <- name
+    remote
   }
 
   ret <- set_names(lapply(names(dat), check1), names(dat))
-  primary <- vlapply(ret, function(x) isTRUE(x$primary))
+  primary <- vlapply(ret, "[[", "primary")
   if (sum(primary) > 1L) {
     stop(sprintf(
-      "At most one api_server can be listed as primary but here %d are: %s",
+      "At most one remote can be listed as primary but here %d are: %s",
       sum(primary), paste(squote(names(which(primary))), collapse = ", ")),
       call. = FALSE)
   }
   ret
 }
 
-sql_type <- function(type, name) {
-  tr <- c(numeric = "DECIMAL",
-          character = "TEXT")
-  tr[[match_value(type, names(tr), name)]]
+config_check_changelog <- function(x, filename) {
+  assert_named(x, unique = TRUE, sprintf("%s:changelog", filename))
+  for (i in names(x)) {
+    assert_scalar_logical(
+      x[[i]]$public,
+      sprintf("%s:changelog:%s:public", filename, i))
+  }
+
+  data_frame(id = names(x),
+             public = vlapply(x, function(x) x$public, USE.NAMES = FALSE))
 }
 
-## package level stuff; we need to arrange to try and find the
-## appropriate configuration.
-orderly_default_config_set <- function(x) {
-  if (!is.null(x)) {
-    assert_is(x, "orderly_config")
-  }
-  options(orderly.config = x)
-}
-
-orderly_default_config <- function(locate = FALSE) {
-  cfg <- getOption("orderly.config")
-  if (is.null(cfg)) {
-    if (locate) {
-      cfg <- orderly_locate_config()
-    } else {
-      stop("orderly configuration not found")
-    }
-  }
-  cfg
-}
 
 orderly_locate_config <- function() {
-  path <- find_file_descend("orderly_config.yml")
-  if (is.null(path)) {
+  root <- find_file_descend("orderly_config.yml")
+  if (is.null(root)) {
     stop("Reached root without finding 'orderly_config.yml'")
   }
-  orderly_config(path)
+  orderly_config(root)
 }
 
-orderly_config_get <- function(x, locate) {
+
+orderly_config_get <- function(x, locate = FALSE) {
   if (inherits(x, "orderly_config")) {
     x
-  } else if (is.null(x)) {
-    orderly_default_config(locate)
+  } else if (is.null(x) && locate) {
+    orderly_locate_config()
   } else if (is.character(x)) {
     orderly_config(x)
   } else {

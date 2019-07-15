@@ -36,6 +36,8 @@
   parameters:
     nmin: 0
 
+- name: global
+
 - name: use_dependency
 
 - name: other
@@ -49,6 +51,8 @@
   parameters:
     nmin: 0
 
+- name: changelog
+
 - name: use_dependency
 
 - name: use_resource
@@ -60,7 +64,8 @@
 - name: multifile-artefact
   publish: true
 
-- name: shiny
+- name: changelog
+  before: add_changelog
 
 - name: html
   publish: true
@@ -68,3 +73,10 @@
 - name: interactive
 
 - name: use_resource_dir
+
+- name: connection
+
+- name: spaces
+  before: write_spacy_filename
+
+- name: view

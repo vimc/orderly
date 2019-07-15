@@ -8,7 +8,7 @@
 \title{Prepare a directory for orderly to use}
 \usage{
 orderly_test_start(name, parameters = NULL, envir = .GlobalEnv,
-  config = NULL, locate = TRUE)
+  root = NULL, locate = TRUE)
 
 orderly_test_end(cleanup = FALSE)
 
@@ -20,16 +20,16 @@ orderly_test_check()
 \item{name}{Name of the report to run (see
 \code{\link{orderly_list}}).}
 
-\item{parameters}{Parameters passed to the report}
+\item{parameters}{Parameters passed to the report. A named list of
+parameters declared in the orderly.yml.}
 
-\item{envir}{The parent of environment to evalute the report in;
+\item{envir}{The parent of environment to evaluate the report in;
 by default a new environment will be made with the global
-environment as the parent.  For \code{orderly_data}, this may be
-\code{list()} in which case a list will be returned (rather than
-an environment).}
+environment as the parent.}
 
-\item{config}{An orderly configuration, or the path to one (or
-\code{NULL} to locate one if \code{locate} is \code{TRUE}).}
+\item{root}{The path to an orderly root directory, or \code{NULL}
+(the default) to search for one from the current working
+directory if \code{locate} is \code{TRUE}).}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
@@ -54,4 +54,30 @@ code runs in the global environment.
 To quit run \code{orderly_test_end()} (or enter \code{Q}, like
 \code{browser}).  To test if all artefacts have been created run
 \code{orderly_test_check()}.
+}
+\examples{
+
+path <- orderly::orderly_example("minimal")
+orderly::orderly_test_start("example", root = path)
+
+# R is now running from the newly created draft directory for this
+# report:
+getwd()
+
+# The data in the orderly example is now available to use
+dat
+
+# Check to see which artefacts have been created so far:
+orderly::orderly_test_check()
+
+# Manually the code that this report has in its script
+png("mygraph.png")
+par(mar = c(15, 4, .5, .5))
+barplot(setNames(dat$number, dat$name), las = 2)
+dev.off()
+
+orderly::orderly_test_check()
+
+# Revert back to the original directory:
+orderly::orderly_test_end()
 }

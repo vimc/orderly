@@ -34,22 +34,37 @@
 ##'   orderly's builtin template.
 ##'
 ##' @inheritParams orderly_list
+##'
+##' @seealso \code{\link{orderly_init}} for initialising a new orderly
+##'   repository.
+##'
 ##' @export
-orderly_new <- function(name, config = NULL, locate = TRUE, quiet = FALSE,
+##' @examples
+##' path <- orderly::orderly_example("minimal")
+##'
+##' # Create a new report with the name "myreport" in this orderly
+##' # repository:
+##' orderly::orderly_new("myreport", root = path)
+##'
+##' # The directory will be initialised with a orderly.yml file
+##' # containing documentation
+##' dir(file.path(path, "src", "myreport"))
+##' readLines(file.path(path, "src", "myreport", "orderly.yml"))
+orderly_new <- function(name, root = NULL, locate = TRUE, quiet = FALSE,
                         template = NULL) {
-  config <- orderly_config_get(config, locate)
+  config <- orderly_config_get(root, locate)
   assert_scalar_character(name)
   if (grepl("[[:space:]]", name)) {
     stop("'name' cannot contain spaces")
   }
-  dest <- file.path(path_src(config$path), name)
+  dest <- file.path(path_src(config$root), name)
   if (file.exists(dest)) {
     stop(sprintf("A report already exists called '%s'", name))
   }
 
   if (is.null(template)) {
     template <-
-      if (has_template(config$path, "default")) "default" else "system"
+      if (has_template(config$root, "default")) "default" else "system"
   }
 
   if (template == "system") {
@@ -78,7 +93,7 @@ orderly_new_system <- function(dest, config) {
     fields <- config$fields
     desc <- ifelse(is.na(fields$description), fields$name, fields$description)
     req <- ifelse(fields$required, "required", "optional")
-    str <- sprintf("%s -- %s (%s)", desc, fields$type, req)
+    str <- sprintf("%s -- character (%s)", desc, req)
     str <- vcapply(strwrap(str, prefix = "# ", simplify = FALSE),
                    paste, collapse = "\n")
     ex <- sprintf(ifelse(fields$required, "%s: ~", "# %s:"), fields$name)
@@ -88,12 +103,12 @@ orderly_new_system <- function(dest, config) {
 
 
 orderly_new_user <- function(dest, config, template) {
-  if (!has_template(config$path, template)) {
+  if (!has_template(config$root, template)) {
     stop(sprintf("Did not find file '%s' within orderly root",
                  file.path("template", template, "orderly.yml")))
   }
   dir.create(dest)
-  path_template <- file.path(config$path, "template", template)
+  path_template <- file.path(config$root, "template", template)
   files <- dir(path_template, all.files = TRUE, no.. = TRUE, full.names = TRUE)
   file_copy(files, dest, recursive = TRUE)
 }

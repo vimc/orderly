@@ -1,3 +1,5 @@
+VERSION_ID_RE <- "^([0-9]{8}-[0-9]{6})-([[:xdigit:]]{4})([[:xdigit:]]{4})$"
+
 ## This gives a list of the source report names known to the system.
 ## This will not include things that have been deleted in source but
 ## are present in the database, because I want this to be useful for
@@ -8,18 +10,29 @@
 ##'
 ##' @title List orderly reports
 ##'
-##' @param config An orderly configuration, or the path to one (or
-##'   \code{NULL} to locate one if \code{locate} is \code{TRUE}).
+##' @param root The path to an orderly root directory, or \code{NULL}
+##'   (the default) to search for one from the current working
+##'   directory if \code{locate} is \code{TRUE}).
 ##'
 ##' @param locate Logical, indicating if the configuration should be
 ##'   searched for.  If \code{TRUE} and \code{config} is not given,
 ##'   then orderly looks in the working directory and up through its
 ##'   parents until it finds an \code{orderly_config.yml} file.
 ##'
+##' @seealso \code{\link{orderly_list_archive}} and
+##'   \code{\link{orderly_list_drafts}}, which list archived
+##'   (committed) and draft reports and their versions.
+##'
 ##' @export
-orderly_list <- function(config = NULL, locate = TRUE) {
-  config <- orderly_config_get(config, locate)
-  basename(list_dirs(path_src(config$path)))
+##' @examples
+##' # The orderly demo, with lots of potential reports:
+##' path <- orderly::orderly_example("demo")
+##'
+##' # Reports that _could_ be run:
+##' orderly::orderly_list(path)
+orderly_list <- function(root = NULL, locate = TRUE) {
+  config <- orderly_config_get(root, locate)
+  basename(list_dirs(path_src(config$root)))
 }
 
 ##' List draft and archived reports.  This returns a data.frame with
@@ -27,16 +40,46 @@ orderly_list <- function(config = NULL, locate = TRUE) {
 ##' It will expand in future.
 ##'
 ##' @title List draft and archived reports
+##'
 ##' @inheritParams orderly_list
+##'
+##' @seealso \code{\link{orderly_list}}, which lists the names of
+##'   source reports that can be run
+##'
 ##' @export
-orderly_list_drafts <- function(config = NULL, locate = TRUE) {
-  orderly_list2(TRUE, config, locate)
+##' @examples
+##' # The orderly demo, with lots of potential reports:
+##' path <- orderly::orderly_example("demo")
+##'
+##' # Reports that _could_ be run:
+##' orderly::orderly_list(path)
+##'
+##' # Run a report twice:
+##' id1 <- orderly::orderly_run("minimal", root = path)
+##' id2 <- orderly::orderly_run("minimal", root = path)
+##'
+##' # We can see both drafts:
+##' orderly::orderly_list_drafts(path)
+##'
+##' # Nothing is in the archive:
+##' orderly::orderly_list_archive(path)
+##'
+##' # Commit a report:
+##' orderly::orderly_commit(id2, root = path)
+##'
+##' # Only one draft now
+##' orderly::orderly_list_drafts(path)
+##'
+##' # And the second report is in the archive:
+##' orderly::orderly_list_archive(path)
+orderly_list_drafts <- function(root = NULL, locate = TRUE) {
+  orderly_list2(TRUE, root, locate)
 }
 
 ##' @export
 ##' @rdname orderly_list_drafts
-orderly_list_archive <- function(config = NULL, locate = TRUE) {
-  orderly_list2(FALSE, config, locate)
+orderly_list_archive <- function(root = NULL, locate = TRUE) {
+  orderly_list2(FALSE, root, locate)
 }
 
 ##' Find most recent version of an orderly report
@@ -52,19 +95,34 @@ orderly_list_archive <- function(config = NULL, locate = TRUE) {
 ##'
 ##' @inheritParams orderly_list
 ##' @export
-orderly_latest <- function(name = NULL, config = NULL, locate = TRUE,
+##' @examples
+##' path <- orderly::orderly_example("minimal")
+##' id1 <- orderly::orderly_run("example", root = path, echo = FALSE)
+##' id2 <- orderly::orderly_run("example", root = path, echo = FALSE)
+##'
+##' # With no reports committed there is no latest report:
+##' orderly::orderly_latest("example", root = path, must_work = FALSE)
+##'
+##' # Commit the first report and it will be reported as latest:
+##' orderly::orderly_commit(id1, root = path)
+##' orderly::orderly_latest("example", root = path)
+##'
+##' # Commit the second report and it will be reported as latest instead:
+##' orderly::orderly_commit(id2, root = path)
+##' orderly::orderly_latest("example", root = path)
+orderly_latest <- function(name = NULL, root = NULL, locate = TRUE,
                            draft = FALSE, must_work = TRUE) {
-  config <- orderly_config_get(config, locate)
+  config <- orderly_config_get(root, locate)
 
   if (is.null(name)) {
     d <- orderly_list2(draft, config, FALSE)
     ids <- d$id
     path <-
-      file.path((if (draft) path_draft else path_archive)(config$path), d$name)
+      file.path((if (draft) path_draft else path_archive)(config$root), d$name)
   } else {
     path <-
-      file.path((if (draft) path_draft else path_archive)(config$path), name)
-    ids <- dir(path)
+      file.path((if (draft) path_draft else path_archive)(config$root), name)
+    ids <- orderly_list_dir(path)
   }
 
   if (length(ids) == 0L) {
@@ -77,77 +135,15 @@ orderly_latest <- function(name = NULL, config = NULL, locate = TRUE,
     }
   }
 
-  id <- latest_id(ids)
-  if (length(id) > 1L) {
-    ## We have no choice here but to look at the actual times to
-    ## determine which is the most recent report.
-    if (is.null(name)) {
-      p <- file.path(path[ids == id], id)
-    } else {
-      p <- file.path(path, id)
-    }
-    times <- lapply(path_orderly_run_rds(p), function(x) readRDS(x)$time)
-    id <- id[[which_max_time(times)]]
-  }
-
-  id
+  latest_id(ids)
 }
 
-##' Open the directory for a completed orderly report
-##'
-##' @title Open directory of completed report
-##'
-##' @param id The identifier of the report - can be \code{latest}, in
-##'   which case \code{name} and \code{draft} must be specified
-##'
-##' @param name The name of the report.  Can be omitted if \code{id}
-##'   is not \code{latest}
-##'
-##' @param draft Logical, indicating if a draft report should be
-##'   found.  Practically only useful when \code{id = "latest"} but
-##'   might be useful to ensure presence of a particular type of
-##'   report.
-##'
-##' @inheritParams orderly_list
-##'
-##' @export
-##' @author Rich FitzJohn
-orderly_open <- function(id, name = NULL, config = NULL, locate = TRUE,
-                         draft = NULL) {
-  path <- orderly_locate(id, name, config, locate, draft, TRUE)
-  open_directory(path)
-}
 
-##' @export
-##' @rdname orderly_open
-orderly_open_latest <- function(name = NULL, config = NULL, locate = TRUE,
-                                draft = FALSE) {
-  id <- orderly_latest(name, config, locate, draft, TRUE)
-  orderly_open(id, name, config, locate, draft)
-}
-
-##' Find the last id that was run
-##' @title Get id of last run report
-##' @inheritParams orderly_list
-##' @param draft Find draft reports?
-##' @export
-orderly_last_id <- function(config = NULL, locate = TRUE, draft = TRUE) {
-  config <- orderly_config_get(config, locate)
+orderly_list2 <- function(draft, root = NULL, locate = TRUE) {
+  config <- orderly_config_get(root, locate)
   path <- if (draft) path_draft else path_archive
-  check <- list_dirs(path(config$path))
-
-  d <- orderly_list2(draft, config, FALSE)
-  id <- latest_id(d$id)
-  if (length(id) > 1L) {
-    stop("tie break not implemented")
-  }
-}
-
-orderly_list2 <- function(draft, config = NULL, locate = TRUE) {
-  config <- orderly_config_get(config, locate)
-  path <- if (draft) path_draft else path_archive
-  check <- list_dirs(path(config$path))
-  res <- lapply(check, dir)
+  check <- list_dirs(path(config$root))
+  res <- lapply(check, orderly_list_dir)
   data.frame(name = rep(basename(check), lengths(res)),
              id = as.character(unlist(res)),
              stringsAsFactors = FALSE)
@@ -156,7 +152,7 @@ orderly_list2 <- function(draft, config = NULL, locate = TRUE) {
 orderly_find_name <- function(id, config, locate = FALSE, draft = TRUE,
                               must_work = FALSE) {
   config <- orderly_config_get(config, locate)
-  path <- (if (draft) path_draft else path_archive)(config$path)
+  path <- (if (draft) path_draft else path_archive)(config$root)
   ## NOTE: listing draft/archive rather than using orderly_list here
   ## because it allows for the existance of an archived report that we
   ## don't have the source for (VIMC-1013 and a related bug when
@@ -178,10 +174,8 @@ orderly_find_name <- function(id, config, locate = FALSE, draft = TRUE,
 orderly_find_report <- function(id, name, config, locate = FALSE,
                                 draft = TRUE, must_work = FALSE) {
   config <- orderly_config_get(config, locate)
-  ## TODO: I don't think that the treatment of draft is OK here - we
-  ## should allow reports to roll over into archive gracefully.
   path <-
-    file.path((if (draft) path_draft else path_archive)(config$path), name)
+    file.path((if (draft) path_draft else path_archive)(config$root), name)
   if (id == "latest") {
     id <- orderly_latest(name, config, FALSE,
                          draft = draft, must_work = must_work)
@@ -205,51 +199,32 @@ latest_id <- function(ids) {
 
   ids <- sort_c(unique(ids))
 
-  re <- "^([0-9]{8}-[0-9]{6})-([[:xdigit:]]{4})([[:xdigit:]]{4})$"
-  stopifnot(all(grepl(re, ids)))
+  err <- !grepl(VERSION_ID_RE, ids)
+  if (any(err)) {
+    stop(sprintf("Invalid report id: %s",
+                 paste(squote(ids[err]), collapse = ", ")),
+         call. = FALSE)
+  }
 
-  isodate <- sub(re, "\\1", ids)
+  isodate <- sub(VERSION_ID_RE, "\\1", ids)
   ids <- ids[isodate == last(isodate)]
 
   if (length(ids) > 1L) {
-    ms <- sub(re, "\\2", ids)
+    ms <- sub(VERSION_ID_RE, "\\2", ids)
     ids <- ids[ms == last(ms)]
   }
 
   ids
 }
 
-## This is annoyingly similar to the above:
-orderly_locate <- function(id, name, config = NULL, locate = TRUE,
-                           draft = NULL, must_work = TRUE) {
-  config <- orderly_config_get(config, locate)
-  if (id == "latest") {
-    if (is.null(name)) {
-      stop("name must be given for id = 'latest'")
-    }
-    if (is.null(draft)) {
-      stop("draft must be given for id = 'latest'")
-    }
-    id <- orderly_latest(name, config, locate, draft, must_work)
-  } else {
-    if (is.null(draft)) {
-      for (draft in c(FALSE, TRUE)) {
-        name <- orderly_find_name(id, config, locate, draft, FALSE)
-        if (!is.null(name)) {
-          break
-        }
-      }
-      if (is.null(id) && must_work) {
-        stop(sprintf("Did not find report %s (draft or archive)", id))
-      }
-    } else {
-      name <- orderly_find_name(id, config, locate, draft, must_work)
-    }
+
+orderly_list_dir <- function(path) {
+  files <- dir(path)
+  err <- !grepl(VERSION_ID_RE, files)
+  if (any(err)) {
+    stop(sprintf("Unexpected files within orderly directory '%s': %s",
+                 path, paste(squote(files[err]), collapse = ", ")),
+         call. = FALSE)
   }
-  if (is.null(id)) {
-    NULL
-  } else {
-    path <- (if (draft) path_draft else path_archive)(config$path)
-    file.path(path, name, id)
-  }
+  files
 }

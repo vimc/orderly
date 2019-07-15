@@ -1,18 +1,56 @@
+##' Set up one of the orderly examples included with the package.
+##' These are not intended to be starting points for new orderly
+##' repositories, but are used in the package examples and vignettes.
+##' @title Set up an orderly example
+##'
+##' @param name Name of the example
+##'
+##' @param path Destination to create the example - if it exists
+##'   already it must be an empty directory.  By default, creates a
+##'   new temporary directory
+##'
+##' @param run_demo Logical, indicating if the example is configured
+##'   as a "demo" (i.e., with a set of reports to be run and
+##'   committed), should these be run?
+##'
+##' @param quiet Logical, indicating if informational messages should
+##'   be suppressed when running the demo.
+##'
+##' @return Returns the path to the orderly example
+##' @export
+##' @examples
+##' # Create a new copy of the "minimal" example
+##' path <- orderly::orderly_example("minimal")
+##' dir(path)
+##'
+##' # Example reports within this repository:
+##' orderly::orderly_list(path)
+orderly_example <- function(name, path = tempfile(), run_demo = FALSE,
+                            quiet = FALSE) {
+  path <- prepare_orderly_example(name, path)
+  if (run_demo && file.exists(path_demo_yml(path))) {
+    run_orderly_demo(path, quiet)
+  }
+  path
+}
+
+
 ## Create an example set that includes some orderly runs (compared
 ## with prepare_orderly_example below that simply prepares the
 ## source).  This is used to create a set of data for testing the API.
 ## See inst/demo/demo.yml for more information.
-create_orderly_demo <- function(path = tempfile()) {
-  prepare_orderly_example("demo", path)
-  run_orderly_demo(path)
+create_orderly_demo <- function(path = tempfile(), quiet = FALSE) {
+  orderly_example("demo", path, TRUE, quiet)
 }
 
 
-run_orderly_demo <- function(path) {
-  dat <- read_demo_yml(path)
+run_orderly_demo <- function(path, quiet = FALSE) {
+  if (quiet) {
+    oo <- options(orderly.nolog = TRUE)
+    on.exit(options(oo))
+  }
 
-  orderly_default_config_set(orderly_config(path))
-  on.exit(orderly_default_config_set(NULL))
+  dat <- read_demo_yml(path)
 
   for (i in seq_along(dat)) {
     if (i > 1) {
@@ -24,10 +62,10 @@ run_orderly_demo <- function(path) {
     if (!is.null(x$before)) {
       withr::with_dir(path, x$before())
     }
-    id <- orderly_run(x$name, x$parameters, echo = FALSE)
+    id <- orderly_run(x$name, x$parameters, echo = FALSE, root = path)
     id_new <- demo_change_time(id, x$time, path)
     if (isTRUE(x$publish)) {
-      orderly_publish(id_new)
+      legacy_orderly_publish(x$name, id_new, TRUE, path)
     }
   }
 
@@ -46,13 +84,13 @@ fake_db <- function(con, seed = 1) {
   d <- data.frame(id = seq_along(id),
                   name = id,
                   number = stats::runif(length(id)))
-  DBI::dbWriteTable(con, "thing", d, overwrite = TRUE)
+  DBI::dbWriteTable(con$source, "thing", d, overwrite = TRUE)
 
   d <- data.frame(id = seq_len(n),
                   thing = sample(length(id), n, replace = TRUE),
                   value = stats::rnorm(n),
                   stringsAsFactors = FALSE)
-  DBI::dbWriteTable(con, "data", d, overwrite = TRUE)
+  DBI::dbWriteTable(con$source, "data", d, overwrite = TRUE)
 }
 
 ## Copy an example directory from 'inst/' and set up the source
@@ -68,9 +106,11 @@ prepare_orderly_example <- function(name, path = tempfile()) {
   } else {
     generator <- fake_db
   }
-  con <- orderly_db("source", config = path)
-  on.exit(DBI::dbDisconnect(con))
-  generator(con)
+  con <- orderly_db("source", root = path)
+  on.exit(lapply(con, DBI::dbDisconnect))
+  if (length(con) > 0L) {
+    generator(con)
+  }
   path
 }
 
@@ -82,7 +122,7 @@ read_demo_yml <- function(path) {
     sys.source(before, e)
   }
 
-  dat <- yaml_read(file.path(path, "demo.yml"))
+  dat <- yaml_read(path_demo_yml(path))
   ## Push time back so that we don't end up with time in the future
   day <- 60 * 60 * 24
   t <- Sys.time() - 365 * day
@@ -113,20 +153,20 @@ demo_change_time <- function(id, time, path) {
   p <- file.path(path_draft(path), name, id_new)
   stopifnot(file.rename(file.path(path_draft(path), name, id), p))
 
-  yml <- path_orderly_run_yml(p)
-  dat <- yaml_read(yml)
-  dat$date <- as.character(time)
-  dat$id <- id_new
-  writeLines(yaml::as.yaml(dat), yml)
-
   rds <- path_orderly_run_rds(p)
   dat <- readRDS(rds)
   dat$time <- time
   dat$meta$id <- id_new
   dat$meta$date <- as.character(time)
+  changelog <- dat$meta$changelog
+  if (!is.null(changelog)) {
+    changelog$report_version[changelog$report_version == id] <- id_new
+    dat$meta$changelog <- changelog
+  }
+
   saveRDS(dat, rds)
 
-  orderly_commit(id_new, name)
+  orderly_commit(id_new, name, root = path)
 
   id_new
 }
@@ -198,8 +238,8 @@ prepare_orderly_git_example <- function(path = tempfile(), run_report = FALSE) {
   git_run(c("commit", "-m", "orderly"), path_upstream)
 
   if (run_report) {
-    id <- orderly_run("minimal", config = path)
-    orderly_commit(id, config = path)
+    id <- orderly_run("minimal", root = path)
+    orderly_commit(id, root = path)
   }
 
   c(origin = path_upstream, local = path)

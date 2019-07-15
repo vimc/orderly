@@ -1,74 +1,65 @@
-orderly_remote_path <- function(path) {
-  assert_file_exists(path)
-  path <- normalizePath(path, mustWork = TRUE)
-  if (!file.exists(path_orderly_config_yml(path))) {
-    stop("Does not look like an orderly repository: ", squote(path))
-  }
-  structure(path,
-            class = c("orderly_remote_path",
-                      "orderly_remote_location"))
+##' Create a "handle" for interacting with orderly repositories that
+##' are hosted at a different path.  This might be useful in cases
+##' where you have access to an orderly repository via a network mount
+##' or a synchronised folder (e.g., Dropbox, Box, etc).  More
+##' generally, \code{orderly_remote_path} implements an interface
+##' used by orderly to abstract over different ways that orderly
+##' repositories might be hosted remotely, including over HTTP APIs.
+##'
+##' @title Orderly remote at a different path
+##'
+##' @param path Path to the orderly store
+##'
+##' @param name Name of the remote
+##'
+##' @export
+##' @seealso \code{\link{orderly_pull_dependencies}} and
+##'   \code{\link{orderly_pull_archive}}, which are the primary ways
+##'   these remote objects are used.  See also
+##'   \href{https://github.com/vimc/orderly-web}{OrderlyWeb} for a
+##'   system for hosting orderly repositories over an HTTP API.
+##'
+##' @example man-roxygen/example-remote.R
+orderly_remote_path <- function(path, name = NULL) {
+  R6_orderly_remote_path$new(path, name)
 }
 
 
-## TODO: overwrite is not handled here.
-pull_archive_path <- function(name, id, config, remote, overwrite = FALSE) {
-  ## This is a little awkward because we need to read the remote
-  ## configuration but don't want to get involved with any of the auth
-  ## stuff there.  Ignore that for now and see how bad that is in
-  ## reality.  It's quite likely we can use .Rprofile remotely and
-  ## orderly_envir.yml locally to make this behave ok, and if we use
-  ## vault for password management that should also work ok.  However,
-  ## practically all we really need here is the path.
-  config_remote <- orderly_config(remote)
+R6_orderly_remote_path <- R6::R6Class(
+  "orderly_remote_path",
 
-  if (id == "latest") {
-    id <- orderly_latest(name, config_remote, FALSE)
-  }
+  public = list(
+    config = NULL,
+    name = NULL,
 
-  src <- file.path(path_archive(config_remote$path), name, id)
-  dest <- file.path(path_archive(config$path), name, id)
+    initialize = function(path, name) {
+      assert_file_exists(path)
+      path <- normalizePath(path, "/", mustWork = TRUE)
+      if (!file.exists(path_orderly_config_yml(path))) {
+        stop("Does not look like an orderly repository: ", squote(path))
+      }
+      self$config <- orderly_config(path)
+      self$name <- name %||% self$config$root
+      lockBinding(quote(config), self)
+      lockBinding(quote(name), self)
+    },
 
-  if (!file.exists(file.path(src, "orderly.yml"))) {
-    stop(sprintf("Did not find archived report at '%s'",
-                 src))
-  }
+    list_reports = function() {
+      orderly_list(self$config)
+    },
 
-  if (file.exists(dest)) {
-    orderly_log("pull", sprintf("%s:%s already exists, skipping", name, id))
-  } else {
-    orderly_log("pull", sprintf("%s:%s", name, id))
-    dest_dir <- dirname(dest)
-    dir.create(dest_dir, FALSE, TRUE)
-    ## This little dance means that in the event of a failure we don't
-    ## get partial copies.
-    on.exit(unlink(dest, recursive = TRUE))
-    file_copy(src, dest_dir, recursive = TRUE)
-    on.exit()
-  }
-}
+    list_versions = function(name) {
+      d <- orderly_list_archive(self$config)
+      d$id[d$name == name]
+    },
 
+    pull = function(name, id, root) {
+      src <- file.path(path_archive(self$config$root), name, id)
+      dest <- file.path(path_archive(root), name, id)
+      copy_directory(src, dest, TRUE)
+    },
 
-push_archive_path <- function(name, id, config, remote, overwrite = FALSE) {
-  if (id == "latest") {
-    id <- orderly_latest(name, config, FALSE)
-  }
-
-  src <- file.path(path_archive(config$path), name, id)
-  dest <- file.path(path_archive(remote), name, id)
-
-  if (file.exists(dest)) {
-    orderly_log("push", sprintf("%s:%s already exists, skipping", name, id))
-  } else {
-    orderly_log("push", sprintf("%s:%s", name, id))
-    dest_dir <- dirname(dest)
-    dir.create(dest_dir, FALSE, TRUE)
-    ## This little dance means that in the event of a failure we don't
-    ## get partial copies.
-    on.exit(unlink(dest, recursive = TRUE))
-    ok <- file.copy(src, dest_dir, recursive = TRUE)
-    if (!ok) {
-      stop("Some sort of error copying %s => %s", src, dest)
+    run = function(...) {
+      stop("'orderly_remote_path' remotes do not run")
     }
-    on.exit()
-  }
-}
+  ))

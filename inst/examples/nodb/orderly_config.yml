@@ -1,3 +1,5 @@
-source:
-  driver: RSQLite::SQLite
-  dbname: $SOME_ENVVAR
+database:
+  source:
+    driver: RSQLite::SQLite
+    args:
+      dbname: $SOME_ENVVAR

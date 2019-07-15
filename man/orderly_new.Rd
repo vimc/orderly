@@ -4,14 +4,15 @@
 \alias{orderly_new}
 \title{Create new report}
 \usage{
-orderly_new(name, config = NULL, locate = TRUE, quiet = FALSE,
+orderly_new(name, root = NULL, locate = TRUE, quiet = FALSE,
   template = NULL)
 }
 \arguments{
 \item{name}{Name of the new report (will be a directory name).}
 
-\item{config}{An orderly configuration, or the path to one (or
-\code{NULL} to locate one if \code{locate} is \code{TRUE}).}
+\item{root}{The path to an orderly root directory, or \code{NULL}
+(the default) to search for one from the current working
+directory if \code{locate} is \code{TRUE}).}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
@@ -50,4 +51,20 @@ We first look for a file \code{orderly/template.yml} within the
 orderly root.  If that is not found, then a copy from the orderly
 package is used.  This can always be used by using \code{template
 = "system"}.
+}
+\examples{
+path <- orderly::orderly_example("minimal")
+
+# Create a new report with the name "myreport" in this orderly
+# repository:
+orderly::orderly_new("myreport", root = path)
+
+# The directory will be initialised with a orderly.yml file
+# containing documentation
+dir(file.path(path, "src", "myreport"))
+readLines(file.path(path, "src", "myreport", "orderly.yml"))
+}
+\seealso{
+\code{\link{orderly_init}} for initialising a new orderly
+  repository.
 }

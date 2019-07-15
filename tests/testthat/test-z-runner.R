@@ -1,6 +1,7 @@
 context("orderly_runner")
 
 test_that("runner queue", {
+  testthat::skip_on_cran()
   queue <- runner_queue()
   expect_equal(queue$status(""), list(state = "unknown", id = NA_character_))
   expect_null(queue$next_queued())
@@ -40,11 +41,13 @@ test_that("runner queue", {
   expect_true(queue$set_state(key4, "running", new_report_id()))
 
   expect_null(queue$next_queued())
+
+  expect_false(queue$set_state("unknown", "running", new_report_id()))
 })
 
 test_that("run: success", {
+  testthat::skip_on_cran()
   skip_on_appveyor()
-  skip_on_travis() # TODO: these need fixing
   path <- prepare_orderly_example("interactive")
 
   expect_false(file.exists(file.path(path, "orderly.sqlite")))
@@ -88,8 +91,8 @@ test_that("run: success", {
 })
 
 test_that("run: error", {
+  testthat::skip_on_cran()
   skip_on_appveyor()
-  skip_on_travis() # TODO: these need fixing
 
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
@@ -106,41 +109,24 @@ test_that("run: error", {
   expect_equal(res$status, "error")
 })
 
-test_that("publish", {
-  path <- prepare_orderly_example("minimal")
-  runner <- orderly_runner(path)
-
-  name <- "example"
-  id <- orderly_run(name, config = path, echo = FALSE)
-  orderly_commit(id, name, config = path)
-
-  res <- runner$publish(name, id)
-
-  path_yml <- path_orderly_published_yml(file.path(path, "archive", name, id))
-  expect_true(file.exists(path_yml))
-  expect_equal(yaml_read(path_yml), list(published = TRUE))
-
-  res <- runner$publish(name, id, FALSE)
-  expect_equal(yaml_read(path_yml), list(published = FALSE))
-})
 
 test_that("rebuild", {
   path <- prepare_orderly_example("minimal")
   runner <- orderly_runner(path)
 
   name <- "example"
-  id <- orderly_run(name, config = path, echo = FALSE)
-  orderly_commit(id, name, config = path)
+  id <- orderly_run(name, root = path, echo = FALSE)
+  orderly_commit(id, name, root = path)
 
   path_db <- file.path(path, "orderly.sqlite")
   file.remove(path_db)
-  expect_silent(runner$rebuild())
+  expect_true(runner$rebuild())
   expect_true(file.exists(path_db))
 })
 
 test_that("run in branch (local)", {
+  testthat::skip_on_cran()
   skip_on_appveyor()
-  skip_on_travis() # TODO: this should be able to work
   path <- unzip_git_demo()
   runner <- orderly_runner(path)
 
@@ -157,6 +143,7 @@ test_that("run in branch (local)", {
 })
 
 test_that("fetch / detach / pull", {
+  testthat::skip_on_cran()
   path <- prepare_orderly_git_example()
   path1 <- path[["origin"]]
   path2 <- path[["local"]]
@@ -189,23 +176,47 @@ test_that("fetch / detach / pull", {
 })
 
 test_that("prevent git change", {
+  testthat::skip_on_cran()
   path <- unzip_git_demo()
   runner <- orderly_runner(path, FALSE)
   expect_error(runner$queue("other", ref = "other"),
-               "Reference switching is disabled in this runner")
+               "Reference switching is disallowed in this runner")
 })
 
 test_that("Can't git change", {
+  testthat::skip_on_cran()
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
   expect_error(runner$queue("other", ref = "other"),
-               "Reference switching is disabled in this runner")
+               "Reference switching is disallowed in this runner")
 })
 
+
+test_that("cleanup", {
+  testthat::skip_on_cran()
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+
+  id <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id, root = path)
+
+  writeLines("1 + 1", file.path(path, "src/example/script.R"))
+  expect_error(orderly_run("example", root = path, echo = FALSE),
+               "Script did not produce")
+
+  runner <- orderly_runner(path)
+  expect_message(runner$cleanup(), "clean.+draft/example")
+  expect_silent(runner$cleanup())
+
+  expect_equal(nrow(orderly_list2(TRUE, root = path)), 0L)
+  expect_equal(orderly_list2(FALSE, root = path)$id, id)
+})
+
+
 test_that("kill", {
+  testthat::skip_on_cran()
   skip_on_windows()
   skip_on_appveyor()
-  skip_on_travis() # TODO: these need fixing
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
   name <- "interactive"
@@ -219,9 +230,9 @@ test_that("kill", {
 })
 
 test_that("kill - wrong process", {
+  testthat::skip_on_cran()
   skip_on_windows()
   skip_on_appveyor()
-  skip_on_travis() # TODO: these need fixing
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
   name <- "interactive"
@@ -236,6 +247,7 @@ test_that("kill - wrong process", {
 })
 
 test_that("kill - no process", {
+  testthat::skip_on_cran()
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
   key <- "virtual_plant"
@@ -244,9 +256,9 @@ test_that("kill - no process", {
 })
 
 test_that("timeout", {
+  testthat::skip_on_cran()
   skip_on_windows()
   skip_on_appveyor()
-  skip_on_travis() # TODO: these need fixing
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
   name <- "interactive"
@@ -258,6 +270,7 @@ test_that("timeout", {
 })
 
 test_that("queue_status", {
+  testthat::skip_on_cran()
   skip_on_windows()
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
@@ -297,8 +310,8 @@ test_that("queue_status", {
 
 
 test_that("queue status", {
+  testthat::skip_on_cran()
   skip_on_windows()
-  skip_on_travis()
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
 
@@ -334,4 +347,103 @@ test_that("queue status", {
   expect_equal(runner$status(key2)$output$stdout, character(0))
   expect_equal(runner$status(key3)$output$stdout,
                sprintf("queued:%s:%s", key2, "interactive"))
+})
+
+
+test_that("prevent git changes", {
+  testthat::skip_on_cran()
+  skip_on_windows()
+  path <- prepare_orderly_git_example()
+
+  cfg <- list(
+    database = list(
+      source = list(
+        driver = "RSQLite::SQLite",
+        args = list(
+          dbname = "dbname: source.sqlite"))),
+    remote = list(
+      main = list(
+        driver = "orderly::orderly_remote_path",
+        primary = TRUE,
+        master_only = TRUE,
+        args = list(root = path[["origin"]])),
+      other = list(
+        driver = "orderly::orderly_remote_path",
+        args = list(root = path[["origin"]]))))
+
+  path_local <- path[["local"]]
+  writeLines(yaml::as.yaml(cfg), file.path(path_local, "orderly_config.yml"))
+
+  runner <- withr::with_envvar(
+    c("ORDERLY_API_SERVER_IDENTITY" = "main"),
+    orderly_runner(path_local))
+  expect_false(runner$allow_ref)
+  expect_error(
+    runner$queue("example", ref = "origin/other", parameters = list(nmin = 0)),
+    "Reference switching is disallowed in this runner")
+
+  runner <- withr::with_envvar(
+    c("ORDERLY_API_SERVER_IDENTITY" = "other"),
+    orderly_runner(path_local))
+  expect_true(runner$allow_ref)
+  r <- runner$queue("example", ref = "origin/other",
+                    parameters = list(nmin = 0))
+  expect_equal(nrow(runner$queue_status()$queue), 1L)
+
+  runner <- withr::with_envvar(
+    c("ORDERLY_API_SERVER_IDENTITY" = NA_character_),
+    orderly_runner(path_local))
+  expect_true(runner$allow_ref)
+  r <- runner$queue("example", ref = "origin/other",
+                    parameters = list(nmin = 0))
+  expect_equal(nrow(runner$queue_status()$queue), 1L)
+})
+
+
+test_that("allow ref logic", {
+  testthat::skip_on_cran()
+  path <- unzip_git_demo()
+  config <- list(server_options = list(master_only = FALSE),
+                 root = path)
+
+  expect_false(runner_allow_ref(FALSE, config))
+  expect_true(runner_allow_ref(TRUE, config))
+  expect_true(runner_allow_ref(NULL, config))
+
+  config <- list(server_options = list(master_only = TRUE),
+                 root = path)
+  expect_false(runner_allow_ref(FALSE, config))
+  expect_true(runner_allow_ref(TRUE, config))
+  expect_false(runner_allow_ref(NULL, config))
+
+  config <- list(server_options = list(master_only = FALSE),
+                 root = tempfile())
+  expect_false(runner_allow_ref(FALSE, config))
+  expect_false(runner_allow_ref(TRUE, config))
+  expect_false(runner_allow_ref(NULL, config))
+})
+
+
+test_that("backup", {
+  testthat::skip_on_cran()
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id, root = path)
+
+  db_orig <- file.path(path, "orderly.sqlite")
+  dat_orig <- with_sqlite(db_orig, function(con)
+    DBI::dbReadTable(con, "report_version"))
+
+  runner <- orderly_runner(path, backup_period = 1)
+
+  Sys.sleep(1.2)
+  runner$poll()
+
+  db_backup <- path_db_backup(path, "orderly.sqlite")
+  expect_true(file.exists(db_backup))
+
+  dat_backup <- with_sqlite(db_backup, function(con)
+    DBI::dbReadTable(con, "report_version"))
+
+  expect_equal(dat_orig, dat_backup)
 })

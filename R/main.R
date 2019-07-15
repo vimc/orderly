@@ -49,7 +49,7 @@ main_args <- function(args) {
 }
 
 ## 1. orderly [--root] run <name> [--no-commit] [--parameters=PARAMS] \
-##                         [--print-log] [--id-file=FILE] \
+##                         [--print-log] [--id-file=FILE] [--message=MESSAGE] \
 ##                         [--ref=REF [--fetch] | --pull]
 main_args_run <- function(res) {
   opts <- list(
@@ -87,7 +87,12 @@ main_args_run <- function(res) {
                           help = "Pull git before running report",
                           type = "logical",
                           default = FALSE,
-                          action = "store_true"))
+                          action = "store_true"),
+    optparse::make_option("--message",
+                          help = "A message explaining why the report was run",
+                          type = "character",
+                          default = NULL,
+                          dest = "message"))
   parser <- optparse::OptionParser(
     option_list = opts,
     usage = "%prog [--root=ROOT] run [options] <name>")
@@ -115,42 +120,43 @@ main_do_run <- function(x) {
   ref <- x$options$ref
   fetch <- x$options$fetch
   pull <- x$options$pull
+  message <- x$options$message
 
   main_run <- function() {
     if (pull) {
       if (is.null(ref)) {
-        git_pull(config$path)
+        git_pull(config$root)
       } else {
         stop("Can't use --pull with --ref; perhaps you meant --fetch ?")
       }
     }
-    dat <- orderly_run(name, parameters, config = config, id_file = id_file,
-                       ref = ref, fetch = fetch, extended_output = TRUE)
+    id <- orderly_run(name, parameters, root = config, id_file = id_file,
+                      ref = ref, fetch = fetch, message = message)
     if (commit) {
-      orderly_commit(dat$id, name, config)
+      orderly_commit(id, name, config)
     }
-    dat
+    id
   }
 
   if (print_log) {
     sink(stderr(), type = "output")
     on.exit(sink(NULL, type = "output"))
-    dat <- main_run()
+    id <- main_run()
   } else {
     log <- tempfile()
     ## we should run this with try() so that we can capture logs there
-    dat <- capture_log(main_run(), log, TRUE)
-    dest <- (if (commit) path_archive else path_draft)(config$path)
-    file_copy(log, file.path(dest, name, dat$id, "orderly.log"))
+    id <- capture_log(main_run(), log)
+    dest <- (if (commit) path_archive else path_draft)(config$root)
+    file_copy(log, file.path(dest, name, id, "orderly.log"))
   }
 
   if (commit) {
-    slack_post_success(dat, config)
+    path_rds <- path_orderly_run_rds(
+      file.path(config$root, "archive", name, id))
+    slack_post_success(readRDS(path_rds), config)
   }
 
-  ## TODO: is it useful to write this to some location (rather than
-  ## stderr) to indicate what was done?
-  message("id:", dat$id)
+  message("id:", id)
 }
 
 ## 2. orderly cleanup [--draft]
@@ -181,11 +187,11 @@ main_args_cleanup <- function(res) {
 }
 
 main_do_cleanup <- function(x) {
-  config <- orderly_config_get(x$options$root, TRUE)
+  root <- x$options$root
   draft <- !x$options$no_draft
   data <- !x$options$no_data
   failed_only <- x$options$failed_only
-  orderly_cleanup(config = config, draft = draft, data = data,
+  orderly_cleanup(root = root, draft = draft, data = data,
                   failed_only = failed_only)
 }
 
@@ -199,36 +205,21 @@ main_args_commit <- function(res) {
 }
 
 main_do_commit <- function(x) {
-  config <- orderly_config_get(x$options$root, TRUE)
+  root <- x$options$root
   id <- x$args
-  orderly_commit(id, config = config)
+  orderly_commit(id, root = root, locate = TRUE)
 }
 
-## 4. publish
-main_args_publish <- function(res) {
-  opts <- list(
-    optparse::make_option("--unpublish",
-                          help = "Set the report to unpublished",
-                          type = "logical",
-                          default = FALSE,
-                          action = "store_true",
-                          dest = "unpublish"))
-  parser <- optparse::OptionParser(
-    option_list = opts,
-    usage = "%prog [--root=ROOT] publish [options] <id>")
-  opts_subcommand(res, parser, main_do_publish, 1L)
-}
-
-main_do_publish <- function(x) {
-  config <- orderly_config_get(x$options$root, TRUE)
-  value <- !x$options$unpublish
-  id <- x$args
-  orderly_publish(id, value, config = config)
-}
 
 ## 4. rebuild
 main_args_rebuild <- function(res) {
-  opts <- list()
+  opts <- list(
+    optparse::make_option("--if-schema-changed",
+                          help = "Only rebuild on schema change",
+                          type = "logical",
+                          default = FALSE,
+                          action = "store_true",
+                          dest = "if_schema_changed"))
   parser <- optparse::OptionParser(
     option_list = opts,
     usage = "%prog [--root=ROOT] rebuild [options]")
@@ -236,8 +227,9 @@ main_args_rebuild <- function(res) {
 }
 
 main_do_rebuild <- function(x) {
-  config <- orderly_config_get(x$options$root, TRUE)
-  orderly_rebuild(config)
+  root <- x$options$root
+  if_schema_changed <- x$options$if_schema_changed
+  orderly_rebuild(root, if_schema_changed = if_schema_changed)
 }
 
 ## 5. list
@@ -258,11 +250,11 @@ main_args_list <- function(res) {
 }
 
 main_do_list <- function(x) {
-  config <- orderly_config_get(x$options$root, TRUE)
+  root <- x$options$root
   switch(x$args,
-         names = writeLines(orderly_list(config)),
-         drafts = print(orderly_list_drafts(config)),
-         archive = print(orderly_list_archive(config)),
+         names = writeLines(orderly_list(root)),
+         drafts = print(orderly_list_drafts(root)),
+         archive = print(orderly_list_archive(root)),
          stop("orderly bug"))
   invisible(NULL)
 }
@@ -288,41 +280,16 @@ main_args_latest <- function(res) {
 }
 
 main_do_latest <- function(x) {
-  config <- orderly_config_get(x$options$root, TRUE)
+  root <- x$options$root
   names <- x$args
   draft <- x$options$draft
   value_if_missing <- x$options$value_if_missing
   must_work <- is.null(value_if_missing)
-  ids <- vcapply(names, orderly_latest, config = config,
+  ids <- vcapply(names, orderly_latest, root = root, locate = TRUE,
                  draft = draft, must_work = must_work,
                  USE.NAMES = FALSE)
   ids[is.na(ids)] <- value_if_missing
   cat(paste0(ids, "\n", collapse = ""))
-}
-
-## 7. deploy-shiny
-main_args_deploy_shiny <- function(res) {
-  opts <- list(
-    optparse::make_option("--info",
-                          help = "path to shiny info file",
-                          type = "character",
-                          default = formals(orderly_deploy_shiny)$info))
-
-  parser <- optparse::OptionParser(
-    option_list = opts,
-    usage = "%prog [--root=ROOT] deploy-shiny [--info=INFO] <dest>")
-  if (res$options$help) {
-    optparse_die_help(parser)
-  }
-  opts_subcommand(res, parser, main_do_deploy_shiny, 1L)
-}
-
-main_do_deploy_shiny <- function(x) {
-  config <- orderly_config_get(x$options$root, TRUE)
-  dest <- x$args
-  info <- x$options$info %||% formals(orderly_deploy_shiny)$info
-  orderly_deploy_shiny(dest, info, config = config, locate = FALSE)
-  invisible(NULL)
 }
 
 
@@ -348,18 +315,24 @@ main_args_migrate <- function(res) {
 
 
 main_do_migrate <- function(x) {
-  config <- orderly_config_get(x$options$root, TRUE)
+  root <- x$options$root
   dry_run <- x$options$dry_run
   to <- x$options$to
-  orderly_migrate(config, to = to, dry_run = dry_run)
+  orderly_migrate(root, to = to, dry_run = dry_run)
 }
 
 
-write_script <- function(path) {
+write_script <- function(path, versioned = FALSE) {
   if (!isTRUE(is_directory(path))) {
     stop("'path' must be a directory")
   }
-  code <- c("#!/usr/bin/env Rscript", "orderly:::main()")
+  if (versioned) {
+    Rscript <- file.path(R.home(), "bin", "Rscript")
+  } else {
+    Rscript <- "/usr/bin/env Rscript"
+  }
+  code <- c(sprintf("#!%s", Rscript),
+            "orderly:::main()")
   path_bin <- file.path(path, "orderly")
   writeLines(code, path_bin)
   Sys.chmod(path_bin, "755")
@@ -393,8 +366,6 @@ main_args_commands <- function() {
                   args = main_args_run),
        commit = list(name = "commit a report",
                    args = main_args_commit),
-       publish = list(name = "publish a report",
-                      args = main_args_publish),
        list = list(name = "list reports",
                    args = main_args_list),
        latest = list(name = "find most recent report",
@@ -404,7 +375,5 @@ main_args_commands <- function() {
        rebuild = list(name = "rebuild the database",
                       args = main_args_rebuild),
        migrate = list(name = "migrate the archive",
-                      args = main_args_migrate),
-       "deploy-shiny" = list(name = "deploy shiny apps",
-                             args = main_args_deploy_shiny))
+                      args = main_args_migrate))
 }

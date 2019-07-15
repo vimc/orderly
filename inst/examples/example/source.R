@@ -1,3 +1,3 @@
 function(con) {
-  DBI::dbWriteTable(con, "mtcars", mtcars)
+  DBI::dbWriteTable(con$source, "mtcars", mtcars)
 }

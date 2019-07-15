@@ -1,6 +1,9 @@
-source:
-  driver: RSQLite::SQLite
-  dbname: source.sqlite
+database:
+  source:
+    driver: RSQLite::SQLite
+    args:
+      dbname: source.sqlite
+
 fields:
   requester:
     required: true
@@ -11,3 +14,12 @@ fields:
   comment:
     required: false
     type: character
+
+changelog:
+  internal:
+    public: false
+  public:
+    public: true
+
+global_resources:
+  global

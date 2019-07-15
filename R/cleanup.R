@@ -1,7 +1,7 @@
 ##' Clean up orderly draft and data directories.  Deletes all drafts
 ##' (possibly just for a set of report names) and then deletes
 ##' dangling data sets that are not pointed to by any draft or
-##' commited reports
+##' committed reports
 ##'
 ##' @title Orderly cleanup
 ##' @param name Optional name; in this case only clean up drafts with this name
@@ -16,9 +16,27 @@
 ##'   \code{\link{orderly_test_start}}
 ##' @inheritParams orderly_list
 ##' @export
-orderly_cleanup <- function(name = NULL, config = NULL, locate = TRUE,
+##' @examples
+##' # In a new example orderly, run two reports and commit only the
+##' # second one:
+##' path <- orderly::orderly_example("minimal")
+##' id1 <- orderly::orderly_run("example", root = path)
+##' id2 <- orderly::orderly_run("example", root = path)
+##' orderly::orderly_commit(id2, root = path)
+##'
+##' # We now have one draft and one archive report:
+##' orderly::orderly_list_drafts(root = path)
+##' orderly::orderly_list_archive(root = path)
+##'
+##' # To clean up the drafts:
+##' orderly::orderly_cleanup(root = path)
+##'
+##' # We now have no draft and one archive reports:
+##' orderly::orderly_list_drafts(root = path)
+##' orderly::orderly_list_archive(root = path)
+orderly_cleanup <- function(name = NULL, root = NULL, locate = TRUE,
                             draft = TRUE, data = TRUE, failed_only = FALSE) {
-  config <- orderly_config_get(config, locate)
+  config <- orderly_config_get(root, locate)
   if (draft) {
     orderly_cleanup_drafts(config, name, failed_only)
   }
@@ -34,9 +52,9 @@ orderly_cleanup_drafts <- function(config, name = NULL, failed_only = FALSE) {
     assert_character(name)
     d <- d[d$name %in% name, , drop = FALSE]
   }
-  p <- file.path(path_draft(config$path), d$name, d$id)
+  p <- file.path(path_draft(config$root), d$name, d$id)
   if (failed_only) {
-    p <- p[!file.exists(path_orderly_run_yml(p))]
+    p <- p[!file.exists(path_orderly_run_rds(p))]
   }
   if (length(p) > 0L) {
     orderly_log(if (failed_only) "prune" else "clean", p)
@@ -48,16 +66,17 @@ orderly_cleanup_data <- function(config) {
   assert_is(config, "orderly_config")
   con <- orderly_db("destination", config, FALSE)
   on.exit(DBI::dbDisconnect(con))
-  data <- DBI::dbGetQuery(con, "SELECT hash_data FROM orderly")[[1]]
+  data <- DBI::dbGetQuery(con, "SELECT hash from report_version_data")[[1]]
 
-  ## Determine all used data sets in *both* draft and published
+  ## Determine all used data sets in *both* draft and committed (archived)
   ## reports
-  used_pub <- unique(unlist(lapply(data, jsonlite::fromJSON)))
+  used_pub <- unique(data)
   dr <- orderly_list_drafts(config, FALSE)
-  yml <- path_orderly_run_yml(
-    file.path(path_draft(config$path), dr$name, dr$id))
+  path_rds <- path_orderly_run_rds(
+    file.path(path_draft(config$root), dr$name, dr$id))
   used_draft <-
-    unlist(lapply(yml, function(x) yaml_read(x)$hash_data), use.names = FALSE)
+    unlist(lapply(path_rds, function(x)
+      readRDS(x)$meta$data$hash), use.names = FALSE)
   used <- c(used_pub, used_draft)
 
   csv <- orderly_db("csv", config, FALSE)

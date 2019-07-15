@@ -1,3 +1,5 @@
-source:
-  driver: RSQLite::SQLite
-  dbname: source.sqlite
+database:
+  source:
+    driver: RSQLite::SQLite
+    args:
+      dbname: source.sqlite

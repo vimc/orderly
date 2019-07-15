@@ -1,5 +1,6 @@
 data:
-  cars: SELECT * FROM mtcars WHERE cyl = ?cyl
+  cars:
+    query: SELECT * FROM mtcars WHERE cyl = ?cyl
 parameters:
   - cyl
 script: script.R

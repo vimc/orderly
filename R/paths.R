@@ -20,18 +20,19 @@ path_archive <- function(root, name = NULL) {
     file.path(root, "archive", name)
   }
 }
+
+
+path_archive_broken <- function() {
+  "archive_broken"
+}
+
+
 path_orderly_config_yml <- function(root) {
   file.path(root, "orderly_config.yml")
 }
 
-path_orderly_run_yml <- function(path) {
-  file.path(path, "orderly_run.yml")
-}
 path_orderly_run_rds <- function(path) {
   file.path(path, "orderly_run.rds")
-}
-path_orderly_published_yml <- function(path) {
-  file.path(path, "orderly_published.yml")
 }
 
 path_orderly_envir_yml <- function(path) {
@@ -54,4 +55,19 @@ path_orderly_run_rds_backup <- function(path, version) {
 
 path_orderly_archive_version <- function(path) {
   file.path(path, "archive", ".orderly_archive_version")
+}
+
+
+path_changelog_txt <- function(path, type) {
+  file.path(path, "changelog.txt")
+}
+
+
+path_db_backup <- function(root, file) {
+  file.path(root, "backup", "db", basename(file), fsep = "/")
+}
+
+
+path_demo_yml <- function(root) {
+  file.path(root, "demo.yml")
 }

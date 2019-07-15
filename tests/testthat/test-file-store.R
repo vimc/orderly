@@ -11,6 +11,30 @@ test_that("basic (rds)", {
   expect_true(st$exists(h))
   expect_equal(st$list(), h)
 
+  filename <- st$filename(h)
+  expect_equal(basename(filename), sprintf("%s.rds", h))
+  expect_equal(readRDS(filename), st$get(h))
+
+  expect_true(st$del(h))
+  expect_equal(st$list(), character(0))
+})
+
+
+test_that("basic (csv)", {
+  st <- file_store_csv(tempfile())
+  expect_is(st, "file_store")
+
+  expect_equal(st$list(), character(0))
+  h <- st$set(mtcars)
+  expect_equal(h, digest::digest(mtcars))
+  expect_equivalent(st$get(h), mtcars)
+  expect_true(st$exists(h))
+  expect_equal(st$list(), h)
+
+  filename <- st$filename(h)
+  expect_equal(basename(filename), sprintf("%s.csv", h))
+  expect_equal(read_csv(filename), st$get(h))
+
   expect_true(st$del(h))
   expect_equal(st$list(), character(0))
 })
@@ -36,7 +60,8 @@ test_that("get missing hash", {
   path <- tempfile()
   st <- file_store_rds(path)
   expect_error(st$get(ids::random_id()),
-               "hash '[[:xdigit:]]{32}' not found")
+               "hash '[[:xdigit:]]{32}' not found",
+               class = "HashError")
 })
 
 test_that("mget", {

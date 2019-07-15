@@ -1,243 +1,292 @@
-##' Download dependent reports (WARNING: this is still in transition
-##' and the docs may not be entirely accurate)
+##' Download dependent reports.
 ##'
-##' If \code{remote} is a \code{montagu_server} object then this
-##' requires the montagu package and for montagu's credentials to be
-##' correctly set up.  The \code{pull_archive} function pulls report
-##' directly (without it being a dependent report).
+##' The \code{orderly_pull_archive} function pulls report directly
+##' (without it being a dependent report).
 ##'
-##' To use this functionality you will need to have \code{montagu}
-##' installed, and be part of the VIMC team.  To set it up run
-##'
-##' \preformatted{
-##' options(montagu.username = "your.email@imperial.ac.uk")
-##' }
-##'
-##' You can add that line to your \code{~/.Rprofile} file perhaps -
-##' see \code{path.expand("~/.Rprofile")} for where this file lives on
-##' your computer.  After setting your username up you can run
-##' \code{pull_dependencies("reportname")} to pull the
+##' After setting your username up you can run
+##' \code{orderly_pull_dependencies("reportname")} to pull the
 ##' \emph{dependencies} of \code{"reportname"} down so that
 ##' \code{"reportname"} can be run, or you can run
-##' \code{pull_archive("reportname")} to pull a copy of
-##' \code{"reportname"} that has been run on the production server.
+##' \code{orderly_pull_archive("reportname")} to pull a copy of
+##' \code{"reportname"} that has been run on the remote server.
 ##'
 ##' @title Download dependent reports
+##'
 ##' @param name Name of the report to download dependencies for
 ##'
-##' @param remote Description of the location.  This must be an
-##'   \code{orderly_remote} object.
+##' @param remote Description of the location.  Typically this is a
+##'   character string indicating a remote specified in the
+##'   \code{remotes} block of your \code{orderly_config.yml}.  It is
+##'   also possible to pass in a directly created remote object (e.g.,
+##'   using \code{\link{orderly_remote_path}}, or one provided by
+##'   another package).  If left \code{NULL}, then the default remote
+##'   for this orderly repository is used - by default that is the
+##'   first listed remote.
 ##'
 ##' @inheritParams orderly_list
 ##' @export
-pull_dependencies <- function(name, config = NULL, locate = TRUE,
-                              remote = NULL) {
-  config <- orderly_config_get(config, locate)
+##'
+##' @seealso \code{\link{orderly_remote_path}}, which implements the
+##'   remote interface for orderly repositories at a local path.  See
+##'   also \href{https://github.com/vimc/orderly-web}{OrderlyWeb} for
+##'   a system for hosting orderly repositories over an HTTP API.
+##'
+##' @example man-roxygen/example-remote.R
+orderly_pull_dependencies <- function(name, root = NULL, locate = TRUE,
+                                      remote = NULL) {
+  config <- orderly_config_get(root, locate)
+  remote <- get_remote(remote, config)
 
-  ## For now, we need to assume that this is valid formatted orderly
-  ## yaml, until I resolve VIMC-506 I have to read everything
-  ## manually:
-  path <- file.path(path_src(config$path), name)
-  filename <- file.path(path, "orderly.yml")
-  if (!file.exists(filename)) {
-    stop("Did not find file 'orderly.yml' at path ", path)
-  }
-  info <- yaml_read(filename)
+  path <- file.path(path_src(config$root), name)
+  depends <- recipe_read(path, config, FALSE)$depends
 
-  depends <- info$depends
-  for (i in seq_along(depends)) {
-    if (!isTRUE(depends[[i]]$draft)) {
-      pull_archive(names(depends)[[i]], depends[[i]]$id, config,
-                   remote = remote)
+  msg <- sprintf("%s has %d %s", name, NROW(depends),
+                 ngettext(NROW(depends), "dependency", "dependencies"))
+  orderly_log("depends", msg)
+
+  if (!is.null(depends)) {
+    for (i in seq_len(nrow(depends))) {
+      if (!isTRUE(depends$draft[[i]])) {
+        orderly_pull_archive(depends$name[[i]], depends$id[[i]], config,
+                             FALSE, remote)
+      }
     }
   }
 }
 
 
 ##' @export
-##' @rdname pull_dependencies
+##' @rdname orderly_pull_dependencies
 ##'
-##' @param id The identifier (for \code{pull_archive}.  The default is
+##' @param id The identifier (for \code{orderly_pull_archive}.  The default is
 ##'   to use the latest report.
-pull_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
-                         remote = NULL) {
-  config <- orderly_config_get(config, locate)
+orderly_pull_archive <- function(name, id = "latest", root = NULL,
+                                 locate = TRUE, remote = NULL) {
+  config <- orderly_config_get(root, locate)
   remote <- get_remote(remote, config)
-  if (inherits(remote, "montagu_server")) {
-    pull_archive_api(name, id, config, remote)
-  } else if (inherits(remote, "orderly_remote_path")) {
-    pull_archive_path(name, id, config, remote)
+
+  v <- remote_report_versions(name, config, FALSE, remote)
+  if (length(v) == 0L) {
+    stop("Unknown report")
+  }
+
+  if (id == "latest") {
+    id <- latest_id(v)
+  }
+
+  if (!(id %in% v)) {
+    ## Confirm that the report does actually exist, working around
+    ## VIMC-1281:
+    stop(sprintf(
+      "Version '%s' not found at '%s': valid versions are:\n%s",
+      id, remote_name(remote), paste(sprintf("  - %s", v), collapse = "\n")),
+      call. = FALSE)
+  }
+
+  dest <- file.path(path_archive(config$root), name, id)
+  if (file.exists(dest)) {
+    orderly_log("pull", sprintf("%s:%s already exists, skipping", name, id))
   } else {
-    stop("Unknown remote type ", paste(squote(class(remote)), collapse = " / "))
+    orderly_log("pull", sprintf("%s:%s", name, id))
+    remote$pull(name, id, config$root)
   }
 }
 
 
-##' Push an archive report to a remote location.
+##' Run a report on a remote server.  Note that this is only supported
+##' for remotes using OrderlyWeb at present.
 ##'
-##' This is experimental and only supported using paths for
-##' \code{remote}.  It will be useful for doing something like sharing
-##' preliminary artefacts peer-to-peer before running centrally.  It
-##' is not supported (yet) for pushing onto a montagu server, but that
-##' would be nice to have (probably locked down the same way that the
-##' \code{ref} argument is).
-##'
-##' @title Push an archive report to a remote location
-##' @inheritParams pull_dependencies
-##' @export
-push_archive <- function(name, id = "latest", config = NULL, locate = TRUE,
-                         remote = NULL) {
-  config <- orderly_config_get(config, locate)
-  remote <- get_remote(remote, config)
-  if (inherits(remote, "montagu_server")) {
-    stop("'montagu_server' remotes do not support push (yet)")
-  } else if (inherits(remote, "orderly_remote_path")) {
-    push_archive_path(name, id, config, remote)
-  } else {
-    stop("Unknown remote type ", paste(squote(class(remote)), collapse = " / "))
-  }
-}
-
-
-##' Run a report on a remote server (for now this means montagu).  Be
-##' careful doing this because once a report is run to completion on
-##' production it cannot be deleted.  So get things working locally,
-##' test on science and then run on production.
-##'
-##' @title Run a report on montagu
+##' @title Run a report on a remote server
 ##'
 ##' @param name Name of the report
 ##'
-##' @param parameters Parameters for the reprt
+##' @param parameters Parameters for the report
 ##'
-##' @param timeout Time to wait for the report to be returned (in seconds)
+##' @param timeout Time to tell the server to wait before killing the
+##'   report.
+##'
+##' @param wait Time to wait for the report to be run; if the report
+##'   takes longer than this time to run but \code{timeout} is longer
+##'   it will remain running on the server but we will stop waiting
+##'   for it and instead thrown an error.
 ##'
 ##' @param poll Period to poll the server for results (in seconds)
 ##'
 ##' @param open Logical, indicating if the report should be opened in
-##'   a browser on completion
+##'   a browser on completion (if supported by the remote)
 ##'
 ##' @param stop_on_error Logical, indicating if we should throw an
 ##'   error if the report fails.  If you set this to \code{FALSE} it
-##'   will be much easier to debug, but more annoying in scripts.
+##'   will be much easier to debug, but more annoying in scripts.  If
+##'   the times out on the server (i.e., takes longer than
+##'   \code{timeout}) that counts as an error.
+##'
+##' @param stop_on_timeout Logical, indicating if we should throw an
+##'   error if the report takes longer than \code{wait} seconds to
+##'   complete.
 ##'
 ##' @param progress Logical, indicating if a progress spinner should
 ##'   be included.
 ##'
 ##' @param ref Optional reference, indicating which branch should be
-##'   used.  This cannot be used on production.
+##'   used.  This cannot be used if the remote has \code{master_only}
+##'   set.
 ##'
-##' @inheritParams pull_dependencies
+##' @inheritParams orderly_pull_dependencies
 ##'
 ##' @export
+##' @examples
+##' path_remote <- orderly::orderly_example("demo")
+##' path_local <- orderly::orderly_example("demo")
+##' remote <- orderly::orderly_remote_path(path_remote)
+##' # Currently, path remotes don't support run
+##' try(orderly::orderly_run_remote(
+##'   "minimal", remote = remote, root = path_local))
 orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
-                               timeout = 3600, poll = 1,
+                               timeout = NULL, wait = 3600, poll = 1,
                                open = TRUE, stop_on_error = TRUE,
+                               stop_on_timeout = TRUE,
                                progress = TRUE,
-                               config = NULL, locate = TRUE, remote = NULL) {
-  config <- orderly_config_get(config, locate)
-  remote <- get_remote(remote, config)
-  if (inherits(remote, "montagu_server")) {
-    orderly_run_remote_api(name = name, parameters = parameters, ref = ref,
-                           timeout = timeout, poll = poll, open = open,
-                           stop_on_error = stop_on_error,
-                           progress = progress,
-                           config = config, remote = remote)
-  } else if (inherits(remote, "orderly_remote_path")) {
-    stop("Can't run reports with remote type ",
-         paste(squote(class(remote)), collapse = " / "))
-  }
-}
-
-##' Publish a report on a remote server
-##'
-##' @title Publish orderly report on remote server
-##'
-##' @param name Name of the report (unlike
-##'   \code{\link{orderly_publish}} this must be provided sorry)
-##'
-##' @param id The report id
-##'
-##' @param value As \code{\link{orderly_publish}}, \code{TRUE} or
-##'   \code{FALSE} to publish or unpublish a report (respectively)
-##'
-##' @inheritParams orderly_run_remote
-##' @export
-orderly_publish_remote <- function(name, id, value = TRUE,
-                                   config = NULL, locate = TRUE, remote = NULL) {
-  config <- orderly_config_get(config, locate)
-  remote <- get_remote(remote, config)
-  if (inherits(remote, "montagu_server")) {
-    orderly_publish_remote_api(name = name, id = id, config = config,
-                               value = value, remote = remote)
-  } else if (inherits(remote, "orderly_remote_path")) {
-    ## This one can actually be done over disk too
-    stop("Can't publish reports with remote type ",
-         paste(squote(class(remote)), collapse = " / "))
-  }
+                               root = NULL, locate = TRUE, remote = NULL) {
+  remote <- get_remote(remote, orderly_config_get(root, locate))
+  remote$run(name, parameters = parameters, ref = ref,
+             timeout = timeout, wait = wait, poll = poll, progress = progress,
+             stop_on_error = stop_on_error, stop_on_timeout = stop_on_timeout,
+             open = open)
 }
 
 
-##' Set and get default remote locations
+##' Set and get default remote locations.  Default locations are
+##' specific to an orderly repository (based on the path of the
+##' repository) so there is no interaction between different orderly
+##' projects.
 ##'
 ##' @title Set default remote location
-##' @param value An \code{orderly_remote_location} object.
+##'
+##' @param value A string describing a remote, a remote object, or
+##'   \code{NULL} to clear
+##'
+##' @inheritParams orderly_list
 ##' @export
-##' @rdname default_remote
-set_default_remote <- function(value) {
-  if (!is.null(value)) {
-    assert_is(value, "orderly_remote_location")
+##' @rdname orderly_default_remote
+##' @examples
+##' # Same setup as in orderly_remote_path, with a remote orderly:
+##' path_remote <- orderly::orderly_example("demo")
+##' id <- orderly::orderly_run("other", list(nmin = 0),
+##'                            root = path_remote, echo = FALSE)
+##' orderly::orderly_commit(id, root = path_remote)
+##' id <- orderly::orderly_run("use_dependency",
+##'                            root = path_remote, echo = FALSE)
+##' orderly::orderly_commit(id, root = path_remote)
+##'
+##' # And a local orderly
+##' path_local <- orderly::orderly_example("demo")
+##'
+##' # We'll create a an object to interact with this remote using
+##' # orderly_remote_path.
+##' remote <- orderly::orderly_remote_path(path_remote)
+##'
+##' # There is no remote set by default:
+##' try(orderly::orderly_default_remote_get(root = path_local))
+##'
+##' # We can set one:
+##' orderly::orderly_default_remote_set(remote, root = path_local)
+##'
+##' # and now we can retrieve it:
+##' orderly::orderly_default_remote_get(root = path_local)
+##'
+##' # Note that this has not affected the other orderly:
+##' try(orderly::orderly_default_remote_get(root = path_remote))
+orderly_default_remote_set <- function(value, root = NULL, locate = TRUE) {
+  config <- orderly_config_get(root, locate)
+
+  if (is.null(value)) {
+    remote <- NULL
+  } else {
+    remote <- get_remote(value, config)
   }
-  cache$default_remote <- value
+
+  cache$default_remote[[config$root]] <- remote
+  invisible(remote)
 }
 
 
-##' @rdname default_remote
-##' @inheritParams orderly_list
-get_default_remote <- function(config = NULL, locate = TRUE) {
-  if (!is.null(cache$default_remote)) {
-    return(cache$default_remote)
+##' @rdname orderly_default_remote
+##' @export
+orderly_default_remote_get <- function(root = NULL, locate = TRUE) {
+  config <- orderly_config_get(root, locate)
+  if (!is.null(cache$default_remote[[config$root]])) {
+    return(cache$default_remote[[config$root]])
   }
-  config <- orderly_config_get(config, locate)
-  if (length(config$api_server) > 0L) {
-    return(check_remote_api_server(config$api_server[[1L]]))
+  if (length(config$remote) > 0L) {
+    return(get_remote(names(config$remote)[[1L]], config))
   }
-  default_remote_path <- Sys.getenv("ORDERLY_DEFAULT_REMOTE_PATH",
-                                    NA_character_)
-  if (!is.na(default_remote_path)) {
-    return(orderly_remote_path(default_remote_path))
-  }
-  stop("default remote has not been set yet: use 'orderly::set_default_remote'")
+  msg <- paste("default remote has not been set yet:",
+               "use 'orderly::orderly_default_remote_set'")
+  stop(msg)
 }
 
 
 get_remote <- function(remote, config) {
   if (is.null(remote)) {
-    get_default_remote(config)
-  } else if (inherits(remote, c("montagu_server", "orderly_remote_path"))) {
-    remote
-  } else if (is.character(remote)) {
-    assert_scalar(remote)
-    if (remote %in% names(config$api_server)) {
-      check_remote_api_server(config$api_server[[remote]])
-    } else if (file.exists(remote)) {
-      orderly_remote_path(remote)
-    } else {
-      stop(sprintf("Unknown remote '%s'", remote),
-           call. = FALSE)
-    }
-  } else {
+    return(orderly_default_remote_get(config))
+  }
+  if (implements_remote(remote)) {
+    return(remote)
+  }
+  if (!is.character(remote)) {
     stop("Unknown remote type ",
          paste(squote(class(remote)), collapse = " / "),
          call. = FALSE)
   }
+
+  assert_scalar(remote)
+  if (remote %in% names(config$remote)) {
+    load_remote(remote, config)
+  } else if (file.exists(remote)) {
+    orderly_remote_path(remote)
+  } else {
+    stop(sprintf("Unknown remote '%s'", remote), call. = FALSE)
+  }
 }
 
 
-check_remote_api_server <- function(x) {
-  server <- x$server
-  if (is.null(server)) {
-    stop("The 'montagu' package is required to use an api server")
+load_remote <- function(name, config) {
+  remote <- config$remote[[name]]
+  hash <- hash_object(remote)
+  if (is.null(cache$remotes[[hash]])) {
+    driver <- getExportedValue(remote$driver[[1L]], remote$driver[[2L]])
+    args <- resolve_secrets(remote$args, config)
+    cache$remotes[[hash]] <- do.call(driver, args)
   }
-  server
+  cache$remotes[[hash]]
+}
+
+
+## Most of these functions can really shrink now?
+remote_report_names <- function(root = NULL, locate = TRUE, remote = NULL) {
+  remote <- get_remote(remote, orderly_config_get(root, locate))
+  remote$list_reports()
+}
+
+
+remote_report_versions <- function(name, config = NULL, locate = TRUE,
+                                   remote = NULL) {
+  remote <- get_remote(remote, orderly_config_get(config, locate))
+  remote$list_versions(name)
+}
+
+
+remote_name <- function(remote) {
+  remote$name
+}
+
+
+## Test to see if something (might) implement our remote interface
+implements_remote <- function(x) {
+  is.recursive(x) &&
+    is.function(x$list_reports) &&
+    is.function(x$list_versions) &&
+    is.function(x$pull) &&
+    is.function(x$run)
 }

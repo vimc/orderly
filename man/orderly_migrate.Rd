@@ -4,12 +4,13 @@
 \alias{orderly_migrate}
 \title{Migrate an orderly archive}
 \usage{
-orderly_migrate(config = NULL, locate = TRUE, to = NULL,
-  verbose = FALSE, dry_run = FALSE)
+orderly_migrate(root = NULL, locate = TRUE, to = NULL,
+  dry_run = FALSE, skip_failed = FALSE)
 }
 \arguments{
-\item{config}{An orderly configuration, or the path to one (or
-\code{NULL} to locate one if \code{locate} is \code{TRUE}).}
+\item{root}{The path to an orderly root directory, or \code{NULL}
+(the default) to search for one from the current working
+directory if \code{locate} is \code{TRUE}).}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
@@ -19,13 +20,17 @@ parents until it finds an \code{orderly_config.yml} file.}
 \item{to}{The version to migrate to.  The default is the current
 archive version; this is almost always what is wanted.}
 
-\item{verbose}{Logical, indicating if extra noisy output from the
-migration should be given.}
-
 \item{dry_run}{Logical, indicating if we should try running the
 migration but not actually applying it.  This is intended
 primarily for developing new migrations and will probably not
 work if you are multiple archive versions behind.}
+
+\item{skip_failed}{Logical, where \code{TRUE} we will skip over
+entries that failed to be migrated.  This is expected to be
+useful on local archives only because it violates the
+append-only nature of orderly.  However, if a local archive
+contains unusual copies of orderly archives that can't be
+migrated this might come in helpful.}
 }
 \description{
 Migrate an orderly archive.  This is needed periodically when the
@@ -39,7 +44,12 @@ Sometimes we add change information saved out in the orderly run.
 This requires patching previously run versions of the orderly
 metadata and that's not something we want to do lightly.  This
 function uses a relatively safe, and reversible, way of migrating
-metadata.  We only modify the \code{orderly_run.rds} files and
-leave the human-readable \code{orderly_run.yml} ones alone (at
-least for now).
+metadata.  We modify the \code{orderly_run.rds} files, but will
+create versioned backups as files are changed.
+}
+\examples{
+# Without an orderly repository created by a previous version of
+# orderly, this function does nothing interesting:
+path <- orderly::orderly_example("minimal")
+orderly::orderly_migrate(path)
 }

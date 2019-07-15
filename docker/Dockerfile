@@ -1,11 +1,13 @@
-FROM rocker/r-ver:3.5.0
+FROM rocker/r-ver:3.5.3
 
 RUN apt-get update && apt-get -y install \
   git \
-  libimage-exiftool-perl \
   libssl-dev \
   libpq-dev \
+  sqlite3 \
   wget
+
+RUN sed  -i'' '/mran.microsoft.com/d' /usr/local/lib/R/etc/Rprofile.site
 
 # R package dependencies, including a few extras that we'll want handy
 RUN install2.r \

@@ -22,7 +22,6 @@ orderly_file <- function(...) {
 
 path <- orderly:::prepare_orderly_example("example")
 path_example <- file.path(path, "src", "example")
-orderly:::orderly_default_config_set(orderly:::orderly_config(path))
 
 tree <- function(path, header = path) {
   paste1 <- function(a, b) {
@@ -72,7 +71,7 @@ reports might change because:
 * we apply the reporting scripts to different subsets of the data
 * the code that we use to generate the scripts changes
 
-(among other more pathalogical reasons such as the packages that
+(among other more pathological reasons such as the packages that
 we're using changing behaviour, etc)
 
 We would like to be able to generate reports easily from the
@@ -85,6 +84,11 @@ to create the reports.
 
 ## Example
 
+As an example, we have a directory at `path` that contains
+orderly sources.  Typically this would be in the working directory
+(and in that case the `root` argument may be omitted) but for this
+vignette the path will be passed in explicitly.
+
 The `orderly.yml` to describe the creation of a report might look like:
 ``` {r results = "asis", echo = FALSE}
 yaml_output(readLines(file.path(path_example, "orderly.yml")))
@@ -93,10 +97,11 @@ yaml_output(readLines(file.path(path_example, "orderly.yml")))
 Hopefully this is somewhat self explanatory:
 
 * `data` is the data sets to pull from the database; it is a named
-  list with one or more elements.  Each element is a SQL query
-  indicating the required data.  You can use placeholders like
-  `?cyl` in the above example to stand in for *parameters* that
-  will be passed through to the report.
+  list with one or more elements.  Each element is a list with a
+  `query` element containing a SQL query that specifies the
+  required data.  You can use placeholders like `?cyl` in the above
+  example to stand in for *parameters* that will be passed through
+  to the report.
 
 * `parameters` is a list of parameters used to query the SQL
   database.  Note the that only the *names* of the parameters are
@@ -123,7 +128,7 @@ yaml_output(readLines(file.path(path_example, "script.R")))
 
 The important thing here is that the report references the variable
 `cars` and `cyl` even though it does not create them!  It must
-produce the files that are mentioed in `artefacts`
+produce the files that are mentioned in `artefacts`
 (`disp_vs_wt.png` and `distribution.png`).  The R code can be as
 long and as short as needed and can use whatever packages it needs.
 `orderly` does not do anything with the script apart from run it so
@@ -159,25 +164,26 @@ The global configuration looks like:
 yaml_output(readLines(file.path(path, "orderly_config.yml")))
 ```
 
-This defines the field `source`, which describes the database that
-we pull results from (the database that the report queries are run
-against).  This contains a field `driver` which must declare a
-DBI-compatible driver (realistically this is going to be
-`RSQLite::SQLite` for a local SQLite database and
-`RPostgres::Posgres` for accessing a postgres database), and then
-any arguments to be passed through to `DBI::dbConnect` along with
-the driver.  For SQLite this is just going to be `dbname` but for
-postgres this will include `host`, `port`, `user`, `dbname` and
-`password`.  For example:
+This defines the field `database`, which describes the databases
+that we pull results from (the databases that the report queries
+are run against).  Each entry (here there is one called `source`)
+contains a field `driver` which must declare a DBI-compatible
+driver (realistically this is going to be `RSQLite::SQLite` for a
+local SQLite database and `RPostgres::Posgres` for accessing a
+postgres database), and then any arguments to be passed through to
+`DBI::dbConnect` along with the driver.  For SQLite this is just
+going to be `dbname` but for postgres this will include `host`,
+`port`, `user`, `dbname` and `password`.  For example:
 
 ```yaml
-source:
-  driver: RSQLite::SQLite
-  host: dbhost
-  port: 5432
-  user: myusername
-  password: s3cret
-  dbname: mydb
+database:
+  source:
+    driver: RSQLite::SQLite
+    host: dbhost
+    port: 5432
+    user: myusername
+    password: s3cret
+    dbname: mydb
 ```
 
 In order to run anything (as below) the working directory must be
@@ -192,7 +198,7 @@ Reports are run by *name*.  In the above configuration the report
 is called `example` because it is in the directory `src/example`.
 A list of report names can be returned by running
 ``` {r }
-orderly::orderly_list()
+orderly::orderly_list(root = path)
 ```
 
 If the report requires parameters then these must be passed through
@@ -200,7 +206,7 @@ too; in the above case the report takes the parameter `cyl` which
 must be passed through as a named list.  So we might run this
 report as
 ``` {r collapse = TRUE}
-id <- orderly::orderly_run("example", list(cyl = 4))
+id <- orderly::orderly_run("example", list(cyl = 4), root = path)
 ```
 
 ``` {r echo = FALSE, results = "hide"}
@@ -229,10 +235,10 @@ there are the files:
 * `script.R`: this is an exact copy of the script used for the analysis
 * `disp_vs_wt.png` and `distribution.png`: the artefacts created by
    the report
-* `orderly_run.yml`: this is metadata about the run (hash of input
-  files, of the data used, and of the output etc)
-* `orderly_run.rds`: version information on all R packages used (in
-  R's rds format as I don't think we need this from anything but R)
+* `orderly_run.rds`: this is metadata about the run and includes
+  hashes of input files, of the data used, and of the output etc,
+  along with details about the packages used and the state of git.
+  It is stored in R's internal data format.
 
 Every time a report is run it will create a new directory at this
 level with a new id.  Running the report again now might create the
@@ -252,14 +258,19 @@ version is faster to read and write, usually smaller, and is
 exactly the data as used, while the csv version is more easily read
 by other applications.
 
+We store the copies of files as run by orderly so that even if the
+input files change we can still easily get back to previous
+versions of the inputs, along side the outputs, and these are safe
+from any changes to the underlying source.
+
 You can see the list of draft reports like so:
 ``` {r }
-orderly::orderly_list_drafts()
+orderly::orderly_list_drafts(root = path)
 ```
 
 Once you're happy with a report, then "commit" it with
 ``` {r collapse = TRUE}
-orderly::orderly_commit(id)
+orderly::orderly_commit(id, root = path)
 ```
 
 **THIS WILL CHANGE A LITTLE I THINK** - but mostly in how the index
@@ -279,10 +290,16 @@ difference is that the index `orderly.sqlite` has been created.
 
 First, create a directory within `src`.  The name is important and
 should not contain spaces (nor should it change as this will change
-the key report id and you'll lose a chain of history).
+the key report id and you'll lose a chain of history), then edit
+the file `orderly.yml` within that directory.
 ``` {r }
-dir.create(file.path(path, "src", "new"))
+orderly::orderly_new("new", root = path)
 ```
+
+As a report becomes more complex, the function
+`orderly::orderly_test_start` will become useful; this function
+creates the isolated environment that orderly uses to run a report,
+but then leaves you to interactively work with your report.
 
 ## Customising the configuration
 
@@ -293,28 +310,30 @@ you can use environment variables within the configuration.  So
 rather than writing
 
 ```yaml
-source:
-  driver: RPostgres::Postgres
-  host: localhost
-  port: 5432
-  user: myuser
-  dbname: databasename
-  password: p4ssw0rd
+database:
+  source:
+    driver: RPostgres::Postgres
+    host: localhost
+    port: 5432
+    user: myuser
+    dbname: databasename
+    password: p4ssw0rd
 ```
 
 you might write
 
 ```yaml
-source:
-  driver: RPostgres::Postgres
-  host: $MY_DBHOST
-  port: $MY_DBPORT
-  user: $MY_DBUSER
-  dbname: $MY_DBNAME
-  password: $MY_PASSWORD
+database:
+  source:
+    driver: RPostgres::Postgres
+    host: $MY_DBHOST
+    port: $MY_DBPORT
+    user: $MY_DBUSER
+    dbname: $MY_DBNAME
+    password: $MY_PASSWORD
 ```
 
-environment varaibles, as used this way **must** begin with a
+environment variables, as used this way **must** begin with a
 dollar sign and consist only of uppercase letters, numbers and the
 underscore character.  You can then set the environment variables
 in an `.Renviron` (either within the project or in your home
@@ -350,5 +369,5 @@ password: VAULT:/secret/users/database_user:password
 
 would look up the field `password` at the path
 `/secret/users/database_user`.  This can be stored in
-`orderly_config.yml`, in the contents of an environment varaible or
+`orderly_config.yml`, in the contents of an environment variable or
 in `orderly_envir.yml`.

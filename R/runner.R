@@ -1,13 +1,38 @@
-##' An orderly runner.  This is used to run reports remotely.  It's
-##' designed to be used in conjunction with montagu-reporting-api, so
-##' there is no "draft" stage.
+##' An orderly runner.  This is used to run reports as a server
+##' process.  It's designed to be used in conjunction with OrderlyWeb,
+##' so there is no "draft" stage and reports are committed as soon as
+##' they are run.  This function is not intended for human end users,
+##' only for creating automated tools for use with orderly.
 ##'
 ##' @title Orderly runner
+##'
 ##' @param path Path to use
-##' @param allow_ref Allow git to change branches/ref for run
+##'
+##' @param allow_ref Allow git to change branches/ref for run.  If not
+##'   given, then we will look to see if the orderly configuration
+##'   disallows branch changes (based on the
+##'   \code{ORDERLY_API_SERVER_IDENTITY} environment variable and the
+##'   \code{master_only} setting of the relevant server block.
+##'
+##' @param backup_period Period (in seconds) between DB backups.  This
+##'   is a guide only as backups cannot happen while a task is running
+##'   - if more than this many seconds have elapsed when the runner is
+##'   in its idle loop a backup of the db will be performed.  This
+##'   creates a copy of orderly's destination database in
+##'   \code{backup/db} with the same filename as the destination
+##'   database, even if that database typically lives outside of the
+##'   orderly tree.  In case of corruption of the database, this
+##'   backup can be manually moved into place.  This is only needed if
+##'   you are storing information alongside the core orderly tables
+##'   (as done by OrderlyWeb).
+##'
 ##' @export
-orderly_runner <- function(path, allow_ref = TRUE) {
-  R6_orderly_runner$new(path, allow_ref)
+##' @examples
+##'
+##' path <- orderly::orderly_example("demo")
+##' runner <- orderly::orderly_runner(path)
+orderly_runner <- function(path, allow_ref = NULL, backup_period = 600) {
+  R6_orderly_runner$new(path, allow_ref, backup_period)
 }
 
 RUNNER_QUEUED  <- "queued"
@@ -33,23 +58,30 @@ R6_orderly_runner <- R6::R6Class(
     path_log = NULL,
     path_id = NULL,
 
-    con = NULL,
     data = NULL,
     has_git = NULL,
 
-    initialize = function(path, allow_ref) {
+    backup = NULL,
+
+    initialize = function(path, allow_ref, backup_period) {
       self$path <- path
       self$config <- orderly_config_get(path)
       self$has_git <- file.exists(file.path(path, ".git"))
       if (!self$has_git) {
         message("Not enabling git features as this is not version controlled")
       }
-      self$allow_ref <- allow_ref && self$has_git &&
-        git_run(c("rev-parse", "HEAD"), root = path, check = FALSE)$success
+
+      self$allow_ref <- runner_allow_ref(allow_ref, self$config)
+      if (self$has_git && !self$allow_ref) {
+        message("Disallowing reference switching in runner")
+      }
+
+      do_backup <- protect(function() orderly_backup(self$config))
+      self$backup <- periodic(do_backup, backup_period)
 
       bin <- tempfile()
       dir.create(bin)
-      self$orderly_bin <- write_script(bin)
+      self$orderly_bin <- write_script(bin, versioned = TRUE)
 
       ## This ensures that the index will be present, which will be
       ## useful if something else wants to access the database!
@@ -66,7 +98,8 @@ R6_orderly_runner <- R6::R6Class(
     queue = function(name, parameters = NULL, ref = NULL, update = FALSE,
                      timeout = 600) {
       if (!self$allow_ref && !is.null(ref)) {
-        stop("Reference switching is disabled in this runner")
+        stop("Reference switching is disallowed in this runner",
+             call. = FALSE)
       }
       if (update && self$has_git) {
         if (is.null(ref)) {
@@ -75,11 +108,10 @@ R6_orderly_runner <- R6::R6Class(
           self$git_fetch()
         }
       }
-      if (!is.null(ref) && !git_ref_exists(ref, self$path)) {
-        stop(sprintf("Did not find git reference '%s'", ref))
+      if (!is.null(ref)) {
         ## Lock down the reference at this point in time (so that
         ## subsequent builds will not affect where we find the source).
-        ref <- git_ref_to_sha(ref)
+        ref <- git_ref_to_sha(ref, self$path, TRUE)
       }
       assert_scalar_numeric(timeout)
       key <- self$data$insert(name, parameters, ref, timeout)
@@ -133,14 +165,6 @@ R6_orderly_runner <- R6::R6Class(
       list(status = status, queue = queue, current = current)
     },
 
-    ## This one could quite easily move into the montagu api; it
-    ## doesn't take too much to do (write one file and write to the
-    ## SQL database)
-    publish = function(name, id, value = TRUE) {
-      orderly_publish(id, value, name, config = self$config)
-      value
-    },
-
     rebuild = function() {
       orderly_rebuild(self$config, FALSE, FALSE)
     },
@@ -181,7 +205,7 @@ R6_orderly_runner <- R6::R6Class(
 
     cleanup = function(name = NULL, draft = TRUE, data = TRUE,
                        failed_only = FALSE) {
-      orderly_cleanup(name = name, config = self$config, draft = draft,
+      orderly_cleanup(name = name, root = self$config, draft = draft,
                       data = data, failed_only = failed_only)
     },
 
@@ -205,6 +229,7 @@ R6_orderly_runner <- R6::R6Class(
       } else {
         ret <-"idle"
       }
+      self$backup()
       attr(ret, "key") <- key
       ret
     },
@@ -232,13 +257,12 @@ R6_orderly_runner <- R6::R6Class(
         p <- file.path(base(self$path), process$name, id)
         if (file.exists(p)) {
           file_copy(process$stderr, file.path(p, "orderly.log"))
-          ## This should be empty if the redirection works as expected
-          if (file.size(process$stdout) > 0L) {
-            file_copy(process$stdout, file.path(p, "orderly.log.stdout"))
+          ## This should be empty if the redirection works as expected:
+          file_copy(process$stdout, file.path(p, "orderly.log.stdout"))
+          if (file.size(process$stdout) == 0L) {
+            file.remove(file.path(p, "orderly.log.stdout"))
           }
         }
-      } else {
-        id <- NA_character_
       }
 
       self$data$set_state(key, state, id)
@@ -310,21 +334,6 @@ path_stdout <- function(path, key) {
   file.path(path, paste0(key, ".stdout"))
 }
 
-process_wait <- function(px, filename, timeout = 1, poll = 0.02) {
-  t_stop <- Sys.time() + timeout
-  while (px$is_alive()) {
-    if (file.exists(filename)) {
-      break
-    }
-    if (Sys.time() > t_stop) {
-      stop("did not start in time")
-    }
-    Sys.sleep(poll)
-    message(".", appendLF = FALSE)
-  }
-  message("started")
-  id <- readLines(filename)
-}
 
 runner_queue <- function() {
   cols <- c("key", "state", "name", "parameters", "ref", "id", "timeout")
@@ -399,4 +408,16 @@ runner_queue <- function() {
         FALSE
       }
     })
+}
+
+
+runner_allow_ref <- function(allow_ref, config) {
+  if (is.null(allow_ref)) {
+    allow_ref <- !(config$server_options$master_only %||% FALSE)
+  }
+  if (allow_ref) {
+    res <- git_run(c("rev-parse", "HEAD"), root = config$root, check = FALSE)
+    allow_ref <- res$success
+  }
+  allow_ref
 }

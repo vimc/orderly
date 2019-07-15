@@ -5,27 +5,27 @@
 \alias{orderly_data}
 \title{Run a report}
 \usage{
-orderly_run(name, parameters = NULL, envir = NULL, config = NULL,
+orderly_run(name, parameters = NULL, envir = NULL, root = NULL,
   locate = TRUE, echo = TRUE, id_file = NULL, fetch = FALSE,
-  ref = NULL, open = FALSE, message = NULL, extended_output = FALSE)
+  ref = NULL, message = NULL)
 
-orderly_data(name, parameters = NULL, envir = list(), config = NULL,
+orderly_data(name, parameters = NULL, envir = NULL, root = NULL,
   locate = TRUE)
 }
 \arguments{
 \item{name}{Name of the report to run (see
 \code{\link{orderly_list}}).}
 
-\item{parameters}{Parameters passed to the report}
+\item{parameters}{Parameters passed to the report. A named list of
+parameters declared in the orderly.yml.}
 
-\item{envir}{The parent of environment to evalute the report in;
+\item{envir}{The parent of environment to evaluate the report in;
 by default a new environment will be made with the global
-environment as the parent.  For \code{orderly_data}, this may be
-\code{list()} in which case a list will be returned (rather than
-an environment).}
+environment as the parent.}
 
-\item{config}{An orderly configuration, or the path to one (or
-\code{NULL} to locate one if \code{locate} is \code{TRUE}).}
+\item{root}{The path to an orderly root directory, or \code{NULL}
+(the default) to search for one from the current working
+directory if \code{locate} is \code{TRUE}).}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
@@ -41,13 +41,8 @@ checking out the reference \code{ref}.}
 
 \item{ref}{A git reference to use for this run (see Details)}
 
-\item{open}{Open the directory after running?}
-
-\item{message}{An optional message explaining why the report was
-run}
-
-\item{extended_output}{Return detailed output about the run
-(similar to the contents of \code{orderly_run.rds}).}
+\item{message}{An optional character string containing a message
+explaining why the report was run}
 }
 \description{
 Run a report.  The \code{orderly_data} function is for testing the
@@ -63,4 +58,44 @@ some careful use of \code{.gitignore} to exclude \code{draft},
 \code{archive}, \code{data} and \code{orderly.sqlite}.  The git
 tree will revert back to the original branch at completion (or
 failure to complete) the report.
+}
+\examples{
+path <- orderly::orderly_example("demo")
+
+# To run most reports, provide the report name (and the path if
+# not running in the working directory, as is the case here):
+id <- orderly::orderly_run("minimal", root = path)
+
+# Every report gets a unique identifier, based on the time (it is
+# ISO 8601 time with random hex appended to end)
+id
+
+# After being run, a report is a "draft" and will exist in the
+# drafts directory:
+orderly::orderly_list_drafts(root = path)
+
+# Draft reports are always stored in the path
+# <root>/draft/<name>/<id>, so we have
+dir(file.path(path, "draft", "minimal", id))
+
+# which contains the files when the report was run.
+
+# If a report has parameters, then these must be passed in as a
+# named list.
+id <- orderly::orderly_run("other", list(nmin = 0.2), root = path)
+
+# These parameters can be used in SQL queries or in the report
+# code.
+# The function orderly_data does all the preparation work that
+# orderly_run does, but does not run the report; instead it
+# returns the created environment with all the data and parameters
+# set.
+env <- orderly::orderly_data("other", list(nmin = 0.2), root = path)
+ls(env)
+env$nmin
+env$extract
+}
+\seealso{
+\code{\link{orderly_log}} for controlling display of log
+  messages (not just R output)
 }

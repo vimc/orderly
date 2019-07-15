@@ -1,0 +1,14 @@
+views:
+  thedata:
+    query: SELECT name, number FROM thing
+data:
+  dat:
+    query: SELECT * FROM thedata
+script: script.R
+artefacts:
+  staticgraph:
+    description: A graph of things
+    filenames: mygraph.png
+author: Researcher McResearcherface
+requester: Funder McFunderface
+comment: This is a comment

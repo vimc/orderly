@@ -4,12 +4,6 @@ with_wd <- function(path, code) {
   force(code)
 }
 
-read_orderly_db <- function(path) {
-  con <- orderly_db("destination", path)
-  on.exit(DBI::dbDisconnect(con))
-  DBI::dbReadTable(con, "orderly")
-}
-
 skip_if_no_git <- function() {
   if (nzchar(Sys.which("git"))) {
     return()
@@ -21,30 +15,6 @@ skip_on_windows <- function() {
   testthat::skip_on_os("windows")
 }
 
-skip_if_no_vault_server <- function() {
-  testthat::skip_if_not_installed("vaultr")
-  if (is.null(vaultr::vault_test_server())) {
-    testthat::skip("vault test server not running")
-  }
-}
-
-start_vault <- function() {
-  Sys.unsetenv("VAULTR_CACHE_DIR")
-  Sys.unsetenv("VAULT_ADDR")
-  with_vault <- !is.null(vaultr::vault_test_server_start())
-  if (with_vault) {
-    cl <- vaultr::vault_test_client()
-    message("Writing test data")
-    ## Some test data to use
-    cl$write("/secret/users/alice", list(password = "ALICE"))
-    cl$write("/secret/users/bob", list(password = "BOB"))
-  }
-}
-
-reset_vault <- function() {
-  cache$vault <- NULL
-  vaultr::vault_clear_token_cache(session = TRUE, persistent = FALSE)
-}
 
 ## Via wikimedia:
 MAGIC_PNG <- as.raw(c(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a))
@@ -63,6 +33,7 @@ has_internet <- function() {
 
 skip_if_no_internet <- function() {
   skip_on_windows()
+  skip_on_cran() # not worth it
   if (has_internet()) {
     return()
   }
@@ -73,3 +44,70 @@ unpack_reference <- function(version, path = tempfile()) {
   unzip(sprintf("reference/%s.zip", version), exdir = path)
   file.path(path, version)
 }
+
+
+prepare_orderly_remote_example <- function(path = tempfile()) {
+  path_remote <- file.path(path, "remote")
+  path_local <- file.path(path, "local")
+
+  prepare_orderly_example("depends", path_remote)
+
+  id1 <- orderly_run("example", root = path_remote, echo = FALSE)
+  id2 <- orderly_run("example", root = path_remote, echo = FALSE)
+  orderly_commit(id1, root = path_remote)
+  orderly_commit(id2, root = path_remote)
+  remote_path <- orderly_remote_path(path_remote)
+
+  path_local <- prepare_orderly_example("depends")
+
+  ## Patch the report to use non-draft dependencies:
+  p <- file.path(path_local, "src", "depend", "orderly.yml")
+  d <- sub("draft: true", "draft: false", readLines(p))
+  writeLines(d, p)
+
+  r <- list(remote = list(
+              default = list(
+                driver = "orderly::orderly_remote_path",
+                args = list(path = path_remote))))
+  append_lines(yaml::as.yaml(r), file.path(path_local, "orderly_config.yml"))
+
+  config <- orderly_config(path_local)
+  remote <- get_remote(NULL, config)
+
+  list(path_remote = path_remote,
+       path_local = path_local,
+       config = config,
+       remote = remote,
+       id1 = id1,
+       id2 = id2)
+}
+
+
+patch_orderly_config <- function(path) {
+  p <- file.path(path, "orderly_config.yml")
+  dat <- yaml_read(p)
+  dat$database <- list(source = dat$source)
+  dat$source <- NULL
+  writeLines(yaml::as.yaml(dat), p)
+}
+
+
+## Quieten down the SQLite warning about unused connections as it
+## makes testing for silentness dependent on the order of tests.
+##
+## ?RSQLite::SQLite says
+##
+## > Connections are automatically cleaned-up after they're deleted and
+## > reclaimed by the GC. You can use ‘DBI::dbDisconnect()’ to
+## > terminate the connection early, but it will not actually close
+## > until all open result sets have been closed (and you'll get a
+## > warning message to this effect).
+##
+## which suggests that there's no good reason to need to disconnect,
+## and we do try to but it's a bit of a faff.
+local({
+  suppressWarnings({
+    DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+    gc()
+  })
+})

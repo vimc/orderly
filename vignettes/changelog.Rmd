@@ -1,0 +1,67 @@
+---
+title: "orderly changelog"
+author: "Rich FitzJohn"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{changelog}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# The orderly changelog
+
+From version 0.6.0, `orderly` supports the concept of a
+"changelog".  This turns out to be somewhat more complicated than
+expected, so the details are explained here.
+
+## Users perspective
+
+From the user perspective, the changelog functionality should be
+fairly simple.  Alongside any `orderly.yml` file, one can have a
+`changelog.txt` file, which will contain description of changes.
+This file will look like:
+
+```plain
+[public]
+Started working with new version of the data.  This includes
+everything sent up to 2018-10-10
+
+[internal]
+Fixed incorrect plotting
+```
+
+The short strings within `[` and `]` are a _label_ - everything
+between a label and the next label or the end of file is a _value_
+(these can span multiple lines, contain blank lines, etc).
+
+Over time, the changelog is **prepended**, i.e., new information is
+added to the _top_ of the changelog.  Existing entries must be left
+unaltered.
+
+Messages can be provided to orderly run and these are required to be in the format `[label] value`.
+
+Once a report is run (via `orderly::orderly_run()`, or via `orderly run` on the command line), the given changelog, along with any
+message, is compared with the last committed version of this report,
+and entries that are introduced on this round are identified.  We add
+the report id to the entries, and a randomly generated unique id to each new entry.  This is saved in `orderly_run.rds` along with other report metadata.
+
+## Details
+
+There are a few complications here
+
+* we need to accept changelog entries that are not present in a file (e.g., from the `message` argument)
+* we don't know the id until after running a report so we can't easily structure a changelog file in the conventional sense.  Instead we have to detect "old" and "new" entries
+* detecting "old" entries is complicated by the fact that there might be multiple places that reports are run (development machine, staging environment, production environment) but ultimately one source of truth
+
+This section documents the logic involved in making this work.
+
+When preparing to run an orderly report:
+
+1. we read in the plaintext changelog if it exists
+1. parse all messages provided and add as if they were a changelog entry `from_file` of `FALSE`
+1. we look for the "latest" archived version of this report and read the changelog from that reports `orderly_run.rds` file.  Alternatively we can use a remote copy of orderly via the interface here (not implemented yet).
+1. filter the previous previous changelog to remove any `from_file = FALSE` entries and confirm that our new changelog can be prepended to the previous
+1. add the `id` to the "new" entries and prepend this - save the resulting data into the new report's `orderly_run.yml`
+
+For checking against the API, we will use `GET reports/:name/versions/version/latest/changelog/` with the current report name as `:name`.

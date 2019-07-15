@@ -3,33 +3,70 @@
 ##'
 ##' @title Connect to orderly databases
 ##' @inheritParams orderly_list
+##'
 ##' @param type The type of connection to make (\code{source},
 ##'   \code{destination}, \code{csv} or \code{rds}).
+##'
+##' @param validate Logical, indicating if the database schema should
+##'   be validated on open (currently only applicable with \code{type
+##'   = "destination"}).  This is primarily intended for internal use.
+##'
 ##' @export
-orderly_db <- function(type, config = NULL, locate = TRUE) {
-  config <- orderly_config_get(config, locate)
+##' @examples
+##' # Create an orderly that has a single commited report:
+##' path <- orderly::orderly_example("minimal")
+##' id <- orderly::orderly_run("example", root = path)
+##' orderly::orderly_commit(id, root = path)
+##'
+##' # The source database holds the data that might be accessible via
+##' # the 'data' entry in orderly.yml:
+##' db <- orderly::orderly_db("source", root = path)
+##' # This is a list, with one connection per database listed in the
+##' # orderly_config.yml (an empty list if none are specified):
+##' db
+##' DBI::dbListTables(db$source)
+##' head(DBI::dbReadTable(db$source, "data"))
+##' DBI::dbDisconnect(db$source)
+##'
+##' # The destination database holds information about the archived
+##' # reports:
+##' db <- orderly::orderly_db("destination", root = path)
+##' DBI::dbListTables(db)
+##'
+##' # These tables are documented online:
+##' # https://vimc.github.io/orderly/schema
+##' DBI::dbReadTable(db, "report_version")
+orderly_db <- function(type, root = NULL, locate = TRUE, validate = TRUE) {
+  config <- orderly_config_get(root, locate)
   if (type == "rds") {
-    file_store_rds(path_rds(config$path))
+    con <- file_store_rds(path_rds(config$root))
   } else if (type == "csv") {
-    file_store_csv(path_csv(config$path))
-  } else if (type %in% c("source", "destination")) {
-    x <- orderly_db_args(type, config)
-    con <- do.call(DBI::dbConnect, c(list(x$driver()), x$args))
-    if (type == "destination") {
-      report_db_init(con, config)
-    }
-    con
+    con <- file_store_csv(path_csv(config$root))
+  } else if (type == "destination") {
+    con <- orderly_db_dbi_connect(config$destination, config)
+    withCallingHandlers(
+      report_db_init(con, config, validate = validate),
+      error = function(e) DBI::dbDisconnect(con))
+  } else if (type == "source") {
+    con <- lapply(config$database, orderly_db_dbi_connect, config)
   } else {
     stop(sprintf("Invalid db type '%s'", type))
   }
+  con
 }
 
-orderly_db_args <- function(type, config) {
-  x <- config[[type]]
+
+orderly_db_dbi_connect <- function(x, config) {
+  dat <- orderly_db_args(x, config)
+  do.call(DBI::dbConnect, c(list(dat$driver()), dat$args))
+}
+
+
+orderly_db_args <- function(x, config) {
   driver <- getExportedValue(x$driver[[1L]], x$driver[[2L]])
 
   args <- withr::with_envvar(
-    orderly_envir_read(config$path),
+    orderly_envir_read(config$root),
     args <- resolve_driver_config(x$args, config))
 
   if (x$driver[[2]] == "SQLite") {
@@ -38,113 +75,111 @@ orderly_db_args <- function(type, config) {
       stop("Cannot use a transient SQLite database with orderly")
     }
     if (is_relative_path(args$dbname)) {
-      args$dbname <- file.path(config$path, args$dbname)
+      args$dbname <- file.path(config$root, args$dbname)
     }
   }
 
   list(driver = driver, args = args)
 }
 
-## Reports database needs special initialisation:
-report_db_init <- function(con, config, must_create = FALSE) {
-  orderly_table <- "orderly"
-  if (!DBI::dbExistsTable(con, orderly_table)) {
-    ## TODO: we'll need some postgres translation here
-    ## TODO: dumping json columns in as text for now
-    ##
-    ## TODO: the door is open here for the table name to be
-    ## configurable, but defaulting to 'orderly', but I do not know
-    ## that that is good thing, really.
-    cols <- report_db_cols()
-    col_types <- sprintf("  %s %s",
-                         c(names(cols), config$fields$name),
-                         c(unname(cols), config$fields$type_sql))
 
-    sql <- sprintf("CREATE TABLE %s (\n%s\n)",
-                   orderly_table,
-                   paste(col_types, collapse = ",\n"))
-    DBI::dbExecute(con, sql)
-  } else if (must_create) {
-    stop(sprintf("Table '%s' already exists", orderly_table))
-  } else {
-    sql <- sprintf("SELECT * FROM %s LIMIT 0", orderly_table)
-    d <- DBI::dbGetQuery(con, sql)
-    custom_name <- config$fields$name
-    msg <- setdiff(custom_name, names(d))
-    if (length(msg) > 0L) {
-      stop(sprintf("custom fields %s not present in existing database",
-                   paste(squote(msg), collapse = ", ")))
-    }
-    extra <- setdiff(setdiff(names(d), names(report_db_cols())), custom_name)
-    if (length(extra) > 0L) {
-      stop(sprintf("custom fields %s in database not present in config",
-                   paste(squote(extra), collapse = ", ")))
-    }
-  }
-
-  report_db2_init(con, config, must_create)
-  orderly_table
-}
-
-report_db_rebuild <- function(config, verbose = TRUE) {
-  assert_is(config, "orderly_config")
-  root <- config$path
-  con <- orderly_db("destination", config)
-  on.exit(DBI::dbDisconnect(con))
-  ## TODO: this assumes name known
-  tbl <- "orderly"
-  DBI::dbExecute(con, "DELETE FROM orderly")
-  reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
-  if (length(reports) > 0L) {
-    dat <- rbind_df(lapply(reports, report_read_data, config))
-    DBI::dbWriteTable(con, tbl, dat, append = TRUE)
-  }
-
-  report_db2_rebuild(config, verbose)
-}
-
-report_db_cols <- function() {
-  c(## INPUTS:
-    id = "TEXT PRIMARY KEY NOT NULL",
-    name = "TEXT",
-    displayname = "TEXT",
-    description = "TEXT",
-    views = "TEXT",          # should be json (dict)
-    data = "TEXT",           # should be json (dict)
-    packages = "TEXT",       # should be json (array)
-    script = "TEXT",
-    artefacts = "TEXT",      # should be json (array)
-    resources = "TEXT",      # should be json (array)
-    hash_script = "TEXT",
-    ## OUTPUTS
-    parameters = "TEXT",     # should be json (dict with values)
-    date = "TIMESTAMP",
-    hash_orderly = "TEXT",
-    hash_input = "TEXT",
-    hash_resources = "TEXT", # should be json (dict)
-    hash_data = "TEXT",      # should be json (dict)
-    hash_artefacts = "TEXT", # should be json (dict)
-    depends = "TEXT",        # should be json (array of dicts)
-    ## PUBLISHING
-    published = "BOOLEAN")
-}
-
-##' Rebuild the report database
+##' Rebuild the report database.  This is necessary when the orderly
+##'   database schema changes, and you will be prompted to run this
+##'   function after upgrading orderly in that case.
+##'
+##' The report database (orderly's "destination" database) is
+##' essentially an index over all the metadata associated with
+##' reports.  It is used by orderly itself, and can be used by
+##' applications that extend orderly (e.g.,
+##' \href{https://github.com/vimc/orderly-web}{OrderlyWeb}).  All the
+##' data in this database can be rebuilt from files stored with the
+##' committed (archive) orderly reports, using the
+##' \code{orderly_rebuild} function.
+##'
 ##' @title Rebuild the report database
+##'
 ##' @inheritParams orderly_list
 ##'
 ##' @param verbose Logical, indicating if information about the
 ##'   rebuild should be printed as it runs
 ##'
+##' @param if_schema_changed Logical, indicating if the rebuild should
+##'   take place only if the schema has changed.  This is designed to
+##'   be safe to use in (say) deployment scripts because it will be
+##'   fast enough to call regularly.
+##'
 ##' @export
-orderly_rebuild <- function(config = NULL, locate = TRUE, verbose = TRUE) {
-  config <- orderly_config_get(config, locate)
-  report_db_rebuild(config, verbose)
-  invisible(NULL)
+##' @examples
+##' path <- orderly::orderly_example("minimal")
+##' id <- orderly::orderly_run("example", root = path)
+##' orderly::orderly_commit(id, root = path)
+##'
+##' con <- orderly::orderly_db("destination", root = path)
+##' DBI::dbReadTable(con, "report_version")
+##' DBI::dbDisconnect(con)
+##'
+##' # The database can be removed and will be rebuilt if requested
+##' # (this is only a good idea if you do not extend the database with
+##' # your own fields - only the fields that orderly looks after can
+##' # be recovered!)
+##' file.remove(file.path(path, "orderly.sqlite"))
+##' orderly::orderly_rebuild(path)
+##' file.exists(file.path(path, "orderly.sqlite"))
+##' con <- orderly::orderly_db("destination", root = path)
+##' DBI::dbReadTable(con, "report_version")
+##' DBI::dbDisconnect(con)
+##'
+##' # It is safe to rebuild a database repeatedly, though this can be
+##' # slow with larger databases.
+##' orderly::orderly_rebuild(path)
+orderly_rebuild <- function(root = NULL, locate = TRUE, verbose = TRUE,
+                            if_schema_changed = FALSE) {
+  ## We'll skip warnings here - they'll come out as messages rather
+  ## than warnings.
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
+  config <- orderly_config_get(root, locate)
+
+  if (length(migrate_plan(config$root, to = NULL)) > 0L) {
+    orderly_log("migrate", "archive")
+    orderly_migrate(config, locate = FALSE)
+    ## This should trigger a rebuild, regardless of what anything else thinks
+    if_schema_changed <- FALSE
+  }
+
+  if (!if_schema_changed || report_db_needs_rebuild(config)) {
+    orderly_log("rebuild", "db")
+    report_db_rebuild(config, verbose)
+    invisible(TRUE)
+  } else {
+    invisible(FALSE)
+  }
 }
 
 
-with_connection <- function(con, f, ...) {
-  withCallingHandlers(f(con, ...),
-                      finally = function() DBI::dbDisconnect(con))
+## From the SQLite docs https://www.sqlite.org/c3ref/backup_finish.html
+##
+## > SQLite holds a write transaction open on the destination database
+## > file for the duration of the backup operation. The source
+## > database is read-locked only while it is being read; it is not
+## > locked continuously for the entire backup operation. Thus, the
+## > backup may be performed on a live source database without
+## > preventing other database connections from reading or writing to
+## > the source database while the backup is underway.
+orderly_backup <- function(config = NULL, locate = TRUE) {
+  config <- orderly_config_get(config, locate)
+  if (config$destination$driver[[1]] == "RSQLite") {
+    curr <- orderly_db_args(config$destination, config)$args$dbname
+
+    dest <- path_db_backup(config$root, curr)
+    dir.create(dirname(dest), FALSE, TRUE)
+
+    prefix <- paste0(config$root, "/")
+    orderly_log("backup", sprintf("%s => %s",
+                                  sub(prefix, "", curr, fixed = TRUE),
+                                  sub(prefix, "", dest, fixed = TRUE)))
+
+    sqlite_backup(curr, dest)
+  }
 }

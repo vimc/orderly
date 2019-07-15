@@ -1,16 +1,12 @@
 # This is what we'll set up via docker
 destination:
   driver: RPostgres::Postgres
-  host: 127.0.0.1
-  port: 35432
-  user: postgres
-  dbname: orderly
-  password: schemaspy
-
-# Dummy - we'll never actually pull this
-source:
-  driver: RSQLite::SQLite
-  dbname: source.sqlite
+  args:
+    host: orderly-db
+    port: 5432
+    user: postgres
+    dbname: orderly
+    password: schemaspy
 
 # Compatible with montagu-reports, but later we'll need this to be
 # tuneable I think.

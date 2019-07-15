@@ -109,9 +109,12 @@ is_relative_path <- function(path) {
   !is_absolute_path(path)
 }
 
-sql_str_sub <- function(s, data, ...) {
-  vcapply(s, function(el) DBI::sqlInterpolate(DBI::ANSI(), el, .dots = data),
-          ...)
+sql_str_sub <- function(s, data) {
+  for (i in seq_along(s)) {
+    s[[i]]$query <- DBI::sqlInterpolate(DBI::ANSI(), s[[i]]$query,
+                                        .dots = data)
+  }
+  s
 }
 
 read_csv <- function(filename, ...) {
@@ -135,41 +138,17 @@ dir_create <- function(x) {
 }
 
 hash_files <- function(filenames, named = TRUE) {
-  if (is.null(filenames)) {
-    set_names(character(0), if (named) character(0) else NULL)
-  } else {
-    h <- tools::md5sum(filenames)
-    if (!named) {
-      names(h) <- NULL
-    }
-    h
+  h <- tools::md5sum(filenames)
+  if (!named) {
+    names(h) <- NULL
   }
-}
-
-hash_directory <- function(filenames, named = TRUE) {
-  f <- function(p) {
-    hash_object(hash_files(list_all_files(p), FALSE))
-  }
-  res <- vcapply(filenames, f)
-  names(res) <- if (named) filenames else NULL
-  res
+  h
 }
 
 hash_object <- function(object) {
   digest::digest(object)
 }
 
-to_json <- function(x, auto_unbox = TRUE, ...) {
-  jsonlite::toJSON(x, auto_unbox = auto_unbox)
-}
-
-to_json_string <- function(...) {
-  as.character(to_json(...))
-}
-
-to_json_string_charvec <- function(x) {
-  to_json_string(x %||% character(0), auto_unbox = FALSE)
-}
 
 list_dirs <- function(path) {
   files <- dir(path, full.names = TRUE)
@@ -183,6 +162,16 @@ file_copy <- function(..., overwrite = TRUE) {
   }
   ok
 }
+
+
+file_move <- function(from, to) {
+  ok <- file.rename(from, to)
+  if (any(!ok)) {
+    stop("Error moving files")
+  }
+  ok
+}
+
 
 is_directory <- function(x) {
   file.info(x, extra_cols = FALSE)$isdir
@@ -204,12 +193,8 @@ pasteq <- function(x, sep = ", ") {
   paste(squote(x), collapse = ", ")
 }
 
-set_mode <- function(x, mode) {
-  storage.mode(x) <- mode
-  x
-}
 
-capture_log <- function(expr, filename, suppress_messages = FALSE) {
+capture_log <- function(expr, filename) {
   con <- file(filename, "w")
   sink(con, split = FALSE)
   on.exit({
@@ -217,11 +202,7 @@ capture_log <- function(expr, filename, suppress_messages = FALSE) {
     close(con)
   })
   handle_message <- function(e) cat(e$message, file = stdout())
-  if (suppress_messages) {
-    suppressMessages(withCallingHandlers(force(expr), message = handle_message))
-  } else {
-    withCallingHandlers(force(expr), message = handle_message)
-  }
+  suppressMessages(withCallingHandlers(force(expr), message = handle_message))
 }
 
 last <- function(x) {
@@ -310,18 +291,24 @@ git_info <- function(root) {
     status <- NULL
   }
 
-  git_url <- git_info_call(root, c("remote", "get-url", "origin"))
-  if (!is.null(git_url)) {
-    re <- "^git@github.com:"
-    if (grepl(re, git_url)) {
-      git_url <- sub("\\.git$", "", sub(re, "https://github.com/", git_url))
-    } else if (!grepl("^https://github.com/", git_url)) {
-      git_url <- NULL
-    }
-  }
+  git_url <- git_clean_url(
+    git_info_call(root, c("remote", "get-url", "origin")))
 
   list(sha_short = sha_short, sha = sha, branch = branch, status = status,
        github_url = git_url)
+}
+
+
+git_clean_url <- function(x) {
+  if (!is.null(x)) {
+    re <- "^git@github.com:"
+    if (grepl(re, x)) {
+      x <- sub("\\.git$", "", sub(re, "https://github.com/", x))
+    } else if (!grepl("^https://github.com/", x)) {
+      x <- NULL
+    }
+  }
+  x
 }
 
 system_success <- function(x) is.null(attr(x, "status", exact = TRUE))
@@ -336,7 +323,7 @@ resolve_driver_config <- function(args, config) {
 
 resolve_env <- function(x, error = TRUE, default = NULL) {
   f <- function(x) {
-    if (grepl("^\\$[0-9A-Z_]+$", x)) {
+    if (length(x) == 1L && is.character(x) && grepl("^\\$[0-9A-Z_]+$", x)) {
       Sys_getenv(substr(x, 2, nchar(x)), error = error, default = NULL)
     } else {
       x
@@ -348,24 +335,27 @@ resolve_env <- function(x, error = TRUE, default = NULL) {
 is_windows <- function() {
   Sys.info()[["sysname"]] == "Windows"
 }
+
+
 is_linux <- function() {
   Sys.info()[["sysname"]] == "Linux"
 }
+
 
 open_directory <- function(path) {
   if (!isTRUE(is_directory(path))) {
     stop("Expected a directory")
   }
-  sysname <- Sys.info()[["sysname"]]
-  if (sysname == "Windows") {
-    system2("cmd", c("/c", "start", "explorer", path))
+
+  if (is_windows()) {
+    cmd <- "cmd"
+    args <- c("/c", "start", "explorer", path)
   } else {
-    cmd <- switch(sysname,
-                  "Darwin" = "open",
-                  "Linux" = "xdg-open",
-                  stop("Unsupported system ", sysname))
-    system2(cmd, path)
+    args <- path
+    cmd <- if (is_linux()) "xdg-open" else "open"
   }
+
+  system2(cmd, args)
 }
 
 ## rename is atomic
@@ -403,7 +393,7 @@ system3 <- function(command, args) {
 sys_which <- function(name) {
   path <- Sys.which(name)
   if (!nzchar(path)) {
-    stop(sprintf("Did not find '%s'", name))
+    stop(sprintf("Did not find '%s'", name), call. = FALSE)
   }
   unname(path)
 }
@@ -418,7 +408,8 @@ zip_dir <- function(path, dest = paste0(basename(path), ".zip")) {
   normalizePath(dest)
 }
 
-file_exists <- function(..., check_case = FALSE, workdir = NULL) {
+file_exists <- function(..., check_case = FALSE, workdir = NULL,
+                        force_case_check = FALSE) {
   files <- c(...)
   if (!is.null(workdir)) {
     assert_scalar_character(workdir)
@@ -429,33 +420,53 @@ file_exists <- function(..., check_case = FALSE, workdir = NULL) {
 
   if (check_case) {
     incorrect_case <- logical(length(files))
-    if (!is_linux()) {
+    if (!is_linux() || force_case_check) {
       incorrect_case[exists] <-
         !vlapply(files[exists], file_has_canonical_case)
+      if (any(incorrect_case)) {
+        correct <- vcapply(files[incorrect_case], file_canonical_case)
+        names(correct) <- files[incorrect_case]
+        attr(exists, "incorrect_case") <- incorrect_case
+        attr(exists, "correct_case") <- correct
+        exists[incorrect_case] <- FALSE
+      }
     }
-    attr(exists, "incorrect_case") <- incorrect_case
-    exists[incorrect_case] <- FALSE
   }
 
   exists
 }
 
-## These two have quite similar patterns
-file_has_canonical_case <- function(filename) {
-  path <- strsplit(filename, "[/\\\\]")[[1]]
+
+file_split_base <- function(filename, lowercase = FALSE) {
+  path <- strsplit(filename, "[/\\\\]")[[1L]]
   if (!nzchar(path[[1]])) {
     base <- "/"
     path <- path[-1L]
+    absolute <- TRUE
   } else if (grepl("^[A-Za-z]:", path[[1]])) {
     base <- paste0(path[[1L]], "/")
     path <- path[-1L]
+    absolute <- TRUE
   } else {
     base <- "."
+    absolute <- FALSE
   }
+  if (lowercase) {
+    path <- tolower(path)
+  }
+  list(path = path[nzchar(path)], base = base, absolute = absolute)
+}
 
-  for (p in path[nzchar(path)]) {
+
+file_has_canonical_case <- function(filename) {
+  dat <- file_split_base(filename)
+  base <- dat$base
+  absolute <- dat$absolute
+
+  for (p in dat$path) {
     if (p %in% dir(base, all.files = TRUE)) {
-      base <- paste(base, p, sep = "/")
+      base <- paste(base, p, sep = if (absolute) "" else "/")
+      absolute <- FALSE
     } else {
       return(FALSE)
     }
@@ -463,75 +474,63 @@ file_has_canonical_case <- function(filename) {
   TRUE
 }
 
+## This one here behaves differently on unix because we could have
+## files called Foo and foo next to each other (but not on
+## windows/mac)
 file_canonical_case <- function(filename) {
- path <- strsplit(tolower(filename), "[/\\\\]")[[1]]
- if (!nzchar(path[[1]])) {
-   base <- "/"
-   path <- path[-1]
- } else if (grepl("^[A-Za-z]:", path[[1]])) {
-   base <- paste0(path[[1]], "/")
-   path <- path[-1]
- } else {
-   base <- "."
- }
+  dat <- file_split_base(filename, TRUE)
+  base <- dat$base
+  path <- dat$path
+  absolute <- dat$absolute
 
- for (p in path[nzchar(path)]) {
-   pos <- dir(base, all.files = TRUE)
-   i <- match(p, tolower(pos))
-   if (is.na(i)) {
-     return(NA_character_)
-   } else {
-     base <- paste(base, pos[[i]], sep = "/")
-   }
- }
+  for (p in dat$path) {
+    pos <- dir(base, all.files = TRUE)
+    i <- match(p, tolower(pos))
+    if (is.na(i)) {
+      return(NA_character_)
+    } else {
+      base <- paste(base, pos[[i]], sep = if (absolute) "" else "/")
+      absolute <- FALSE
+    }
+  }
 
- if (grepl("^\\./", base) && !grepl("^\\./", filename)) {
-   base <- sub("^\\./", "", base)
- }
- base
+  if (grepl("^\\./", base) && !grepl("^\\./", filename)) {
+    base <- sub("^\\./", "", base)
+  }
+  base
 }
 
-copy_directory <- function(src, as) {
+copy_directory <- function(src, as, rollback_on_error = FALSE) {
+  assert_is_directory(src)
   files <- dir(src, all.files = TRUE, no.. = TRUE, full.names = TRUE)
+  if (rollback_on_error) {
+    if (file.exists(as)) {
+      stop("Destination cannot already exist")
+    }
+    on.exit(unlink(as, recursive = TRUE))
+  }
   dir.create(as, FALSE, TRUE)
   res <- file.copy(files, as, recursive = TRUE)
   if (!all(res)) {
     stop("Error copying files")
   }
-}
-
-expand_directory_list <- function(files) {
-  if (is.null(files)) {
-    return(NULL)
+  if (rollback_on_error) {
+    on.exit()
   }
-  i <- is_directory(files)
-  extra <- unlist(lapply(files[i], list_all_files), use.names = FALSE)
-  union(files[!i], extra)
-}
-
-list_all_files <- function(path) {
-  sort_c(dir(path, recursive = TRUE, full.names = TRUE, all.files = TRUE,
-             no.. = TRUE))
 }
 
 
 ordered_map_to_list <- function(x) {
   ## This should not happen, but this is what would happen if we had
-  ## a corrupted ordered map.  I think that the yaml parrsers will
+  ## a corrupted ordered map.  I think that the yaml parsers will
   ## fix that for us though.  See similar faff in
   ## recipe_read_check_artefacts.
-  stopifnot(all(lengths(x) == 1L),
-            vlapply(x, function(el) !is.null(names(el))))
   if (!all(lengths(x) == 1L)) {
-    stop("I am confused here")
+    stop("Corrupt ordered map (this should never happen)")
   }
+  stopifnot(vlapply(x, function(el) !is.null(names(el))))
   set_names(lapply(x, function(x) x[[1]]),
             vcapply(x, names))
-}
-
-
-drop_na <- function(x) {
-  x[!is.na(x)]
 }
 
 
@@ -562,4 +561,143 @@ source_to_function <- function(filename, name, parent) {
 get_version <- function(x, numeric = TRUE, default = "0.0.0") {
   v <- x %||% default
   if (numeric) numeric_version(v) else as.character(v)
+}
+
+
+abbreviate <- function(x, len = round(getOption("width", 80) * 0.8)) {
+  x <- sub("\n.*", "", x)
+  i <- nchar(x) > len
+  if (any(i)) {
+    x[i] <- paste0(substr(x[i], 1, len - 3L), "...")
+  }
+  x
+}
+
+handle_missing_packages <- function(missing_packages, force = FALSE) {
+  ## check if we are interactive and logging is active...
+  if (show_question() || force) {
+    install_missing_packages(missing_packages)
+  } else {
+    ## ...we're not in interactive environment so just print out the command
+    stop_missing_packages(missing_packages)
+  }
+}
+
+install_missing_packages <- function(missing_packages) {
+  ## collapse vector to packages to string "c('pckg_1','pckg_2')"
+  vector_packages <- sprintf("install.packages(c(%s))",
+                             paste(squote(missing_packages), collapse = ", "))
+
+  ## ...if so ask if Orderly should try to install the pacakges
+  question <- "Should I try to install missing packages by running:"
+  install_command <- sprintf("\n%s\n\n    %s", question, vector_packages)
+
+  if (prompt_ask_yes_no(install_command)) {
+    install_packages(missing_packages)
+  } else {
+    stop_missing_packages(missing_packages)
+  }
+}
+
+stop_missing_packages <- function(missing_packages) {
+  vector_packages <- sprintf("install.packages(c(%s))",
+                             paste(squote(missing_packages), collapse = ", "))
+  question <- "To install the missing packages run:"
+  install_command <- sprintf("\n%s\n\n    %s", question, vector_packages)
+  msg <- sprintf("Missing packages: %s\n%s",
+                 paste(squote(missing_packages), collapse = ", "),
+                 install_command)
+  stop(msg)
+}
+
+prompt_ask_yes_no <- function(prompt) {
+  utils::menu(c("no", "yes"), FALSE, title = prompt) == 2 # nocov
+}
+
+show_question <- function() {
+  (interactive() && !isTRUE(getOption("orderly.nolog")))
+}
+
+install_packages <- function(missing_packages) {
+  ## try to install missing packages...
+  utils::install.packages(missing_packages, quiet = TRUE)
+  ## ...then check that they have been sucessful
+  msg <- setdiff(missing_packages, .packages(TRUE))
+  if (length(msg) > 0) {
+    stop(sprintf("Could not install these packages: %s",
+                 paste(squote(msg), collapse = ", ")))
+  }
+}
+
+
+flow_text <- function(x) {
+  paste(strwrap(paste(x, collapse = " ")), collapse = "\n")
+}
+
+
+sqlite_backup <- function(src, dest) {
+  if (file.exists(dest)) {
+    file.rename(dest, paste0(dest, ".prev"))
+  }
+
+  dest_con <- DBI::dbConnect(RSQLite::SQLite(), dest)
+  on.exit(DBI::dbDisconnect(dest_con))
+
+  src_con <- DBI::dbConnect(RSQLite::SQLite(), src)
+  on.exit(DBI::dbDisconnect(src_con), add = TRUE)
+
+  RSQLite::sqliteCopyDatabase(src_con, dest_con)
+  invisible(dest)
+}
+
+
+periodic <- function(fun, period) {
+  fun <- match.fun(fun)
+  force(period)
+  last <- Sys.time()
+  function() {
+    now <- Sys.time()
+    if (now > last + period) {
+      fun()
+      last <<- now
+    }
+  }
+}
+
+
+protect <- function(fun) {
+  fun <- match.fun(fun)
+  function() {
+    tryCatch(fun(), error = function(e) NULL)
+  }
+}
+
+
+## Does not exist in older R (< 3.3.0 I think)
+file_size <- function(path) {
+  file.info(path, extra_cols = FALSE)$size
+}
+
+
+file_info <- function(path, workdir = NULL) {
+  if (is.null(path)) {
+    return(NULL)
+  }
+  if (!is.null(workdir)) {
+    return(withr::with_dir(workdir, file_info(path)))
+  }
+  data_frame(filename = path,
+             file_hash = hash_files(path, FALSE),
+             file_size = file_size(path))
+}
+
+
+file_in_data <- function(...) {
+  d <- list(...)
+  n <- viapply(d, NROW, USE.NAMES = FALSE)
+  ret <- cbind(file_purpose = rep(names(d), n),
+               do.call("rbind", d),
+               stringsAsFactors = FALSE)
+  rownames(ret) <- NULL
+  ret
 }

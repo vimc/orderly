@@ -20,16 +20,18 @@ test_that("non-empty", {
 
 test_that("query through lifecycle", {
   path <- prepare_orderly_example("minimal")
-  expect_equal(orderly_list(config = path), "example")
+  expect_equal(orderly_list(root = path), "example")
 
   empty <- data.frame(name = character(0), id = character(0),
                       stringsAsFactors = FALSE)
   expect_equal(orderly_list_drafts(path), empty)
   expect_equal(orderly_list_archive(path), empty)
 
-  id <- orderly_run("example", config = path, echo = FALSE)
+  id <- orderly_run("example", root = path, echo = FALSE)
 
-  p <- orderly_locate(id, config = path)
+  expect_null(
+    orderly_find_report(id, "example", draft = FALSE, config = path))
+  p <- orderly_find_report(id, "example", draft = TRUE, config = path)
   expect_true(file.exists(p))
   expect_equal(basename(dirname(p)), "example")
   expect_equal(basename(dirname(dirname(p))), "draft")
@@ -51,9 +53,11 @@ test_that("query through lifecycle", {
                "Did not find draft report")
   expect_null(orderly_find_name("id", path, FALSE, TRUE, FALSE))
 
-  orderly_commit(id, config = path)
+  orderly_commit(id, root = path)
 
-  p <- orderly_locate(id, config = path)
+  expect_null(
+    orderly_find_report(id, "example", draft = TRUE, config = path))
+  p <- orderly_find_report(id, "example", draft = FALSE, config = path)
   expect_true(file.exists(p))
   expect_equal(basename(dirname(p)), "example")
   expect_equal(basename(dirname(dirname(p))), "archive")
@@ -94,40 +98,84 @@ test_that("latest_ids", {
   id_all <- c(id_both, id_same)
   expect_identical(latest_id(id_all), sort_c(id_same))
   expect_identical(latest_id(sample(id_all)), sort_c(id_same))
+
+  ## Unexpected inputs
+  expect_error(latest_id(c(id, "other")),
+               "Invalid report id: 'other'")
 })
 
 test_that("latest", {
   path <- prepare_orderly_example("minimal")
 
-  expect_equal(orderly_latest("example", config = path, must_work = FALSE),
+  expect_equal(orderly_latest("example", root = path, must_work = FALSE),
                NA_character_)
-  expect_equal(orderly_latest("example", config = path, must_work = FALSE,
+  expect_equal(orderly_latest("example", root = path, must_work = FALSE,
                               draft = TRUE),
                NA_character_)
-  expect_error(orderly_latest("example", config = path),
+  expect_error(orderly_latest("example", root = path),
                "Did not find any archive reports for example")
-  expect_error(orderly_latest("example", config = path, draft = TRUE),
+  expect_error(orderly_latest("example", root = path, draft = TRUE),
                "Did not find any draft reports for example")
 
-  expect_equal(orderly_latest(NULL, config = path, must_work = FALSE),
+  expect_equal(orderly_latest(NULL, root = path, must_work = FALSE),
                NA_character_)
 
-  id1 <- orderly_run("example", config = path, echo = FALSE)
-  expect_equal(orderly_latest(NULL, config = path, draft = TRUE),
+  id1 <- orderly_run("example", root = path, echo = FALSE)
+  expect_equal(orderly_latest(NULL, root = path, draft = TRUE),
                id1)
-  expect_equal(orderly_latest(NULL, config = path, draft = FALSE,
+  expect_equal(orderly_latest(NULL, root = path, draft = FALSE,
                               must_work = FALSE), NA_character_)
   Sys.sleep(0.1)
-  id2 <- orderly_run("example", config = path, echo = FALSE)
-  expect_equal(orderly_latest("example", config = path, draft = TRUE), id2)
-  expect_equal(orderly_latest(NULL, config = path, draft = TRUE),
+  id2 <- orderly_run("example", root = path, echo = FALSE)
+  expect_equal(orderly_latest("example", root = path, draft = TRUE), id2)
+  expect_equal(orderly_latest(NULL, root = path, draft = TRUE),
                id2)
-  expect_equal(orderly_latest(NULL, config = path, draft = FALSE,
+  expect_equal(orderly_latest(NULL, root = path, draft = FALSE,
                               must_work = FALSE), NA_character_)
 
-  orderly_commit(id2, config = path)
-  expect_equal(orderly_latest("example", config = path, draft = TRUE), id1)
-  expect_equal(orderly_latest("example", config = path), id2)
-  orderly_commit(id1, config = path)
-  expect_equal(orderly_latest("example", config = path), id2)
+  orderly_commit(id2, root = path)
+  expect_equal(orderly_latest("example", root = path, draft = TRUE), id1)
+  expect_equal(orderly_latest("example", root = path), id2)
+})
+
+
+test_that("Behaviour with rogue files", {
+  testthat::skip_on_cran()
+  path <- prepare_orderly_example("minimal")
+  id1 <- orderly_run("example", root = path, echo = FALSE)
+  id2 <- orderly_run("example", root = path, echo = FALSE)
+  p1 <- orderly_commit(id1, root = path)
+  p2 <- orderly_commit(id2, root = path)
+  expect_equal(orderly_latest("example", root = path), id2)
+
+  zip_dir(file.path(path, "archive", "example", id2))
+
+  expect_error(
+    orderly_latest("example", root = path),
+    "Unexpected files within orderly directory '.*archive/example': '.*\\.zip'")
+})
+
+
+test_that("orderly_find_report", {
+  path <- prepare_orderly_example("minimal")
+  id1 <- orderly_run("example", root = path, echo = FALSE)
+  id2 <- orderly_run("example", root = path, echo = FALSE)
+
+  p <- orderly_find_report("latest", "example", config = path)
+  expect_equal(normalizePath(p),
+               normalizePath(file.path(path, "draft", "example", id2)))
+  p <- orderly_find_report(id1, "example", config = path)
+  expect_equal(normalizePath(p),
+               normalizePath(file.path(path, "draft", "example", id1)))
+
+  expect_null(
+    orderly_find_report(new_report_id(), "example", config = path))
+  expect_error(
+    orderly_find_report(new_report_id(), "example", config = path,
+                        must_work = TRUE),
+    "Did not find draft report example:")
+  expect_error(
+    orderly_find_report(new_report_id(), "example", config = path,
+                        must_work = TRUE, draft = FALSE),
+    "Did not find archived report example:")
 })

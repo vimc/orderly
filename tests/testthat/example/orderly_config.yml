@@ -1,7 +1,9 @@
-source:
-  driver: RPostgres::Postgres
-  host: montagu.dide.ic.ac.uk
-  port: 8888
-  user: vimc
-  dbname: montagu
-  password: changeme
+database:
+  source:
+    driver: RPostgres::Postgres
+    args:
+      host: montagu.dide.ic.ac.uk
+      port: 8888
+      user: vimc
+      dbname: montagu
+      password: changeme

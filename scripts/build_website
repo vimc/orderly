@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+set -ex
+HERE=${BASH_SOURCE%/*}
+ROOT=$(realpath $HERE/..)
+
+REGISTRY=docker.montagu.dide.ic.ac.uk:5000
+TAG=$(git symbolic-ref --short HEAD)
+SHA=$(git rev-parse --short=7 HEAD)
+
+ORDERLY_BASE=$REGISTRY/orderly:$TAG
+ORDERLY_DEV=$REGISTRY/orderly-dev:$TAG
+
+USER_UID=`id -u`
+USER_GID=`id -g`
+USER_STR="${USER_UID}:${USER_GID}"
+
+DB_CONTAINER=orderly-db
+DB_PASS=schemaspy
+DB_IMAGE=postgres:10.4
+DB_NW=orderly-nw
+DB_NAME=orderly
+
+SCHEMASPY_NAME=vimc/orderly-schemaspy
+
+DOCS_DIR=$ROOT/docs
+
+docker pull $ORDERLY_BASE
+
+docker build \
+       --build-arg ORDERLY_BASE=$ORDERLY_BASE \
+       --tag $ORDERLY_DEV \
+       -f $ROOT/docker/Dockerfile.dev \
+       $ROOT
+
+docker build -t $SCHEMASPY_NAME "$HERE/schema"
+
+docker network create $DB_NW || true
+
+docker run -d --rm \
+       --network=$DB_NW \
+       -e POSTGRES_PASS=$DB_PASS \
+       -e POSTGRES_DB=$DB_NAME \
+       --name $DB_CONTAINER \
+       $DB_IMAGE
+function cleanup {
+    echo "Cleaning up!"
+    set +e
+    docker kill $DB_CONTAINER
+    docker network rm $DB_NW
+}
+trap cleanup EXIT
+
+docker cp "$HERE/schema/postgres_wait" $DB_CONTAINER:/usr/local/bin
+docker exec $DB_CONTAINER postgres_wait
+# I see a further required wait here
+sleep 2
+
+docker run --rm \
+       --network=$DB_NW \
+       -w /orderly/scripts/schema \
+       $ORDERLY_DEV \
+       ./create_schema
+
+rm -rf $DOCS_DIR
+mkdir -p $DOCS_DIR
+docker run --rm \
+       --network=$DB_NW \
+       -w /orderly \
+       -v $DOCS_DIR:/orderly/docs \
+       --user "$USER_STR" \
+       $ORDERLY_DEV \
+       Rscript -e 'pkgdown::build_site(document = FALSE)'
+
+SCHEMA_DEST=${DOCS_DIR}/schema
+if [ -f $DEST/index.html ]; then
+    rm -rf $SCHEMA_DEST
+fi
+mkdir -p $SCHEMA_DEST
+
+docker run --rm \
+       --user "$USER_STR" \
+       -v $SCHEMA_DEST:/schema \
+       --network=$DB_NW \
+       $SCHEMASPY_NAME \
+       -db $DB_NAME \
+       -u postgres \
+       -host $DB_CONTAINER \
+       -p $DB_PASS \
+       -s public \
+       -o /schema
+
+if [ $TAG = "master" ]; then
+    REMOTE_URL=$(git config --get remote.origin.url | \
+                        sed -s 's;https://github.com/;git@github.com:;')
+    rm -rf ${DOCS_DIR}/.git
+    git init ${DOCS_DIR}
+    git -C ${DOCS_DIR} checkout --orphan gh-pages
+    git -C ${DOCS_DIR} add .
+    git -C ${DOCS_DIR} commit --no-verify -m "Update docs for version ${SHA}"
+    git -C ${DOCS_DIR} remote add origin -m "gh-pages" ${REMOTE_URL}
+    git -C ${DOCS_DIR} push --force -u origin gh-pages
+fi

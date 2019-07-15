@@ -9,10 +9,10 @@ recipe_read <- function(path, config, validate = TRUE) {
 
   required <- c("script", # filename
                 "artefacts",
-                "data",
                 config$fields$name[config$fields$required])
   optional <- c("displayname",
                 "description",
+                "data",
                 "parameters", # character >= 1
                 "views",
                 "packages",
@@ -20,14 +20,14 @@ recipe_read <- function(path, config, validate = TRUE) {
                 "resources",
                 "connection",
                 "depends",
+                "global_resources",
                 config$fields$name[!config$fields$required])
   check_fields(info, filename, required, optional)
 
   ## Fill any any missing optional fields:
   i <- !(config$fields$name %in% names(info))
   if (any(i)) {
-    info[config$fields$name[i]] <-
-      lapply(config$fields$type[i], set_mode, x = NA)
+    info[config$fields$name[i]] <- NA_character_
   }
 
   fieldname <- function(name) {
@@ -47,34 +47,46 @@ recipe_read <- function(path, config, validate = TRUE) {
   if (!is.null(info$packages)) {
     assert_character(info$packages, fieldname("packages"))
   }
+
+  recipe_read_check_sources(info$sources, info$resources, filename, path)
   if (!is.null(info$sources)) {
     assert_character(info$sources, fieldname("sources"))
     assert_file_exists(file.path(path, info$sources))
-    ## TODO: check relative path
-    info$resources <- c(info$resources, info$sources)
   }
   if (!is.null(info$connection)) {
-    assert_scalar_character(info$connection)
+    if (length(config$database) == 0L) {
+      stop("No databases are configured - can't use a 'connection' section")
+    }
+    if (is.character(info$connection)) {
+      if (!config$database_old_style) {
+        ## TODO: Better message?
+        msg <- c("Use of strings for connection: is deprecated and will be",
+                 "removed in a future orderly version - please use",
+                 "connection: <object>: <dbname> instead.  See the main",
+                 "package vignette for details")
+        orderly_warning(flow_text(msg))
+      }
+      if (length(config$database) > 1L) {
+        msg <- paste("More than one database configured; update 'connection'",
+                     sprintf("from '%s' to '%s: <dbname>' in '%s'",
+                             info$connection, info$connection, filename))
+        stop(msg, call. = FALSE)
+      }
+      assert_scalar_character(info$connection, fieldname("connection"))
+      info$connection <- set_names(as.list(names(config$database)),
+                                   info$connection)
+    } else {
+      assert_named(info$connection, unique = TRUE,
+                   name = fieldname("connection"))
+      for (i in names(info$connection)) {
+        match_value(info$connection[[i]], names(config$database),
+                    name = sprintf("%s:%s", fieldname("connection"), i))
+      }
+    }
   }
 
-  is_shiny <- info$artefacts[, "format"] == "shinyapp"
-  shiny_dirs <- unlist(info$artefacts[is_shiny, "filenames"], use.names = FALSE)
-  if (length(shiny_dirs) > 0L) {
-    info$resources <- c(info$resources, shiny_dirs)
-  }
-
-  ## Then some processing:
-  if (!is.null(info$data)) {
-    assert_named(info$data, TRUE, fieldname("data"))
-    info$data <- string_or_filename(info$data, path, fieldname("data"))
-    info$resources <- c(info$resources, attr(info$data, "files"))
-  }
-
-  if (!is.null(info$views)) {
-    assert_named(info$views, TRUE, fieldname("views"))
-    info$views <- string_or_filename(info$views, path, fieldname("views"))
-    info$resources <- c(info$resources, attr(info$views, "files"))
-  }
+  info <- recipe_read_query("data", info, filename, config)
+  info <- recipe_read_query("views", info, filename, config)
 
   assert_scalar_character(info$script, fieldname("script"))
   assert_file_exists(info$script, workdir = path, name = "Script file")
@@ -83,7 +95,7 @@ recipe_read <- function(path, config, validate = TRUE) {
     el <- config$fields[i, ]
     x <- info[[el$name]]
     if (!is.null(x) || el$required) {
-      assert_type(x, el$type, fieldname(el$name))
+      assert_scalar_character(x, fieldname(el$name))
     }
   }
 
@@ -104,24 +116,20 @@ recipe_read <- function(path, config, validate = TRUE) {
 ## *format* (which we can get from the extension) but an intent of
 ## use.
 valid_formats <- function() {
-  c("staticgraph", "interactivegraph", "data", "report", "shinyapp", "interactivehtml")
+  c("staticgraph", "interactivegraph", "data", "report", "interactivehtml")
 }
 
 string_or_filename <- function(x, path, name) {
-  if (is.list(x)) {
-    if (all(vlapply(x, is.character))) {
-      x <- vcapply(x, identity)
-    }
+  assert_scalar_character(x, name)
+  if (grepl("\\.sql$", x)) {
+    file <- x
+    assert_file_exists(file, workdir = path, name = "SQL file")
+    query <- read_lines(file.path(path, file))
+  } else {
+    file <- NULL
+    query <- x
   }
-  assert_character(x, name)
-  i <- grepl("\\.sql$", x)
-  if (any(i)) {
-    files <- x[i]
-    assert_file_exists(files, workdir = path, name = "SQL file")
-    x[i] <- vcapply(file.path(path, files), read_lines, USE.NAMES = FALSE)
-    attr(x, "files") <- unname(files)
-  }
-  x
+  list(query = query, query_file = file)
 }
 
 recipe_read_check_artefacts <- function(x, filename, path) {
@@ -132,11 +140,6 @@ recipe_read_check_artefacts <- function(x, filename, path) {
     check_fields(el, sprintf("%s:artefacts[%d]", filename, i), v, NULL)
     for (j in v) {
       assert_character(el[[j]], sprintf("artefacts:%s:%s", i, j))
-    }
-    if (identical(format, "shiny")) {
-      nm <- sprintf("artefacts:%s:filenames", i)
-      assert_scalar(el$filenames, nm)
-      assert_is_directory(el$filenames, workdir = path, name = nm)
     }
     c(el[v], list(format = format))
   }
@@ -161,9 +164,7 @@ recipe_read_check_artefacts <- function(x, filename, path) {
   ## This converts the latter into the former:
   if (!is.null(names(x)) && length(x) != 1L) {
     if (any(names(x) %in% valid_formats())) {
-      if (length(x) > 3) {
-        x <- x[1:3] # keep things reasonable
-      }
+      x <- utils::tail(x, 3)
       correct <- list(artefacts = lapply(seq_along(x), function(i) x[i]))
       msg <- c("Your artefacts look incorrectly formatted; they must be",
                "an _ordered map_.  Currently you have something like",
@@ -199,7 +200,7 @@ recipe_read_check_artefacts <- function(x, filename, path) {
   dups <- unique(filenames[duplicated(filenames)])
   if (length(dups) > 0L) {
     stop("Duplicate artefact filenames are not allowed: ",
-         paste(dups, collapse = ", "))
+         paste(squote(dups), collapse = ", "))
   }
 
   res
@@ -223,6 +224,22 @@ recipe_read_check_resources <- function(x, filename, path) {
   ## being used.
   x
 }
+
+
+recipe_read_check_sources <- function(sources, resources, filename, path) {
+  if (is.null(sources)) {
+    return()
+  }
+  assert_character(sources, sprintf("%s:%s", filename, "sources"))
+  assert_file_exists(sources, workdir = path, name = "Source file")
+  err <- intersect(sources, resources)
+  if (length(err)) {
+    stop(sprintf("Do not list source files (sources) as resources:%s",
+                 paste(sprintf("\n  - %s", err), collapse = "")),
+         call. = FALSE)
+  }
+}
+
 
 recipe_read_check_depends <- function(x, filename, config, validate) {
   ## TODO: this is going to assume that the artefacts are all in place
@@ -284,7 +301,8 @@ recipe_read_check_depends <- function(x, filename, config, validate) {
 
       ## VIMC-2017: check that a file is actually an artefact
       meta <- readRDS(path_orderly_run_rds(el$path))
-      ok <- el$filename %in% names(meta$meta$hash_artefacts)
+      i <- match(el$filename, meta$meta$file_info_artefacts$filename)
+      ok <- !is.na(i)
       if (any(!ok)) {
         stop(sprintf(
           "Dependency %s not an artefact of %s/%s:\n%s",
@@ -294,9 +312,17 @@ recipe_read_check_depends <- function(x, filename, config, validate) {
           call. = FALSE)
       }
 
-      el$hash <- hash_files(filename_full, FALSE)
+      el$hash <- meta$meta$file_info_artefacts$file_hash[i]
+      err <- el$hash != hash_files(filename_full, FALSE)
+      if (any(err)) {
+        stop(sprintf(
+          paste("Validation of dependency %s (%s/%s) failed:",
+                "artefact has been modified"),
+          paste(squote(el$filename[err]), collapse = ", "), el$name, el$id),
+          call. = FALSE)
+      }
 
-      el$time <- readRDS(path_orderly_run_rds(el$path))$time
+      el$time <- meta$time
 
       ## Is this considered to be the "latest" copy of a dependency?
       el$is_latest <- el$id == "latest" ||
@@ -310,4 +336,54 @@ recipe_read_check_depends <- function(x, filename, config, validate) {
   }
 
   rbind_df(lapply(seq_along(x), check_use1))
+}
+
+
+recipe_read_query <- function(field, info, filename, config) {
+  d <- info[[field]]
+  path <- dirname(filename)
+
+  if (!is.null(d)) {
+    if (length(config$database) == 0L) {
+      stop("No databases are configured - can't use a 'data' section")
+    }
+    assert_named(d, TRUE, sprintf("%s:%s", filename, field))
+    f <- function(nm) {
+      name <- sprintf("%s:%s:%s", filename, field, nm)
+      d <- d[[nm]]
+      if (is.character(d)) {
+        if (!config$database_old_style) {
+          msg <- c("Use of strings for queries is deprecated and will be",
+                   "removed in a future orderly version - please use",
+                   "query: <yourstring> instead.  See the main package",
+                   "vignette for details")
+          orderly_warning(flow_text(msg))
+        }
+        d <- string_or_filename(d, path, name)
+      } else {
+        check_fields(d, name, "query", "database")
+        dat <- string_or_filename(d$query, path, sprintf("%s:query", name))
+        d[names(dat)] <- dat
+      }
+      if (is.null(d$database)) {
+        if (length(config$database) > 1L) {
+          msg <- paste("More than one database configured; a 'database'",
+                       sprintf("field is required for '%s'", name))
+          stop(msg, call. = FALSE)
+        }
+        d$database <- names(config$database)[[1]]
+      } else {
+        match_value(d$database, names(config$database),
+                    sprintf("%s:database", name))
+      }
+      d
+    }
+
+    d[] <- lapply(names(d), f)
+
+    query_files <- unlist(lapply(d, "[[", "query_file"), FALSE, FALSE)
+    info$resources <- c(info$resources, query_files)
+    info[[field]] <- d
+  }
+  info
 }

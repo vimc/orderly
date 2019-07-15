@@ -2,48 +2,75 @@
 % Please edit documentation in R/remote.R
 \name{orderly_run_remote}
 \alias{orderly_run_remote}
-\title{Run a report on montagu}
+\title{Run a report on a remote server}
 \usage{
-orderly_run_remote(name, parameters = NULL, ref = NULL, timeout = 3600,
-  poll = 1, open = TRUE, stop_on_error = TRUE, progress = TRUE,
-  config = NULL, locate = TRUE, remote = NULL)
+orderly_run_remote(name, parameters = NULL, ref = NULL,
+  timeout = NULL, wait = 3600, poll = 1, open = TRUE,
+  stop_on_error = TRUE, stop_on_timeout = TRUE, progress = TRUE,
+  root = NULL, locate = TRUE, remote = NULL)
 }
 \arguments{
 \item{name}{Name of the report}
 
-\item{parameters}{Parameters for the reprt}
+\item{parameters}{Parameters for the report}
 
 \item{ref}{Optional reference, indicating which branch should be
-used.  This cannot be used on production.}
+used.  This cannot be used if the remote has \code{master_only}
+set.}
 
-\item{timeout}{Time to wait for the report to be returned (in seconds)}
+\item{timeout}{Time to tell the server to wait before killing the
+report.}
+
+\item{wait}{Time to wait for the report to be run; if the report
+takes longer than this time to run but \code{timeout} is longer
+it will remain running on the server but we will stop waiting
+for it and instead thrown an error.}
 
 \item{poll}{Period to poll the server for results (in seconds)}
 
 \item{open}{Logical, indicating if the report should be opened in
-a browser on completion}
+a browser on completion (if supported by the remote)}
 
 \item{stop_on_error}{Logical, indicating if we should throw an
 error if the report fails.  If you set this to \code{FALSE} it
-will be much easier to debug, but more annoying in scripts.}
+will be much easier to debug, but more annoying in scripts.  If
+the times out on the server (i.e., takes longer than
+\code{timeout}) that counts as an error.}
+
+\item{stop_on_timeout}{Logical, indicating if we should throw an
+error if the report takes longer than \code{wait} seconds to
+complete.}
 
 \item{progress}{Logical, indicating if a progress spinner should
 be included.}
 
-\item{config}{An orderly configuration, or the path to one (or
-\code{NULL} to locate one if \code{locate} is \code{TRUE}).}
+\item{root}{The path to an orderly root directory, or \code{NULL}
+(the default) to search for one from the current working
+directory if \code{locate} is \code{TRUE}).}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
 
-\item{remote}{Description of the location.  This must be an
-\code{orderly_remote} object.}
+\item{remote}{Description of the location.  Typically this is a
+character string indicating a remote specified in the
+\code{remotes} block of your \code{orderly_config.yml}.  It is
+also possible to pass in a directly created remote object (e.g.,
+using \code{\link{orderly_remote_path}}, or one provided by
+another package).  If left \code{NULL}, then the default remote
+for this orderly repository is used - by default that is the
+first listed remote.}
 }
 \description{
-Run a report on a remote server (for now this means montagu).  Be
-careful doing this because once a report is run to completion on
-production it cannot be deleted.  So get things working locally,
-test on science and then run on production.
+Run a report on a remote server.  Note that this is only supported
+for remotes using OrderlyWeb at present.
+}
+\examples{
+path_remote <- orderly::orderly_example("demo")
+path_local <- orderly::orderly_example("demo")
+remote <- orderly::orderly_remote_path(path_remote)
+# Currently, path remotes don't support run
+try(orderly::orderly_run_remote(
+  "minimal", remote = remote, root = path_local))
 }

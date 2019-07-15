@@ -4,14 +4,15 @@
 \alias{orderly_cleanup}
 \title{Orderly cleanup}
 \usage{
-orderly_cleanup(name = NULL, config = NULL, locate = TRUE, draft = TRUE,
-  data = TRUE, failed_only = FALSE)
+orderly_cleanup(name = NULL, root = NULL, locate = TRUE,
+  draft = TRUE, data = TRUE, failed_only = FALSE)
 }
 \arguments{
 \item{name}{Optional name; in this case only clean up drafts with this name}
 
-\item{config}{An orderly configuration, or the path to one (or
-\code{NULL} to locate one if \code{locate} is \code{TRUE}).}
+\item{root}{The path to an orderly root directory, or \code{NULL}
+(the default) to search for one from the current working
+directory if \code{locate} is \code{TRUE}).}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
@@ -31,5 +32,24 @@ end-of-run metadata).  This will also clean up drafts created by
 Clean up orderly draft and data directories.  Deletes all drafts
 (possibly just for a set of report names) and then deletes
 dangling data sets that are not pointed to by any draft or
-commited reports
+committed reports
+}
+\examples{
+# In a new example orderly, run two reports and commit only the
+# second one:
+path <- orderly::orderly_example("minimal")
+id1 <- orderly::orderly_run("example", root = path)
+id2 <- orderly::orderly_run("example", root = path)
+orderly::orderly_commit(id2, root = path)
+
+# We now have one draft and one archive report:
+orderly::orderly_list_drafts(root = path)
+orderly::orderly_list_archive(root = path)
+
+# To clean up the drafts:
+orderly::orderly_cleanup(root = path)
+
+# We now have no draft and one archive reports:
+orderly::orderly_list_drafts(root = path)
+orderly::orderly_list_archive(root = path)
 }

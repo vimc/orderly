@@ -1,21 +1,24 @@
-# This file must contain the field 'source', which must contain a
-# field 'driver' that will be one of RSQLite::SQLite or
+# To use external databases, this file must contain the field
+# 'database', which contains database configurations, each of which
+# must contain a field 'driver' that will be one of RSQLite::SQLite or
 # RPostgres::Postgres (other drivers may work too in future, but not
 # yet).
 #
 # For example, a configuration to use Postgres as the source database
 # might look like:
 #
-#   source:
-#     driver: RPostgres::Postgres
-#     host: localhost
-#     port: 5432
-#     user: myuser
-#     dbname: databasename
-#     password: p4ssw0rd
+#   database:
+#     source:
+#       driver: RPostgres::Postgres
+#       args:
+#         host: localhost
+#         port: 5432
+#         user: myuser
+#         dbname: databasename
+#         password: p4ssw0rd
 #
-# All arguments other than driver are optional and will be passed
-# through during the 'DBI::dbConnect()' call.
+# All arguments in the "args" block will be passed through during the
+# 'DBI::dbConnect()' call.
 #
 # If using SQLite, then the "dbname" argument will be interpreted
 # relative to the orderly root if not absolute .  Be sure to exclude
@@ -24,8 +27,7 @@
 # Other options accepted by RSQLite are allowed but are much less
 # commonly useful (as of RSQLite v1.1-2, loadable.extensions,
 # cache_size, synchronous, flags, vfs)
-source:
-  driver: ~
+database: ~
 
 # It is not necessary to configure a destination driver explicitly
 # unless you want to change the default (which is into a SQLite
@@ -34,7 +36,8 @@ source:
 #
 #   destination:
 #     driver: RSQLite::SQLite
-#     dbname: different.sqlite
+#     args:
+#       dbname: different.sqlite
 
 # In addition, it may contain a 'fields' section defining custom
 # fields, for example:

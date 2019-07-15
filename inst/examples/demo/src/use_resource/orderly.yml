@@ -1,8 +1,10 @@
 data:
-  dat: SELECT name, number FROM thing
+  dat:
+    query: SELECT name, number FROM thing
 script: script.R
 resources:
-  meta/data.csv
+  - meta/data.csv
+  - README.md
 artefacts:
   staticgraph:
     description: A graph of things

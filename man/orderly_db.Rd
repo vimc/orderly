@@ -4,21 +4,51 @@
 \alias{orderly_db}
 \title{Connect to orderly databases}
 \usage{
-orderly_db(type, config = NULL, locate = TRUE)
+orderly_db(type, root = NULL, locate = TRUE, validate = TRUE)
 }
 \arguments{
 \item{type}{The type of connection to make (\code{source},
 \code{destination}, \code{csv} or \code{rds}).}
 
-\item{config}{An orderly configuration, or the path to one (or
-\code{NULL} to locate one if \code{locate} is \code{TRUE}).}
+\item{root}{The path to an orderly root directory, or \code{NULL}
+(the default) to search for one from the current working
+directory if \code{locate} is \code{TRUE}).}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
+
+\item{validate}{Logical, indicating if the database schema should
+be validated on open (currently only applicable with \code{type
+= "destination"}).  This is primarily intended for internal use.}
 }
 \description{
 Connect to the orderly databases.  These should be treated as as
 \emph{read only} (with the exception of \code{source}).
+}
+\examples{
+# Create an orderly that has a single commited report:
+path <- orderly::orderly_example("minimal")
+id <- orderly::orderly_run("example", root = path)
+orderly::orderly_commit(id, root = path)
+
+# The source database holds the data that might be accessible via
+# the 'data' entry in orderly.yml:
+db <- orderly::orderly_db("source", root = path)
+# This is a list, with one connection per database listed in the
+# orderly_config.yml (an empty list if none are specified):
+db
+DBI::dbListTables(db$source)
+head(DBI::dbReadTable(db$source, "data"))
+DBI::dbDisconnect(db$source)
+
+# The destination database holds information about the archived
+# reports:
+db <- orderly::orderly_db("destination", root = path)
+DBI::dbListTables(db)
+
+# These tables are documented online:
+# https://vimc.github.io/orderly/schema
+DBI::dbReadTable(db, "report_version")
 }

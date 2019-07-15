@@ -1,3 +1,5 @@
+## Low-level db functions
+
 ## This reads in the yaml version of the schema and turns it into an
 ## object ready for use.
 
@@ -6,15 +8,15 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-ORDERLY_SCHEMA_VERSION <- "0.0.1"
+ORDERLY_SCHEMA_VERSION <- "0.0.8"
 
 ## These will be used in a few places and even though they're not
 ## super likely to change it would be good
 ORDERLY_SCHEMA_TABLE <- "orderly_schema"
 ORDERLY_MAIN_TABLE <- "report_version"
-ORDERY_TABLE_LIST <- "orderly_schema_tables"
+ORDERLY_TABLE_LIST <- "orderly_schema_tables"
 
-orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
+report_db_schema_read <- function(fields = NULL, dialect = "sqlite") {
   d <- yaml_read(orderly_file("database/schema.yml"))
 
   preprepare <- function(nm) {
@@ -26,9 +28,10 @@ orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
 
   d <- set_names(lapply(names(d), preprepare), names(d))
 
+  ## Delete with VIMC-2929
   if (!is.null(fields)) {
     f <- set_names(Map(function(t, n) list(type = t, nullable = n),
-                       fields$type, !fields$required),
+                       rep("character", nrow(fields)), !fields$required),
                    fields$name)
     d[[ORDERLY_MAIN_TABLE]]$columns <- c(d[[ORDERLY_MAIN_TABLE]]$columns, f)
   }
@@ -102,72 +105,102 @@ orderly_schema_prepare <- function(fields = NULL, dialect = "sqlite") {
     sql <- c(sql, unlist(lapply(tables, "[[", "sql_fk"), FALSE, FALSE))
   }
   values <- drop_null(lapply(tables, "[[", "values"))
+  if (!is.null(fields)) {
+    values$custom_fields <- data_frame(
+      id = fields$name,
+      description = fields$description)
+  }
+
   list(tables = tables,
        sql = sql,
        values = values)
 }
 
 
+report_db_schema <- function(fields = NULL, dialect = "sqlite") {
+  key <- hash_object(list(fields, dialect))
+  if (is.null(cache$schema[[key]])) {
+    cache$schema[[key]] <- report_db_schema_read(fields, dialect)
+  }
+  cache$schema[[key]]
+}
+
+
 ## Same pattern as existing db.R version but with
-report_db2_init <- function(con, config, must_create = FALSE) {
+report_db_init <- function(con, config, must_create = FALSE, validate = TRUE) {
+  sqlite_pragma_fk(con, TRUE)
+
   if (!DBI::dbExistsTable(con, ORDERLY_SCHEMA_TABLE)) {
-    if (config$destination$driver[[1]] == "RSQLite") {
-      dialect <- "sqlite"
-    } else {
-      dialect <- "postgres"
-    }
-   dat <- orderly_schema_prepare(config$fields, dialect)
-
-    ## This should probably be tuneable:
-    if (dialect == "sqlite") {
-      DBI::dbExecute(con, "PRAGMA foreign_keys = ON")
-    }
-
-    for (s in dat$sql) {
-      DBI::dbExecute(con, s)
-    }
-    for (nm in names(dat$values)) {
-      DBI::dbWriteTable(con, nm, dat$values[[nm]], append = TRUE)
-    }
+    report_db_init_create(con, config, report_db_dialect(con))
   } else if (must_create) {
     stop(sprintf("Table '%s' already exists", ORDERLY_SCHEMA_TABLE))
-  } else {
-    sql <- sprintf("SELECT * FROM %s LIMIT 0", ORDERLY_MAIN_TABLE)
-    d <- DBI::dbGetQuery(con, sql)
-    custom_name <- config$fields$name
-    msg <- setdiff(custom_name, names(d))
-    if (length(msg) > 0L) {
-      stop(sprintf("custom fields %s not present in existing database",
-                   paste(squote(msg), collapse = ", ")))
-    }
-
-    ## TODO: this should be dealt with in a more sustainable way; the
-    ## report_db_cols() function duplicates information already
-    ## present in the yml and that should be the source of truth here
-    ## but we shuold only load that once in a session.
-    extra <- setdiff(setdiff(names(d), names(report_db_cols())),
-                     c("report", custom_name))
-    if (length(extra) > 0L) {
-      stop(sprintf("custom fields %s in database not present in config",
-                   paste(squote(extra), collapse = ", ")))
-    }
-
-    ## TODO: check the schema version here but probably not until we
-    ## know how to deal with changes!
+  } else if (validate) {
+    report_db_open_existing(con, config)
   }
 }
 
 
-report_db2_rebuild <- function(config, verbose = TRUE) {
+report_db_init_create <- function(con, config, dialect) {
+  dat <- report_db_schema(config$fields, dialect)
+  dat$values$changelog_label <- config$changelog
+
+  DBI::dbBegin(con)
+  on.exit(DBI::dbRollback(con))
+  for (s in dat$sql) {
+    DBI::dbExecute(con, s)
+  }
+  for (nm in names(dat$values)) {
+    DBI::dbWriteTable(con, nm, dat$values[[nm]], append = TRUE)
+  }
+
+  DBI::dbCommit(con)
+  on.exit()
+}
+
+
+report_db_open_existing <- function(con, config) {
+  version_db <- DBI::dbReadTable(con, ORDERLY_SCHEMA_TABLE)$schema_version
+  version_package <- ORDERLY_SCHEMA_VERSION
+  if (numeric_version(version_db) < numeric_version(version_package)) {
+    stop("orderly db needs rebuilding with orderly::orderly_rebuild()",
+         call. = FALSE)
+  }
+
+  custom_db <- DBI::dbReadTable(con, "custom_fields")$id
+  custom_config <- config$fields$name
+  custom_msg <- setdiff(custom_config, custom_db)
+  if (length(custom_msg) > 0L) {
+    stop(sprintf("custom fields %s not present in existing database",
+                 paste(squote(custom_msg), collapse = ", ")))
+  }
+  custom_extra <- setdiff(custom_db, custom_config)
+  if (length(custom_extra) > 0L) {
+    stop(sprintf("custom fields %s in database not present in config",
+                 paste(squote(custom_extra), collapse = ", ")))
+  }
+
+  label <- DBI::dbReadTable(con, "changelog_label")
+  label$public <- as.logical(label$public)
+  ok <- setequal(label$id, config$changelog$id) &&
+    identical(label$public[match(label$id, config$changelog$id)],
+              config$changelog$public %||% logical(0))
+  if (!ok) {
+    stop("changelog labels have changed: rebuild with orderly::orderly_rebuild",
+         call. = FALSE)
+  }
+}
+
+
+report_db_rebuild <- function(config, verbose = TRUE) {
   assert_is(config, "orderly_config")
-  root <- config$path
-  con <- orderly_db("destination", config)
+  root <- config$root
+  con <- orderly_db("destination", config, validate = FALSE)
   on.exit(DBI::dbDisconnect(con))
 
-  if (DBI::dbExistsTable(con, ORDERY_TABLE_LIST)) {
-    report_db2_destroy(con)
+  if (DBI::dbExistsTable(con, ORDERLY_TABLE_LIST)) {
+    report_db_destroy(con, config)
   }
-  report_db2_init(con, config)
+  report_db_init(con, config)
   reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
   if (length(reports) > 0L) {
     for (p in reports[order(basename(reports))]) {
@@ -177,15 +210,27 @@ report_db2_rebuild <- function(config, verbose = TRUE) {
       report_data_import(con, p, config)
     }
   }
+
+  legacy_report_db_rebuild_published(config)
+}
+
+
+report_db_needs_rebuild <- function(config) {
+  con <- orderly_db("destination", config, FALSE, FALSE)
+  on.exit(DBI::dbDisconnect(con))
+
+  d <- DBI::dbReadTable(con, ORDERLY_SCHEMA_TABLE)
+  numeric_version(d$schema_version) < numeric_version(ORDERLY_SCHEMA_VERSION)
 }
 
 
 report_data_import <- function(con, workdir, config) {
   dat_rds <- readRDS(path_orderly_run_rds(workdir))
-  dat_in <- recipe_read(workdir, config, FALSE)
 
   ## Was not done before 0.3.3
   stopifnot(!is.null(dat_rds$meta))
+  ## Was not done before 0.5.5
+  stopifnot(!is.null(dat_rds$meta$connection))
 
   id <- dat_rds$meta$id
   name <- dat_rds$meta$name
@@ -193,57 +238,78 @@ report_data_import <- function(con, workdir, config) {
   sql_name <- "SELECT name FROM report WHERE name = $1"
   if (nrow(DBI::dbGetQuery(con, sql_name, name)) == 0L) {
     DBI::dbWriteTable(con, "report", data_frame(name = name), append = TRUE)
+  } else {
+    sql <- "SELECT id FROM report_version WHERE report = $1"
+    prev <- max(DBI::dbGetQuery(con, sql, name)$id)
+    if (id < prev) {
+      stop(sprintf(
+        "Report id '%s' is behind existing id '%s'", id, prev),
+        call. = FALSE)
+    }
+  }
+
+  if (is.null(dat_rds$git$sha)) {
+    git_clean <- NA
+  } else {
+    git_clean <- is.null(dat_rds$git$status)
   }
 
   report_version <- data_frame(
     id = id,
     report = dat_rds$meta$name,
     date = dat_rds$meta$date,
-    displayname = dat_rds$meta$displayname %||% NA_character_,
-    description = dat_rds$meta$description %||% NA_character_)
-  if (nrow(config$fields) > 0L) {
-    extra <- drop_null(set_names(
-      lapply(config$fields$name, function(x) dat_in[[x]]),
-      config$fields$name))
-    if (length(extra) > 0L) {
-      report_version <- cbind(report_version, as_data_frame(extra))
-    }
+    displayname = dat_rds$meta$displayname,
+    description = dat_rds$meta$description,
+    published = FALSE, # TODO: this eventually comes out
+    connection = dat_rds$meta$connection,
+    git_sha = dat_rds$git$sha %||% NA_character_,
+    git_branch = dat_rds$git$branch %||% NA_character_,
+    git_clean = git_clean)
+  ## TODO: Delete with VIMC-2929
+  if (!is.null(dat_rds$meta$extra_fields)) {
+    report_version <- cbind(report_version, dat_rds$meta$extra_fields)
   }
   DBI::dbWriteTable(con, "report_version", report_version, append = TRUE)
 
-  if (!is.null(dat_in$views)) {
-    report_version_view <- data_frame(
+  if (!is.null(dat_rds$meta$extra_fields)) {
+    custom <- vcapply(dat_rds$meta$extra_fields, function(x) as.character(x))
+    custom <- custom[!is.na(custom)]
+    report_version_custom_fields <- data_frame(
       report_version = id,
-      name = names(dat_in$views),
-      sql = unname(dat_in$views))
+      key = names(custom),
+      value = unname(custom))
+    DBI::dbWriteTable(con, "report_version_custom_fields",
+                      report_version_custom_fields, append = TRUE)
+  }
+
+  if (!is.null(dat_rds$meta$view)) {
+    report_version_view <- cbind(report_version = id, dat_rds$meta$view,
+                                 stringsAsFactors = FALSE)
     DBI::dbWriteTable(con, "report_version_view", report_version_view,
                       append = TRUE)
   }
 
   ## Then see if the data is known:
-  hash_data <- list_to_character(dat_rds$meta$hash_data)
-  if (length(hash_data) > 0L) {
+  data <- dat_rds$meta$data
+  if (!is.null(data) && nrow(data) > 0L) {
     sql_data <- sprintf("SELECT hash FROM data WHERE hash IN (%s)",
-                        paste(dquote(hash_data), collapse = ", "))
-    msg <- setdiff(hash_data, DBI::dbGetQuery(con, sql_data)$hash)
+                        paste(dquote(data$hash), collapse = ", "))
+    msg <- setdiff(data$hash, DBI::dbGetQuery(con, sql_data)$hash)
     if (length(msg)) {
-      data <- data_frame(
-        hash = msg,
-        size_csv = file.size(orderly_db("csv", config)$filename(msg)),
-        size_rds = file.size(orderly_db("rds", config)$filename(msg)))
-      DBI::dbWriteTable(con, "data", data, append = TRUE)
+      i <- data$hash %in% msg & !duplicated(data$hash)
+      cols <- c("hash", "size_csv", "size_rds")
+      DBI::dbWriteTable(con, "data", data[i, cols], append = TRUE)
     }
 
-    report_version_data <- data_frame(
-      report_version = id,
-      name = names(hash_data),
-      sql = unname(dat_in$data),
-      hash = unname(hash_data))
+    report_version_data <- cbind(report_version = id,
+                                 data[c("name", "database", "query", "hash")],
+                                 stringsAsFactors = FALSE)
     DBI::dbWriteTable(con, "report_version_data", report_version_data,
                       append = TRUE)
   }
 
-  if (length(dat_in$packages) > 0L) {
+  packages <- dat_rds$meta$packages
+  if (length(packages) > 0L) {
     r_version <-
       paste(dat_rds$session_info$R.version[c("major", "minor")], collapse = ".")
     pkgs_base <-
@@ -253,97 +319,87 @@ report_data_import <- function(con, workdir, config) {
       unname(dat_rds$session_info[c("otherPkgs", "loadedOnly")]), FALSE),
       "[[", "Version")
     report_version_package <- data_frame(
-      report_version = rep(id, length(dat_in$packages)),
-      package_name = dat_in$packages,
-      package_version = c(pkgs_base, pkgs_other)[dat_in$packages])
+      report_version = rep(id, length(packages)),
+      package_name = packages,
+      package_version = c(pkgs_base, pkgs_other)[packages])
     rownames(report_version_package) <- NULL
     DBI::dbWriteTable(con, "report_version_package", report_version_package,
                       append = TRUE)
   }
 
-  depends <- report_data_find_dependencies(con, dat_rds$meta)
+  depends <- report_data_find_dependencies(con, dat_rds$meta, config)
   if (!is.null(depends)) {
     DBI::dbWriteTable(con, "depends", depends, append = TRUE)
   }
 
-  ## TODO: patch this back in for the saved rds I think
-  hash_orderly_yml <- hash_files(file.path(workdir, "orderly.yml"), FALSE)
-
-  ## NOTE: the hash from 'sources' comes from the resources field.
-  file_in <- list(resource = names(dat_rds$meta$hash_resources),
-                  script = dat_in$script,
-                  orderly_yml = "orderly.yml")
-  file_in_name <- unlist(file_in, FALSE, FALSE)
-  file_in_hash <- c(list_to_character(dat_rds$meta$hash_resources, FALSE),
-                    dat_rds$meta$hash_script,
-                    hash_orderly_yml)
-  file_in_purpose <- rep(names(file_in), lengths(file_in))
-  file_in_purpose[file_in_name %in% dat_in$sources] <- "source"
-
-  ## These might be missing:
-  sql <- sprintf("SELECT hash from file WHERE hash IN (%s)",
-                 paste(dquote(unique(file_in_hash)), collapse = ", "))
-  hash_msg <- setdiff(file_in_hash, DBI::dbGetQuery(con, sql)$hash)
-  i <- file_in_hash %in% hash_msg & !duplicated(file_in_hash)
-  if (any(i)) {
-    file <- data_frame(hash = file_in_hash[i],
-                       size = file.size(file.path(workdir, file_in_name[i])))
-    DBI::dbWriteTable(con, "file", file, append = TRUE)
-  }
-
-  file_input <- data_frame(
+  ## Inputs:
+  report_data_add_files(con, dat_rds$meta$file_info_inputs)
+  file_input <- cbind(
     report_version = id,
-    file_hash = file_in_hash,
-    filename = file_in_name,
-    file_purpose = file_in_purpose)
+    dat_rds$meta$file_info_inputs[c("file_hash", "filename", "file_purpose")],
+    stringsAsFactors = FALSE)
   DBI::dbWriteTable(con, "file_input", file_input, append = TRUE)
 
-  ## Then artefacts
-  report_version_artefact <- data_frame(
+  ## Artefacts:
+  report_data_add_files(con, dat_rds$meta$file_info_artefacts)
+  report_version_artefact <- cbind(
     report_version = id,
-    format = list_to_character(dat_in$artefacts[, "format"], FALSE),
-    description = list_to_character(dat_in$artefacts[, "description"], FALSE),
-    order = seq_len(nrow(dat_in$artefacts)))
-
+    dat_rds$meta$artefacts,
+    stringsAsFactors = FALSE)
   DBI::dbWriteTable(con, "report_version_artefact", report_version_artefact,
                     append = TRUE)
+
   sql <- paste("SELECT id FROM report_version_artefact",
                "WHERE report_version = $1 ORDER BY 'order'")
-  tmp <- DBI::dbGetQuery(con, sql, id)
+  artefact_id <- DBI::dbGetQuery(con, sql, id)$id
 
-  ## We need to do some faffage here:
-  n <- lengths(dat_in$artefacts[, "filenames"])
-  i <- rep(seq_along(n), n)
-
-  ## Not certain this will cope with shiny outputs?  Or other
-  ## directory outputs (are there any?)
-  artefact_files <- unlist(dat_in$artefacts[, "filenames"], use.names = FALSE)
-  artefact_hash <-
-    list_to_character(dat_rds$meta$hash_artefacts[artefact_files], FALSE)
-  report_data_add_files(con, artefact_hash, artefact_files, workdir)
-
-  file_artefact <- data_frame(
-    artefact = tmp$id[i],
-    file_hash = artefact_hash,
-    filename = artefact_files)
+  file_artefact <- cbind(
+    artefact = artefact_id[dat_rds$meta$file_info_artefacts$order],
+    dat_rds$meta$file_info_artefacts[c("file_hash", "filename")])
   DBI::dbWriteTable(con, "file_artefact", file_artefact, append = TRUE)
+
+  changelog <- dat_rds$meta$changelog
+  if (!is.null(changelog)) {
+    changelog <- changelog[changelog$report_version == id, , drop = FALSE]
+    if (nrow(changelog) > 0L) {
+      prev <- DBI::dbGetQuery(con, "SELECT max(ordering) FROM changelog")[[1]]
+      if (is.na(prev)) {
+        prev <- 0L
+      }
+      changelog$ordering <- seq_len(nrow(changelog)) + prev
+      DBI::dbWriteTable(con, "changelog", changelog, append = TRUE)
+    }
+  }
+
+  if (!is.null(dat_rds$meta$parameters)) {
+    p <- dat_rds$meta$parameters
+    parameters <- data_frame(
+      report_version = id,
+      name = names(p),
+      type = report_db_parameter_type(p),
+      value = report_db_parameter_serialise(p))
+    DBI::dbWriteTable(con, "parameters", parameters, append = TRUE)
+  }
+
+  sql <- "UPDATE report SET latest = $1 WHERE name = $2"
+  DBI::dbExecute(con, sql, list(id, name))
 }
 
 
-report_data_add_files <- function(con, hashes, paths, workdir) {
+report_data_add_files <- function(con, files) {
   sql <- sprintf("SELECT hash from file WHERE hash IN (%s)",
-                 paste(dquote(unique(hashes)), collapse = ", "))
-  hash_msg <- setdiff(hashes, DBI::dbGetQuery(con, sql)$hash)
-  i <- hashes %in% hash_msg & !duplicated(hashes)
+                 paste(dquote(unique(files$file_hash)), collapse = ", "))
+  hash_msg <- setdiff(files$file_hash, DBI::dbGetQuery(con, sql)$hash)
+  i <- files$file_hash %in% hash_msg & !duplicated(files$file_hash)
   if (any(i)) {
-    file <- data_frame(hash = hashes[i],
-                       size = file.size(file.path(workdir, paths[i])))
+    file <- data_frame(hash = files$file_hash[i],
+                       size = files$file_size[i])
     DBI::dbWriteTable(con, "file", file, append = TRUE)
   }
 }
 
 
-report_data_find_dependencies <- function(con, meta) {
+report_data_find_dependencies <- function(con, meta, config) {
   if (is.null(meta$depends) || nrow(meta$depends) == 0L) {
     return(NULL)
   }
@@ -361,8 +417,23 @@ report_data_find_dependencies <- function(con, meta) {
   depends_use <- list_to_integer(
     Map(find_depends, meta$depends$id, meta$depends$filename,
         USE.NAMES = FALSE))
-  ## Was not done before 0.5.0
-  stopifnot(all(!is.na(depends_use)))
+
+  ## Verify that all dependencies are found and return (hopefully)
+  ## helpful messages.  This is not a practical issue for our main
+  ## orderly workflows.
+  if (any(is.na(depends_use))) {
+    err <- unique(meta$depends$id[is.na(depends_use)])
+    is_draft <- vlapply(err, function(id)
+      !is.null(orderly_find_name(id, config, draft = TRUE)))
+    if (any(!is_draft)) {
+      stop("Report uses nonexistant id:\n",
+           paste(sprintf("\t- %s", err[!is_draft]), collapse = "\n"))
+    }
+    if (any(is_draft)) {
+      stop("Report uses draft id - commit first:\n",
+           paste(sprintf("\t- %s", err[is_draft]), collapse = "\n"))
+    }
+  }
 
   data_frame(
     report_version = meta$id,
@@ -373,10 +444,80 @@ report_data_find_dependencies <- function(con, meta) {
 }
 
 
-report_db2_destroy <- function(con) {
-  if (DBI::dbExistsTable(con, ORDERY_TABLE_LIST)) {
-    for (t in DBI::dbReadTable(con, ORDERY_TABLE_LIST)[[1L]]) {
+report_db_destroy <- function(con, config) {
+  dialect <- report_db_dialect(con)
+  schema <- names(report_db_schema(config$fields, dialect)$tables)
+  existing <- DBI::dbListTables(con)
+  known <- DBI::dbReadTable(con, ORDERLY_TABLE_LIST)[[1L]]
+  drop <- intersect(known, existing)
+  extra <- setdiff(intersect(schema, existing), drop)
+
+  if (length(extra)) {
+    msg <- c("While rebuilding the orderly database, we will delete",
+             sprintf("additional tables: %s.",
+                     paste(squote(extra), collapse = ", ")),
+             "This is most likely an orderly bug - please request that",
+             "the orderly schema version is increased")
+    warning(paste(msg, collapse = " "),
+            immediate. = TRUE, call. = FALSE)
+    drop <- c(drop, extra)
+  }
+
+  if (length(drop) > 0L) {
+    sqlite_pragma_fk(con, FALSE)
+    on.exit(sqlite_pragma_fk(con, TRUE))
+    for (t in drop) {
       DBI::dbRemoveTable(con, t)
     }
+  }
+}
+
+
+sqlite_pragma_fk <- function(con, enable = TRUE) {
+  if (report_db_dialect(con) == "sqlite") {
+    DBI::dbExecute(con, sprintf("PRAGMA foreign_keys = %d", enable))
+  }
+}
+
+
+report_db_parameter_type <- function(x) {
+  vcapply(x, function(el) {
+    if (is.character(el)) {
+      "text"
+    } else if (is.numeric(el)) {
+      "number"
+    } else if (is.logical(el)) {
+      "boolean"
+    } else {
+      stop("Unsupported parameter type")
+    }
+  }, USE.NAMES = FALSE)
+}
+
+
+report_db_parameter_serialise <- function(x) {
+  vcapply(x, function(el) {
+    if (is.character(el)) {
+      el
+    } else if (is.numeric(el)) {
+      as.character(el)
+    } else if (is.logical(el)) {
+      tolower(as.character(el))
+    } else {
+      stop("Unsupported parameter type")
+    }
+  }, USE.NAMES = FALSE)
+}
+
+
+report_db_dialect <- function(con) {
+  if (inherits(con, "SQLiteConnection")) {
+    "sqlite"
+  } else if (inherits(con, "PqConnection")) {
+    "postgres"
+  } else {
+    ## It's possible that RPostgreSQL might work, but it's unlikely to
+    ## throw all the errors that we need.
+    stop("Can't determine SQL dialect")
   }
 }

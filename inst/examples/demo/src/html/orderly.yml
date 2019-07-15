@@ -1,6 +1,7 @@
 packages: rmarkdown
 data:
-  dat: SELECT name, number FROM thing
+  dat:
+    query: SELECT name, number FROM thing
 script: script.R
 artefacts:
   report:

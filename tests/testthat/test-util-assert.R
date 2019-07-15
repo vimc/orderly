@@ -59,3 +59,23 @@ test_that("assert_file_exists", {
   writeLines(character(0), path)
   expect_silent(assert_file_exists(path))
 })
+
+
+test_that("assert_file_exists: error in case", {
+  mockery::stub(assert_file_exists, "file_exists",
+                structure(c(TRUE, FALSE, FALSE),
+                          incorrect_case = c(FALSE, TRUE, FALSE),
+                          correct_case = c("FOO" = "foo")))
+  expect_error(assert_file_exists(c("bar", "FOO", "gaz")),
+               "File does not exist: 'FOO' (should be 'foo'), 'gaz'",
+               fixed = TRUE)
+})
+
+
+test_that("assert_is_directory", {
+  path <- tempfile()
+  expect_error(assert_is_directory(path), "File does not exist")
+  file.create(path)
+  expect_error(assert_is_directory(path), "File exists but is not a directory")
+  expect_silent(assert_is_directory("."))
+})
