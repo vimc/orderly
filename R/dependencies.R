@@ -6,21 +6,21 @@
 ##' @inheritParams orderly_list 
 ##'
 ##' @export
-orderly_dependencies <- function(name, id = NULL, config = NULL, draft = FALSE, locate = TRUE) {
-  config <- orderly_config_get(config, locate)
+orderly_dependencies <- function(name, id = NULL, root = NULL, draft = FALSE, locate = TRUE) {
+  config <- orderly_config_get(root, locate)
   
   if (is.null(id)) {
-    id <- orderly_latest(name, config = config, draft = draft, locate = TRUE)
+    id <- orderly_latest(name, root = config, draft = draft, locate = TRUE)
   }
 
-  # if (is.null(config_path)) {
-  #   config_path <- "."
+  # if (is.null(root_path)) {
+  #   root_path <- "."
   # }
 
   if (draft) {
-    rds_path <- file.path(config$path, "draft", name, id, "orderly_run.rds")
+    rds_path <- file.path(config$root, "draft", name, id, "orderly_run.rds")
   } else {
-    rds_path <- file.path(config$path, "archive", name, id, "orderly_run.rds")
+    rds_path <- file.path(config$root, "archive", name, id, "orderly_run.rds")
   }
 
   if (!file.exists(rds_path)) {
@@ -46,7 +46,7 @@ orderly_dependencies <- function(name, id = NULL, config = NULL, draft = FALSE, 
 ##' @inheritParams orderly_list                          
 ##'
 ##' @export
-orderly_depends_on <- function(report, id = "latest", config = NULL,
+orderly_depends_on <- function(report, id = "latest", root = NULL,
                                draft = FALSE, depth = 0, dep_reports = list(),
                                locate = TRUE) {
   # this is potentially needed to trap circular dependencies
@@ -60,15 +60,15 @@ orderly_depends_on <- function(report, id = "latest", config = NULL,
   
   # we need to go find the latest version of the report
   if (id == "latest") {
-    id <- orderly_latest(report, config = config, draft = draft, locate = TRUE)
+    id <- orderly_latest(report, root = root, draft = draft, locate = TRUE)
   }
 
   # get a list of all local reports - doing this every time is tedious, but
   # it doesn't take long and looks nicer than passing around a vector of names
   if (draft) {
-    rep_names <- unique(orderly_list_drafts(config = config)$name, locate = TRUE)
+    rep_names <- unique(orderly_list_drafts(root = root)$name, locate = TRUE)
   } else {
-    rep_names <- unique(orderly_list_archive(config = config)$name, locate = TRUE)
+    rep_names <- unique(orderly_list_archive(root = root)$name, locate = TRUE)
   }
 
   # here's the plan - We have a report, A.
@@ -78,16 +78,16 @@ orderly_depends_on <- function(report, id = "latest", config = NULL,
   # B depends on A so this gets added to the list
   # - Then we need to check which reports depend on B
   for (name in rep_names) {
-    rep_id <- orderly_latest(name, config = config, draft = draft, locate = TRUE)
+    rep_id <- orderly_latest(name, root = root, draft = draft, locate = TRUE)
     deps <- orderly_dependencies(name = name, id = rep_id, draft = draft,
-                                 config = config, locate = TRUE)
+                                 root = root, locate = TRUE)
     if (report %in% deps$name) {
       i <- which(deps$name == report)
       dep_reports[[length(dep_reports) + 1]] <-  list(name = name,
                                                       id = rep_id,
                                                       depth = depth)
       dep_reports <- orderly_depends_on(report = name, id = rep_id, 
-                                        config = config,
+                                        root = root,
                                         draft = draft, depth = depth + 1,
                                         dep_reports = dep_reports,
                                         locate = TRUE)
@@ -106,9 +106,9 @@ orderly_depends_on <- function(report, id = "latest", config = NULL,
 ##'
 ##' @export
 print_dep_tree <- function(report, id = "latest", draft = FALSE,
-                           config = NULL, locate = TRUE) {
+                           root = NULL, locate = TRUE) {
   dep_tree <- orderly_depends_on(report = report, id = id, draft = draft, 
-                                 config = config, locate = TRUE)
+                                 root = root, locate = TRUE)
   if (length(dep_tree) == 0) {
     orderly_log("dep tree", "Nothing to update.")
   }
