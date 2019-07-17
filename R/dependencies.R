@@ -34,6 +34,80 @@ orderly_dependencies <- function(name, id = NULL, root = NULL, draft = FALSE, lo
   run_data$meta$depends
 }
 
+get_dependencies_db <- function(name, id = NULL, root = NULL, upstream = FALSE,
+                                draft = FALSE, locate = TRUE) {
+  config <- orderly_config_get(root, locate)
+
+  # if (is.null(id)) {
+  #   id <- orderly_latest(name, root = config, draft = draft, locate = TRUE)
+  # }
+
+  ## get a connection to the database
+  con <- orderly_db("destination", config)
+  print(con)
+
+  ## find the latest version of this report in the database
+  if (is.null(id)) {
+    sql_qry <- paste("SELECT",
+                     "id, report, date FROM report_version",
+                     "WHERE",
+                     sprintf("report='%s'", name),
+                     "AND",
+                     "date=(SELECT MAX(date)",
+                     "FROM",
+                     "report_version",
+                     sprintf("WHERE report='%s')", name), collapse = " ")
+    print(sql_qry)
+
+    id <- DBI::dbGetQuery(con, sql_qry)$id
+  }
+
+  print(id)
+  id <- 1234567890
+  
+  ## now construct the SQL query
+  if (upstream) {
+    filt_qry <- sprintf("depends.report_version='%s'", id)
+  } else {
+    filt_qry <- sprintf("report_version.id='%s'", id)
+  }
+
+  print(filt_qry)
+  
+  sql_qry <- paste(c("SELECT",
+               "depends.report_version, ",
+               "report_version.report, report_version.id, ",
+               "file_artefact.filename",
+               "FROM", "(depends",
+               "INNER JOIN", "file_artefact", "ON",
+               "depends.use=file_artefact.id",
+               "INNER JOIN", "report_version_artefact", "ON",
+               "file_artefact.artefact=report_version_artefact.id",
+               "INNER JOIN", "report_version", "ON",
+               "report_version_artefact.report_version=report_version.id)",
+               "WHERE", filt_qry), collapse = " ")
+  print(sql_qry)
+
+  deps <- DBI::dbGetQuery(con, sql_qry)
+  print(deps)
+
+  if (nrow(deps) == 0) {
+    return(NULL)
+  }
+
+  dtst$latest <- sapply(dtst$report_version, is_latest_in_db, con = con)
+  if (only_latest) {
+    dtst <- dtst[which(dtst$latest), ]
+  }
+  
+  # if we're going uptree
+  if (upstream) {
+    return(unique(dtst$id))
+  } else {
+    return(unique(dtst$report_version))
+  }
+}
+
 ##' @title Generate a list of dependencies for a given report
 ##'
 ##' @param report the name of the report
