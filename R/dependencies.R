@@ -184,6 +184,11 @@ print_dep_tree <- function(report, id = "latest", draft = FALSE,
                            root = NULL, locate = TRUE, con = NULL,
                            upstream = FALSE) {
   library(crayon)
+  if (upstream) {
+    cat(yellow("++++++UPSTREAM++++++\n"))
+  } else {
+    cat(green("+++++DOWNSTREAM+++++\n"))
+  }
   if (is.null(con)) {
     con <- orderly_db("destination", orderly_config_get(root, locate))
     on.exit(DBI::dbDisconnect(con))
