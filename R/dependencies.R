@@ -109,13 +109,13 @@ build_graph <- function(report, id = "latest", root = NULL, draft = FALSE,
     return(dep_reports)
   }
 
-  print(paste(rep("*", depth), collapse = ""))
+  ##print(paste(rep("*", depth), collapse = ""))
 
   if (is.null(con)) {
     con <- orderly_db("destination", orderly_config_get(root, locate))
     on.exit(DBI::dbDisconnect(con))
   }
-  
+
   # we need to go find the latest version of the report
   latest_id <- orderly_latest(report, root = root, draft = draft, locate = TRUE)
   if (id == "latest") {
@@ -134,10 +134,10 @@ build_graph <- function(report, id = "latest", root = NULL, draft = FALSE,
     rep_names <- unique(orderly_list_archive(root = root)$name, locate = TRUE)
   }
 
-
   dep_ids <- get_dependencies_db(name = report, id = id, draft = draft,
-                                 root = root, locate = TRUE, con = con,
-                                 upstream = upstream)
+                               root = root, locate = TRUE, con = con,
+                               upstream = upstream)
+
   for (dep_id in dep_ids) {
     dep_name <- id_to_name(id = dep_id, con = con)
     dep_reports[[dep_name]] <- build_graph(report = dep_name,
@@ -145,7 +145,8 @@ build_graph <- function(report, id = "latest", root = NULL, draft = FALSE,
                                        root = root,
                                        draft = draft,
                                        depth = depth + 1,
-                                       locate = locate)    
+                                       locate = locate,
+                                       upstream = upstream)    
   }
 
   # here's the plan - We have a report, A.
@@ -182,14 +183,15 @@ build_graph <- function(report, id = "latest", root = NULL, draft = FALSE,
 print_dep_tree <- function(report, id = "latest", draft = FALSE,
                            root = NULL, locate = TRUE, con = NULL,
                            upstream = FALSE) {
-
+  library(crayon)
   if (is.null(con)) {
     con <- orderly_db("destination", orderly_config_get(root, locate))
     on.exit(DBI::dbDisconnect(con))
   }
 
   dep_tree <- build_graph(report = report, id = id, draft = draft, 
-                                 root = root, locate = TRUE, con = con)
+                          root = root, locate = TRUE, con = con,
+                          upstream = upstream)
   if (length(dep_tree) == 0) {
     orderly_log("dep tree", "Nothing to update.")
   }
@@ -198,17 +200,17 @@ print_dep_tree <- function(report, id = "latest", draft = FALSE,
 } 
 
 print_tree_r <- function(dep_tree, depth = 0) {
+  console_colour <- if (dep_tree$latest) {crayon::blue} else {crayon::red}
+
   if (depth == 0) {
-    print(sprintf("%s [%s]%s",
-                  dep_tree$name,
-                  dep_tree$id,
-                  if (dep_tree$latest) {""} else {"*"}))    
+    cat(console_colour(sprintf("%s [%s]\n",
+                       dep_tree$name,
+                       dep_tree$id)))    
   } else {
-    print(sprintf("%s|___%s [%s]%s",
-                  strrep(x="| ", times = depth - 1),
-                  dep_tree$name,
-                  dep_tree$id,
-                  if (dep_tree$latest) {""} else {"*"}))  
+    cat(console_colour(sprintf("%s|___%s [%s]\n",
+                       strrep(x="| ", times = depth - 1),
+                       dep_tree$name,
+                       dep_tree$id)))  
   }
 
   children <- setdiff(names(dep_tree), c("name", "id", "latest"))
