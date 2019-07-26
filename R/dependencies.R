@@ -6,33 +6,8 @@
 ##' @inheritParams orderly_list 
 ##'
 ##' @export
-orderly_dependencies <- function(name, id = NULL, root = NULL, draft = FALSE,
-                                 locate = TRUE) {
-  config <- orderly_config_get(root, locate)
-  
-  if (is.null(id)) {
-    id <- orderly_latest(name, root = config, draft = draft, locate = TRUE)
-  }
-
-  if (draft) {
-    rds_path <- file.path(config$root, "draft", name, id, "orderly_run.rds")
-  } else {
-    rds_path <- file.path(config$root, "archive", name, id, "orderly_run.rds")
-  }
-
-  if (!file.exists(rds_path)) {
-    stop(sprintf(
-      "The report %s:%s does not exist or does not have orderly_run.rds",
-      name, id))
-    return(NULL)
-  }
-  run_data <- readRDS(rds_path)
-
-  run_data$meta$depends
-}
-
 get_dependencies_db <- function(name, id = NULL, root = NULL, upstream = FALSE,
-                                draft = FALSE, locate = TRUE, con = NULL) {
+                                locate = TRUE, con = NULL) {
   ## get a connection to the database
   if (is.null(con)) {
     con <- orderly_db("destination", orderly_config_get(root, locate))
@@ -41,7 +16,7 @@ get_dependencies_db <- function(name, id = NULL, root = NULL, upstream = FALSE,
 
   ## find the latest version of this report in the database
   if (is.null(id)) {
-    id <- get_latest_in_db(name = name, con = con)
+    id <- get_latest_in_db(name = name, con = con)$id
   }
   
   ## now construct the SQL query
@@ -65,8 +40,6 @@ get_dependencies_db <- function(name, id = NULL, root = NULL, upstream = FALSE,
                "WHERE", filt_qry), collapse = " ")
 
   dtst <- DBI::dbGetQuery(con, sql_qry)
-
-  #print(dtst)
 
   if (nrow(dtst) == 0) {
     return(NULL)
@@ -97,7 +70,7 @@ get_dependencies_db <- function(name, id = NULL, root = NULL, upstream = FALSE,
 ##' @inheritParams orderly_list                          
 ##'
 ##' @export
-build_graph <- function(report, id = "latest", root = NULL, draft = FALSE,
+build_graph <- function(report, id = "latest", root = NULL,
                         depth = 0, dep_reports = list(), locate = TRUE,
                         con = NULL, upstream = FALSE) {
   # this is potentially needed to trap circular dependencies
@@ -117,59 +90,32 @@ build_graph <- function(report, id = "latest", root = NULL, draft = FALSE,
   }
 
   # we need to go find the latest version of the report
-  latest_id <- orderly_latest(report, root = root, draft = draft, locate = TRUE)
+  latest_id <- get_latest_in_db(con, report)
   if (id == "latest") {
-    id <- latest_id
+    id <- latest_id$id
   }
+  # here we should also check if the artifect -> resources have the same hash
+  # if they match then we shouldn't flag as out of date
 
   dep_reports[["name"]] = report
   dep_reports[["id"]] = id
-  dep_reports[["latest"]] <- (id == latest_id)
+  dep_reports[["latest"]] <- (id == latest_id$id)
 
-  # get a list of all local reports - doing this every time is tedious, but
-  # it doesn't take long and looks nicer than passing around a vector of names
-  if (draft) {
-    rep_names <- unique(orderly_list_drafts(root = root)$name, locate = TRUE)
-  } else {
-    rep_names <- unique(orderly_list_archive(root = root)$name, locate = TRUE)
-  }
-
-  dep_ids <- get_dependencies_db(name = report, id = id, draft = draft,
-                               root = root, locate = TRUE, con = con,
-                               upstream = upstream)
+  dep_ids <- get_dependencies_db(name = report, id = id,
+                                 root = root, locate = TRUE, con = con,
+                                 upstream = upstream)
 
   for (dep_id in dep_ids) {
     dep_name <- id_to_name(id = dep_id, con = con)
     dep_reports[[dep_name]] <- build_graph(report = dep_name,
-                                       id = dep_id,
-                                       root = root,
-                                       draft = draft,
-                                       depth = depth + 1,
-                                       locate = locate,
-                                       upstream = upstream)    
+                                           id = dep_id,
+                                           root = root,
+                                           depth = depth + 1,
+                                           locate = locate,
+                                           upstream = upstream)    
   }
 
-  # here's the plan - We have a report, A.
-  # - We iterate through the list of local reports reading the dependencies from
-  # the orderly_run.yml
-  # - If for some report (B), A appears in the list of dependencies of B, then
-  # B depends on A so this gets added to the list
-  # - Then we need to check which reports depend on B
-  # for (name in rep_names) {
-  #   rep_id <- orderly_latest(name, root = root, draft = draft, locate = TRUE)
-  #   deps <- orderly_dependencies(name = name, id = rep_id, draft = draft,
-  #                                root = root, locate = TRUE)
-  #   if (report %in% deps$name) {
-  #     dep_reports[[name]] <- build_graph(report = name,
-  #                                        id = rep_id,
-  #                                        root = root,
-  #                                        draft = draft,
-  #                                        depth = depth + 1,
-  #                                        locate = locate)
-  #   }
-  # }
-
-  dep_reports
+  return(dep_reports)
 }
 
 ##' @title Print the dependency tree for a given report using orderly log
@@ -181,20 +127,23 @@ build_graph <- function(report, id = "latest", root = NULL, draft = FALSE,
 ##'
 ##' @export
 print_dep_tree <- function(report, id = "latest", draft = FALSE,
-                           root = NULL, locate = TRUE, con = NULL,
-                           upstream = FALSE) {
+                           root = NULL, locate = TRUE, remote = NULL,
+                           upstream = FALSE, con = NULL) {
   library(crayon)
   if (upstream) {
     cat(yellow("++++++UPSTREAM++++++\n"))
   } else {
     cat(green("+++++DOWNSTREAM+++++\n"))
   }
+
   if (is.null(con)) {
     con <- orderly_db("destination", orderly_config_get(root, locate))
     on.exit(DBI::dbDisconnect(con))
+
+    remote <- get_remote(remote, orderly_config_get(root, locate))
   }
 
-  dep_tree <- build_graph(report = report, id = id, draft = draft, 
+  dep_tree <- build_graph(report = report, id = id,
                           root = root, locate = TRUE, con = con,
                           upstream = upstream)
   if (length(dep_tree) == 0) {
@@ -255,5 +204,6 @@ is_latest_in_db <- function(con, id) {
   name <- id_to_name(con, id)
   latest <- get_latest_in_db(con, name)
   
-  (latest$id == id)
+  return(latest$id == id)
 }
+
