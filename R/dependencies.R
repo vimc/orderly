@@ -1,11 +1,11 @@
-##' @title Get the dependencies for a given report from the orderly_run.yml
-##' 
+##' @title Get the dependencies for a given report from the database
+##'
 ##' @param name the name of the report
 ##' @param id the id of the report, if omitted, use the id of the latest report
 ##' @param root
-##' @param upstream
+##' @param upstream A boolean indicating if we want to move up or down the tree
 ##' @param locate
-##' @param con 
+##' @param con A connection to a database
 get_dependencies_db <- function(name, id = NULL, root = NULL, upstream = FALSE,
                                 locate = TRUE, con = NULL) {
   ## get a connection to the database
@@ -58,6 +58,10 @@ get_dependencies_db <- function(name, id = NULL, root = NULL, upstream = FALSE,
   }
 }
 
+##' @title Get the id of the latest version of a report
+##'
+##' @param name the name of the report
+##' @param con A connection to a database
 get_latest_in_db <- function(con, name) {
   sql_qry <- paste("SELECT",
                    "id, report, date FROM report_version",
@@ -73,6 +77,10 @@ get_latest_in_db <- function(con, name) {
   return(dtst)
 }
 
+##' @title Get the name of a report for a given id
+##'
+##' @param id the id of the report
+##' @param con A connection to a database
 id_to_name <- function(con, id) {
   sql_qry <- c("SELECT", "report_version.report",
                "FROM", "report_version",
@@ -83,13 +91,29 @@ id_to_name <- function(con, id) {
   return(dtst$report)
 }
 
+##' @title Is the id the latest version of the report in the database
+##'
+##' @param id the id of the report
+##' @param con A connection to a database
 is_latest_in_db <- function(con, id) {
-  name <- id_to_name(con, id)
-  latest <- get_latest_in_db(con, name)
+  latest <- get_latest_in_db(con, id_to_name(con, id))
   
   return(latest$id == id)
 }
 
+##' @title Recursively builds a tree for a given report
+##'
+##' @param name the name of the report
+##' @param id the id of the report, if omitted, use the id of the latest report
+##' @param depth [internal] - only used ensure we don't get trapped in an
+##'              infinite loop
+##' @param parent [internal] - the previous vertex in the tree
+##' @param tree [internal] - The tree object that is built up and returned at
+##'             the end
+##' @param con A connection to a database
+##' @param root
+##' @param locate
+##' @param upstream A boolean indicating if we want to move up or down the tree
 build_tree <- function(name, id = "latest", depth = 0, parent = NULL,
                        tree = NULL, con = NULL, root = NULL, locate = TRUE,
                        upstream = FALSE) {
@@ -121,8 +145,6 @@ build_tree <- function(name, id = "latest", depth = 0, parent = NULL,
     v <- tree$add_child(parent, name, id, (id == latest_id$id))
   }
   
-  ##children <- getchildren(report)
-
   dep_ids <- get_dependencies_db(name = name, id = id,
                                  root = root, locate = TRUE, con = con,
                                  upstream = upstream)
@@ -143,21 +165,22 @@ build_tree <- function(name, id = "latest", depth = 0, parent = NULL,
 }
 
 ##' @title Print the dependency tree for a given report using orderly log
-##' 
-##' @param report the name of the report
+##'
+##' @param name the name of the report
 ##' @param id the id of the report, if omitted, use the id of the latest report
-##' @param draft If true look in the draft directory otehrwise look in archive
-##' @inheritParams orderly_list 
+##' @param con A connection to a database
+##' @param root
+##' @param locate
+##' @param upstream A boolean indicating if we want to move up or down the tree
+##' @param propagate A boolean indicating if we want to propogate out of date
+##'                  through the tree
 ##'
 ##' @export
-print_dep_tree <- function(name, id = "latest", draft = FALSE,
-                           root = NULL, locate = TRUE, remote = NULL,
+print_dep_tree <- function(name, id = "latest", root = NULL, locate = TRUE,
                            upstream = FALSE, con = NULL, propagate = FALSE) {
   if (is.null(con)) {
     con <- orderly_db("destination", orderly_config_get(root, locate))
     on.exit(DBI::dbDisconnect(con))
-
-    #remote <- get_remote(remote, orderly_config_get(root, locate))
   }
 
   dep_tree <- build_tree(name = name, id = id,
@@ -182,19 +205,19 @@ print_dep_tree <- function(name, id = "latest", draft = FALSE,
 }
 
 
-propagate <- function(v, upstream) {
-  for (c in v$children) {
+propagate <- function(vertex, upstream) {
+  for (child in vertex$children) {
     if (!upstream) {
-      if (!v$latest) {
-        c$latest = FALSE
+      if (!vertex$latest) {
+        child$latest = FALSE
       }
     }
 
-    propagate(c, upstream)
+    propagate(child, upstream)
 
     if (upstream) {
-      if (!c$latest) {
-        v$latest = FALSE
+      if (!child$latest) {
+        vertex$latest = FALSE
       }
     }
   }
@@ -214,8 +237,8 @@ Vertex <- R6::R6Class("Vertex", list(
     self$id <- id
     self$latest <- latest
   },
-  add_child = function(c) {
-    self$children <- append(self$children, list(c))
+  add_child = function(child) {
+    self$children <- append(self$children, list(child))
   },
   to_string = function() {
     return(sprintf("%s [%s]", self$name, self$id))  
@@ -228,50 +251,42 @@ Tree <- R6::R6Class("Tree", list(
   vertices = NULL,
   root = NULL,
   initialize = function(root) {
-    # add root to tree
     self$vertices <- append(self$vertices, list(root))
-    # remember which is the root
     self$root <- root
   },
   add_child = function(parent, name, id, latest) {
-    # create a new vertex
-    c <- Vertex$new(parent, name, id, latest)
-    # assign the child to the parent
-    parent$add_child(c)
-    # and add it to the tree
-    self$vertices <- append(self$vertices, list(c))
-    return(c)
+    child <- Vertex$new(parent, name, id, latest)
+    parent$add_child(child)
+    self$vertices <- append(self$vertices, list(child))
+    return(child)
   },
   get_vertex = function(name, id) {
-    for (v in self$vertices) {
-      if ((name == v$name) && (id == v$id))
-        return(v)
+    for (vertex in self$vertices) {
+      if ((name == vertex$name) && (id == vertex$id)) {
+        return(vertex)
+      }
     }
   },
   # this is stupidly hacky to get the formatting right
-  print_tree = function(v = self$root, fvector = c()) {
-    console_colour <- if (v$latest) {crayon::blue} else {crayon::red}
+  print_tree = function(vertex = self$root, fvector = c()) {
+    console_colour <- if (vertex$latest) {crayon::blue} else {crayon::red}
 
     if (length(fvector) == 0) {
-      cat(console_colour(sprintf("%s\n",v$to_string())))  
+      cat(console_colour(sprintf("%s\n", vertex$to_string())))
     } else {
       spacing <- paste(ifelse(head(fvector, -1), "| ", "  "), collapse = "")
-      cat(console_colour(sprintf("%s|___%s\n",
-                         spacing,
-                         v$to_string())))
+      cat(console_colour(sprintf("%s|___%s\n", spacing, vertex$to_string())))
     }
 
-    if (length(v$children) == 0) {
-      return()
-    }
+    if (length(vertex$children) > 0) {
+      for (i in 1:length(vertex$children)) {
+        child <- vertex$children[[i]]
 
-    for (i in 1:length(v$children)) {
-      c = v$children[[i]]
-
-      if (i != length(v$children)) {
-        self$print_tree(c, c(fvector, TRUE))
-      } else {
-        self$print_tree(c, c(fvector, FALSE))
+        if (i != length(vertex$children)) {
+          self$print_tree(child, c(fvector, TRUE))
+        } else {
+          self$print_tree(child, c(fvector, FALSE))
+        }
       }
     }
   }
