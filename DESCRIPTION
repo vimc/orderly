@@ -25,6 +25,7 @@ Imports:
     DBI,
     R6,
     RSQLite,
+    crayon,
     digest,
     ids,
     jsonlite,

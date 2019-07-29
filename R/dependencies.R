@@ -58,123 +58,6 @@ get_dependencies_db <- function(name, id = NULL, root = NULL, upstream = FALSE,
   }
 }
 
-##' @title Generate a list of dependencies for a given report
-##'
-##' @param report the name of the report
-##' @param id the id of the report, if omitted, use the id of the latest report
-##' @param draft If true look in the draft directory otehrwise look in archive
-##' @param depth only used internally, to prevent infinite recursion and make 
-##'              the output log look nice
-##' @param dep_reports the list of reports, needs to passed as an argument
-##'                          (and returned)
-##' @inheritParams orderly_list                          
-##'
-##' @export
-build_graph <- function(report, id = "latest", root = NULL,
-                        depth = 0, dep_reports = list(), locate = TRUE,
-                        con = NULL, upstream = FALSE) {
-  # this is potentially needed to trap circular dependencies
-  # TODO - We could be clever here and check if this report already appears in
-  # dep_reports
-  if (depth > 10) {
-    orderly_log("depends",
-                "*WARNING* There appears to be a circular dependency")
-    return(dep_reports)
-  }
-
-  ##print(paste(rep("*", depth), collapse = ""))
-
-  if (is.null(con)) {
-    con <- orderly_db("destination", orderly_config_get(root, locate))
-    on.exit(DBI::dbDisconnect(con))
-  }
-
-  # we need to go find the latest version of the report
-  latest_id <- get_latest_in_db(con, report)
-  if (id == "latest") {
-    id <- latest_id$id
-  }
-  # here we should also check if the artifect -> resources have the same hash
-  # if they match then we shouldn't flag as out of date
-
-  dep_reports[["name"]] = report
-  dep_reports[["id"]] = id
-  dep_reports[["latest"]] <- (id == latest_id$id)
-
-  dep_ids <- get_dependencies_db(name = report, id = id,
-                                 root = root, locate = TRUE, con = con,
-                                 upstream = upstream)
-
-  for (dep_id in dep_ids) {
-    dep_name <- id_to_name(id = dep_id, con = con)
-    dep_reports[[dep_name]] <- build_graph(report = dep_name,
-                                           id = dep_id,
-                                           root = root,
-                                           depth = depth + 1,
-                                           locate = locate,
-                                           upstream = upstream)    
-  }
-
-  return(dep_reports)
-}
-
-##' @title Print the dependency tree for a given report using orderly log
-##' 
-##' @param report the name of the report
-##' @param id the id of the report, if omitted, use the id of the latest report
-##' @param draft If true look in the draft directory otehrwise look in archive
-##' @inheritParams orderly_list 
-##'
-##' @export
-print_dep_tree <- function(report, id = "latest", draft = FALSE,
-                           root = NULL, locate = TRUE, remote = NULL,
-                           upstream = FALSE, con = NULL) {
-  library(crayon)
-  if (upstream) {
-    cat(yellow("++++++UPSTREAM++++++\n"))
-  } else {
-    cat(green("+++++DOWNSTREAM+++++\n"))
-  }
-
-  if (is.null(con)) {
-    con <- orderly_db("destination", orderly_config_get(root, locate))
-    on.exit(DBI::dbDisconnect(con))
-
-    remote <- get_remote(remote, orderly_config_get(root, locate))
-  }
-
-  dep_tree <- build_graph(report = report, id = id,
-                          root = root, locate = TRUE, con = con,
-                          upstream = upstream)
-  if (length(dep_tree) == 0) {
-    orderly_log("dep tree", "Nothing to update.")
-  }
-
-  print_tree_r(dep_tree)
-} 
-
-print_tree_r <- function(dep_tree, depth = 0) {
-  console_colour <- if (dep_tree$latest) {crayon::blue} else {crayon::red}
-
-  if (depth == 0) {
-    cat(console_colour(sprintf("%s [%s]\n",
-                       dep_tree$name,
-                       dep_tree$id)))    
-  } else {
-    cat(console_colour(sprintf("%s|___%s [%s]\n",
-                       strrep(x="| ", times = depth - 1),
-                       dep_tree$name,
-                       dep_tree$id)))  
-  }
-
-  children <- setdiff(names(dep_tree), c("name", "id", "latest"))
-  for (child in children) {
-    print_tree_r(dep_tree[[child]], depth + 1)
-  }
-}
-
-
-
 get_latest_in_db <- function(con, name) {
   sql_qry <- paste("SELECT",
                    "id, report, date FROM report_version",
@@ -207,3 +90,154 @@ is_latest_in_db <- function(con, id) {
   return(latest$id == id)
 }
 
+build_tree <- function(report, id = "latest", depth = 0, parent = NULL,
+                       tree = NULL, con = NULL, root = NULL, locate = TRUE,
+                       upstream = FALSE) {
+  if (depth > 10) {
+    print("*WARNING* There appears to be a circular dependency")
+    return(tree)
+  }
+
+  if (is.null(con)) {
+    con <- orderly_db("destination", orderly_config_get(root, locate))
+    on.exit(DBI::dbDisconnect(con))
+  }
+
+  # we need to go find the latest version of the report
+  latest_id <- get_latest_in_db(con, report)
+  if (id == "latest") {
+    id <- latest_id$id
+  }
+  
+  ## if this is no tree, create a tree
+  if (is.null(tree)) {
+    v <- Vertex$new(NULL, report, id, (id == latest_id$id))
+    tree <- Tree$new(v)
+  } else {
+    v <- tree$add_child(parent, report, id, (id == latest_id$id))
+  }
+  
+  ##children <- getchildren(report)
+
+  dep_ids <- get_dependencies_db(name = report, id = id,
+                                 root = root, locate = TRUE, con = con,
+                                 upstream = upstream)
+  for (dep_id in dep_ids) {
+    dep_name <- id_to_name(id = dep_id, con = con)
+    build_tree(report = dep_name,
+               id = dep_id,
+               depth = depth + 1,
+               parent = v,
+               tree = tree,
+               con = con,
+               root = root,
+               locate = locate,
+               upstream = upstream)    
+  }
+  
+  return(tree)
+}
+
+##' @title Print the dependency tree for a given report using orderly log
+##' 
+##' @param report the name of the report
+##' @param id the id of the report, if omitted, use the id of the latest report
+##' @param draft If true look in the draft directory otehrwise look in archive
+##' @inheritParams orderly_list 
+##'
+##' @export
+print_dep_tree <- function(report, id = "latest", draft = FALSE,
+                           root = NULL, locate = TRUE, remote = NULL,
+                           upstream = FALSE, con = NULL) {
+  if (is.null(con)) {
+    con <- orderly_db("destination", orderly_config_get(root, locate))
+    on.exit(DBI::dbDisconnect(con))
+
+    #remote <- get_remote(remote, orderly_config_get(root, locate))
+  }
+
+  dep_tree <- build_tree(report = report, id = id,
+                          root = root, locate = TRUE, con = con,
+                          upstream = upstream)
+
+  library(crayon)
+  if (upstream) {
+    cat(yellow("++++++UPSTREAM++++++\n"))
+  } else {
+    cat(green("+++++DOWNSTREAM+++++\n"))
+  }
+
+  # propegate out-of-date
+  #dep_tree <- propegate(dep_tree, )
+
+  if (length(dep_tree) == 0) {
+    orderly_log("dep tree", "Nothing to update.")
+  }
+
+  dep_tree$print_tree()
+} 
+
+
+Vertex <- R6::R6Class("Vertex", list(
+  parent = NULL,
+  children = list(),
+  name = NULL,
+  id = NULL,
+  latest = NULL,
+  initialize = function(parent, name, id, latest) {
+    # add some type safety here
+    self$parent <- parent
+    self$name <- name
+    self$id <- id
+    self$latest <- latest
+  },
+  add_child = function(child) {
+    self$children <- append(self$children, list(child))
+  },
+  to_string = function() {
+    return(sprintf("%s [%s]", self$name, self$id))  
+  }
+  )
+)
+
+
+Tree <- R6::R6Class("Tree", list(
+  vertices = NULL,
+  root = NULL,
+  initialize = function(root) {
+    # add root to tree
+    self$vertices <- append(self$vertices, list(root))
+    # remember which is the root
+    self$root <- root
+  },
+  add_child = function(parent, name, id, latest) {
+    # create a new vertex
+    c <- Vertex$new(parent, name, id, latest)
+    # assign the child to the parent
+    parent$add_child(c)
+    # and add it to the tree
+    self$vertices <- append(self$vertices, list(c))
+    return(c)
+  },
+  get_vertex = function(name, id) {
+    for (v in self$vertices) {
+      if ((name == v$name) && (id == v$id))
+        return(v)
+    }
+  },
+  print_tree = function(v = self$root, depth = 0) {
+    console_colour <- if (v$latest) {crayon::blue} else {crayon::red}
+
+    if (depth == 0) {
+      cat(console_colour(sprintf("%s\n",v$to_string())))  
+    } else {
+      cat(console_colour(sprintf("%s|___%s\n",
+                         strrep(x="| ", times = depth - 1),
+                         v$to_string())))
+    }
+    for (c in v$children) {
+      self$print_tree(c, depth + 1)
+    }
+  }
+  )
+)
