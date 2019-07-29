@@ -7,7 +7,7 @@
 ##' @param locate
 ##' @param con A connection to a database
 get_dependencies_db <- function(name, id = NULL, root = NULL, upstream = FALSE,
-                                locate = TRUE, con = NULL) {
+                                locate = TRUE, con = NULL, use_latest = FALSE) {
   ## get a connection to the database
   if (is.null(con)) {
     con <- orderly_db("destination", orderly_config_get(root, locate))
@@ -39,22 +39,22 @@ get_dependencies_db <- function(name, id = NULL, root = NULL, upstream = FALSE,
                "report_version_artefact.report_version=report_version.id)",
                "WHERE", filt_qry), collapse = " ")
 
-  dtst <- DBI::dbGetQuery(con, sql_qry)
+  db_ret <- DBI::dbGetQuery(con, sql_qry)
 
-  if (nrow(dtst) == 0) {
+  if (nrow(db_ret) == 0) {
     return(NULL)
   }
 
-  dtst$latest <- sapply(dtst$report_version, is_latest_in_db, con = con)
-  if (TRUE) {
-    dtst <- dtst[which(dtst$latest), ]
+  db_ret$latest <- sapply(db_ret$report_version, is_latest_in_db, con = con)
+  if (use_latest) {
+    db_ret <- db_ret[which(db_ret$latest), ]
   }
   
   # if we're going uptree
   if (upstream) {
-    return(unique(dtst$id))
+    return(unique(db_ret$id))
   } else {
-    return(unique(dtst$report_version))
+    return(unique(db_ret$report_version))
   }
 }
 
