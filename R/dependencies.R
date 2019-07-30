@@ -73,8 +73,8 @@ get_latest_in_db <- function(con, name) {
                    "report_version",
                    sprintf("WHERE report='%s')", name)
   )
-  dtst <- DBI::dbGetQuery(con, sql_qry)
-  return(dtst)
+  db_ret <- DBI::dbGetQuery(con, sql_qry)
+  return(db_ret)
 }
 
 ##' @title Get the name of a report for a given id
@@ -86,9 +86,9 @@ id_to_name <- function(con, id) {
                "FROM", "report_version",
                "WHERE", sprintf("report_version.id='%s'", id)
   )
-  dtst <- DBI::dbGetQuery(con, paste(sql_qry, collapse = " "))
+  db_ret <- DBI::dbGetQuery(con, paste(sql_qry, collapse = " "))
   
-  return(dtst$report)
+  return(db_ret$report)
 }
 
 ##' @title Is the id the latest version of the report in the database
@@ -125,6 +125,12 @@ build_tree <- function(name, id = "latest", depth = 0, parent = NULL,
   if (is.null(con)) {
     con <- orderly_db("destination", orderly_config_get(root, locate))
     on.exit(DBI::dbDisconnect(con))
+  }
+
+  # make sure a report with this name exists
+  db_reports <- DBI::dbGetQuery(con, "SELECT name FROM report")
+  if (!(name %in% db_reports$name)) {
+    stop("This report does not exist")
   }
 
   # we need to go find the latest version of the report
@@ -184,12 +190,12 @@ print_dep_tree <- function(name, id = "latest", root = NULL, locate = TRUE,
   }
 
   dep_tree <- build_tree(name = name, id = id,
-                          root = root, locate = TRUE, con = con,
-                          upstream = upstream)
+                         root = root, locate = TRUE, con = con,
+                         upstream = upstream)
   if (upstream) {
-    cat(yellow("++++++UPSTREAM++++++\n"))
+    message(crayon::yellow("++++++UPSTREAM++++++"))
   } else {
-    cat(green("+++++DOWNSTREAM+++++\n"))
+    message(crayon::green("+++++DOWNSTREAM+++++"))
   }
 
   # propagate out-of-date
@@ -272,10 +278,10 @@ Tree <- R6::R6Class("Tree", list(
     console_colour <- if (vertex$latest) {crayon::blue} else {crayon::red}
 
     if (length(fvector) == 0) {
-      cat(console_colour(sprintf("%s\n", vertex$to_string())))
+      message(console_colour(sprintf("%s", vertex$to_string())))
     } else {
       spacing <- paste(ifelse(head(fvector, -1), "| ", "  "), collapse = "")
-      cat(console_colour(sprintf("%s|___%s\n", spacing, vertex$to_string())))
+      message(console_colour(sprintf("%s|___%s", spacing, vertex$to_string())))
     }
 
     if (length(vertex$children) > 0) {

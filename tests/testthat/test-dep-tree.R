@@ -4,36 +4,81 @@ context("dep_tree")
 test_that("no dependencies", {
   path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
-  orderly_run("example", config = path, id_file = tmp, echo = FALSE)
+  id <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id, root = path)
+  file.remove(file.path(path, "orderly.sqlite"))
+  orderly_rebuild(path)
 
   messages <- capture_messages(
-    print_dep_tree("example", draft = TRUE, config = path)
+    print_dep_tree("example", root = path)
   )
-  expect_equal(messages, "[ dep tree   ]  Nothing to update.\n")
+  expect_equal(messages,
+               c("\033[32m+++++DOWNSTREAM+++++\033[39m\n",
+                sprintf("\033[34mexample [%s]\033[39m\n", id)))
 })
 
 # check reports with recursive dependencies
 # example
 # - depend
 #   - depend3
-test_that("has dependencies", {
+test_that("has dependencies downstream", {
   path <- prepare_orderly_example("depends")
   tmp <- tempfile()
-  r1 <- orderly_run("example", config = path, id_file = tmp, echo = FALSE)
-  r2 <- orderly_run("depend", config = path, id_file = tmp, echo = FALSE)
-  r3 <- orderly_run("depend3", config = path, id_file = tmp, echo = FALSE)
-  
+  r1 <- orderly_run("example", root = path, echo = FALSE)
+  r2 <- orderly_run("depend", root = path, echo = FALSE)
+  r3 <- orderly_run("depend3", root = path, echo = FALSE)
+  orderly_commit(r1, root = path)
+  orderly_commit(r2, root = path)
+  orderly_commit(r3, root = path)
+  file.remove(file.path(path, "orderly.sqlite"))
+  orderly_rebuild(path)
+
   messages <- capture_messages(
-    print_dep_tree("example", draft = TRUE, config = path)
+    print_dep_tree("example", root = path)
   )
-  exp_message <- c(sprintf("[ dep tree   ]  - depend [%s]\n", r2),
-                   sprintf("[ dep tree   ]    - depend3 [%s]\n", r3))
+  exp_message <- c("\033[32m+++++DOWNSTREAM+++++\033[39m\n",
+                   sprintf("\033[34mexample [%s]\033[39m\n", r1),
+                   sprintf("\033[34m|___depend [%s]\033[39m\n", r2),
+                   sprintf("\033[34m  |___depend3 [%s]\033[39m\n", r3))
   expect_equal(messages, exp_message)
   
   messages <- capture_messages(
-    print_dep_tree("depend", draft = TRUE, config = path)
+    print_dep_tree("depend", root = path)
   )
-  exp_message <- sprintf("[ dep tree   ]  - depend3 [%s]\n", r3)
+  exp_message <- c("\033[32m+++++DOWNSTREAM+++++\033[39m\n",
+                   sprintf("\033[34mdepend [%s]\033[39m\n", r2),
+                   sprintf("\033[34m|___depend3 [%s]\033[39m\n", r3))
+  
+  expect_equal(messages, exp_message)
+})
+
+test_that("has dependencies upstream", {
+  path <- prepare_orderly_example("depends")
+  tmp <- tempfile()
+  r1 <- orderly_run("example", root = path, echo = FALSE)
+  r2 <- orderly_run("depend", root = path, echo = FALSE)
+  r3 <- orderly_run("depend3", root = path, echo = FALSE)
+  orderly_commit(r1, root = path)
+  orderly_commit(r2, root = path)
+  orderly_commit(r3, root = path)
+  file.remove(file.path(path, "orderly.sqlite"))
+  orderly_rebuild(path)
+
+  messages <- capture_messages(
+    print_dep_tree("example", root = path, upstream = TRUE)
+  )
+  exp_message <- c("\033[32m++++++UPSTREAM++++++\033[39m\n",
+                   sprintf("\033[34mexample [%s]\033[39m\n", r1),
+                   sprintf("\033[34m|___depend [%s]\033[39m\n", r2),
+                   sprintf("\033[34m  |___depend3 [%s]\033[39m\n", r3))
+  expect_equal(messages, exp_message)
+  
+  messages <- capture_messages(
+    print_dep_tree("depend3", root = path, upstream = TRUE)
+  )
+  exp_message <- c("\033[32m++++++UPSTREAM++++++\033[39m\n",
+                   sprintf("\033[34mdepend [%s]\033[39m\n", r2),
+                   sprintf("\033[34m|___depend3 [%s]\033[39m\n", r3))
   
   expect_equal(messages, exp_message)
 })
