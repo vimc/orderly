@@ -10,6 +10,10 @@
 
 * Fixes notifications to slack on report completion (VIMC-2992).
 
+# 0.7.4
+
+* The database configuration in `orderly_config.yml` now has an "args" section, rather than guessing arguments.  Old configurations are valid, with a warning to update (VIMC-1986).
+
 # 0.7.3
 
 * Function `orderly_unzip_archive` / `unzip_archive` has been removed in preparation for release.
