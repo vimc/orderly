@@ -22,7 +22,7 @@
 ##' orderly::orderly_list_archive(root = path)
 orderly_commit <- function(id, name = NULL, root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
-  check_orderly_archive_version(config)
+  config <- check_orderly_archive_version(config)
   if (is.null(name)) {
     name <- orderly_find_name(id, config, draft = TRUE, must_work = TRUE)
   } else {

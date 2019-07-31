@@ -207,15 +207,18 @@ check_orderly_archive_version <- function(config) {
   used <- numeric_version(config$archive_version)
   curr <- cache$current_archive_version
   if (used == "0.0.0" && nrow(orderly_list_archive(config)) == 0L) {
+    orderly_log("info",
+                sprintf("Writing initial orderly archive version as %s", curr))
     write_orderly_archive_version(curr, config$root)
     used <- curr
-  }
-  if (used < curr) {
+    config$archive_version <- curr
+  } else if (used < curr) {
     stop(sprintf("orderly archive needs migrating from %s => %s\n",
                  as.character(used), as.character(curr)),
          "Run orderly::orderly_migrate() to fix",
          call. = FALSE)
   }
+  config
 }
 
 
