@@ -117,3 +117,39 @@ test_that("pull from new remote", {
                          remote = dat$remote),
     "Report was created with orderly more recent than this, upgrade!")
 })
+
+
+test_that("pull migrated archive", {
+  path_local <- prepare_orderly_example("demo")
+  unlink(file.path(path_local, "archive"), recursive = TRUE)
+  dir.create(file.path(path_local, "archive"))
+
+  path_remote <- unpack_reference("0.5.4")
+  withr::with_options(list(orderly.nmowarnings = TRUE),
+                      orderly_migrate(path_remote))
+  file.copy(file.path(path_local, "orderly_config.yml"),
+            file.path(path_remote, "orderly_config.yml"),
+            overwrite = TRUE)
+  dir.create(file.path(path_remote, "global"))
+
+  ## Empty archives have a null version:
+  expect_equal(read_orderly_archive_version(path_local), "0.0.0")
+
+  remote <- orderly_remote_path(path_remote)
+  orderly_pull_archive("use_dependency", root = path_local, remote = remote)
+
+  ## The archive version has been upgraded:
+  expect_equal(read_orderly_archive_version(path_local),
+               as.character(cache$current_archive_version))
+  expect_setequal(orderly_list_archive(path_local)$name,
+                  c("other", "use_dependency"))
+
+  ## This fails in old versions, but will work here:
+  id <- orderly_run("minimal", root = path_local)
+  orderly_commit(id, root = path_local)
+  expect_true(id %in% orderly_list_archive(path_local)$id)
+
+  ## And this is not necessary but also fails on the previous version
+  ## because of issues re-running migrations.
+  expect_silent(orderly_migrate(root = path_local))
+})
