@@ -237,7 +237,8 @@ test_that("label change requires rebuild", {
   id2 <- orderly_run("example", root = path, echo = FALSE)
   expect_error(
     orderly_commit(id2, root = path),
-    "changelog labels have changed: rebuild with orderly::orderly_rebuild")
+    "changelog labels have changed: rebuild with orderly::orderly_rebuild()",
+    fixed = TRUE)
 
   orderly_rebuild(root = path)
   p2 <- orderly_commit(id2, root = path)
