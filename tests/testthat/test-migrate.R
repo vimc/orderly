@@ -143,8 +143,9 @@ test_that("migrate_plan default is used", {
   on.exit(options(oo))
 
   path <- unpack_reference("0.3.2")
-  expect_equal(migrate_plan(path), available_migrations())
-  expect_equal(migrate_plan(path, to = "0.0.1"),
+  config <- orderly_config(path)
+  expect_equal(migrate_plan(config$archive_version), available_migrations())
+  expect_equal(migrate_plan(config$archive_version, to = "0.0.1"),
                set_names(character(), character()))
 })
 

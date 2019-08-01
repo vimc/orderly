@@ -72,7 +72,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
                         message = NULL) {
   envir <- orderly_environment(envir)
   config <- orderly_config_get(root, locate)
-  check_orderly_archive_version(config)
+  config <- check_orderly_archive_version(config)
 
   info <- recipe_prepare(config, name, id_file, ref, fetch, message)
   on.exit(recipe_current_run_clear())

@@ -46,7 +46,7 @@ orderly_migrate <- function(root = NULL, locate = TRUE, to = NULL,
   config <- orderly_config_get(root, locate)
   root <- config$root
 
-  migrations <- migrate_plan(root, to)
+  migrations <- migrate_plan(config$archive_version, to)
 
   for (v in names(migrations)) {
     f <- source_to_function(migrations[[v]], "migrate", topenv())
@@ -55,15 +55,14 @@ orderly_migrate <- function(root = NULL, locate = TRUE, to = NULL,
 }
 
 
-migrate_plan <- function(root, to = NULL) {
-  current <- read_orderly_archive_version(root)
+migrate_plan <- function(from, to = NULL) {
   avail <- available_migrations()
 
   if (is.null(to)) {
     to <- names(avail)[[length(avail)]]
   }
 
-  apply <- numeric_version(current) < numeric_version(names(avail)) &
+  apply <- numeric_version(from) < numeric_version(names(avail)) &
     numeric_version(to) >= numeric_version(names(avail))
   avail[apply]
 }
@@ -80,18 +79,13 @@ migrate_apply <- function(root, version, fun, config, dry_run, skip_failed) {
   orderly_log("migrate", sprintf("'%s' => '%s'", previous, version))
   withCallingHandlers({
     for (p in reports) {
-      name <- basename(dirname(p))
-      id <- basename(p)
-      nm <- file.path(name, id)
-      status <- migrate_apply1(p, version, fun, config, dry_run, skip_failed)
-      orderly_log(status, nm)
+      migrate_apply1(p, version, fun, config, dry_run, skip_failed)
     }
     if (!dry_run) {
       write_orderly_archive_version(version, root)
     }
   },
   error = function(e) {
-    migrate_fail_message(name, id, e)
     if (!dry_run) {
       migrate_rollback(root, version, previous)
     }
@@ -114,18 +108,27 @@ migrate_apply1 <- function(root, version, fun, config, dry_run, skip_failed) {
 
   file_orig <- path_orderly_run_rds(root)
   dat <- readRDS(file_orig)
+  name <- dat$meta$name
+  id <- dat$meta$id
+
   version_previous <- get_version(dat$archive_version)
   if (version_previous < version) {
-    res <- fun(dat, root, config)
-    res$data$archive_version <- numeric_version(version)
-    if (!dry_run) {
-      file_copy(file_orig, file)
-      saveRDS(res$data, file_orig)
-    }
-    if (res$changed) "updated" else "ok"
+    withCallingHandlers({
+      res <- fun(dat, root, config)
+      res$data$archive_version <- numeric_version(version)
+      if (!dry_run) {
+        file_copy(file_orig, file)
+        saveRDS(res$data, file_orig)
+      }
+      changed <- res$changed
+    }, error = function(e) {
+      migrate_fail_message(name, id, e)
+    })
   } else {
-    "ok"
+    changed <- FALSE
   }
+  status <- if (changed) "updated" else "ok"
+  orderly_log(status, sprintf("%s/%s", name, id))
 }
 
 
@@ -204,13 +207,42 @@ check_orderly_archive_version <- function(config) {
   used <- numeric_version(config$archive_version)
   curr <- cache$current_archive_version
   if (used == "0.0.0" && nrow(orderly_list_archive(config)) == 0L) {
+    orderly_log("info",
+                sprintf("Writing initial orderly archive version as %s", curr))
     write_orderly_archive_version(curr, config$root)
     used <- curr
-  }
-  if (used < curr) {
+    config$archive_version <- curr
+  } else if (used < curr) {
     stop(sprintf("orderly archive needs migrating from %s => %s\n",
                  as.character(used), as.character(curr)),
          "Run orderly::orderly_migrate() to fix",
          call. = FALSE)
+  }
+  config
+}
+
+
+migrate_single <- function(path, config) {
+  assert_is(config, "orderly_config")
+  dat_rds <- readRDS(path_orderly_run_rds(path))
+
+  report_archive_version <- dat_rds$archive_version
+  archive_version <- config$archive_version
+
+  if (report_archive_version > archive_version) {
+    ## TODO: better message here
+    stop("Report was created with orderly more recent than this, upgrade!")
+  } else if (report_archive_version == archive_version) {
+    return()
+  }
+
+  migrations <- migrate_plan(report_archive_version, archive_version)
+
+  for (v in names(migrations)) {
+    fun <- source_to_function(migrations[[v]], "migrate", topenv())
+    orderly_log("migrate", sprintf("'%s' => '%s'", report_archive_version, v))
+    migrate_apply1(path, v, fun, config,
+                   dry_run = FALSE, skip_failed = FALSE)
+    report_archive_version <- v
   }
 }

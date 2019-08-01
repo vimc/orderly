@@ -22,7 +22,7 @@
 ##' orderly::orderly_list_archive(root = path)
 orderly_commit <- function(id, name = NULL, root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
-  check_orderly_archive_version(config)
+  config <- check_orderly_archive_version(config)
   if (is.null(name)) {
     name <- orderly_find_name(id, config, draft = TRUE, must_work = TRUE)
   } else {
@@ -60,14 +60,9 @@ recipe_commit <- function(workdir, config) {
   ## Copy the _files_ over, but we'll roll this back if anything fails
   dest <- copy_report(workdir, name, config)
 
-  DBI::dbBegin(con)
   withCallingHandlers(
-    report_data_import(con, workdir, config),
-    error = function(e) {
-      unlink(dest, recursive = TRUE)
-      tryCatch(DBI::dbRollback(con), error = function(e) NULL)
-    })
-  DBI::dbCommit(con)
+    report_db_import(name, id, config),
+    error = function(e) unlink(dest, TRUE))
 
   ## After success we can delete the draft directory
   unlink(workdir, recursive = TRUE)

@@ -36,6 +36,11 @@ test_that("pull report", {
   d <- orderly_list_archive(path2)
   expect_equal(d$name, "multifile-artefact")
   expect_true(d$id %in% orderly_list_archive(path1)$id)
+
+  ## Pulled report is now in the db:
+  con <- orderly_db("destination", root = path2)
+  on.exit(DBI::dbDisconnect(con))
+  expect_equal(DBI::dbReadTable(con, "report_version")$id, id)
 })
 
 
@@ -127,4 +132,28 @@ test_that("pull dependencies", {
     "\\[ pull\\s+ \\]  example:")
   expect_equal(orderly_list_archive(dat$config),
                data_frame(name = "example", id = c(dat$id2, id3)))
+})
+
+
+test_that("pull report with dependencies", {
+  dat <- prepare_orderly_remote_example()
+
+  ## For some reason that I don't understand, we use draft: true for
+  ## the depend report here, so fix that:
+  p <- file.path(dat$path_remote, "src", "depend", "orderly.yml")
+  yml <- grep("^\\s+draft: true", readLines(p), invert = TRUE, value = TRUE)
+  writeLines(yml, p)
+
+  id <- orderly_run("depend", root = dat$path_remote, echo = FALSE)
+  orderly_commit(id, root = dat$path_remote)
+
+  orderly_pull_archive("depend", id,
+                       root = dat$path_local, remote = dat$remote)
+  d <- orderly_list_archive(root = dat$path_local)
+  expect_setequal(d$id, c(dat$id2, id))
+  expect_setequal(d$name, c("example", "depend"))
+
+  con <- orderly_db("destination", root = dat$path_local)
+  on.exit(DBI::dbDisconnect(con))
+  expect_setequal(d$id, DBI::dbReadTable(con, "report_version")$id)
 })

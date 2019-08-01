@@ -48,6 +48,17 @@ After setting your username up you can run
 \code{"reportname"} can be run, or you can run
 \code{orderly_pull_archive("reportname")} to pull a copy of
 \code{"reportname"} that has been run on the remote server.
+
+Pulling an archive report from a remote also pulls its
+dependencies (recursively), and adds all of these to the local
+database.  This may require migrating old orderly archives
+(\code{\link{orderly_migrate}}).  Note that this migration will
+likely fail for remote orderly versions older than 0.6.8 because
+the migration needs to read data files on disk that are not
+included in the downloaded archive in order to collect all the
+information required for the database.  In this case, ask the
+administrator of the remote orderly archive to migrate their
+archive, and then re-pull.
 }
 \examples{
 # Suppose we have a "remote" orderly repository at some path.

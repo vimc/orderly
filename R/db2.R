@@ -191,6 +191,16 @@ report_db_open_existing <- function(con, config) {
 }
 
 
+report_db_import <- function(name, id, config) {
+  orderly_log("import", sprintf("%s:%s", name, id))
+  con <- orderly_db("destination", config)
+  on.exit(DBI::dbDisconnect(con))
+  DBI::dbBegin(con)
+  report_data_import(con, name, id, config)
+  DBI::dbCommit(con)
+}
+
+
 report_db_rebuild <- function(config, verbose = TRUE) {
   assert_is(config, "orderly_config")
   root <- config$root
@@ -204,10 +214,12 @@ report_db_rebuild <- function(config, verbose = TRUE) {
   reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
   if (length(reports) > 0L) {
     for (p in reports[order(basename(reports))]) {
+      id <- basename(p)
+      name <- basename(dirname(p))
       if (verbose) {
-        message(sprintf("%s (%s)", basename(p), basename(dirname(p))))
+        message(sprintf("%s (%s)", id, name))
       }
-      report_data_import(con, p, config)
+      report_data_import(con, name, id, config)
     }
   }
 
@@ -224,16 +236,9 @@ report_db_needs_rebuild <- function(config) {
 }
 
 
-report_data_import <- function(con, workdir, config) {
+report_data_import <- function(con, name, id, config) {
+  workdir <- file.path(config$root, "archive", name, id)
   dat_rds <- readRDS(path_orderly_run_rds(workdir))
-
-  ## Was not done before 0.3.3
-  stopifnot(!is.null(dat_rds$meta))
-  ## Was not done before 0.5.5
-  stopifnot(!is.null(dat_rds$meta$connection))
-
-  id <- dat_rds$meta$id
-  name <- dat_rds$meta$name
 
   sql_name <- "SELECT name FROM report WHERE name = $1"
   if (nrow(DBI::dbGetQuery(con, sql_name, name)) == 0L) {
@@ -241,11 +246,6 @@ report_data_import <- function(con, workdir, config) {
   } else {
     sql <- "SELECT id FROM report_version WHERE report = $1"
     prev <- max(DBI::dbGetQuery(con, sql, name)$id)
-    if (id < prev) {
-      stop(sprintf(
-        "Report id '%s' is behind existing id '%s'", id, prev),
-        call. = FALSE)
-    }
   }
 
   if (is.null(dat_rds$git$sha)) {
