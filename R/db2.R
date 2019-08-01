@@ -185,8 +185,9 @@ report_db_open_existing <- function(con, config) {
     identical(label$public[match(label$id, config$changelog$id)],
               config$changelog$public %||% logical(0))
   if (!ok) {
-    stop("changelog labels have changed: rebuild with orderly::orderly_rebuild",
-         call. = FALSE)
+    stop(
+      "changelog labels have changed: rebuild with orderly::orderly_rebuild()",
+      call. = FALSE)
   }
 }
 
