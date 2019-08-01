@@ -246,11 +246,6 @@ report_data_import <- function(con, name, id, config) {
   } else {
     sql <- "SELECT id FROM report_version WHERE report = $1"
     prev <- max(DBI::dbGetQuery(con, sql, name)$id)
-    if (id < prev) {
-      stop(sprintf(
-        "Report id '%s' is behind existing id '%s'", id, prev),
-        call. = FALSE)
-    }
   }
 
   if (is.null(dat_rds$git$sha)) {

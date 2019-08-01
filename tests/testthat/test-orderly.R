@@ -158,21 +158,20 @@ test_that("dependency dir can be used", {
 })
 
 
-test_that("can't commit out of order", {
+test_that("commit out of order", {
   path <- prepare_orderly_example("minimal")
 
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("example", root = path, echo = FALSE)
 
   orderly_commit(id2, root = path)
-  expect_error(orderly_commit(id1, root = path),
-               "Report id '.+?' is behind existing id '.+?'")
+  expect_error(orderly_commit(id1, root = path), NA)
 
-  expect_equal(dir(file.path(path, "archive", "example")), id2)
-  expect_equal(dir(file.path(path, "draft", "example")), id1)
+  expect_equal(orderly_latest("example", root = path), id2)
 
   id3 <- orderly_run("example", root = path, echo = FALSE)
   expect_error(orderly_commit(id3, root = path), NA)
+  expect_equal(orderly_latest("example", root = path), id3)
 })
 
 
