@@ -12,9 +12,10 @@ test_that("no dependencies", {
   messages <- capture_messages(
     print_dep_tree("example", root = path)
   )
-  expect_equal(messages,
-               c("\033[32m+++++DOWNSTREAM+++++\033[39m\n",
-                sprintf("\033[34mexample [%s]\033[39m\n", id)))
+  exp_message <-
+    c(paste(crayon::green("+++++DOWNSTREAM+++++"), "\n", sep=""),
+      paste(crayon::blue(sprintf("example [%s]", id)), "\n", sep=""))
+  expect_equal(messages, exp_message)
 })
 
 # check reports with recursive dependencies
@@ -36,10 +37,12 @@ test_that("has dependencies downstream", {
   messages <- capture_messages(
     print_dep_tree("example", root = path)
   )
-  exp_message <- c("\033[32m+++++DOWNSTREAM+++++\033[39m\n",
-                   sprintf("\033[34mexample [%s]\033[39m\n", r1),
-                   sprintf("\033[34m|___depend [%s]\033[39m\n", r2),
-                   sprintf("\033[34m  |___depend3 [%s]\033[39m\n", r3))
+  exp_message <-
+    c(paste(crayon::green("+++++DOWNSTREAM+++++"), "\n", sep=""),
+      paste(crayon::blue(sprintf("example [%s]", r1)), "\n", sep=""),
+      paste(crayon::blue(sprintf("|___depend [%s]", r2)), "\n", sep=""),
+      paste(crayon::blue(sprintf("  |___depend3 [%s]", r3)), "\n", sep=""))
+
   expect_equal(messages, exp_message)
   
   messages <- capture_messages(
@@ -48,6 +51,11 @@ test_that("has dependencies downstream", {
   exp_message <- c("\033[32m+++++DOWNSTREAM+++++\033[39m\n",
                    sprintf("\033[34mdepend [%s]\033[39m\n", r2),
                    sprintf("\033[34m|___depend3 [%s]\033[39m\n", r3))
+
+  exp_message <-
+    c(paste(crayon::green("+++++DOWNSTREAM+++++"), "\n", sep=""),
+      paste(crayon::blue(sprintf("depend [%s]", r2)), "\n", sep=""),
+      paste(crayon::blue(sprintf("|___depend3 [%s]", r3)), "\n", sep=""))
   
   expect_equal(messages, exp_message)
 })
@@ -67,18 +75,47 @@ test_that("has dependencies upstream", {
   messages <- capture_messages(
     print_dep_tree("example", root = path, upstream = TRUE)
   )
-  exp_message <- c("\033[32m++++++UPSTREAM++++++\033[39m\n",
-                   sprintf("\033[34mexample [%s]\033[39m\n", r1),
-                   sprintf("\033[34m|___depend [%s]\033[39m\n", r2),
-                   sprintf("\033[34m  |___depend3 [%s]\033[39m\n", r3))
+
+  exp_message <-
+    c(paste(crayon::yellow("++++++UPSTREAM++++++"), "\n", sep=""),
+      paste(crayon::blue(sprintf("example [%s]", r1)), "\n", sep=""))
   expect_equal(messages, exp_message)
   
   messages <- capture_messages(
     print_dep_tree("depend3", root = path, upstream = TRUE)
   )
-  exp_message <- c("\033[32m++++++UPSTREAM++++++\033[39m\n",
-                   sprintf("\033[34mdepend [%s]\033[39m\n", r2),
-                   sprintf("\033[34m|___depend3 [%s]\033[39m\n", r3))
+  exp_message <-
+    c(paste(crayon::yellow("++++++UPSTREAM++++++"), "\n", sep=""),
+      paste(crayon::blue(sprintf("depend3 [%s]", r3)), "\n", sep=""),
+      paste(crayon::blue(sprintf("|___depend [%s]", r2)), "\n", sep=""),
+      paste(crayon::blue(sprintf("  |___example [%s]", r1)), "\n", sep=""))
   
+  expect_equal(messages, exp_message)
+})
+
+test_that("out of date dependencies", {
+  path <- prepare_orderly_example("depends")
+  tmp <- tempfile()
+  r1 <- orderly_run("example", root = path, echo = FALSE)
+  r2 <- orderly_run("depend", root = path, echo = FALSE)
+  r3_1 <- orderly_run("depend3", root = path, echo = FALSE)
+  r3_2 <- orderly_run("depend3", root = path, echo = FALSE)
+  orderly_commit(r1, root = path)
+  orderly_commit(r2, root = path)
+  orderly_commit(r3_1, root = path)
+  orderly_commit(r3_2, root = path)
+  file.remove(file.path(path, "orderly.sqlite"))
+  orderly_rebuild(path)
+
+  messages <- capture_messages(
+    print_dep_tree("example", root = path)
+  )
+  exp_message <-
+    c(paste(crayon::green("+++++DOWNSTREAM+++++"), "\n", sep=""),
+      paste(crayon::blue(sprintf("example [%s]", r1)), "\n", sep=""),
+      paste(crayon::blue(sprintf("|___depend [%s]", r2)), "\n", sep=""),
+      paste(crayon::red(sprintf("  |___depend3 [%s]", r3_1)), "\n", sep=""),
+      paste(crayon::blue(sprintf("  |___depend3 [%s]", r3_2)), "\n", sep=""))
+
   expect_equal(messages, exp_message)
 })
