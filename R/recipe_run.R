@@ -465,7 +465,6 @@ recipe_prepare_workdir <- function(info, message, config) {
 
   info$inputs <- recipe_file_inputs(info)
   info$changelog <- changelog_load(src, message, info, config)
-
   recipe_check_unique_inputs(info)
   info
 }
@@ -720,7 +719,6 @@ recipe_check_hashes <- function(pre, post, name1, name2) {
   }
 }
 
-
 recipe_copy_readme <- function(info, src) {
   ## README logic:
   ## * if there's a readme we copy it
@@ -741,7 +739,7 @@ recipe_copy_readme <- function(info, src) {
 
     ## now check if README is a resource
     if (length(info$resources) > 0) {
-      i <- grepl("README.md", info$resources, ignore.case = FALSE)
+      i <- grepl("^(?i)readme(|.md)$", info$resources, ignore.case = FALSE)
       if (any(i)) {
         ## WARNING
         orderly_log("readme",
@@ -752,7 +750,7 @@ recipe_copy_readme <- function(info, src) {
 
     ## now check if README is an artefact
     artefact_files <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
-    if (any(grepl("README.md", artefact_files, ignore.case = TRUE))) {
+    if (any(grepl("^(?i)readme(|.md)$", artefact_files, ignore.case = TRUE))) {
       stop("README.md should not be listed as an artefact")
     }
   }
