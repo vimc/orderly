@@ -102,3 +102,41 @@ test_that("readme db",  {
   ## check that the purpose of README.md is readme
   expect_true(all(d$file_purpose[readme_file] == "readme"))
 })
+
+test_that("allow readme in sub-directory", {
+  path <- prepare_orderly_example("demo")
+  ## in report directory create a file called README.md
+  report_path <- file.path(path, "src", "use_resource")
+  # add a readme fiel to the meta data directory
+  file.create(file.path(report_path, "meta", "README.md"))
+
+  #rewrite yml to include extra readme file
+  yml_path <- file.path(report_path, "orderly.yml")
+  yml <- c("data:",
+           "  dat:",
+           "    query: SELECT name, number FROM thing",
+           "script: script.R",
+           "resources:",
+           "  - meta/data.csv",
+           "  - meta/README.md",
+           "  - README.md",
+           "artefacts:",
+           "  staticgraph:",
+           "    description: A graph of things",
+           "    filenames: mygraph.png",
+           "author: Dr Serious",
+           "requester: ACME"
+           )
+  writeLines(yml, file.path(yml_path))
+
+  id <- orderly_run("use_resource", root = path, echo = FALSE)
+  p <- file.path(path, "draft", "use_resource", id)
+  # make sure the file has been copied across
+  expect_true(file.exists(file.path(p, "meta", "README.md")))
+  orderly_commit(id, root = path)
+  con <- orderly_db("destination", root = path)
+  on.exit(DBI::dbDisconnect(con))
+  dat <- DBI::dbReadTable(con, "file_input")
+  # make sure the file has been inserted to the database
+  expect_equal(sum(dat$filename == "meta/README.md"), 1)
+})

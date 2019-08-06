@@ -465,6 +465,7 @@ recipe_prepare_workdir <- function(info, message, config) {
 
   info$inputs <- recipe_file_inputs(info)
   info$changelog <- changelog_load(src, message, info, config)
+
   recipe_check_unique_inputs(info)
   info
 }
@@ -718,6 +719,7 @@ recipe_check_hashes <- function(pre, post, name1, name2) {
          call. = FALSE)
   }
 }
+
 
 recipe_copy_readme <- function(info, src) {
   ## README logic:
