@@ -22,12 +22,12 @@ test_that("lowercase README.md",  {
   file.create(file.path(report_path, "readme.MD"))
   id <- orderly_run("example", root = path, echo = FALSE)
   p <- file.path(path, "draft", "example", id)
-  expect_true(file.exists(file.path(p, "README.md")))
+  expect_true(file.exists(file.path(p, "README.MD")))
   orderly_commit(id, root = path)
   con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
   dat <- DBI::dbReadTable(con, "file_input")
-  expect_equal(sum(dat$filename == "README.md"), 1)
+  expect_equal(sum(dat$filename == "README.MD"), 1)
 })
 
 test_that("list README.md as resource",  {
@@ -103,13 +103,33 @@ test_that("readme db",  {
   expect_true(all(d$file_purpose[readme_file] == "readme"))
 })
 
-test_that("allow readme in sub-directory", {
+test_that("copy readme in sub-directory", {
+  path <- prepare_orderly_example("demo")
+  ## in report directory create a file called README.md
+  report_path <- file.path(path, "src", "use_resource")
+
+  # add a readme file to the meta data directory
+  file.create(file.path(report_path, "meta", "README.md"))
+  id <- orderly_run("use_resource", root = path, echo = FALSE)
+  p <- file.path(path, "draft", "use_resource", id)
+
+  # make sure the file has been copied across
+  expect_true(file.exists(file.path(p, "meta", "README.md")))
+  orderly_commit(id, root = path)
+  con <- orderly_db("destination", root = path)
+  on.exit(DBI::dbDisconnect(con))
+  dat <- DBI::dbReadTable(con, "file_input")
+
+  # make sure the file has been inserted to the database
+  expect_equal(sum(dat$filename == "meta/README.md"), 1)
+})
+
+test_that("list README.md as resource in sub-directory", {
   path <- prepare_orderly_example("demo")
   ## in report directory create a file called README.md
   report_path <- file.path(path, "src", "use_resource")
   # add a readme fiel to the meta data directory
   file.create(file.path(report_path, "meta", "README.md"))
-
   #rewrite yml to include extra readme file
   yml_path <- file.path(report_path, "orderly.yml")
   yml <- c("data:",
@@ -128,8 +148,11 @@ test_that("allow readme in sub-directory", {
            "requester: ACME"
            )
   writeLines(yml, file.path(yml_path))
+  # make sure we get a warning about this
+  messages <- capture_messages(
+    id <- orderly_run("use_resource", root = path, echo = FALSE))
+  expect_true(any(grep("should not be listed as a resource", messages)))
 
-  id <- orderly_run("use_resource", root = path, echo = FALSE)
   p <- file.path(path, "draft", "use_resource", id)
   # make sure the file has been copied across
   expect_true(file.exists(file.path(p, "meta", "README.md")))
