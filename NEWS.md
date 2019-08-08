@@ -1,3 +1,7 @@
+# 0.7.7
+
+* Pulling from remotes now imports the report into the local orderly db, and also pulls all dependent reports (VIMC-2855, VIMC-3054).
+
 # 0.7.6
 
 * Detection of modified dependencies has been improved (VIMC-2997).

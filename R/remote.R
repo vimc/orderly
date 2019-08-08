@@ -10,6 +10,17 @@
 ##' \code{orderly_pull_archive("reportname")} to pull a copy of
 ##' \code{"reportname"} that has been run on the remote server.
 ##'
+##' Pulling an archive report from a remote also pulls its
+##' dependencies (recursively), and adds all of these to the local
+##' database.  This may require migrating old orderly archives
+##' (\code{\link{orderly_migrate}}).  Note that this migration will
+##' likely fail for remote orderly versions older than 0.6.8 because
+##' the migration needs to read data files on disk that are not
+##' included in the downloaded archive in order to collect all the
+##' information required for the database.  In this case, ask the
+##' administrator of the remote orderly archive to migrate their
+##' archive, and then re-pull.
+##'
 ##' @title Download dependent reports
 ##'
 ##' @param name Name of the report to download dependencies for
@@ -63,6 +74,7 @@ orderly_pull_dependencies <- function(name, root = NULL, locate = TRUE,
 orderly_pull_archive <- function(name, id = "latest", root = NULL,
                                  locate = TRUE, remote = NULL) {
   config <- orderly_config_get(root, locate)
+  config <- check_orderly_archive_version(config)
   remote <- get_remote(remote, config)
 
   v <- remote_report_versions(name, config, FALSE, remote)
@@ -84,11 +96,32 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
   }
 
   dest <- file.path(path_archive(config$root), name, id)
+  label <- sprintf("%s:%s", name, id)
   if (file.exists(dest)) {
-    orderly_log("pull", sprintf("%s:%s already exists, skipping", name, id))
+    orderly_log("pull", sprintf("%s already exists, skipping", label))
   } else {
-    orderly_log("pull", sprintf("%s:%s", name, id))
-    remote$pull(name, id, config$root)
+    orderly_log("pull", label)
+    path <- file.path(config$root, "archive", name, id)
+    withCallingHandlers({
+      ## TODO (VIMC-2953): it would be might to have the remote pull
+      ## into a temporary directory and handle the copy ourselves for
+      ## easier rollback and less logic
+      remote$pull(name, id, config$root)
+
+      ## There's an assumption here that the depenency resolution here
+      ## will not be badly affected by migrations.  If a migration
+      ## changes how d$meta$depends is structured (if d$meta$depends
+      ## stops being a data.frame that includes name and id as
+      ## columns) then we'll need to deal with that when checking
+      ## dependencies too.
+      orderly_pull_resolve_dependencies(path, remote, config)
+
+      ## Only migrate after dependencies have been resolved because
+      ## some migrations do check dependencies.
+      migrate_single(path, config)
+
+      report_db_import(name, id, config)
+    }, error = function(e) unlink(path, recursive = TRUE))
   }
 }
 
@@ -289,4 +322,20 @@ implements_remote <- function(x) {
     is.function(x$list_versions) &&
     is.function(x$pull) &&
     is.function(x$run)
+}
+
+
+orderly_pull_resolve_dependencies <- function(path, remote, config) {
+  d <- readRDS(path_orderly_run_rds(path))
+  depends <- d$meta$depends
+  if (NROW(depends) > 0L) { # NROW(x) is 0 for x = NULL
+    depends <- depends[!duplicated(depends$id), c("name", "id"), drop = FALSE]
+    orderly_log("depends",
+                paste(sprintf("%s/%s", depends$name, depends$id),
+                      collapse = ", "))
+    for (i in seq_len(nrow(depends))) {
+      orderly_pull_archive(depends$name[[i]], depends$id[[i]], root = config,
+                           locate = FALSE, remote = remote)
+    }
+  }
 }
