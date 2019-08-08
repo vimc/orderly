@@ -210,6 +210,21 @@ recipe_read_check_resources <- function(x, filename, path) {
   if (is.null(x)) {
     return(NULL)
   }
+
+  # make sure that a directory resource does not have a trailing /
+  # There is much more sanitation that could be done here...
+  is_dir <- is_directory(file.path(path, x))
+  trailing <- grepl(pattern = "(\\/)$", x)
+  bad_resource <- is_dir & trailing
+  if (any(bad_resource)) {
+    warning_msg <- sprintf("Resource %s a traling slash:%s",
+                   ngettext(sum(bad_resource), "directory has",
+                                               "directories have"),
+                   paste(squote(x[bad_resource]), collapse = ", "))
+    orderly_log("warning", warning_msg)
+    x[bad_resource] <- sub("(\\/)$", "", x[bad_resource])
+  }
+
   assert_character(x, sprintf("%s:%s", filename, "resouces"))
   assert_file_exists(x, workdir = path, name = "Resource file")
   ## TODO: this is not quite right because the files need to be

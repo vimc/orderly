@@ -375,3 +375,31 @@ test_that("sources and resources are exclusive", {
     recipe_read(file.path(path, "src", "other"), config),
     "Do not list source files \\(sources\\) as resources:\\s+- functions\\.R")
 })
+
+
+test_that("trailing slash on resource directory", {
+  path <- prepare_orderly_example("demo")
+  ## in report directory create a file called README.md
+  report_path <- file.path(path, "src", "use_resource")
+  #rewrite yml to include extra readme file
+  yml_path <- file.path(report_path, "orderly.yml")
+  yml <- c("data:",
+           "  dat:",
+           "    query: SELECT name, number FROM thing",
+           "script: script.R",
+           "resources:",
+           "  - meta/",
+           "artefacts:",
+           "  staticgraph:",
+           "    description: A graph of things",
+           "    filenames: mygraph.png",
+           "author: Dr Serious",
+           "requester: ACME"
+           )
+  writeLines(yml, file.path(yml_path))
+  # make sure we get a warning about this
+  messages <- capture_messages(
+    id <- orderly_run("use_resource", root = path, echo = FALSE))
+  expect_true(any(grep("Resource directory has a traling slash:'meta/'",
+                       messages)))
+})
