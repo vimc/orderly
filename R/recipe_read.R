@@ -221,7 +221,6 @@ recipe_read_check_resources <- function(x, filename, path) {
                    ngettext(sum(bad_resource), "directory has",
                                                "directories have"),
                    paste(squote(x[bad_resource]), collapse = ", "))
-    orderly_log("warning", warning_msg)
     x[bad_resource] <- sub("(\\/)$", "", x[bad_resource])
   }
 

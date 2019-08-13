@@ -397,9 +397,15 @@ test_that("trailing slash on resource directory", {
            "requester: ACME"
            )
   writeLines(yml, file.path(yml_path))
-  # make sure we get a warning about this
-  messages <- capture_messages(
-    id <- orderly_run("use_resource", root = path, echo = FALSE))
-  expect_true(any(grep("Resource directory has a traling slash:'meta/'",
-                       messages)))
+  id <- orderly_run("use_resource", root = path, echo = FALSE)
+  p <- file.path(path, "draft", "use_resource", id)
+
+  # make sure the directory has been copied across
+  expect_true(file.exists(file.path(p, "meta")))
+  orderly_commit(id, root = path)
+  con <- orderly_db("destination", root = path)
+  on.exit(DBI::dbDisconnect(con))
+  dat <- DBI::dbReadTable(con, "file_input")
+  # make sure the resource filename does not contain a double slash //
+  expect_true("meta/data.csv" %in% dat$filename)
 })
