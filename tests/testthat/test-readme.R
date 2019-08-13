@@ -153,13 +153,22 @@ test_that("list README.md as resource in sub-directory", {
     id <- orderly_run("use_resource", root = path, echo = FALSE))
   expect_true(any(grep("should not be listed as a resource", messages)))
 
+  ## Try again _without_ listing the READMEs as a resource so that we
+  ## see that they're copied over
+  writeLines(yml[!grepl("README", yml)], file.path(yml_path))
+  id <- orderly_run("use_resource", root = path, echo = FALSE)
+
   p <- file.path(path, "draft", "use_resource", id)
   # make sure the file has been copied across
   expect_true(file.exists(file.path(p, "meta", "README.md")))
+  expect_true(file.exists(file.path(p, "README.md")))
   orderly_commit(id, root = path)
   con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
   dat <- DBI::dbReadTable(con, "file_input")
-  # make sure the file has been inserted to the database
-  expect_equal(sum(dat$filename == "meta/README.md"), 1)
+
+  ## make sure the file has been inserted to the database
+  i <- dat$file_purpose == "readme"
+  expect_equal(sum(i), 2)
+  expect_setequal(dat$filename[i], c("README.md", "meta/README.md"))
 })
