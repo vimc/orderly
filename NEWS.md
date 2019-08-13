@@ -1,3 +1,7 @@
+# 0.7.9
+
+* All README files are copied into destination directory, not just top level (VIMC-3065)
+
 # 0.7.7
 
 * Pulling from remotes now imports the report into the local orderly db, and also pulls all dependent reports (VIMC-2855, VIMC-3054).
