@@ -506,37 +506,18 @@ recipe_exists_artefacts <- function(info, id) {
 }
 
 recipe_unexpected_artefacts <- function(info, id) {
-  ## TODO: filter out globals
-  # expected artefacts
-  expected <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
-  # expected resources
-  resources <- c()
-  if (!is.null(info$resources)) {
-    resources <- info$resources
-  }
-  # expected dependencies
-  dependencies <- c()
-  if (!is.null(info$depends)) {
-    dependencies <- info$depends$as
-  }
-  ## we expect to see all artefacts from the config, the source file
-  ## and the yml config; the changelog may or may not be present, but
-  ## it's never unexpected.
-  expected <- c(expected, resources, dependencies, info$script, "orderly.yml")
+  artefacts <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
+  resources <- info$inputs$filename
+  dependencies <- info$depends$as
+  expected <- c(artefacts, resources, dependencies)
 
-  # this is set to recursive to ensure that artefacts created in directories
-  # are tracked
+  ## this is set to recursive to ensure that artefacts created in directories
+  ## are tracked
   found <- list.files(recursive = TRUE)
-  # TODO do we need to track when a user unexpectedly creates an empty directory ?
+  ## TODO do we need to track when a user unexpectedly creates an
+  ## empty directory ?
 
-  # what files have we found that were not contained in expected
-  unexpected <- setdiff(found, expected)
-
-  # remove any files of the form readme or readme.md
-  unexpected <- unexpected[!grepl("^readme(|.md)$", unexpected,
-                                  ignore.case = TRUE)]
-
-  unexpected
+  setdiff(found, expected)
 }
 
 iso_time_str <- function(time = Sys.time()) {
