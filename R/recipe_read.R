@@ -217,10 +217,6 @@ recipe_read_check_resources <- function(x, filename, path) {
   trailing <- grepl(pattern = "(\\/)$", x)
   bad_resource <- is_dir & trailing
   if (any(bad_resource)) {
-    warning_msg <- sprintf("Resource %s a traling slash:%s",
-                   ngettext(sum(bad_resource), "directory has",
-                                               "directories have"),
-                   paste(squote(x[bad_resource]), collapse = ", "))
     x[bad_resource] <- sub("(\\/)$", "", x[bad_resource])
   }
 
