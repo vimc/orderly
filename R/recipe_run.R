@@ -506,37 +506,18 @@ recipe_exists_artefacts <- function(info, id) {
 }
 
 recipe_unexpected_artefacts <- function(info, id) {
-  ## TODO: filter out globals
-  # expected artefacts
-  expected <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
-  # expected resources
-  resources <- c()
-  if (!is.null(info$resources)) {
-    resources <- info$resources
-  }
-  # expected dependencies
-  dependencies <- c()
-  if (!is.null(info$depends)) {
-    dependencies <- info$depends$as
-  }
-  ## we expect to see all artefacts from the config, the source file
-  ## and the yml config; the changelog may or may not be present, but
-  ## it's never unexpected.
-  expected <- c(expected, resources, dependencies, info$script, "orderly.yml")
+  artefacts <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
+  resources <- info$inputs$filename
+  dependencies <- info$depends$as
+  expected <- c(artefacts, resources, dependencies)
 
-  # this is set to recursive to ensure that artefacts created in directories
-  # are tracked
+  ## this is set to recursive to ensure that artefacts created in directories
+  ## are tracked
   found <- list.files(recursive = TRUE)
-  # TODO do we need to track when a user unexpectedly creates an empty directory ?
+  ## TODO do we need to track when a user unexpectedly creates an
+  ## empty directory ?
 
-  # what files have we found that were not contained in expected
-  unexpected <- setdiff(found, expected)
-
-  # remove any files of the form readme or readme.md
-  unexpected <- unexpected[!grepl("^readme(|.md)$", unexpected,
-                                  ignore.case = TRUE)]
-
-  unexpected
+  setdiff(found, expected)
 }
 
 iso_time_str <- function(time = Sys.time()) {
@@ -730,29 +711,33 @@ recipe_copy_readme <- function(info, src) {
   src_files <- dir(src)
   readme_file <- src_files[tolower(src_files) == "readme.md"]
 
+  readme_files <- dir(src, pattern = "README(\\.md)?$",
+                      ignore.case = TRUE, recursive = TRUE)
   ## Two readme files e.g. README.md and Readme.MD can happen on unix
   ## systems; it is not clear what we should do here, so we just
   ## ignore the readme silently for now.
-  if (length(readme_file) == 1) {
+  if (length(readme_files) > 0) {
     ## we copy the readme.md file to README.md irrespective of what
     ## case filename the user has used
-    file_copy(file.path(src, readme_file), "README.md")
-    info$readme <- "README.md"
+    dir_create(dirname(readme_files))
+    canonical_readme_files <- sub("README(|.md)$", "README\\1", readme_files,
+                                  ignore.case = TRUE)
+    file_copy(file.path(src, readme_files), canonical_readme_files)
+    info$readme <- canonical_readme_files
 
     ## now check if README is a resource
     if (length(info$resources) > 0) {
-      i <- grepl("README.md", info$resources, ignore.case = FALSE)
+      i <- grepl("README(|.md)$", info$resources, ignore.case = TRUE)
       if (any(i)) {
         ## WARNING
-        orderly_log("readme",
-                    "README.md should not be listed as a resource")
+        orderly_log("readme", "README.md should not be listed as a resource")
         info$resources <- info$resources[!i]
       }
     }
 
     ## now check if README is an artefact
     artefact_files <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
-    if (any(grepl("README.md", artefact_files, ignore.case = TRUE))) {
+    if (any(grepl("README(|.md)$", artefact_files, ignore.case = TRUE))) {
       stop("README.md should not be listed as an artefact")
     }
   }
