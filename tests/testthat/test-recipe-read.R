@@ -375,3 +375,37 @@ test_that("sources and resources are exclusive", {
     recipe_read(file.path(path, "src", "other"), config),
     "Do not list source files \\(sources\\) as resources:\\s+- functions\\.R")
 })
+
+
+test_that("trailing slash on resource directory", {
+  path <- prepare_orderly_example("demo")
+  ## in report directory create a file called README.md
+  report_path <- file.path(path, "src", "use_resource")
+  #rewrite yml to include extra readme file
+  yml_path <- file.path(report_path, "orderly.yml")
+  yml <- c("data:",
+           "  dat:",
+           "    query: SELECT name, number FROM thing",
+           "script: script.R",
+           "resources:",
+           "  - meta/",
+           "artefacts:",
+           "  staticgraph:",
+           "    description: A graph of things",
+           "    filenames: mygraph.png",
+           "author: Dr Serious",
+           "requester: ACME"
+           )
+  writeLines(yml, file.path(yml_path))
+  id <- orderly_run("use_resource", root = path, echo = FALSE)
+  p <- file.path(path, "draft", "use_resource", id)
+
+  # make sure the directory has been copied across
+  expect_true(file.exists(file.path(p, "meta")))
+  orderly_commit(id, root = path)
+  con <- orderly_db("destination", root = path)
+  on.exit(DBI::dbDisconnect(con))
+  dat <- DBI::dbReadTable(con, "file_input")
+  # make sure the resource filename does not contain a double slash //
+  expect_true("meta/data.csv" %in% dat$filename)
+})
