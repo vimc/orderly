@@ -101,7 +101,7 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
     orderly_log("pull", sprintf("%s already exists, skipping", label))
   } else {
     orderly_log("pull", label)
-    path <- remote$pull(name, id, config$root)
+    path <- remote$pull(name, id)
 
     ## There's an assumption here that the depenency resolution here
     ## will not be badly affected by migrations.  If a migration
