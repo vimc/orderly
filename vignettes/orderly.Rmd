@@ -301,6 +301,119 @@ As a report becomes more complex, the function
 creates the isolated environment that orderly uses to run a report,
 but then leaves you to interactively work with your report.
 
+## Using the output from other reports
+
+It is often the case that we would like to write a report that depends on an
+earlier report, _e.g._ one report produces a large dataset and a later report
+produces a high level summary. Orderly allows a report to directly copy an
+artefact file from and existing report without having to manually copy ii into 
+the report source directory.  This is handled in `depends` block of the report's
+`orderly.yml`.
+
+An simple example might look like:
+
+```yaml
+depends:
+  big-data-report:
+    id: 20190425-163691-b8451bbf
+    use:
+      data.rds: huge-data-set.rds
+    draft: false
+```
+
+This will copy the file the `huge-data-set.rds` from the report
+`big-data-report` with `id` `20190425-163691-b8451bbf` and rename it `data.rds`.
+This file can then be used by the report as if it were in the source directory.
+The field `draft` tells orderly to only use completed reports in the archive as
+opposed to drafts. Setting this to true allows uncommited reports in `draft` to
+be used. This can be useful when developing a chain of related reports.
+
+If we want to a report to always use the latest version of a report we can set 
+the `id` field to `latest`, _e.g._:
+
+```yaml
+depends:
+  big-data-report:
+    id: latest
+    use:
+      data.rds: huge-data-set.rds
+    draft: false
+```
+
+This will find the most recent version of the report `big-data-report` and copy
+files from that directory.
+
+To use multiple artefacts from a single report add the files into the `use`
+block _e.g._:
+
+```yaml
+depends:
+  big-data-report:
+    id: latest
+    use:
+      data.rds: huge-data-set.rds
+      pop.csv: population_data.csv
+    draft: false
+```
+
+To use artefacts from multiple reports we add multiple entries to the `depends`
+field _e.g._:
+
+```yaml
+depends:
+  big-data-report:
+    id: latest
+    use:
+      data.rds: huge-data-set.rds
+      pop.csv: population_data.csv
+    draft: false
+  report_two:
+    id: latest
+    use:
+      data_b.rds: filename.rds
+    draft: false
+```
+
+We can also use the same artefact from different versions of the same report. 
+This might come up if we want to write a report that compares the output from
+versions of another report. The yaml pattern for this is:
+
+```yaml
+depends:
+  - big-data-report:
+      id: 20190425-163691-b8451bbf
+      draft: false
+      use:
+        data_latest.rds: huge-data-set.rds
+  - big-data-report:
+      id: 20181225-172991-34c91ef1
+      draft: false
+      use:
+        data_old: huge-data-set.rds
+```
+
+## Using global resources
+
+There might be files that are used in (almost) every report, examples of these
+sorts of files might be document templates or organisation logos. To set up a 
+global resource create a directory `your_global_dir` in `<root>` and the
+following to the `orderly_config.yml`:
+
+```yaml
+global_resources:
+  your_global_dir
+```
+
+Then to use any file in `your_global_dir` in your report add a
+`global_resources` field to that report's `orderly.yml`:
+
+```yaml
+global_resources:
+  - org_logo.jpg
+  - org_latex_class.cls
+  - org_styles.css
+```
+
 ## Customising the configuration
 
 The contents of `orderly_config.yml` may contain things like secrets
