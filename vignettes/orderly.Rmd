@@ -334,6 +334,8 @@ listed and file created during the running of the script must be
 included as artefacts (or deleted before the script finishes) or an
 error will be returned.
 
+Examples of artefacts fields in `orderly.yml`:
+
 ```yaml
 artefacts:
   - report:
@@ -342,6 +344,7 @@ artefacts:
 ```
 
 ```yaml
+artefacts:
   - report:
       filenames: report.html
       description: a simple report
