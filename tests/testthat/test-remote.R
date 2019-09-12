@@ -73,6 +73,8 @@ test_that("pull_dependencies counts dependencies", {
 ## These need dealing with properly, but check that they trigger
 ## correctly here:
 test_that("pull from old remote", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
   path_local <- prepare_orderly_example("demo")
   path_remote <- unpack_reference("0.6.0")
 
@@ -120,6 +122,8 @@ test_that("pull from new remote", {
 
 
 test_that("pull migrated archive", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
   path_local <- prepare_orderly_example("demo")
   unlink(file.path(path_local, "archive"), recursive = TRUE)
   dir.create(file.path(path_local, "archive"))
@@ -145,7 +149,7 @@ test_that("pull migrated archive", {
                   c("other", "use_dependency"))
 
   ## This fails in old versions, but will work here:
-  id <- orderly_run("minimal", root = path_local)
+  id <- orderly_run("minimal", root = path_local, echo = FALSE)
   orderly_commit(id, root = path_local)
   expect_true(id %in% orderly_list_archive(path_local)$id)
 
