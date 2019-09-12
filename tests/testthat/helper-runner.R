@@ -19,13 +19,14 @@ wait_while_running <- function(runner, ...) {
   wait_while(function() runner$poll() == "running")
 }
 wait_for_id <- function(runner, key, ...) {
-  st <- NULL
+  e <- environment()
+  e$st <- NULL
   continue <- function() {
-    st <<- runner$status(key)
-    st$status == "running" && is.na(st$id)
+    e$st <- runner$status(key)
+    e$st$status == "running" && is.na(e$st$id)
   }
   wait_while(continue)
-  st$id
+  e$st$id
 }
 
 runner_start <- function(runner, name, ...) {

@@ -47,10 +47,9 @@ test_that("failed migrations are rolled back", {
   path <- unpack_reference("0.3.2")
   hash <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
 
-  counter <- 0L
+  counter <- new_counter()
   fun <- function(data, path, config) {
-    counter <<- counter + 1L
-    if (counter >= 3L) {
+    if (counter() >= 3L) {
       stop("some sort of migration failure")
     }
     ## any old bit to indicate a change:
@@ -73,10 +72,9 @@ test_that("failed migrations can be skipped", {
   path <- unpack_reference("0.3.2")
   hash <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
 
-  counter <- 0L
+  counter <- new_counter()
   fun <- function(data, path, config) {
-    counter <<- counter + 1L
-    if (counter >= 5L) {
+    if (counter() >= 5L) {
       stop("some sort of migration failure")
     }
     ## any old bit to indicate a change:
@@ -106,10 +104,9 @@ test_that("failed migrations warned in dry run", {
   path <- unpack_reference("0.3.2")
   hash <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
 
-  counter <- 0L
+  counter <- new_counter()
   fun <- function(data, path, config) {
-    counter <<- counter + 1L
-    if (counter >= 5L) {
+    if (counter() >= 5L) {
       stop("some sort of migration failure")
     }
     ## any old bit to indicate a change:
