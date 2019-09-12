@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -e
+HERE=${BASH_SOURCE%/*}
+ROOT=$(realpath $HERE/..)
+DEST=$ROOT/tests/testthat/reference
+
+rm -f $DEST/*.zip
+
+mkdir -p $DEST
+cp $ROOT/reference/*.zip $DEST

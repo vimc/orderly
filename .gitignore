@@ -10,3 +10,4 @@ vignettes/*.html
 build
 docs
 tests/testthat/montagu-reports
+tests/testthat/reference/*.zip
