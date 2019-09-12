@@ -111,3 +111,13 @@ local({
     gc()
   })
 })
+
+
+new_counter <- function() {
+  e <- new.env(parent = emptyenv())
+  e$x <- 0L
+  function() {
+    e$x <- e$x + 1L
+    e$x
+  }
+}

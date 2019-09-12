@@ -654,12 +654,13 @@ sqlite_backup <- function(src, dest) {
 periodic <- function(fun, period) {
   fun <- match.fun(fun)
   force(period)
-  last <- Sys.time()
+  env <- new.env(parent = emptyenv())
+  env$last <- Sys.time()
   function() {
     now <- Sys.time()
-    if (now > last + period) {
+    if (now > env$last + period) {
       fun()
-      last <<- now
+      env$last <- now
     }
   }
 }

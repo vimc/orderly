@@ -507,19 +507,23 @@ test_that("show_question interactive", {
 
 
 test_that("periodic", {
+  e <- new.env(parent = emptyenv())
+  e$x <- 1
+
   skip_on_windows() # timing on windows is a pain
   skip_on_cran() # gc may cause occasional failures here
   gc() # avoid slow collections during this test
-  x <- 1
-  f <- function() x <<- x + 1
+  f <- function() {
+    e$x <- e$x + 1
+  }
   g <- periodic(f, 0.1)
   g()
-  expect_equal(x, 1)
+  expect_equal(e$x, 1)
   Sys.sleep(0.2)
   g()
-  expect_equal(x, 2)
+  expect_equal(e$x, 2)
   g()
-  expect_equal(x, 2)
+  expect_equal(e$x, 2)
 })
 
 
