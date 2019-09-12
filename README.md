@@ -83,6 +83,10 @@ Interaction with the remote environments is achieved using an [HTTP API](https:/
 
 `orderly` has a database, which should be the preferred way of querying the report archive from other programs.  The schema is programmatically described at [`inst/database/schema.yml`](inst/database/schema.yml) and automatically generated database documentation is available [here](https://vimc.github.io/orderly/schema).
 
+## Testing
+
+There is a set of regression tests that require the reference data.  Enable these by running the script `./scripts/copy_reference` which creates data in `tests/testthat/reference`
+
 ## Installation
 
 ```r

@@ -41,7 +41,16 @@ skip_if_no_internet <- function() {
 }
 
 unpack_reference <- function(version, path = tempfile()) {
-  unzip(sprintf("reference/%s.zip", version), exdir = path)
+  src <- sprintf("reference/%s.zip", version)
+  if (!file.exists(src)) {
+    msg <- sprintf("Reference data %s not available", version)
+    if (identical(Sys.getenv("TRAVIS"), "true")) {
+      stop(msg)
+    } else {
+      testthat::skip(msg)
+    }
+  }
+  unzip(src, exdir = path)
   file.path(path, version)
 }
 
