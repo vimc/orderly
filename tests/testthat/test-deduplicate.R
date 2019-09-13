@@ -67,6 +67,21 @@ test_that("simpler use", {
 })
 
 
+test_that("print on run", {
+  path <- orderly_example("demo")
+  id1 <- orderly_run("minimal", root = path, echo = FALSE)
+  id2 <- orderly_run("minimal", root = path, echo = FALSE)
+  orderly_commit(id1, root = path)
+  orderly_commit(id2, root = path)
+
+  expect_output(
+    orderly_deduplicate(path, dry_run = TRUE, quiet = FALSE),
+    "Deduplication information for")
+  expect_silent(
+    orderly_deduplicate(path, dry_run = TRUE, quiet = TRUE))
+})
+
+
 test_that("deduplicate empty", {
   skip_on_windows()
   path <- orderly_example("demo")
