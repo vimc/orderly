@@ -282,6 +282,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   }
 
   recipe_check_device_stack(prep$n_dev)
+  recipe_check_sink_stack(prep$n_sink)
   hash_artefacts <- recipe_check_artefacts(info)
 
   hash_data_csv <- con_csv$mset(prep$data)
@@ -551,6 +552,22 @@ recipe_check_device_stack <- function(expected) {
   }
 }
 
+recipe_check_sink_stack <- function(expected) {
+  check <- sink.number() - expected
+  if (check == 0) {
+    return()
+  } else if (check > 0) {
+    for (i in seq_len(check)) {
+      sink(NULL)
+    }
+    stop(ngettext(check,
+                  "Report left 1 sink open",
+                  sprintf("Report left %d sinks open", check)))
+  } else {
+    stop(sprintf("Report closed %d more sinks than it opened!", abs(check)))
+  }
+}
+
 orderly_environment <- function(envir) {
   if (is.null(envir)) {
     new.env(parent = .GlobalEnv)
@@ -571,13 +588,14 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
 
   ## Compute the device stack size before starting work too
   n_dev <- length(grDevices::dev.list())
+  n_sink <- sink.number()
 
   missing_packages <- setdiff(info$packages, .packages(TRUE))
   if (length(missing_packages) > 0) {
     handle_missing_packages(missing_packages)
   }
 
-  ret <- list(data = ldata, n_dev = n_dev)
+  ret <- list(data = ldata, n_dev = n_dev, n_sink = n_sink)
 
   if (!is.null(info$connection)) {
     ## NOTE: this is a copy of exported connections so that we can

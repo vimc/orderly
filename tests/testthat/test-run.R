@@ -99,6 +99,31 @@ test_that("close too many devices", {
                "Report closed 1 more devices than it opened")
 })
 
+test_that("sink imbalance", {
+  path <- prepare_orderly_example("minimal")
+  config <- orderly_config(path)
+  path_script <- file.path(path, "src/example/script.R")
+  txt <- readLines(path_script)
+  writeLines(c("sink('somefile', split = TRUE)", txt), path_script)
+
+  expect_error(
+    orderly_run("example", root = path, echo = FALSE),
+    "Report left 1 sink open")
+
+  logfile <- tempfile()
+  expect_error(
+    capture_log(
+      orderly_run("example", root = path, echo = TRUE), logfile),
+    "Report left 1 sink open")
+
+  writeLines(c("sink()", txt), path_script)
+  expect_error(
+    suppressWarnings(
+      capture_log(
+        orderly_run("example", root = path, echo = TRUE), logfile),
+      "Report closed 1 more sinks than it opened!"))
+})
+
 test_that("included example", {
   path <- prepare_orderly_example("example")
   id <- orderly_run("example", list(cyl = 4), root = path, echo = FALSE)
