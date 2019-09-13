@@ -12,6 +12,8 @@
 ##'
 ##' @param dry_run Logical, indicating if the deduplication
 ##'
+##' @param quiet Logical, indicating if the status should not be printed
+##'
 ##' @return Invisibly, information about the duplication status of the
 ##'   archive before deduplication was run.
 ##' @export
@@ -25,7 +27,8 @@
 ##' tryCatch(
 ##'   orderly::orderly_deduplicate(path, dry_run = TRUE),
 ##'   error = function(e) NULL)
-orderly_deduplicate <- function(root = NULL, locate = TRUE, dry_run = TRUE, quiet = FALSE) {
+orderly_deduplicate <- function(root = NULL, locate = TRUE, dry_run = TRUE,
+                                quiet = FALSE) {
   config <- orderly_config_get(root, locate)
   info <- orderly_deduplicate_info(config)
   if (!quiet) {

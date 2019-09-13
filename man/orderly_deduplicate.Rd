@@ -18,6 +18,8 @@ then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
 
 \item{dry_run}{Logical, indicating if the deduplication}
+
+\item{quiet}{Logical, indicating if the status should not be printed}
 }
 \value{
 Invisibly, information about the duplication status of the
