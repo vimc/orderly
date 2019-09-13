@@ -177,7 +177,7 @@ relink <- function(from, to) {
   backup <- paste0(from, ".bak")
   fs::file_move(from, backup)
   withCallingHandlers(
-    fs::link_create(to, from),
+    fs::link_create(to, from, FALSE),
     error = function(e) fs::file_move(backup, from))
   fs::file_delete(backup)
 }
