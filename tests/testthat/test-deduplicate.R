@@ -68,6 +68,7 @@ test_that("simpler use", {
 
 
 test_that("print on run", {
+  skip_on_windows()
   path <- orderly_example("demo")
   id1 <- orderly_run("minimal", root = path, echo = FALSE)
   id2 <- orderly_run("minimal", root = path, echo = FALSE)
