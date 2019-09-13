@@ -68,6 +68,7 @@ test_that("simpler use", {
 
 
 test_that("deduplicate empty", {
+  skip_on_windows()
   path <- orderly_example("demo")
   x <- orderly_deduplicate_info(orderly_config(path))
   expect_is(x, "orderly_deduplicate_info")
