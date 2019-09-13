@@ -1,3 +1,7 @@
+# 0.7.12
+
+* It is now possible to deduplicate an orderly archive using `orderly::orderly_deduplicate` (VIMC-731).
+
 # 0.7.9
 
 * All README files are copied into destination directory, not just top level (VIMC-3065)
