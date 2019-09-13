@@ -26,6 +26,7 @@ Imports:
     R6,
     RSQLite,
     digest,
+    fs,
     ids,
     jsonlite,
     optparse,
