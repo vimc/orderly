@@ -306,6 +306,7 @@ but then leaves you to interactively work with your report.
 Resources to a report are expected to be static files that are used by 
 the script to produce the report. Examples of the sort files that
 should be used as resources are:
+
  * Moderately sized data files (large datasets should be accessed from
    a database),
  * A markdown file used to create a report,
@@ -314,10 +315,10 @@ should be used as resources are:
 Resources can not be modified by the report; if orderly detects that a
 resource has been changed an error will be returned.
 
-Orderly will automatically detect any files named readme.md in a
+Orderly will automatically detect any files named README.md in a
 report's source directory and copy them across a resources.
 
-```ymal
+```yaml
 resources: 
   - years.csv
   - data_dictionary.xlsx
@@ -325,11 +326,13 @@ resources:
   - code_documentation.md
 ```
 
-Sources are files containing R code that sourced (via the R function
-`source()`) before the main script is run. Often this file contains
-functions or variables used by the main script.
+Sources are files containing R code that will be sourced (via the R
+function `source()`) before the main script is run. Often this file
+contains functions or variables used by the main script. All of the
+copying and sourcing will be handled by orderly itself so there is no
+need to explictly source the files in the main script.
 
-Artefacts are the output to the report. At least one artefact must be
+Artefacts are the output of the report. At least one artefact must be
 listed and file created during the running of the script must be
 included as artefacts (or deleted before the script finishes) or an
 error will be returned.
@@ -374,11 +377,11 @@ An simple example might look like:
 
 ```yaml
 depends:
-  big-data-report:
-    id: 20190425-163691-b8451bbf
-    use:
-      data.rds: huge-data-set.rds
-    draft: false
+  - big-data-report:
+      id: 20190425-163691-b8451bbf
+      use:
+        data.rds: huge-data-set.rds
+      draft: false
 ```
 
 This will copy the file the `huge-data-set.rds` from the report
@@ -394,11 +397,11 @@ can set the `id` field to `latest`, _e.g._:
 
 ```yaml
 depends:
-  big-data-report:
-    id: latest
-    use:
-      data.rds: huge-data-set.rds
-    draft: false
+  - big-data-report:
+      id: latest
+      use:
+        data.rds: huge-data-set.rds
+      draft: false
 ```
 
 This will find the most recent version of the report `big-data-report`
@@ -409,12 +412,12 @@ To use multiple artefacts from a single report add the files into the
 
 ```yaml
 depends:
-  big-data-report:
-    id: latest
-    use:
-      data.rds: huge-data-set.rds
-      pop.csv: population_data.csv
-    draft: false
+  - big-data-report:
+      id: latest
+      use:
+        data.rds: huge-data-set.rds
+        pop.csv: population_data.csv
+      draft: false
 ```
 
 To use artefacts from multiple reports we add multiple entries to the
@@ -422,17 +425,17 @@ To use artefacts from multiple reports we add multiple entries to the
 
 ```yaml
 depends:
-  big-data-report:
-    id: latest
-    use:
-      data.rds: huge-data-set.rds
-      pop.csv: population_data.csv
-    draft: false
-  report_two:
-    id: latest
-    use:
-      data_b.rds: filename.rds
-    draft: false
+  - big-data-report:
+      id: latest
+      use:
+        data.rds: huge-data-set.rds
+        pop.csv: population_data.csv
+      draft: false
+  - report_two:
+      id: latest
+      use:
+        data_b.rds: filename.rds
+      draft: false
 ```
 
 We can also use the same artefact from different versions of the same
