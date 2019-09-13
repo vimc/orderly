@@ -6,6 +6,29 @@
 ##' changing one copy of a linked file changes all the other instances
 ##' of it - the files are literally the same file.
 ##'
+##' This function will alter your orderly archive.  Ordinarily this is
+##' not something that should be done, so we try to be careful.  In
+##' order for this to work, it is \emph{very important} to treat your
+##' orderly archive as read-only generally.  If your canonical orderly
+##' archive is behind OrderlyWeb this will almost certainly be the
+##' case already.
+##'
+##' With "hard linking", two files with the same content can be
+##' updated so that both files point at the same physical bit of data
+##' (see \href{https://en.wikipedia.org/wiki/Hard_link}{this wikipedia
+##' page for more information}).  This is great, as if the file is
+##' large, then only one copy needs to be stored.  However, this means
+##' that if a change is made to one copy of the file, it is
+##' immediately reflected in the other, but there is nothing to
+##' indicate that the files are linked!
+##'
+##' This approach is worth exploring if you have large files that are
+##' outputs of one report and inputs to another, or large inputs
+##' repeatedly used in different reports, or outputs that end up being
+##' the same in multiple reports.  If you run the deduplication with
+##' \code{dry_run = TRUE}, an indication of the savings will be
+##' printed.
+##'
 ##' @title Deduplicate an orderly archive
 ##'
 ##' @inheritParams orderly_list
