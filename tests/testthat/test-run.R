@@ -126,6 +126,39 @@ test_that("sink imbalance", {
   expect_equal(sink.number(), 0)
 })
 
+
+test_that("leave connection open", {
+  ## The issue here is that a garbage collection *might* occur causing
+  ## the connection to close, but that is not guaranteed!  So we pop
+  ## the connection into the environment so that it will not be
+  ## garbage collected.
+  e <- new.env(parent = .GlobalEnv)
+  path <- prepare_orderly_example("minimal")
+  config <- orderly_config(path)
+  path_script <- file.path(path, "src/example/script.R")
+
+  writeLines(
+    'con <- file("mygraph.png", "w")',
+    path_script)
+
+  expect_error(
+    orderly_run("example", root = path, echo = FALSE, envir = e),
+    "File left open: mygraph.png")
+
+  ## And check we can recover!
+  close(e$con)
+
+  writeLines(
+    c('con <- file("mygraph.png", "w")', 'close(con)'),
+    path_script)
+
+  e <- new.env(parent = .GlobalEnv)
+  expect_error(
+    orderly_run("example", root = path, echo = FALSE, envir = e),
+    NA)
+})
+
+
 test_that("included example", {
   path <- prepare_orderly_example("example")
   id <- orderly_run("example", list(cyl = 4), root = path, echo = FALSE)

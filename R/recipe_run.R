@@ -283,6 +283,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
 
   recipe_check_device_stack(prep$n_dev)
   recipe_check_sink_stack(prep$n_sink)
+  recipe_check_connections(info)
   hash_artefacts <- recipe_check_artefacts(info)
 
   hash_data_csv <- con_csv$mset(prep$data)
@@ -856,5 +857,20 @@ recipe_check_unique_inputs <- function(info) {
     stop(sprintf("Orderly configuration implies duplicate files:%s",
                  paste(details, collapse = "")),
          call. = FALSE)
+  }
+}
+
+
+recipe_check_connections <- function(info) {
+  cons <- getAllConnections()
+  cons <- cons[cons > 2] # drop stdin, stdout, stderr
+  if (length(cons) > 0L) {
+    open <- basename(vcapply(cons, function(x)
+      summary.connection(x)$description))
+    ours <- unlist(info$artefacts[, "filenames"], FALSE, FALSE)
+    err <- ours[basename(ours) %in% open]
+    if (any(ours %in% open)) {
+      stop("File left open: ", paste(err, collapse = ", "))
+    }
   }
 }
