@@ -113,16 +113,18 @@ test_that("sink imbalance", {
   logfile <- tempfile()
   expect_error(
     capture_log(
-      orderly_run("example", root = path, echo = TRUE), logfile),
+      orderly_run("example", root = path, echo = FALSE), logfile),
     "Report left 1 sink open")
 
   p <- tempfile()
   sink(p, split = TRUE)
   writeLines(c("sink()", txt), path_script)
-  expect_error(
-    capture_log(
-      orderly_run("example", root = path, echo = TRUE), logfile),
-    "Report closed 1 more sinks than it opened!")
+  withr::with_options(
+    list(orderly.nolog = TRUE),
+    expect_error(
+      capture_log(
+        orderly_run("example", root = path, echo = FALSE), logfile),
+      "Report closed 1 more sinks than it opened!"))
   expect_equal(sink.number(), 0)
 })
 
