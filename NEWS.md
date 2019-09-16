@@ -1,3 +1,7 @@
+# 0.7.12
+
+* `orderly_run` now checks for sink imbalance, in the same way that device imbalances are currently checked for, preventing odd errors when sinks are left open or too many are closed (VIMC-3129)
+
 # 0.7.9
 
 * All README files are copied into destination directory, not just top level (VIMC-3065)
