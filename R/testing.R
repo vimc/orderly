@@ -171,6 +171,19 @@ demo_change_time <- function(id, time, path) {
   id_new
 }
 
+
+## System call to attrib to unhide a file on windows, in a way
+## that is safely and silently ignored on Linux. Used only
+## in build_git_demo below. The whole line is treated as 
+## a comment in bash, whereas windows will execute the attrib.
+
+unhide_file <- function(file) {
+  script <- paste0(tempfile(), ".bat")
+  writeLines(sprintf("# 2>NUL & attrib -h %s", file, script, sep = "\r\n"))
+  system2(script, stdout = NULL)
+  unlink(script)
+}
+
 ## This version will eventually go into a yml thing but it's a bit
 ## nasty to deal with at the moment.  This means it's not easily
 ## extendable...
@@ -210,14 +223,7 @@ build_git_demo <- function() {
   # otherwise, it will be ignored by InfoZip (zip.exe 
   # which utils::zip will likely pick up from the RTools folder)
   
-  # This only does something on windows - in bash, it is 
-  # ignored.
-  
-  script <- paste0(tempfile(), ".bat")
-  writeLines(sprintf("# 2>NUL & attrib -h %s",
-                    file.path(path, ".git")), script, sep="\r\n")
-  system2(script, stdout = NULL)
-  unlink(script)
+  unhide_file(file.path(path, ".git"))
   
   archive <- zip_dir(path)
   options(orderly.server.demo = archive)
