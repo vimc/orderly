@@ -133,7 +133,7 @@ test_that("run in branch (local)", {
   path <- unzip_git_demo()
   runner <- orderly_runner(path)
 
-  pars <- as.character(jsonlite::toJSON(list(nmin = 0), auto_unbox = TRUE))
+  pars <- '{"nmin":0}'
   key <- runner$queue("other", parameters = pars, ref = "other")
   runner$poll()
   id <- wait_for_id(runner, key)

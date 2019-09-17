@@ -45,7 +45,6 @@ test_that("run: ref", {
   testthat::skip_on_cran()
   path <- unzip_git_demo()
 
-  pars <- as.character(jsonlite::toJSON(list(nmin = 0), auto_unbox = TRUE))
   args <- c("--root", path, "run", "--ref", "other", "other", "nmin=0")
 
   res <- cli_args_process(args)

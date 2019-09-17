@@ -29,11 +29,11 @@ Imports:
     docopt,
     fs,
     ids,
-    jsonlite,
     withr,
     yaml
 Suggests:
     httr,
+    jsonlite,
     knitr,
     mockery,
     processx,
