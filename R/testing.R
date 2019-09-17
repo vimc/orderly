@@ -206,6 +206,19 @@ build_git_demo <- function() {
 
   git_checkout_branch("master", root = path)
 
+  # On windows, make ".git" folder non-hidden,
+  # otherwise, it will be ignored by InfoZip (zip.exe 
+  # which utils::zip will likely pick up from the RTools folder)
+  
+  # This only does something on windows - in bash, it is 
+  # ignored.
+  
+  script <- paste0(tempfile(), ".bat")
+  writeLines(sprintf("# 2>NUL & attrib -h %s",
+                    file.path(path, ".git")), script, sep="\r\n")
+  system2(script, stdout = NULL)
+  unlink(script)
+  
   archive <- zip_dir(path)
   options(orderly.server.demo = archive)
   archive
