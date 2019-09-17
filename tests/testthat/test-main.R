@@ -41,6 +41,18 @@ test_that("run: id-file", {
 })
 
 
+test_that("pass parameters", {
+  f <- function(...) {
+    cli_args_process(c("run", "report", ...))$options$parameters
+  }
+  expect_equal(f("a=1"), list(a = 1))
+  expect_equal(f("a=1", "b=value"), list(a = 1, b = "value"))
+  expect_equal(f("a=1", "b=value", "c=TRUE"),
+               list(a = 1, b = "value", c=TRUE))
+  expect_equal(f("a=1+2"), list(a = "1+2"))
+})
+
+
 test_that("run: ref", {
   testthat::skip_on_cran()
   path <- unzip_git_demo()
