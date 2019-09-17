@@ -33,7 +33,8 @@
 ##'
 ##' @inheritParams orderly_list
 ##'
-##' @param dry_run Logical, indicating if the deduplication
+##' @param dry_run Logical, indicating if the deduplication should be
+##'   planned but not run
 ##'
 ##' @param quiet Logical, indicating if the status should not be printed
 ##'
