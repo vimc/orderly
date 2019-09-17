@@ -3,9 +3,9 @@ context("main")
 test_that("run", {
   path <- prepare_orderly_example("minimal")
   args <- c("--root", path, "run", "example")
-  res <- main_args(args)
+  res <- cli_args_process(args)
   expect_equal(res$command, "run")
-  expect_equal(res$args, "example")
+  expect_equal(res$options$name, "example")
   expect_null(res$options$parameters)
   expect_null(res$options$ref)
   expect_false(res$options$no_commit)
@@ -17,14 +17,15 @@ test_that("run", {
   expect_equal(nrow(orderly_list_archive(path)), 1)
 })
 
+
 test_that("run: id-file", {
   path <- prepare_orderly_example("minimal")
   id_file <- tempfile()
   args <- c("--root", path, "run", "--id-file", id_file, "example")
-  res <- main_args(args)
+  res <- cli_args_process(args)
 
   expect_equal(res$command, "run")
-  expect_equal(res$args, "example")
+  expect_equal(res$options$name, "example")
   expect_null(res$options$parameters)
   expect_false(res$options$no_commit)
   expect_false(res$options$print_log)
@@ -39,17 +40,18 @@ test_that("run: id-file", {
   expect_equal(id, orderly_list_archive(path)$id)
 })
 
+
 test_that("run: ref", {
   testthat::skip_on_cran()
   path <- unzip_git_demo()
 
   pars <- as.character(jsonlite::toJSON(list(nmin = 0), auto_unbox = TRUE))
-  args <- c("--root", path, "run", "--ref", "other", "--parameters", pars,
-            "other")
+  args <- c("--root", path, "run", "--ref", "other", "other", "nmin=0")
 
-  res <- main_args(args)
+  res <- cli_args_process(args)
   expect_equal(res$command, "run")
   expect_equal(res$options$ref, "other")
+  expect_equal(res$options$parameters, list(nmin = 0))
 
   ans <- capture.output(res$target(res))
 
@@ -69,7 +71,7 @@ test_that("run: fetch", {
 
   args <- c("--root", path_local, "run", "--ref", "origin/master", "--fetch",
             "minimal")
-  res <- main_args(args)
+  res <- cli_args_process(args)
   expect_true(res$options$fetch)
   expect_false(res$options$pull)
 
@@ -88,7 +90,7 @@ test_that("run: pull & ref don't go together", {
   path <- unzip_git_demo()
   args <- c("--root", path, "run", "--ref", "origin/master", "--pull",
             "minimal")
-  res <- main_args(args)
+  res <- cli_args_process(args)
   expect_error(res$target(res),
                "Can't use --pull with --ref; perhaps you meant --fetch ?",
                fixed = TRUE)
@@ -104,7 +106,7 @@ test_that("run: pull before run", {
   sha_origin <- git_ref_to_sha("HEAD", path_origin)
 
   args <- c("--root", path_local, "run", "--pull", "minimal")
-  res <- main_args(args)
+  res <- cli_args_process(args)
   expect_true(res$options$pull)
   expect_null(res$options$ref)
   res$target(res)
@@ -121,9 +123,9 @@ test_that("commit", {
   path <- prepare_orderly_example("minimal")
   id <- orderly_run("example", root = path, echo = FALSE)
   args <- c("--root", path, "commit", id)
-  res <- main_args(args)
+  res <- cli_args_process(args)
   expect_equal(res$command, "commit")
-  expect_equal(res$args, id)
+  expect_equal(res$options$id, id)
   expect_identical(res$target, main_do_commit)
 
   res$target(res)
@@ -138,53 +140,54 @@ test_that("latest", {
   id2 <- orderly_run("example", root = path, echo = FALSE)
 
   args <- c("--root", path, "latest", "--draft", "example")
-  res <- main_args(args)
+  res <- cli_args_process(args)
   expect_equal(res$command, "latest")
-  expect_equal(res$args, "example")
+  expect_equal(res$options$name, "example")
   expect_true(res$options$draft)
   expect_identical(res$target, main_do_latest)
 
   expect_output(main_do_latest(res), id2)
 
   args <- c("--root", path, "latest", "--value-if-missing", "NONE", "example")
-  res <- main_args(args)
+  res <- cli_args_process(args)
   expect_output(main_do_latest(res), "NONE")
 })
 
-test_that("help", {
-  expect_error(capture.output(main_args("--help")),
-               "Aborting as help requested")
-  expect_output(try(main_args("--help"), silent = TRUE),
-                "The <command> argument must be one of", fixed = TRUE)
 
-  for (cmd in names(main_args_commands())) {
-    expect_output(try(main_args(c(cmd, "--help")), silent = TRUE),
-                  sprintf("[--root=ROOT] %s", cmd),
-                  fixed = TRUE)
+test_that("help", {
+  expect_error(capture.output(cli_args_process("--help")),
+               class = "orderly_cli_error")
+
+  for (cmd in names(cli_commands())) {
+    expect_output(try(cli_args_process(c(cmd, "--help")), silent = TRUE),
+                  sprintf("Usage:\n  orderly %s", cmd))
   }
 })
+
 
 test_that("list", {
   path <- prepare_orderly_example("minimal")
 
   args <- c("--root", path, "list")
-  res <- main_args(args)
+  res <- cli_args_process(args)
 
   expect_output(res$target(res), "^example$")
 
-  expect_equal(main_args(c("--root", path, "list", "names"))$args, "names")
-  expect_equal(main_args(c("--root", path, "list", "drafts"))$args, "drafts")
-  expect_equal(main_args(c("--root", path, "list", "archive"))$args, "archive")
-  expect_error(main_args(c("--root", path, "list", "foo")),
-               "argument to list must be one of")
+  for (i in c("names", "drafts", "archive")) {
+    expect_equal(
+      cli_args_process(c("--root", path, "list", i))$options$type,
+      i)
+  }
 })
+
 
 test_that("unknown", {
   path <- tempfile()
   args <- c("--root", path, "foo")
-  expect_error(capture.output(main_args(args)),
-               "unknown command 'foo'")
+  expect_error(capture.output(cli_args_process(args)),
+               "'foo' is not an orderly command. See orderly --help")
 })
+
 
 test_that("write_script requires directory", {
   expect_error(write_script(tempfile()),
@@ -218,7 +221,7 @@ test_that("migrate", {
   expect_equal(orderly_config(path)$archive_version, "0.0.0")
 
   args <- c("--root", path, "migrate")
-  res <- main_args(args)
+  res <- cli_args_process(args)
   expect_equal(res$command, "migrate")
   expect_false(res$options$dry_run)
   expect_null(res$options$to)
@@ -233,7 +236,7 @@ test_that("migrate", {
 test_that("migrate: args", {
   path <- prepare_orderly_example("minimal")
   args <- c("--root", path, "migrate", "--to", "0.3.3", "--dry-run")
-  res <- main_args(args)
+  res <- cli_args_process(args)
   expect_equal(res$command, "migrate")
   expect_true(res$options$dry_run)
   expect_equal(res$options$to, "0.3.3")
@@ -247,7 +250,7 @@ test_that("rebuild", {
 
   path <- unpack_reference("0.5.1")
   args <- c("--root", path, "rebuild", "--if-schema-changed")
-  res <- main_args(args)
+  res <- cli_args_process(args)
   expect_equal(res$command, "rebuild")
   expect_true(res$options$if_schema_changed)
   expect_identical(res$target, main_do_rebuild)
@@ -260,7 +263,7 @@ test_that("cleanup", {
   path <- prepare_orderly_example("minimal")
   id <- orderly_run("example", root = path, echo = FALSE)
 
-  res <- main_args(c("--root", path, "cleanup"))
+  res <- cli_args_process(c("--root", path, "cleanup"))
   expect_equal(res$command, "cleanup")
   expect_false(res$options$no_data)
   expect_false(res$options$no_draft)
@@ -280,13 +283,13 @@ test_that("list", {
   id2 <- orderly_run("example", root = path, echo = FALSE)
   orderly_commit(id2, root = path)
 
-  res <- main_args(c("--root", path, "list", "names"))
+  res <- cli_args_process(c("--root", path, "list", "names"))
   expect_equal(capture.output(res$target(res)), "example")
 
-  res <- main_args(c("--root", path, "list", "drafts"))
+  res <- cli_args_process(c("--root", path, "list", "drafts"))
   out1 <- capture.output(res$target(res))
 
-  res <- main_args(c("--root", path, "list", "archive"))
+  res <- cli_args_process(c("--root", path, "list", "archive"))
   out2 <- capture.output(res$target(res))
 
   expect_match(out1[[1]], "name\\s+id")
@@ -294,10 +297,6 @@ test_that("list", {
 
   expect_match(out1[[2]], sprintf("1\\s+example\\s+%s", id1))
   expect_match(out2[[2]], sprintf("1\\s+example\\s+%s", id2))
-
-  res <- main_args(c("--root", path, "list", "names"))
-  res$args <- "other"
-  expect_error(res$target(res), "orderly bug")
 })
 
 
@@ -305,10 +304,10 @@ test_that("run: message", {
   ## Should have no errors
   path <- prepare_orderly_example("changelog")
   message <- "[label1] This is a test message."
-  args <- c("--root", path, "run", "--message", message, "example")
-  res <- main_args(args)
+  args <- c("--root", path, "run", "--message", squote(message), "example")
+  res <- cli_args_process(args)
   expect_equal(res$command, "run")
-  expect_equal(res$args, "example")
+  expect_equal(res$options$name, "example")
   expect_null(res$options$parameters)
   expect_null(res$options$ref)
   expect_false(res$options$no_commit)
@@ -331,8 +330,8 @@ test_that("run: bad message", {
   ## mal-formatted message
   path <- prepare_orderly_example("changelog")
   message <- "Invalid message"
-  args <- c("--root", path, "run", "--message", message, "example")
-  res <- main_args(args)
+  args <- c("--root", path, "run", "--message", squote(message), "example")
+  res <- cli_args_process(args)
 
   error <- paste("message must be of the form '[<label>] <message>' failed on:",
                  sprintf("'%s'", message), sep = "\n")
@@ -344,8 +343,8 @@ test_that("run: message no changelog",{
   ## changelog not enabled
   path <- prepare_orderly_example("minimal")
   message <- "[label1] This is a test message."
-  args <- c("--root", path, "run", "--message", message, "example")
-  res <- main_args(args)
+  args <- c("--root", path, "run", "--message", squote(message), "example")
+  res <- cli_args_process(args)
 
   error <- paste("report 'example' uses changelog,",
                  "but this is not enabled in orderly_config.yml", sep = " ")

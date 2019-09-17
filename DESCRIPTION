@@ -26,10 +26,10 @@ Imports:
     R6,
     RSQLite,
     digest,
+    docopt,
     fs,
     ids,
     jsonlite,
-    optparse,
     withr,
     yaml
 Suggests:

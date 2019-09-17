@@ -1,103 +1,115 @@
 ## Try to make it easy to run things
 main <- function(args = commandArgs(TRUE)) {
-  opts <- main_args(args)
-  opts$target(opts)
+  dat <- cli_args_process(args)
+  dat$target(dat$args)
 }
 
-main_args <- function(args) {
-  ## With docopt there is no easy way of passing in a json string and
-  ## have it survive quoting.  This is very sad.  So we'll use
-  ## optparse instead I think.
 
-  ## Argument parsing will be somewhat complicated because we'll
-  ## implement a number of different commands.  We'll set up the
-  ## parser to allow everything, and then do the validation later.
-  root <- optparse::make_option(c("-r", "--root"),
-                                help = "Path to the orderly root",
-                                type = "character",
-                                default = NULL)
+cli_args_process <- function(args) {
+  dat <- cli_args_preprocess(args)
+  pos <- cli_commands()
+  if (!(dat$command %in% names(pos))) {
+    orderly_cli_error(sprintf(
+      "'%s' is not an orderly command. See orderly --help",
+      dat$command))
+  }
+  usage <- pos[[dat$command]]$usage
+  dat$options <- docopt_parse(usage, c(dat$command, dat$args))
+  names(dat$options) <- gsub("-", "_", names(dat$options), fixed = TRUE)
+  dat$options$root <- dat$root
+  dat$target <- pos[[dat$command]]$target
 
-  cmds <- main_args_commands()
+  ## Any additional processing:
+  if (dat$command == "run") {
+    dat$options$parameters <- cli_args_process_run_parameters(
+      dat$options$parameter)
+    dat$options$name <- dat$options[["<name>"]] # docopt bug?
+  } else if (dat$command == "list") {
+    dat$options$type <- cli_args_process_list_type(dat$options)
+  }
 
-  desc <- c("",
-            "The <command> argument must be one of:",
-            "",
-            sprintf("  * %s: %s",
-                    names(cmds),
-                    vcapply(cmds, "[[", "name",
-                            USE.NAMES = FALSE)))
+  dat
+}
 
-  parser <- optparse::OptionParser(
-    option_list = list(root),
-    usage = "%prog [options] <command> <args>",
-    description = paste(desc, collapse = "\n"))
-  res <- optparse::parse_args(parser, args, positional_arguments = TRUE,
-                              print_help_and_exit = FALSE)
-  if (res$options$help) {
-    if(length(res$args) == 0) {
-      optparse_die_help(parser)
+
+usage_base <- "Usage:
+  orderly [options] <command> [<args>...]
+
+Options:
+  --root=ROOT  Path to the orderly root
+
+Commands:
+  run          Run a report
+  commit       Commit a report
+  list         List reports
+  latest       Find the most recent report
+  cleanup      Remove drafts and dangling data
+  rebuild      Rebuild the database
+  migrate      Migrate the archive"
+
+cli_args_preprocess <- function(args) {
+  ## This will work ok for filtering away unwanted arguments *if* the
+  ## user chooses a reasonable argument name.  Things like
+  ##
+  ##   orderly ruin --option name
+  ##
+  ## will create some odd error messages, because the --option is not
+  ## accepted.
+  cmds <- names(cli_commands())
+  i <- args %in% cmds
+  if (any(i)) {
+    j <- seq_along(args) <= which(i)[[1]]
+    base <- args[j]
+    args <- args[!j]
+  } else {
+    base <- args
+    args <- character(0)
+  }
+
+  dat <- docopt_parse(usage_base, base)
+  list(root = dat$root,
+       list_commands = dat[["--list-commands"]],
+       command = dat$command,
+       args = args)
+}
+
+
+cli_args_process_run_parameters <- function(parameters) {
+  if (length(parameters) == 0L) {
+    NULL
+  } else {
+    parameters <- strsplit(parameters, "=", fixed = TRUE)
+    n <- lengths(parameters)
+    if (any(n != 2)) {
+      stop("Invalid parameters") # better error messages and coping here
     }
+    value <- lapply(parameters, function(x) parse_parameter(x[[2L]]))
+    set_names(value, vcapply(parameters, "[[", 1L))
   }
-  res$command <- res$args[[1]]
-  res$args <- res$args[-1L]
-
-  use <- cmds[[res$command]]
-  if (is.null(use)) {
-    optparse_die(parser, sprintf("unknown command '%s'", res$command))
-  }
-  use$args(res)
 }
 
-## 1. orderly [--root] run <name> [--no-commit] [--parameters=PARAMS] \
-##                         [--print-log] [--id-file=FILE] [--message=MESSAGE] \
-##                         [--ref=REF [--fetch] | --pull]
-main_args_run <- function(res) {
-  opts <- list(
-    optparse::make_option("--no-commit",
-                          help = "Do not commit the report",
-                          type = "logical",
-                          default = FALSE,
-                          action = "store_true",
-                          dest = "no_commit"),
-    optparse::make_option("--print-log",
-                          help = "Print log (rather than storing it)",
-                          type = "logical",
-                          default = FALSE,
-                          action = "store_true",
-                          dest = "print_log"),
-    optparse::make_option("--id-file",
-                          help = "File to write id into",
-                          type = "character",
-                          default = NULL,
-                          dest = "id_file"),
-    optparse::make_option("--parameters",
-                          help = "Parameters (in json format)",
-                          type = "character",
-                          default = NULL),
-    optparse::make_option("--ref",
-                          help = "Git reference (branch or sha) to use",
-                          type = "character",
-                          default = NULL),
-    optparse::make_option("--fetch",
-                          help = "Fetch git before updating reference",
-                          type = "logical",
-                          default = FALSE,
-                          action = "store_true"),
-    optparse::make_option("--pull",
-                          help = "Pull git before running report",
-                          type = "logical",
-                          default = FALSE,
-                          action = "store_true"),
-    optparse::make_option("--message",
-                          help = "A message explaining why the report was run",
-                          type = "character",
-                          default = NULL,
-                          dest = "message"))
-  parser <- optparse::OptionParser(
-    option_list = opts,
-    usage = "%prog [--root=ROOT] run [options] <name>")
-  opts_subcommand(res, parser, main_do_run, 1L)
-}
+
+## docopt.R seems not to follow the docopt spec, so we can't do
+##
+## <name>... [--] [<parameter>...]
+##
+## and allow a vector of parameters through
+##
+## So we'll do a different approach for batch runs.
+usage_run <- "Usage:
+  orderly run [options] <name> [<parameter>...]
+
+Options:
+  --no-commit     Do not commit the report
+  --print-log     Print the log (rather than storing it)
+  --id-file=FILE  File to write the id into
+  --ref=REF       Git reference (branch or sha) to use
+  --fetch         Fetch git before updating reference
+  --pull          Pull git before running report
+  --message=TEXT  A message explaining why the report was run
+
+Parameters, if given, must be passed through in key=value pairs"
+
 
 main_do_run <- function(x) {
   ## TODO: Get some classed errors though here and then write out
@@ -109,13 +121,11 @@ main_do_run <- function(x) {
   ## * error while running report
   ## * error checking artefacts
   config <- orderly_config_get(x$options$root, TRUE)
-  name <- x$args
+  name <- x$options$name
   commit <- !x$options$no_commit
   parameters <- x$options$parameters
   id_file <- x$options$id_file
-  if (!is.null(x$options$parameters)) {
-    parameters <- jsonlite::fromJSON(parameters)
-  }
+  parameters <- x$options$parameters
   print_log <- x$options$print_log
   ref <- x$options$ref
   fetch <- x$options$fetch
@@ -127,7 +137,8 @@ main_do_run <- function(x) {
       if (is.null(ref)) {
         git_pull(config$root)
       } else {
-        stop("Can't use --pull with --ref; perhaps you meant --fetch ?")
+        orderly_cli_error(
+          "Can't use --pull with --ref; perhaps you meant --fetch ?")
       }
     }
     id <- orderly_run(name, parameters, root = config, id_file = id_file,
@@ -159,32 +170,14 @@ main_do_run <- function(x) {
   message("id:", id)
 }
 
-## 2. orderly cleanup [--draft]
-main_args_cleanup <- function(res) {
-  opts <- list(
-    optparse::make_option("--no-draft",
-                          help = "Do not clean draft reports",
-                          type = "logical",
-                          default = FALSE,
-                          action = "store_true",
-                          dest = "no_draft"),
-    optparse::make_option("--no-data",
-                          help = "Do not clean data",
-                          type = "logical",
-                          default = FALSE,
-                          action = "store_true",
-                          dest = "no_data"),
-    optparse::make_option("--failed-only",
-                          help = "Clean only failed drafts",
-                          type = "logical",
-                          default = FALSE,
-                          action = "store_true",
-                          dest = "failed_only"))
-  parser <- optparse::OptionParser(
-    option_list = opts,
-    usage = "%prog [--root=ROOT] cleanup [options]")
-  opts_subcommand(res, parser, main_do_cleanup, 0L)
-}
+
+usage_cleanup <- "Usage:
+  orderly cleanup [options]
+Options:
+  --no-draft     Do not clean draft reports
+  --no-data      Do not clean data
+  --failed-only  Clean only failed drafts"
+
 
 main_do_cleanup <- function(x) {
   root <- x$options$root
@@ -195,36 +188,25 @@ main_do_cleanup <- function(x) {
                   failed_only = failed_only)
 }
 
-## 3. commit
-main_args_commit <- function(res) {
-  opts <- list()
-  parser <- optparse::OptionParser(
-    option_list = opts,
-    usage = "%prog [--root=ROOT] commit [options] <id>")
-  opts_subcommand(res, parser, main_do_commit, 1L)
-}
+
+usage_commit <- "Usage:
+  orderly commit <id>"
+
 
 main_do_commit <- function(x) {
   root <- x$options$root
-  id <- x$args
+  id <- x$options$id
   orderly_commit(id, root = root, locate = TRUE)
 }
 
 
 ## 4. rebuild
-main_args_rebuild <- function(res) {
-  opts <- list(
-    optparse::make_option("--if-schema-changed",
-                          help = "Only rebuild on schema change",
-                          type = "logical",
-                          default = FALSE,
-                          action = "store_true",
-                          dest = "if_schema_changed"))
-  parser <- optparse::OptionParser(
-    option_list = opts,
-    usage = "%prog [--root=ROOT] rebuild [options]")
-  opts_subcommand(res, parser, main_do_rebuild, 0L)
-}
+usage_rebuild <- "Usage:
+  orderly rebuild [options]
+
+Options:
+  --if-schema-changed  Only rebuild on schema change"
+
 
 main_do_rebuild <- function(x) {
   root <- x$options$root
@@ -232,56 +214,42 @@ main_do_rebuild <- function(x) {
   orderly_rebuild(root, if_schema_changed = if_schema_changed)
 }
 
+
 ## 5. list
-main_args_list <- function(res) {
-  ## TODO: this should optionally filter name I think
-  opts <- list()
-  parser <- optparse::OptionParser(
-    option_list = opts,
-    usage = "%prog [--root=ROOT] list (names | drafts | archive)")
-  if (res$options$help) {
-    optparse_die_help(parser)
+usage_list <- "Usage:
+  orderly list [names|drafts|archive]"
+
+cli_args_process_list_type <- function(options) {
+  if (options$archive) {
+    "archive"
+  } else if (options$drafts) {
+    "drafts"
+  } else {
+    "names"
   }
-  ret <- opts_subcommand(res, parser, main_do_list, 0:1)
-  type <- if (length(ret$args) == 0L) "names" else ret$args
-  ret$args <- match_value(type, c("names", "drafts", "archive"),
-                          "argument to list")
-  ret
 }
+
 
 main_do_list <- function(x) {
   root <- x$options$root
-  switch(x$args,
+  switch(x$options$type,
          names = writeLines(orderly_list(root)),
          drafts = print(orderly_list_drafts(root)),
-         archive = print(orderly_list_archive(root)),
-         stop("orderly bug"))
+         archive = print(orderly_list_archive(root)))
   invisible(NULL)
 }
 
 ## 6. latest
-main_args_latest <- function(res) {
-  opts <- list(
-    optparse::make_option("--draft",
-                          help = "Look for latest draft report",
-                          type = "logical",
-                          default = FALSE,
-                          action = "store_true",
-                          dest = "draft"),
-    optparse::make_option("--value-if-missing",
-                          help = "Look for latest draft report",
-                          type = "character",
-                          default = NULL,
-                          dest = "value_if_missing"))
-  parser <- optparse::OptionParser(
-    option_list = opts,
-    usage = "%prog [--root=ROOT] latest [options] <name>...")
-  opts_subcommand(res, parser, main_do_latest, TRUE)
-}
+usage_latest <- "Usage:
+  orderly latest [options] <name>...
+Options:
+  --draft                   Look for latest draft report
+  --value-if-missing=VALUE  Value to print if missing"
+
 
 main_do_latest <- function(x) {
   root <- x$options$root
-  names <- x$args
+  names <- x$options$name
   draft <- x$options$draft
   value_if_missing <- x$options$value_if_missing
   must_work <- is.null(value_if_missing)
@@ -294,24 +262,12 @@ main_do_latest <- function(x) {
 
 
 ## 8. migrate
-main_args_migrate <- function(res) {
-  opts <- list(
-    optparse::make_option("--to",
-                          help = "Version to migrate to",
-                          type = "character",
-                          default = NULL,
-                          dest = "to"),
-    optparse::make_option("--dry-run",
-                          help = "Test run the migration only",
-                          type = "logical",
-                          default = FALSE,
-                          action = "store_true",
-                          dest = "dry_run"))
-  parser <- optparse::OptionParser(
-    option_list = opts,
-    usage = "%prog [--root=ROOT] migrate [options]")
-  opts_subcommand(res, parser, main_do_migrate, 0L)
-}
+usage_migrate <- "Usage:
+  orderly migrate [options]
+
+Options:
+  --to=VERSION  Version to migrate to
+  --dry-run     Test run the migration only"
 
 
 main_do_migrate <- function(x) {
@@ -332,48 +288,61 @@ write_script <- function(path, versioned = FALSE) {
     Rscript <- "/usr/bin/env Rscript"
   }
   code <- c(sprintf("#!%s", Rscript),
-            "orderly:::main()")
+            readLines(orderly_file("script")))
   path_bin <- file.path(path, "orderly")
   writeLines(code, path_bin)
   Sys.chmod(path_bin, "755")
   invisible(path_bin)
 }
 
-opts_subcommand <- function(base, parser, target, positional_arguments) {
-  if (base$options$help) {
-    optparse_die_help(parser)
-  }
-  new <- optparse::parse_args(parser, base$args,
-                              positional_arguments = positional_arguments)
 
-  base$options <- modify_list(base$options, new$options)
-  base$args <- new$args
-  base$target <- target
-  base
-}
-
-optparse_die <- function(parser, message) {
-  optparse::print_help(parser)
-  stop(message, call. = FALSE)
-}
-
-optparse_die_help <- function(parser) {
-  optparse_die(parser, "(Aborting as help requested)")
-}
-
-main_args_commands <- function() {
+cli_commands <- function() {
   list(run = list(name = "run a report",
-                  args = main_args_run),
+                  usage = usage_run,
+                  target = main_do_run),
        commit = list(name = "commit a report",
-                   args = main_args_commit),
+                     usage = usage_commit,
+                     target = main_do_commit),
        list = list(name = "list reports",
-                   args = main_args_list),
+                   usage = usage_list,
+                   target = main_do_list),
        latest = list(name = "find most recent report",
-                     args = main_args_latest),
+                     usage = usage_latest,
+                     target = main_do_latest),
        cleanup = list(name = "remove drafts and dangling data",
-                      args = main_args_cleanup),
+                      usage = usage_cleanup,
+                      target = main_do_cleanup),
        rebuild = list(name = "rebuild the database",
-                      args = main_args_rebuild),
+                      usage = usage_rebuild,
+                      target = main_do_rebuild),
        migrate = list(name = "migrate the archive",
-                      args = main_args_migrate))
+                      usage = usage_migrate,
+                      target = main_do_migrate))
+}
+
+
+parse_parameter <- function(x) {
+  value <- parse(text = x)[[1]]
+  if (is.logical(value) || is.numeric(value)) {
+    value
+  } else {
+    x
+  }
+}
+
+
+docopt_parse <- function(...) {
+  tryCatch(
+    docopt::docopt(...),
+    error = function(e) {
+      class(e) <- c("orderly_cli_error", class(e))
+      stop(e)
+    })
+}
+
+
+orderly_cli_error <- function(str) {
+  err <- list(message = str)
+  class(err) <- c("orderly_cli_error", "error", "condition")
+  stop(err)
 }
