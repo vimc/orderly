@@ -139,7 +139,7 @@ test_that("don't deduplicate after file modification", {
 
   expect_error(
     orderly_deduplicate_prepare(info),
-    "Can't deduplicate files that have been modified")
+    "Can't deduplicate files that have been modified:.+- minimal/.+/script.R")
 })
 
 

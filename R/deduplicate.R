@@ -149,7 +149,10 @@ orderly_deduplicate_prepare <- function(x) {
 
   ## Likely too strict as we can just skip these
   if (!all(x$files$unchanged)) {
-    stop("Can't deduplicate files that have been modified")
+    detail <- paste(sprintf("\n  - %s", x$files$path[!x$files$unchanged]),
+                    collapse = "")
+    stop("Can't deduplicate files that have been modified:", detail,
+         call. = FALSE)
   }
 
   ## Possibly too strict:
