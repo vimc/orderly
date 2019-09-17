@@ -179,7 +179,7 @@ demo_change_time <- function(id, time, path) {
 
 unhide_file <- function(file) {
   script <- paste0(tempfile(), ".bat")
-  writeLines(sprintf("# 2>NUL & attrib -h %s", file, script, sep = "\r\n"))
+  writeLines(sprintf("# 2>NUL & attrib -h %s", file), script, sep = "\r\n")
   system2(script, stdout = NULL)
   unlink(script)
 }
