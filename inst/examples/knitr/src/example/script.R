@@ -1,2 +1,2 @@
-knitr::knit2html("myreport.Rmd", "myreport.html")
-unlink("myreport.md")
+knitr::knit2html("report.Rmd", "report.html")
+unlink("report.md")
