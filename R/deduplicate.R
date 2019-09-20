@@ -136,10 +136,6 @@ orderly_deduplicate_info <- function(config) {
 
 
 orderly_deduplicate_prepare <- function(x) {
-  if (is_windows()) {
-    stop("Deduplication is not supported on windows")
-  }
-
   assert_is(x, "orderly_deduplicate_info")
 
   ## This is the only safe thing to do here:

@@ -1,8 +1,6 @@
 context("deduplicate")
 
 test_that("deduplicate demo", {
-  skip_on_windows() # need inode information
-
   path <- create_orderly_demo()
   config <- orderly_config_get(path, locate)
   x <- orderly_deduplicate_info(config)
@@ -29,6 +27,7 @@ test_that("deduplicate demo", {
 
   ## This will need updating every time we change the demo pretty
   ## much.
+
   expect_equal(nrow(plan), 43)
 
   orderly_deduplicate_run(plan)
@@ -42,7 +41,6 @@ test_that("deduplicate demo", {
 
 
 test_that("simpler use", {
-  skip_on_windows()
   path <- orderly_example("demo")
   id1 <- orderly_run("minimal", root = path, echo = FALSE)
   id2 <- orderly_run("minimal", root = path, echo = FALSE)
@@ -68,7 +66,6 @@ test_that("simpler use", {
 
 
 test_that("print on run", {
-  skip_on_windows()
   path <- orderly_example("demo")
   id1 <- orderly_run("minimal", root = path, echo = FALSE)
   id2 <- orderly_run("minimal", root = path, echo = FALSE)
@@ -84,7 +81,6 @@ test_that("print on run", {
 
 
 test_that("deduplicate empty", {
-  skip_on_windows()
   path <- orderly_example("demo")
   x <- orderly_deduplicate_info(orderly_config(path))
   expect_is(x, "orderly_deduplicate_info")
@@ -94,7 +90,6 @@ test_that("deduplicate empty", {
 
 
 test_that("don't deduplicate across filesystem boundaries", {
-  skip_on_windows()
   path <- orderly_example("demo")
   id1 <- orderly_run("minimal", root = path, echo = FALSE)
   id2 <- orderly_run("minimal", root = path, echo = FALSE)
@@ -109,7 +104,6 @@ test_that("don't deduplicate across filesystem boundaries", {
 
 
 test_that("don't deduplicate hardlinked files", {
-  skip_on_windows()
   path <- orderly_example("demo")
   id1 <- orderly_run("minimal", root = path, echo = FALSE)
   id2 <- orderly_run("minimal", root = path, echo = FALSE)
@@ -124,7 +118,6 @@ test_that("don't deduplicate hardlinked files", {
 
 
 test_that("don't deduplicate after file modification", {
-  skip_on_windows()
   path <- orderly_example("demo")
   id1 <- orderly_run("minimal", root = path, echo = FALSE)
   id2 <- orderly_run("minimal", root = path, echo = FALSE)
@@ -142,19 +135,7 @@ test_that("don't deduplicate after file modification", {
     "Can't deduplicate files that have been modified:.+- minimal/.+/script.R")
 })
 
-
-test_that("don't deduplicate on windows", {
-  mockery::stub(orderly_deduplicate_prepare, "is_windows", TRUE)
-  path <- orderly_example("demo")
-  x <- orderly_deduplicate_info(orderly_config(path))
-  expect_error(
-    orderly_deduplicate_prepare(x),
-    "Deduplication is not supported on windows")
-})
-
-
 test_that("relink basic case", {
-  skip_on_windows()
   path <- tempfile()
   from <- file.path(path, "a")
   to <- file.path(path, "b")
@@ -168,7 +149,6 @@ test_that("relink basic case", {
 
 
 test_that("relink error handling", {
-  skip_on_windows()
   path <- tempfile()
   from <- file.path(path, "a")
   to <- file.path(path, "b")
