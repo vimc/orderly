@@ -303,8 +303,8 @@ but then leaves you to interactively work with your report.
 
 ## Resources, sources and artefacts
 
-Resources to a report are expected to be static files that are used by 
-the script to produce the report. Examples of the sort files that
+Resources to a report are expected to be read only files that are used
+by the script to produce the report. Examples of the sort files that
 should be used as resources are:
 
  * Moderately sized data files (large datasets should be accessed from
@@ -360,6 +360,12 @@ artefacts:
         - data_three.csv
         - data_four.csv
 ```
+
+When declaring an artefact we have to specify what format the artefact
+is. Currently supported formats are :`data`, `report`, `staticgraph`,
+`interactivegraph` and `interactivehtml`. These tags reflect the
+intent of use of the file, they have no special meaning within orderly
+itself.
 
 ## Using artefacts from other reports
 
@@ -457,6 +463,14 @@ depends:
         data_old: huge-data-set.rds
 ```
 
+The important feature in this example is the dashes before the report
+name. When all the report names are different these dashes can be
+omitted, but they are necessary when the report depends on different
+versions of the same report. Since including the dashes will never
+cause a problem but omitting them might, we advise that they should
+always be included.
+
+
 ## Using global resources
 
 There might be files that are used in (almost) every report, examples
@@ -479,6 +493,12 @@ global_resources:
   - org_latex_class.cls
   - org_styles.css
 ```
+
+Currently code _i.e._ R source code cannot be sourced from the global
+resources directory. So for example utility functions common across
+multiple report must be included in each report directory separately.
+The functionality to include global source code may be added in future
+versions.
 
 ## Customising the configuration
 
