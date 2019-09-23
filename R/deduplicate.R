@@ -1,10 +1,13 @@
 ##' Deduplicate an orderly archive.  Deduplicating an orderly archive
 ##' will replace all files that have the same content with "hard
-##' links".  This is reliable only on Unix-like systems.  If you use
-##' this feature, it is \emph{very important} that you treat your
-##' orderly archive as read-only (though you should be anyway) as
-##' changing one copy of a linked file changes all the other instances
-##' of it - the files are literally the same file.
+##' links".  This requires hard link support in the underlying
+##' operating system, which is available on all unix-like systems
+##' (e.g. MacOS and Linux) and on Windows since Vista.  However, on
+##' windows systems this might require somewhat elevated privileges.
+##' If you use this feature, it is \emph{very important} that you
+##' treat your orderly archive as read-only (though you should be
+##' anyway) as changing one copy of a linked file changes all the
+##' other instances of it - the files are literally the same file.
 ##'
 ##' This function will alter your orderly archive.  Ordinarily this is
 ##' not something that should be done, so we try to be careful.  In
