@@ -563,3 +563,30 @@ test_that("backup db", {
   expect_setequal(list_tables(path_db), list_tables(dest))
   expect_setequal(list_tables(path_db), list_tables(dest_prev))
 })
+
+
+test_that("unhide file windows will call attrib on windows", {
+  mock <- mockery::mock(NULL)
+  mockery::stub(unhide_file_windows, "system2", mock)
+  mockery::stub(unhide_file_windows, "is_windows", TRUE)
+
+  p <- tempfile()
+  expect_null(unhide_file_windows(p))
+  calls <- mockery::mock_calls(mock)
+  expect_equal(length(calls), 1)
+  ## This seems pretty limiting:
+  expect_equal(calls[[1]],
+               quote(system2("attrib", c("-h", file), stdout = NULL)))
+})
+
+
+test_that("unhide file windows call system2 on windows", {
+  mock <- mockery::mock(NULL)
+  mockery::stub(unhide_file_windows, "system2", mock)
+  mockery::stub(unhide_file_windows, "is_windows", FALSE)
+
+  p <- tempfile()
+  expect_null(unhide_file_windows(p))
+  calls <- mockery::mock_calls(mock)
+  expect_equal(length(calls), 0)
+})

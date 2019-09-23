@@ -177,11 +177,10 @@ demo_change_time <- function(id, time, path) {
 ## in build_git_demo below. The whole line is treated as 
 ## a comment in bash, whereas windows will execute the attrib.
 
-unhide_file <- function(file) {
-  script <- paste0(tempfile(), ".bat")
-  writeLines(sprintf("# 2>NUL & attrib -h %s", file), script, sep = "\r\n")
-  system2(script, stdout = NULL)
-  unlink(script)
+unhide_file_windows <- function(file) {
+  if (is_windows()) {
+    system2("attrib", c("-h", file), stdout = NULL)
+  }
 }
 
 ## This version will eventually go into a yml thing but it's a bit
@@ -223,7 +222,7 @@ build_git_demo <- function() {
   # otherwise, it will be ignored by InfoZip (zip.exe 
   # which utils::zip will likely pick up from the RTools folder)
   
-  unhide_file(file.path(path, ".git"))
+  unhide_file_windows(file.path(path, ".git"))
   
   archive <- zip_dir(path)
   options(orderly.server.demo = archive)
