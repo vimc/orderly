@@ -1,6 +1,7 @@
 context("deduplicate")
 
 test_that("deduplicate demo", {
+  skip_on_cran()
   path <- create_orderly_demo()
   config <- orderly_config_get(path, locate)
   x <- orderly_deduplicate_info(config)
@@ -41,6 +42,7 @@ test_that("deduplicate demo", {
 
 
 test_that("simpler use", {
+  skip_on_cran()
   path <- orderly_example("demo")
   id1 <- orderly_run("minimal", root = path, echo = FALSE)
   id2 <- orderly_run("minimal", root = path, echo = FALSE)
@@ -66,6 +68,7 @@ test_that("simpler use", {
 
 
 test_that("print on run", {
+  skip_on_cran()
   path <- orderly_example("demo")
   id1 <- orderly_run("minimal", root = path, echo = FALSE)
   id2 <- orderly_run("minimal", root = path, echo = FALSE)
@@ -81,6 +84,7 @@ test_that("print on run", {
 
 
 test_that("deduplicate empty", {
+  skip_on_cran()
   path <- orderly_example("demo")
   x <- orderly_deduplicate_info(orderly_config(path))
   expect_is(x, "orderly_deduplicate_info")
@@ -90,6 +94,7 @@ test_that("deduplicate empty", {
 
 
 test_that("don't deduplicate across filesystem boundaries", {
+  skip_on_cran()
   path <- orderly_example("demo")
   id1 <- orderly_run("minimal", root = path, echo = FALSE)
   id2 <- orderly_run("minimal", root = path, echo = FALSE)
@@ -104,6 +109,7 @@ test_that("don't deduplicate across filesystem boundaries", {
 
 
 test_that("don't deduplicate hardlinked files", {
+  skip_on_cran()
   path <- orderly_example("demo")
   id1 <- orderly_run("minimal", root = path, echo = FALSE)
   id2 <- orderly_run("minimal", root = path, echo = FALSE)
@@ -118,6 +124,7 @@ test_that("don't deduplicate hardlinked files", {
 
 
 test_that("don't deduplicate after file modification", {
+  skip_on_cran()
   path <- orderly_example("demo")
   id1 <- orderly_run("minimal", root = path, echo = FALSE)
   id2 <- orderly_run("minimal", root = path, echo = FALSE)
@@ -136,6 +143,7 @@ test_that("don't deduplicate after file modification", {
 })
 
 test_that("relink basic case", {
+  skip_on_cran()
   path <- tempfile()
   from <- file.path(path, "a")
   to <- file.path(path, "b")
@@ -149,6 +157,7 @@ test_that("relink basic case", {
 
 
 test_that("relink error handling", {
+  skip_on_cran()
   path <- tempfile()
   from <- file.path(path, "a")
   to <- file.path(path, "b")
