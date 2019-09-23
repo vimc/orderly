@@ -36,6 +36,7 @@ add_changelog <- function() {
 
 
 write_spacy_filename <- function() {
-  path <- "src/spaces/a resource with spaces.csv"
-  writeLines(c("a,b", "1,2"), path)
+  src <- "src/use_resource_dir/meta/another.csv"
+  dest <- "src/spaces/a resource with spaces.csv"
+  file.copy(src, dest, overwrite = TRUE)
 }

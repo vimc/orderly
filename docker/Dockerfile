@@ -16,6 +16,7 @@ RUN install2.r \
   RPostgres \
   RSQLite \
   digest \
+  fs \
   ids \
   jsonlite \
   knitr \

@@ -2,13 +2,6 @@
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
-## A graph to demonstrate
-
-```{r}
-par(mar = c(15, 4, .5, .5))
-barplot(setNames(dat$number, dat$name), las = 2)
-```
-
 ## Conclusion
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. A cras semper auctor neque vitae tempus quam pellentesque. Sed enim ut sem viverra aliquet eget sit. Et netus et malesuada fames. Tortor at risus viverra adipiscing. Ipsum dolor sit amet consectetur adipiscing elit. Vel orci porta non pulvinar neque laoreet suspendisse. Egestas diam in arcu cursus. Nisi vitae suscipit tellus mauris a. Massa placerat duis ultricies lacus sed turpis tincidunt. Convallis convallis tellus id interdum velit laoreet id donec ultrices. Fusce id velit ut tortor pretium viverra suspendisse potenti nullam. Mi ipsum faucibus vitae aliquet. Lorem ipsum dolor sit amet consectetur adipiscing elit pellentesque. Fusce id velit ut tortor pretium viverra suspendisse. Nec feugiat in fermentum posuere urna nec. Porttitor lacus luctus accumsan tortor posuere ac ut. Ut tortor pretium viverra suspendisse potenti. Orci ac auctor augue mauris augue neque gravida in fermentum. Ac placerat vestibulum lectus mauris ultrices eros in cursus.

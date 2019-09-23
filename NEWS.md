@@ -1,3 +1,7 @@
+# 0.7.13
+
+* It is now possible to deduplicate an orderly archive using `orderly::orderly_deduplicate` (VIMC-731).
+
 # 0.7.12
 
 * `orderly_run` now checks for sink imbalance, in the same way that device imbalances are currently checked for, preventing odd errors when sinks are left open or too many are closed (VIMC-3129)
