@@ -361,3 +361,23 @@ test_that("run: message no changelog",{
                  "but this is not enabled in orderly_config.yml", sep = " ")
   expect_error(capture.output(res$target(res)), error)
 })
+
+
+test_that("preprocess with no options", {
+  expect_equal(
+    cli_args_preprocess(c("run")),
+    list(root = NULL, list_commands = NULL,
+         command = "run", args = character(0)))
+  expect_equal(
+    cli_args_preprocess(c("run", "--option", "other")),
+    list(root = NULL, list_commands = NULL,
+         command = "run", args = c("--option", "other")))
+})
+
+
+test_that("preprocess set root", {
+  expect_equal(
+    cli_args_preprocess(c("--root", "value", "list")),
+    list(root = "value", list_commands = NULL,
+         command = "list", args = character(0)))
+})
