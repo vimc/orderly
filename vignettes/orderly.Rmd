@@ -301,6 +301,205 @@ As a report becomes more complex, the function
 creates the isolated environment that orderly uses to run a report,
 but then leaves you to interactively work with your report.
 
+## Resources, sources and artefacts
+
+Resources to a report are expected to be read only files that are used
+by the script to produce the report. Examples of the sort files that
+should be used as resources are:
+
+ * Moderately sized data files (large datasets should be accessed from
+   a database),
+ * A markdown file used to create a report,
+ * Documentation for the report.
+
+Resources can not be modified by the report; if orderly detects that a
+resource has been changed an error will be returned.
+
+Orderly will automatically detect any files named README.md in a
+report's source directory and copy them across a resources.
+
+```yaml
+resources: 
+  - years.csv
+  - data_dictionary.xlsx
+  - report.Rmd
+  - code_documentation.md
+```
+
+Sources are files containing R code that will be sourced (via the R
+function `source()`) before the main script is run. Often this file
+contains functions or variables used by the main script. All of the
+copying and sourcing will be handled by orderly itself so there is no
+need to explictly source the files in the main script.
+
+Artefacts are the output of the report. At least one artefact must be
+listed and file created during the running of the script must be
+included as artefacts (or deleted before the script finishes) or an
+error will be returned.
+
+Examples of artefacts fields in `orderly.yml`:
+
+```yaml
+artefacts:
+  - report:
+      filenames: report.html
+      description: a simple report
+```
+
+```yaml
+artefacts:
+  - report:
+      filenames: report.html
+      description: a simple report
+  - data:
+      description:
+        - associated data sets
+      filenames:
+        - data_one.csv
+        - data_two.csv
+        - data_three.csv
+        - data_four.csv
+```
+
+When declaring an artefact we have to specify what format the artefact
+is. Currently supported formats are :`data`, `report`, `staticgraph`,
+`interactivegraph` and `interactivehtml`. These tags reflect the
+intent of use of the file, they have no special meaning within orderly
+itself.
+
+## Using artefacts from other reports
+
+It is often the case that we would like to write a report that depends
+on an earlier report, _e.g._ one report produces a large dataset and a
+later report produces a high level summary. Orderly allows a report to
+directly copy an artefact file from and existing report without having
+to manually copy it into the report source directory. This is handled
+in `depends` block of the report's `orderly.yml`.
+
+*To use a file as a dependency it must be explicitly listed as an
+artefact.*
+
+An simple example might look like:
+
+```yaml
+depends:
+  - big-data-report:
+      id: 20190425-163691-b8451bbf
+      use:
+        data.rds: huge-data-set.rds
+      draft: false
+```
+
+This will copy the file the `huge-data-set.rds` from the report
+`big-data-report` with `id` `20190425-163691-b8451bbf` and rename it
+`data.rds`. This file can then be used by the report as if it were in
+the source directory. The field `draft` tells orderly to only use
+completed reports in the archive as opposed to drafts. Setting this to
+true allows uncommited reports in `draft` to be used. This can be
+useful when developing a chain of related reports.
+
+If we want to a report to always use the latest version of a report we
+can set the `id` field to `latest`, _e.g._:
+
+```yaml
+depends:
+  - big-data-report:
+      id: latest
+      use:
+        data.rds: huge-data-set.rds
+      draft: false
+```
+
+This will find the most recent version of the report `big-data-report`
+and copy files from that directory.
+
+To use multiple artefacts from a single report add the files into the
+`use` block _e.g._:
+
+```yaml
+depends:
+  - big-data-report:
+      id: latest
+      use:
+        data.rds: huge-data-set.rds
+        pop.csv: population_data.csv
+      draft: false
+```
+
+To use artefacts from multiple reports we add multiple entries to the
+`depends` field _e.g._:
+
+```yaml
+depends:
+  - big-data-report:
+      id: latest
+      use:
+        data.rds: huge-data-set.rds
+        pop.csv: population_data.csv
+      draft: false
+  - report_two:
+      id: latest
+      use:
+        data_b.rds: filename.rds
+      draft: false
+```
+
+We can also use the same artefact from different versions of the same
+report. This might come up if we want to write a report that compares
+the output from versions of another report. The yaml pattern for this
+is:
+
+```yaml
+depends:
+  - big-data-report:
+      id: 20190425-163691-b8451bbf
+      draft: false
+      use:
+        data_latest.rds: huge-data-set.rds
+  - big-data-report:
+      id: 20181225-172991-34c91ef1
+      draft: false
+      use:
+        data_old: huge-data-set.rds
+```
+
+The important feature in this example is the dashes before the report
+name. When all the report names are different these dashes can be
+omitted, but they are necessary when the report depends on different
+versions of the same report. Since including the dashes will never
+cause a problem but omitting them might, we advise that they should
+always be included.
+
+
+## Using global resources
+
+There might be files that are used in (almost) every report, examples
+of these sorts of files might be document templates or organisation
+logos. To set up a global resource create a directory
+`your_global_dir` in `<root>` and the following to the
+`orderly_config.yml`:
+
+```yaml
+global_resources:
+  your_global_dir
+```
+
+Then to use any file in `your_global_dir` in your report add a
+`global_resources` field to that report's `orderly.yml`:
+
+```yaml
+global_resources:
+  - org_logo.jpg
+  - org_latex_class.cls
+  - org_styles.css
+```
+
+Currently code _i.e._ R source code cannot be sourced from the global
+resources directory. So for example utility functions common across
+multiple report must be included in each report directory separately.
+The functionality to include global source code may be added in future
+versions.
+
 ## Customising the configuration
 
 The contents of `orderly_config.yml` may contain things like secrets

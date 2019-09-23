@@ -19,9 +19,6 @@ check:
 check_all:
 	${RSCRIPT} -e "rcmdcheck::rcmdcheck(args = c('--as-cran', '--no-manual'))"
 
-vignettes/%.Rmd: vignettes/src/%.R
-	${RSCRIPT} -e 'library(sowsear); sowsear("$<", output="$@")'
-
 ## This will eventually swap out for devtools::build_vignettes(), but
 ## in current version it's not working when offline.  For now I'll
 ## just do the copy manually.
