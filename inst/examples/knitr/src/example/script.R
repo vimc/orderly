@@ -1,1 +1,2 @@
-rmarkdown::render("report.Rmd", "html_document", quiet = TRUE)
+knitr::knit2html("report.Rmd", "report.html", quiet = TRUE)
+unlink("report.md")
