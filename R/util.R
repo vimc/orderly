@@ -654,12 +654,13 @@ sqlite_backup <- function(src, dest) {
 periodic <- function(fun, period) {
   fun <- match.fun(fun)
   force(period)
-  last <- Sys.time()
+  env <- new.env(parent = emptyenv())
+  env$last <- Sys.time()
   function() {
     now <- Sys.time()
-    if (now > last + period) {
+    if (now > env$last + period) {
       fun()
-      last <<- now
+      env$last <- now
     }
   }
 }
@@ -700,4 +701,11 @@ file_in_data <- function(...) {
                stringsAsFactors = FALSE)
   rownames(ret) <- NULL
   ret
+}
+
+
+pretty_bytes <- function(bytes) {
+  unit <- c("", "k", "M", "G")
+  exponent <- max(0, min(floor(log(bytes, 1000)), length(unit) - 1))
+  sprintf("%s %sB", round(bytes / 1000^exponent, 2), unit[exponent + 1])
 }

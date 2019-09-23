@@ -48,6 +48,7 @@ test_that("runner queue", {
 test_that("run: success", {
   testthat::skip_on_cran()
   skip_on_appveyor()
+  skip_on_windows()
   path <- prepare_orderly_example("interactive")
 
   expect_false(file.exists(file.path(path, "orderly.sqlite")))
@@ -93,6 +94,7 @@ test_that("run: success", {
 test_that("run: error", {
   testthat::skip_on_cran()
   skip_on_appveyor()
+  skip_on_windows()
 
   path <- prepare_orderly_example("interactive")
   runner <- orderly_runner(path)
@@ -127,6 +129,7 @@ test_that("rebuild", {
 test_that("run in branch (local)", {
   testthat::skip_on_cran()
   skip_on_appveyor()
+  skip_on_windows()
   path <- unzip_git_demo()
   runner <- orderly_runner(path)
 

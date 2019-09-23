@@ -1,13 +1,3 @@
----
-title: "An example report"
-author: "Rich"
-date: "August 2017"
-output:
-  html_document: default
-  pdf_document: default
-  word_document: default
----
-
 ``` {r echo=FALSE, results="hide"}
 knitr::opts_chunk$set(error=FALSE)
 ```

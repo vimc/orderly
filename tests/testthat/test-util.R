@@ -507,19 +507,23 @@ test_that("show_question interactive", {
 
 
 test_that("periodic", {
+  e <- new.env(parent = emptyenv())
+  e$x <- 1
+
   skip_on_windows() # timing on windows is a pain
   skip_on_cran() # gc may cause occasional failures here
   gc() # avoid slow collections during this test
-  x <- 1
-  f <- function() x <<- x + 1
+  f <- function() {
+    e$x <- e$x + 1
+  }
   g <- periodic(f, 0.1)
   g()
-  expect_equal(x, 1)
+  expect_equal(e$x, 1)
   Sys.sleep(0.2)
   g()
-  expect_equal(x, 2)
+  expect_equal(e$x, 2)
   g()
-  expect_equal(x, 2)
+  expect_equal(e$x, 2)
 })
 
 
@@ -558,4 +562,48 @@ test_that("backup db", {
   expect_true(file.exists(dest_prev))
   expect_setequal(list_tables(path_db), list_tables(dest))
   expect_setequal(list_tables(path_db), list_tables(dest_prev))
+})
+
+
+test_that("pretty_bytes", {
+  expect_equal(pretty_bytes(0), "0 B")
+  expect_equal(pretty_bytes(1), "1 B")
+  expect_equal(pretty_bytes(12), "12 B")
+  expect_equal(pretty_bytes(123), "123 B")
+  expect_equal(pretty_bytes(1234), "1.23 kB")
+  expect_equal(pretty_bytes(12345), "12.35 kB")
+  expect_equal(pretty_bytes(123456), "123.46 kB")
+  expect_equal(pretty_bytes(1234567), "1.23 MB")
+  expect_equal(pretty_bytes(12345678), "12.35 MB")
+  expect_equal(pretty_bytes(123456789), "123.46 MB")
+  expect_equal(pretty_bytes(1234567890), "1.23 GB")
+  expect_equal(pretty_bytes(12345678901), "12.35 GB")
+  expect_equal(pretty_bytes(123456789012), "123.46 GB")
+})
+
+
+test_that("unhide file windows will call attrib on windows", {
+  mock <- mockery::mock(NULL)
+  mockery::stub(unhide_file_windows, "system2", mock)
+  mockery::stub(unhide_file_windows, "is_windows", TRUE)
+
+  p <- tempfile()
+  expect_null(unhide_file_windows(p))
+  calls <- mockery::mock_calls(mock)
+  expect_equal(length(calls), 1)
+  ## This seems pretty limiting:
+  expect_equal(calls[[1]],
+               quote(system2("attrib", c("-h", file), stdout = NULL)))
+})
+
+
+test_that("unhide file windows call system2 on windows", {
+  mock <- mockery::mock(NULL)
+  mockery::stub(unhide_file_windows, "system2", mock)
+  mockery::stub(unhide_file_windows, "is_windows", FALSE)
+
+  p <- tempfile()
+  expect_null(unhide_file_windows(p))
+  calls <- mockery::mock_calls(mock)
+  expect_equal(length(calls), 0)
 })

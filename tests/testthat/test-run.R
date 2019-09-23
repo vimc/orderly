@@ -99,6 +99,68 @@ test_that("close too many devices", {
                "Report closed 1 more devices than it opened")
 })
 
+test_that("sink imbalance", {
+  path <- prepare_orderly_example("minimal")
+  config <- orderly_config(path)
+  path_script <- file.path(path, "src/example/script.R")
+  txt <- readLines(path_script)
+  writeLines(c("sink('somefile', split = TRUE)", txt), path_script)
+
+  expect_error(
+    orderly_run("example", root = path, echo = FALSE),
+    "Report left 1 sink open")
+
+  logfile <- tempfile()
+  expect_error(
+    capture_log(
+      orderly_run("example", root = path, echo = FALSE), logfile),
+    "Report left 1 sink open")
+
+  p <- tempfile()
+  sink(p, split = TRUE)
+  writeLines(c("sink()", txt), path_script)
+  withr::with_options(
+    list(orderly.nolog = TRUE),
+    expect_error(
+      capture_log(
+        orderly_run("example", root = path, echo = FALSE), logfile),
+      "Report closed 1 more sinks than it opened!"))
+  expect_equal(sink.number(), 0)
+})
+
+
+test_that("leave connection open", {
+  ## The issue here is that a garbage collection *might* occur causing
+  ## the connection to close, but that is not guaranteed!  So we pop
+  ## the connection into the environment so that it will not be
+  ## garbage collected.
+  e <- new.env(parent = .GlobalEnv)
+  path <- prepare_orderly_example("minimal")
+  config <- orderly_config(path)
+  path_script <- file.path(path, "src/example/script.R")
+
+  writeLines(
+    'con <- file("mygraph.png", "w")',
+    path_script)
+
+  expect_error(
+    orderly_run("example", root = path, echo = FALSE, envir = e),
+    "File left open: mygraph.png")
+
+  ## And check we can recover!
+  close(e$con)
+
+  writeLines(
+    c('con <- file("mygraph.png", "w")', 'close(con)'),
+    path_script)
+
+  e <- new.env(parent = .GlobalEnv)
+  expect_error(
+    orderly_run("example", root = path, echo = FALSE, envir = e),
+    NA)
+})
+
+
 test_that("included example", {
   path <- prepare_orderly_example("example")
   id <- orderly_run("example", list(cyl = 4), root = path, echo = FALSE)
@@ -267,8 +329,6 @@ test_that("resources", {
 
 
 test_that("markdown", {
-  skip_if_not_installed("rmarkdown")
-  skip_on_appveyor() # See https://github.com/jgm/pandoc/issues/5037
   path <- prepare_orderly_example("knitr")
 
   id <- orderly_run("example", root = path, echo = FALSE)

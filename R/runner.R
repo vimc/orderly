@@ -336,49 +336,60 @@ path_stdout <- function(path, key) {
 
 
 runner_queue <- function() {
-  cols <- c("key", "state", "name", "parameters", "ref", "id", "timeout")
-  data <- matrix(character(0), 0, length(cols))
-  colnames(data) <- cols
+  R6_runner_queue$new()
+}
 
-  list(
+
+R6_runner_queue <- R6::R6Class(
+  "runner_queue",
+  private = list(
+    data = NULL
+  ),
+  public = list(
+    initialize = function() {
+      cols <- c("key", "state", "name", "parameters", "ref", "id", "timeout")
+      private$data <-
+        matrix(character(0), 0, length(cols), dimnames = list(NULL, cols))
+    },
+
     get = function() {
-      data
+      private$data
     },
 
     get_df = function() {
-      ret <- as.data.frame(data, stringsAsFactors = FALSE)
+      ret <- as.data.frame(private$data, stringsAsFactors = FALSE)
       ret$timeout <- as.numeric(ret$timeout)
       ret
     },
 
     length = function() {
-      sum(data[, "state"] == RUNNER_QUEUED)
+      sum(private$data[, "state"] == RUNNER_QUEUED)
     },
 
     insert = function(name, parameters = NULL, ref = NULL, timeout = 600) {
-      existing <- data[, "key"]
+      existing <- private$data[, "key"]
       repeat {
         key <- ids::adjective_animal()
         if (!(key %in% existing)) {
           break
         }
       }
-      new <- data[NA_integer_, , drop = TRUE]
+      new <- private$data[NA_integer_, , drop = TRUE]
       new[["key"]] <- key
       new[["name"]] <- name
       new[["state"]] <- RUNNER_QUEUED
       new[["parameters"]] <- parameters %||% NA_character_
       new[["ref"]] <- ref %||% NA_character_
       new[["timeout"]] <- timeout
-      data <<- rbind(data, new, deparse.level = 0)
+      private$data <- rbind(private$data, new, deparse.level = 0)
       key
     },
 
     next_queued = function() {
-      i <- data[, "state"] == RUNNER_QUEUED
+      i <- private$data[, "state"] == RUNNER_QUEUED
       if (any(i)) {
         i <- which(i)[[1L]]
-        ret <- as.list(data[i, ])
+        ret <- as.list(private$data[i, ])
         ret$timeout <- as.numeric(ret$timeout)
         ret
       } else {
@@ -387,7 +398,7 @@ runner_queue <- function() {
     },
 
     status = function(key) {
-      d <- data[data[, "key"] == key, , drop = FALSE]
+      d <- private$data[private$data[, "key"] == key, , drop = FALSE]
       if (nrow(d) == 0L) {
         list(state = RUNNER_UNKNOWN, id = NA_character_)
       } else {
@@ -397,18 +408,18 @@ runner_queue <- function() {
     },
 
     set_state = function(key, state, id = NULL) {
-      i <- data[, "key"] == key
+      i <- private$data[, "key"] == key
       if (any(i)) {
-        data[i, "state"] <<- state
+        private$data[i, "state"] <- state
         if (!is.null(id)) {
-          data[i, "id"] <<- id
+          private$data[i, "id"] <- id
         }
         TRUE
       } else {
         FALSE
       }
-    })
-}
+    }
+  ))
 
 
 runner_allow_ref <- function(allow_ref, config) {
