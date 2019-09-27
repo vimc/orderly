@@ -390,3 +390,11 @@ test_that("main wrapper", {
   path <- prepare_orderly_example("minimal")
   expect_output(main(c("--root", path, "list")), "example")
 })
+
+
+test_that("docopt failure gives reasonable error", {
+  path <- prepare_orderly_example("minimal")
+  expect_error(
+    main(c("--root", path, "list", "unknown")),
+    class = "orderly_cli_error")
+})
