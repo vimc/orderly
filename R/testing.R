@@ -172,17 +172,6 @@ demo_change_time <- function(id, time, path) {
 }
 
 
-## System call to attrib to unhide a file on windows, in a way
-## that is safely and silently ignored on Linux. Used only
-## in build_git_demo below. The whole line is treated as 
-## a comment in bash, whereas windows will execute the attrib.
-
-unhide_file_windows <- function(file) {
-  if (is_windows()) {
-    system2("attrib", c("-h", file), stdout = NULL)
-  }
-}
-
 ## This version will eventually go into a yml thing but it's a bit
 ## nasty to deal with at the moment.  This means it's not easily
 ## extendable...
@@ -218,12 +207,6 @@ build_git_demo <- function() {
 
   git_checkout_branch("master", root = path)
 
-  # On windows, make ".git" folder non-hidden,
-  # otherwise, it will be ignored by InfoZip (zip.exe 
-  # which utils::zip will likely pick up from the RTools folder)
-  
-  unhide_file_windows(file.path(path, ".git"))
-  
   archive <- zip_dir(path)
   options(orderly.server.demo = archive)
   archive
