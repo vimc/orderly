@@ -1,7 +1,7 @@
 ## Try to make it easy to run things
 main <- function(args = commandArgs(TRUE)) {
   dat <- cli_args_process(args)
-  dat$target(dat$args)
+  dat$target(dat)
 }
 
 

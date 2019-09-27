@@ -381,3 +381,9 @@ test_that("preprocess set root", {
     list(root = "value", list_commands = NULL,
          command = "list", args = character(0)))
 })
+
+
+test_that("main wrapper", {
+  path <- prepare_orderly_example("minimal")
+  expect_output(main(c("--root", path, "list")), "example")
+})
