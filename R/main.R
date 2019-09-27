@@ -78,13 +78,15 @@ cli_args_process_run_parameters <- function(parameters) {
   if (length(parameters) == 0L) {
     NULL
   } else {
-    parameters <- strsplit(parameters, "=", fixed = TRUE)
-    n <- lengths(parameters)
-    if (any(n != 2)) {
-      stop("Invalid parameters") # better error messages and coping here
+    p <- strsplit(parameters, "=", fixed = TRUE)
+    err <- lengths(p) != 2
+    if (any(err)) {
+      stop(sprintf(
+        "Invalid parameters %s - all must be in form key=value",
+        paste(squote(parameters[err]), collapse = ", ")))
     }
-    value <- lapply(parameters, function(x) parse_parameter(x[[2L]]))
-    set_names(value, vcapply(parameters, "[[", 1L))
+    value <- lapply(p, function(x) parse_parameter(x[[2L]]))
+    set_names(value, vcapply(p, "[[", 1L))
   }
 }
 

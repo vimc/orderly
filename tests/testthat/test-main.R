@@ -398,3 +398,15 @@ test_that("docopt failure gives reasonable error", {
     main(c("--root", path, "list", "unknown")),
     class = "orderly_cli_error")
 })
+
+
+test_that("invalid parameters", {
+  expect_error(
+    cli_args_process_run_parameters("a"),
+    "Invalid parameters 'a' - all must be in form key=value",
+    fixed = TRUE)
+  expect_error(
+    cli_args_process_run_parameters(c("a", "b=2", "c=3=4")),
+    "Invalid parameters 'a', 'c=3=4' - all must be in form key=value",
+    fixed = TRUE)
+})
