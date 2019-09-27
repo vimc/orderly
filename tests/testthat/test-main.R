@@ -167,6 +167,7 @@ test_that("latest", {
 
 
 test_that("help", {
+  skip("prevent docopt killing session")
   expect_error(capture.output(cli_args_process("--help")),
                class = "orderly_cli_error")
 
