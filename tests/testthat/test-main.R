@@ -104,7 +104,8 @@ test_that("run: pull & ref don't go together", {
   res <- cli_args_process(args)
   expect_error(res$target(res),
                "Can't use --pull with --ref; perhaps you meant --fetch ?",
-               fixed = TRUE)
+               fixed = TRUE,
+               class = "orderly_cli_error")
 })
 
 
@@ -196,7 +197,8 @@ test_that("unknown", {
   path <- tempfile()
   args <- c("--root", path, "foo")
   expect_error(capture.output(cli_args_process(args)),
-               "'foo' is not an orderly command. See orderly --help")
+               "'foo' is not an orderly command. See orderly --help",
+               class = "orderly_cli_error")
 })
 
 
