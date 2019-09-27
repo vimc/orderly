@@ -346,13 +346,6 @@ test_that("sys_which", {
 })
 
 
-test_that("zip_dir", {
-  testthat::skip_on_cran()
-  mockery::stub(zip_dir, "utils::zip", function(...) -1)
-  expect_error(zip_dir(tempfile()), "error running zip")
-})
-
-
 test_that("open_directory: windows", {
   mockery::stub(open_directory, "system2", list)
   mockery::stub(open_directory, "is_windows", TRUE)

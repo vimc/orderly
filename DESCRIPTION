@@ -31,7 +31,8 @@ Imports:
     jsonlite,
     optparse,
     withr,
-    yaml
+    yaml,
+    zip
 Suggests:
     httr,
     knitr,
