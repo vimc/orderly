@@ -166,18 +166,6 @@ test_that("latest", {
 })
 
 
-test_that("help", {
-  skip("prevent docopt killing session")
-  expect_error(capture.output(cli_args_process("--help")),
-               class = "orderly_cli_error")
-
-  for (cmd in names(cli_commands())) {
-    expect_output(try(cli_args_process(c(cmd, "--help")), silent = TRUE),
-                  sprintf("Usage:\n  orderly %s", cmd))
-  }
-})
-
-
 test_that("list", {
   path <- prepare_orderly_example("minimal")
 
