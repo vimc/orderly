@@ -32,7 +32,7 @@ Imports:
     optparse,
     withr,
     yaml,
-    zip
+    zip (>= 2.0.0)
 Suggests:
     httr,
     knitr,
