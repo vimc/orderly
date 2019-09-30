@@ -55,7 +55,7 @@ test_that("directories of global resources are forbidden", {
 
   p_orderly <- file.path(path, "src", "example", "orderly.yml")
   d <- yaml_read(p_orderly)
-  d$global_resources <- "dir"
+  d$global_resources <- list("dir" = "dir")
   yaml_write(d, p_orderly)
 
   expect_error(
@@ -72,7 +72,7 @@ test_that("global resource from a subdir", {
 
   p_orderly <- file.path(path, "src", "example", "orderly.yml")
   d <- yaml_read(p_orderly)
-  d$global_resources <- "dir/data.csv"
+  d$global_resources <- list("data.csv" = "dir/data.csv")
   yaml_write(d, p_orderly)
 
   id <- orderly_run("example", root = path, echo = FALSE)
