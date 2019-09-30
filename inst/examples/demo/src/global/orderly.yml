@@ -8,7 +8,7 @@ artefacts:
       description: plot of displacement vs weight
 
 global_resources:
-  - data.csv
+  data.csv: data.csv
 
 author: Researcher McResearcherface
 requester: Funder McFunderface
