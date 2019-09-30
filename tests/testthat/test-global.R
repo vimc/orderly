@@ -16,7 +16,7 @@ test_that("missing global file", {
   path_yaml <- file.path(path_example, "orderly.yml")
   # the final line of the yaml is globa file, so we change that
   config_lines <- readLines(path_yaml)
-  config_lines[11] <- "  - none.csv"
+  config_lines[11] <- "  data.csv: none.csv"
   writeLines(config_lines, path_yaml)
   
   expected_error <- "Global resources in '.+/global' does not exist: 'none.csv'"
