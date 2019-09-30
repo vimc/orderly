@@ -480,7 +480,7 @@ test_that("patch modified artefact", {
 })
 
 
-test_that("migrate => 0.6.8", {
+test_that("migrate => 0.7.15", {
   oo <- options(orderly.nowarnings = TRUE)
   on.exit(options(oo))
 
