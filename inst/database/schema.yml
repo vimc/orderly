@@ -103,6 +103,14 @@ file_input:
     # This would be great to have but seems overkill
     # - mime: {type: TEXT}
 
+# global files might have been renamed so we track their original
+# names here:
+file_input_global:
+  columns:
+    - id: {type: SERIAL}
+    - file_input: {fk: file_input.id}
+    - filename: {type: TEXT}
+
 # Link views into the report
 report_version_view:
   columns:

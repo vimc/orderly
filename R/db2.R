@@ -8,7 +8,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-ORDERLY_SCHEMA_VERSION <- "0.0.8"
+ORDERLY_SCHEMA_VERSION <- "0.0.9"
 
 ## These will be used in a few places and even though they're not
 ## super likely to change it would be good
