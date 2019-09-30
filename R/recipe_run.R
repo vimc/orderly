@@ -674,10 +674,8 @@ recipe_file_inputs <- function(info) {
     script = file_info(info$script),
     readme = file_info(info$readme),
     source = file_info(info$sources),
-    ## TODO: What we really should do is not have put the sources in
-    ## here in the first place, then this bit would not be necessary.
     resource = file_info(info$resources),
-    global = file_info(info$global_resources))
+    global = file_info(names(info$global_resources)))
 }
 
 
@@ -805,22 +803,13 @@ recipe_copy_resources <- function(info, src) {
 recipe_copy_global <- function(info, config) {
   if (!is.null(info$global_resources)) {
     global_path <- file.path(config$root, config$global_resources)
-    assert_file_exists(
-      info$global_resources, check_case = TRUE, workdir = global_path,
-      name = sprintf("Global resources in '%s'", global_path))
-
-    global_src <- file.path(global_path, info$global_resources)
-    ## See VIMC-2961: the copy here is different to sources and
-    ## resources because we can't rename files as they're copied; we
-    ## don't support directories and we're pretty limited in how
-    ## copying can happen.  I believe the "." that is the destination
-    ## of the copy will strip all leading path fragments (path/to/x
-    ## becoming x).
-    if (any(is_directory(global_src))) {
-      stop("global resources cannot yet be directories")
-    }
-    orderly_log("global", info$global_resources)
-    file_copy(global_src, ".", recursive = TRUE)
+    src <- file.path(global_path, info$global_resources)
+    dest <- names(info$global_resources)
+    dir_create(dirname(dest))
+    file_copy(src, dest)
+    orderly_log("global",
+                sprintf("%s -> %s",
+                        info$global_resources, names(info$global_resources)))
   }
   info
 }

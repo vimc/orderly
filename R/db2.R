@@ -341,6 +341,18 @@ report_data_import <- function(con, name, id, config) {
     stringsAsFactors = FALSE)
   DBI::dbWriteTable(con, "file_input", file_input, append = TRUE)
 
+  if (!is.null(dat_rds$meta$global_resources)) {
+    sql <- c("SELECT id, filename FROM file_input",
+             " WHERE report_version = $1 AND file_purpose = 'global'")
+    tmp <- DBI::dbGetQuery(con, paste(sql, collapse = " "), id)
+    i <- match(names(dat_rds$meta$global_resources), tmp$filename)
+    file_input_global <- data_frame(
+      file_input = tmp$id[i],
+      filename = unname(dat_rds$meta$global_resources))
+    DBI::dbWriteTable(con, "file_input_global", file_input_global,
+                      append = TRUE)
+  }
+
   ## Artefacts:
   report_data_add_files(con, dat_rds$meta$file_info_artefacts)
   report_version_artefact <- cbind(

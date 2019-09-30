@@ -36,6 +36,8 @@ recipe_read <- function(path, config, validate = TRUE) {
 
   info$artefacts <- recipe_read_check_artefacts(info$artefacts, filename, path)
   info$resources <- recipe_read_check_resources(info$resources, filename, path)
+  info$global_resources <- recipe_read_check_global_resources(
+    info$global_resources, filename, config)
   info$depends <-
     recipe_read_check_depends(info$depends, filename, config, validate)
 
@@ -232,6 +234,40 @@ recipe_read_check_resources <- function(x, filename, path) {
   ## TODO: At this point we should also return the normalised
   ## *relative* path perhaps to prevent valid, but absolute, paths
   ## being used.
+  x
+}
+
+
+recipe_read_check_global_resources <- function(x, filename, config) {
+  if (is.null(x)) {
+    return(NULL)
+  }
+
+  if (is.character(x)) {
+    msg <- c("Use of strings for global_resources: is deprecated and will be",
+             "removed in a future orderly version - please use",
+             "<as>: <from> mapping pairs instead.")
+    orderly_warning(flow_text(msg))
+    x <- set_names(as.list(x), basename(x))
+  }
+
+  prefix <- sprintf("%s:global_resources", filename)
+
+  assert_named(x, name = prefix)
+  for (i in seq_along(x)) {
+    assert_scalar_character(x[[i]], sprintf("%s:%s", prefix, names(x)[[i]]))
+  }
+  x <- list_to_character(x)
+
+  global_path <- file.path(config$root, config$global_resources)
+  assert_file_exists(
+    x, check_case = TRUE, workdir = global_path,
+    name = sprintf("Global resources in '%s'", global_path))
+
+  if (any(is_directory(file.path(global_path, x)))) {
+    stop("global resources cannot yet be directories")
+  }
+
   x
 }
 
