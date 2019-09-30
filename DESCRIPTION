@@ -30,7 +30,8 @@ Imports:
     fs,
     ids,
     withr,
-    yaml
+    yaml,
+    zip (>= 2.0.0)
 Suggests:
     httr,
     jsonlite,

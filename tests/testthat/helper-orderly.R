@@ -50,7 +50,7 @@ unpack_reference <- function(version, path = tempfile()) {
       testthat::skip(msg)
     }
   }
-  unzip(src, exdir = path)
+  zip::unzip(src, exdir = path)
   file.path(path, version)
 }
 

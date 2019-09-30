@@ -346,13 +346,6 @@ test_that("sys_which", {
 })
 
 
-test_that("zip_dir", {
-  testthat::skip_on_cran()
-  mockery::stub(zip_dir, "utils::zip", function(...) -1)
-  expect_error(zip_dir(tempfile()), "error running zip")
-})
-
-
 test_that("open_directory: windows", {
   mockery::stub(open_directory, "system2", list)
   mockery::stub(open_directory, "is_windows", TRUE)
@@ -579,31 +572,4 @@ test_that("pretty_bytes", {
   expect_equal(pretty_bytes(1234567890), "1.23 GB")
   expect_equal(pretty_bytes(12345678901), "12.35 GB")
   expect_equal(pretty_bytes(123456789012), "123.46 GB")
-})
-
-
-test_that("unhide file windows will call attrib on windows", {
-  mock <- mockery::mock(NULL)
-  mockery::stub(unhide_file_windows, "system2", mock)
-  mockery::stub(unhide_file_windows, "is_windows", TRUE)
-
-  p <- tempfile()
-  expect_null(unhide_file_windows(p))
-  calls <- mockery::mock_calls(mock)
-  expect_equal(length(calls), 1)
-  ## This seems pretty limiting:
-  expect_equal(calls[[1]],
-               quote(system2("attrib", c("-h", file), stdout = NULL)))
-})
-
-
-test_that("unhide file windows call system2 on windows", {
-  mock <- mockery::mock(NULL)
-  mockery::stub(unhide_file_windows, "system2", mock)
-  mockery::stub(unhide_file_windows, "is_windows", FALSE)
-
-  p <- tempfile()
-  expect_null(unhide_file_windows(p))
-  calls <- mockery::mock_calls(mock)
-  expect_equal(length(calls), 0)
 })

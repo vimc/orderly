@@ -397,10 +397,7 @@ sys_which <- function(name) {
 zip_dir <- function(path, dest = paste0(basename(path), ".zip")) {
   owd <- setwd(dirname(path))
   on.exit(setwd(owd))
-  code <- utils::zip(dest, basename(path), extras = "-q")
-  if (code != 0) {
-    stop("error running zip")
-  }
+  zip::zipr(dest, basename(path))
   normalizePath(dest)
 }
 

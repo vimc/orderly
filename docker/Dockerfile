@@ -24,7 +24,8 @@ RUN install2.r \
   remotes \
   rmarkdown \
   withr \
-  yaml
+  yaml \
+  zip
 
 RUN Rscript -e 'remove.packages("BH")'
 
