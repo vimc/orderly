@@ -337,6 +337,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                packages = info$packages,
                file_info_inputs = info$inputs,
                file_info_artefacts = file_info_artefacts,
+               global_resources = info$global_resources,
                artefacts = artefacts,
                depends = depends,
                elapsed = as.numeric(elapsed, "secs"),
