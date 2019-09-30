@@ -495,7 +495,7 @@ test_that("migrate => 0.7.15", {
   expect_equal(d$meta$global_resources, c("data.csv" = "data.csv"))
 
   con <- orderly_db("destination", path, validate = FALSE)
-  on.exit(DBI::dbDisconnect(con))
+  on.exit(DBI::dbDisconnect(con), add = TRUE)
   tab <- DBI::dbReadTable(con, "file_input_global")
   expect_equal(nrow(tab), 1)
 })
