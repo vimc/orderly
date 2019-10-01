@@ -112,6 +112,24 @@ test_that("run: error", {
 })
 
 
+test_that("run report with parameters", {
+  testthat::skip_on_cran()
+  path <- prepare_orderly_example("demo")
+  runner <- orderly_runner(path)
+  pars <- '{"nmin":0.5}'
+  key <- runner$queue("other", parameters = pars)
+  runner$poll()
+  id <- wait_for_id(runner, key)
+  wait_while_running(runner)
+  d <- orderly_list_archive(path)
+  expect_equal(d$name, "other")
+  expect_equal(d$id, id)
+
+  d <- readRDS(path_orderly_run_rds(file.path(path, "archive", "other", id)))
+  expect_equal(d$meta$parameters, list(nmin = 0.5))
+})
+
+
 test_that("rebuild", {
   path <- prepare_orderly_example("minimal")
   runner <- orderly_runner(path)
@@ -133,7 +151,7 @@ test_that("run in branch (local)", {
   path <- unzip_git_demo()
   runner <- orderly_runner(path)
 
-  pars <- as.character(jsonlite::toJSON(list(nmin = 0), auto_unbox = TRUE))
+  pars <- '{"nmin":0}'
   key <- runner$queue("other", parameters = pars, ref = "other")
   runner$poll()
   id <- wait_for_id(runner, key)

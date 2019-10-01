@@ -1,6 +1,8 @@
 context("slack")
 
 test_that("slack payload is correct", {
+  skip_if_not_installed("httr")
+  skip_if_not_installed("jsonlite")
   server_url <- "https://example.com"
   server_is_primary <- FALSE
   server_name <- "myserver"
@@ -44,6 +46,8 @@ test_that("slack payload is correct", {
 
 
 test_that("git information is collected correctly", {
+  skip_if_not_installed("httr")
+  skip_if_not_installed("jsonlite")
   server_url <- "https://example.com"
   server_is_primary <- FALSE
   server_name <- "myserver"
@@ -149,6 +153,7 @@ test_that("main interface", {
 
 test_that("main interface", {
   skip_if_no_internet()
+  skip_if_not_installed("httr")
 
   path <- prepare_orderly_example("minimal")
   append_lines(c(
@@ -196,6 +201,7 @@ test_that("main interface", {
 
 
 test_that("exit on no httr", {
+  skip_if_not_installed("mockery")
   dat <- list(meta = list(elapsed = 10,
                           id = "20181213-123456-fedcba98",
                           name = "example"))

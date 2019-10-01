@@ -290,10 +290,19 @@ R6_orderly_runner <- R6::R6Class(
       orderly_log("run", sprintf("%s (%s)", key, dat$name))
       self$data$set_state(key, RUNNER_RUNNING)
       id_file <- file.path(self$path_id, key)
+      if (is.na(dat$parameters)) {
+        parameters <- NULL
+      } else {
+        ## In the current system, these come through as json, but we
+        ## might want to tweak this.  I need to follow this back
+        ## through orderly.server next
+        p <- jsonlite::fromJSON(dat$parameters, FALSE)
+        parameters <- sprintf("%s=%s", names(p), vcapply(p, format))
+      }
       args <- c("--root", self$path,
                 "run", dat$name, "--print-log", "--id-file", id_file,
-                if (!is.na(dat$parameters)) c("--parameters", dat$parameters),
-                if (!is.na(dat$ref)) c("--ref", dat$ref))
+                if (!is.na(dat$ref)) c("--ref", dat$ref),
+                parameters)
 
       ## NOTE: sending stdout/stderr to "|" causes a big slowdown (as
       ## in 5-10x longer to run than not going through processx). File

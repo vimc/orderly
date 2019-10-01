@@ -1,3 +1,7 @@
+# 0.7.14
+
+* The command line interface has been overhauled, in particular the parameter passing interface (VIMC-2469) which now accepts key-value pairs and not json
+
 # 0.7.13
 
 * It is now possible to deduplicate an orderly archive using `orderly::orderly_deduplicate` (VIMC-731).

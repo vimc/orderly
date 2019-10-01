@@ -209,10 +209,6 @@ last <- function(x) {
   x[[length(x)]]
 }
 
-modify_list <- function(a, b) {
-  a[names(b)] <- b
-  a
-}
 
 orderly_env <- function() {
   env <- Sys.getenv()
