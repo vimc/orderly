@@ -409,3 +409,20 @@ test_that("trailing slash on resource directory", {
   # make sure the resource filename does not contain a double slash //
   expect_true("meta/data.csv" %in% dat$filename)
 })
+
+
+test_that("old style global resources deprecated", {
+  path <- prepare_orderly_example("global")
+  path_example <- file.path(path, "src", "example")
+  path_yaml <- file.path(path_example, "orderly.yml")
+  config_lines <- readLines(path_yaml)
+  config_lines[[11]] <- "  data.csv"
+  writeLines(config_lines, path_yaml)
+
+  expect_warning(
+    res <- recipe_read(path_example, orderly_config(path)),
+    "Use of strings for global_resources: is deprecated")
+  expect_equal(
+    res$global_resources,
+    c(data.csv = "data.csv"))
+})

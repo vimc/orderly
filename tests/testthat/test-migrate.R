@@ -478,3 +478,24 @@ test_that("patch modified artefact", {
   expect_equal(readRDS(path_rds)$meta$file_info_artefacts$file_hash[[2]], h2)
   expect_equal(new$file_hash[new$filename == "subset.csv"], h2)
 })
+
+
+test_that("migrate => 0.7.15", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
+  path <- unpack_reference("0.6.0")
+  orderly_migrate(path, to = "0.7.15")
+  orderly_rebuild(path)
+
+  list <- orderly_list_archive(path)
+  id <- list$id[list$name == "global"]
+
+  d <- readRDS(path_orderly_run_rds(file.path(path, "archive", "global", id)))
+  expect_equal(d$meta$global_resources, c("data.csv" = "data.csv"))
+
+  con <- orderly_db("destination", path, validate = FALSE)
+  on.exit(DBI::dbDisconnect(con), add = TRUE)
+  tab <- DBI::dbReadTable(con, "file_input_global")
+  expect_equal(nrow(tab), 1)
+})

@@ -1,3 +1,7 @@
+# 0.7.15
+
+* Global resources can now be renamed on copy, allowing use of subdirectories to structure them.  Using global resources as a set of strings is now deprecated (VIMC-2961).
+
 # 0.7.14
 
 * The command line interface has been overhauled, in particular the parameter passing interface (VIMC-2469) which now accepts key-value pairs and not json

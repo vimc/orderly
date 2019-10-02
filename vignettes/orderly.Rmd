@@ -489,9 +489,9 @@ Then to use any file in `your_global_dir` in your report add a
 
 ```yaml
 global_resources:
-  - org_logo.jpg
-  - org_latex_class.cls
-  - org_styles.css
+  logo.jpg: org_logo.jpg
+  latex_class.cls: org_latex_class.cls
+  styles.css: org_styles.css
 ```
 
 Currently code _i.e._ R source code cannot be sourced from the global
