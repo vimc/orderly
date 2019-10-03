@@ -29,6 +29,11 @@
 ##'   contains unusual copies of orderly archives that can't be
 ##'   migrated this might come in helpful.
 ##'
+##' @param clean Logical, where \code{TRUE} (and where the migration
+##'   was successful and \code{dry_run} is \code{FALSE}) orderly will
+##'   clean up all migration backup files.  Use this periodically to
+##'   clean up the archive.
+##'
 ##' @export
 ##' @examples
 ##' # Without an orderly repository created by a previous version of
@@ -36,8 +41,8 @@
 ##' path <- orderly::orderly_example("minimal")
 ##' orderly::orderly_migrate(path)
 orderly_migrate <- function(root = NULL, locate = TRUE, to = NULL,
-                            dry_run = FALSE,
-                            skip_failed = FALSE) {
+                            dry_run = FALSE, skip_failed = FALSE,
+                            clean = FALSE) {
   ## We'll skip warnings here - they'll come out as messages rather
   ## than warnings.
   oo <- options(orderly.nowarnings = TRUE)
@@ -51,6 +56,10 @@ orderly_migrate <- function(root = NULL, locate = TRUE, to = NULL,
   for (v in names(migrations)) {
     f <- source_to_function(migrations[[v]], "migrate", topenv())
     migrate_apply(root, v, f, config, dry_run, skip_failed)
+  }
+
+  if (clean) {
+    migrate_clean(config, dry_run)
   }
 }
 
@@ -245,4 +254,18 @@ migrate_single <- function(path, config) {
                    dry_run = FALSE, skip_failed = FALSE)
     report_archive_version <- v
   }
+}
+
+
+migrate_clean <- function(config, dry_run) {
+  files <- list.files(file.path(config$root, "archive"),
+                      "^orderly_run_([0-9]+\\.){3}rds",
+                      recursive = TRUE, full.names = TRUE)
+  size <- pretty_bytes(sum(file_size(files)))
+  orderly_log("clean",
+              sprintf("%d backup files to delete (%s)", length(files), size))
+  if (!dry_run) {
+    file.remove(files)
+  }
+  invisible()
 }
