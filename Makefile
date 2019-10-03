@@ -30,4 +30,7 @@ vignettes: vignettes/orderly.Rmd
 tests/testthat/montagu-reports:
 	git clone git@github.com:vimc/montagu-reports $@
 
+README.md: README.md.in vignettes/orderly.Rmd
+	scripts/build_readme
+
 .PHONY: test roxygen install build check check_all vignettes

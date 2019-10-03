@@ -61,6 +61,68 @@ tree <- function(path, header = path) {
 }
 ```
 
+<!-- introduction begin -->
+
+`orderly` is a package designed to help make analysis more [reproducible](https://en.wikipedia.org/wiki/Reproducibility).  Its principal aim is to automate a series of basic steps in the process of writing analyses, making it easy to:
+
+* track all inputs into an analysis (packages, code, and data resources)
+* store multiple versions of an analysis where it is repeated
+* track outputs of an analysis
+* create analyses that depend on the outputs of previous analyses
+
+With `orderly` we have two main hopes:
+
+* analysts can write code that will straightforwardly run on someone else's machine (or a remote machine)
+* when an analysis that is run several times starts behaving differently it will be easy to see when the outputs started changing, and what inputs started changing at the same time
+
+`orderly` requires a few conventions around organisation of a project, and after that tries to keep out of your way.  However, these requirements are designed to make collaborative development with git easier by minimising conflicts and making backup easier by using an append-only storage system.
+
+### The problem
+
+One often-touted goal of R over point-and-click analyses packages is that if an analysis is scripted it is more reproducible.  However, essentially all analyses depend on external resources - packages, data, code, and R itself; any change in these external resources might change the results.  Preventing such changes in external resources is not always possible, but *tracking* changes should be straightforward - all we need to know is what is being used.
+
+For example, while reproducible research [has become synonymous with literate programming](https://cran.r-project.org/view=ReproducibleResearch) this approach often increases the number of external resources.  A typical [`knitr`](https://cran.r-project.org/package=knitr) document will depend on:
+
+* the source file (`.Rmd` or `.Rnw`)
+* templates used for styling
+* data that is read in for the analysis
+* code that is directly read in with `source`
+
+The `orderly` package helps by
+
+* collecting external resources before an analysis
+* ensuring that all required external resources are identified
+* removing any manual work in tracking information about these external resources
+* allowing running reports multiple times and making it easy to see what changed and why
+
+The core problem is that analyses have no general _interface_.  Consider in contrast that role that functions take in programming.  All functions have a set of arguments (inputs) and a return value (outputs).  With `orderly`, we borrow this idea, and each piece of analysis will require that the user describes what is needed and what will be produced.
+
+### The process
+
+The user describes the inputs of their analysis, including:
+
+* SQL queries (if using databases)
+* Required R sources
+* External resource files (e.g., csv data files, Rmd files, templates)
+* Packages required to run the analysis
+* Dependencies on previously run analyses
+
+The user also provides a list of "artefacts" (file-based results) that they will produce.
+
+Then `orderly`:
+
+1. creates a new empty directory
+2. copies over _only_ the declared file resources
+3. loads only the declared packages
+4. loads the declared R sources
+5. evaluates any sql queries to create R objects
+6. then runs then analysis
+7. verifies that the declared artefacts are produced
+
+It then stores metadata alongside the analysis including [md5 hashes](https://en.wikipedia.org/wiki/Hash_function) of all inputs and outputs, copies of data extracted from the database, a record of all R packages loaded at the end of the session, and (if using git) information about the git state (hash, branch and status).
+
+<!-- introduction end -->
+
 ## The problem
 
 Suppose that we have an SQL database that is used for a series of
