@@ -98,7 +98,7 @@ orderly_data <- function(name, parameters = NULL, envir = NULL,
   config <- orderly_config_get(root, locate)
   info <- recipe_read(file.path(path_src(config$root), name), config)
   envir <- orderly_environment(envir)
-  recipe_data(config, info, parameters, envir)
+  recipe_data(config, info, parameters, envir)$dest
 }
 
 
@@ -328,7 +328,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
 
   meta <- list(id = info$id,
                name = info$name,
-               parameters = parameters,
+               parameters = prep$parameters,
                date = as.character(Sys.time()),
                displayname = info$displayname %||% NA_character_,
                description = info$description %||% NA_character_,
@@ -374,24 +374,40 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
 }
 
 
-recipe_substitute <- function(info, parameters) {
+recipe_parameters <- function(info, parameters) {
   if (!is.null(parameters)) {
     assert_named(parameters, unique = TRUE)
   }
-  msg <- setdiff(info$parameters, names(parameters))
+
+  has_default <- names(info$parameters)[vlapply(info$parameters, function(x)
+    "default" %in% names(x))]
+  msg <- setdiff(setdiff(names(info$parameters), names(parameters)),
+                 has_default)
   if (length(msg) > 0L) {
     stop("Missing parameters: ", pasteq(msg))
   }
-  extra <- setdiff(names(parameters), info$parameters)
+  extra <- setdiff(names(parameters), names(info$parameters))
   if (length(extra) > 0L) {
     stop("Extra parameters: ", pasteq(extra))
   }
+
+  use_default <- setdiff(has_default, names(parameters))
+  if (length(use_default) > 0L) {
+    parameters[use_default] <-
+      lapply(info$parameters[use_default], "[[", "default")
+  }
+
+  parameters
+}
+
+
+recipe_substitute <- function(info, parameters) {
   if (length(parameters) > 0L) {
     info$views <- sql_str_sub(info$views, parameters)
     info$data <- sql_str_sub(info$data, parameters)
     orderly_log("parameter", sprintf("%s: %s", names(parameters), parameters))
   }
-  info$hash_parameters <- digest::digest(parameters)
+
   info
 }
 
@@ -401,13 +417,16 @@ recipe_data <- function(config, info, parameters, dest) {
     stop("Invalid input for 'dest'")
   }
 
-  info <- recipe_substitute(info, parameters)
+  parameters <- recipe_parameters(info, parameters)
   if (!is.null(parameters)) {
     list2env(parameters, dest)
+    info <- recipe_substitute(info, parameters)
   }
 
+  ret <- list(dest = dest, parameters = parameters)
+
   if (length(info$data) == 0 && is.null(info$connection)) {
-    return(dest)
+    return(ret)
   }
 
   con <- orderly_db("source", config)
@@ -420,16 +439,20 @@ recipe_data <- function(config, info, parameters, dest) {
     DBI::dbExecute(con[[views[[v]]$database]], sql)
   }
 
+  data <- list()
   for (v in names(info$data)) {
     database <- info$data[[v]]$database
     query <- info$data[[v]]$query
     withCallingHandlers(
-      dest[[v]] <- DBI::dbGetQuery(con[[database]], query),
+      data[[v]] <- dest[[v]] <- DBI::dbGetQuery(con[[database]], query),
       error = function(e)
         orderly_log("data", sprintf("%s => %s: <error>", database, v)))
     orderly_log("data",
                 sprintf("%s => %s: %s x %s",
                         database, v, nrow(dest[[v]]), ncol(dest[[v]])))
+  }
+  if (length(data) > 0L) {
+    ret$data <- data
   }
 
   if (!is.null(info$connection)) {
@@ -441,7 +464,7 @@ recipe_data <- function(config, info, parameters, dest) {
                        names(config$database))]
   }
 
-  dest
+  ret
 }
 
 recipe_prepare_workdir <- function(info, message, config) {
@@ -582,11 +605,7 @@ orderly_environment <- function(envir) {
 
 
 orderly_prepare_data <- function(config, info, parameters, envir) {
-  ## Because the script (including the files in sources) might modify
-  ## the data we need to make sure that we grab a copy of it now (as a
-  ## list 'ldata') to pass back
-  data <- recipe_data(config, info, parameters, envir)
-  ldata <- as.list(data)[names(info$data)]
+  res <- recipe_data(config, info, parameters, envir)
 
   ## Compute the device stack size before starting work too
   n_dev <- length(grDevices::dev.list())
@@ -597,13 +616,14 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
     handle_missing_packages(missing_packages)
   }
 
-  ret <- list(data = ldata, n_dev = n_dev, n_sink = n_sink)
+  ret <- list(data = res$data, parameters = res$parameters,
+              n_dev = n_dev, n_sink = n_sink)
 
   if (!is.null(info$connection)) {
     ## NOTE: this is a copy of exported connections so that we can
     ## close them once the report finishes running.
     con <- list_to_character(info$connection)
-    ret$con <- lapply(names(con)[!duplicated(con)], function(nm) data[[nm]])
+    ret$con <- lapply(names(con)[!duplicated(con)], function(nm) res$data[[nm]])
   }
 
   for (p in info$packages) {
