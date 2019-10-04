@@ -175,11 +175,11 @@ test_that("git", {
 
 test_that("git_info non-cran", {
   path <- unzip_git_demo()
-  
+
   withr::with_options(
     list(orderly.nogit = TRUE),
     expect_null(git_info(path)))
-  
+
   res <- withr::with_options(
     list(orderly.nogit = FALSE),
     git_info(path))
