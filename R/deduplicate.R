@@ -18,7 +18,7 @@
 ##'
 ##' With "hard linking", two files with the same content can be
 ##' updated so that both files point at the same physical bit of data
-##' (see \href{https://en.wikipedia.org/wiki/Hard_link}{this wikipedia
+##' (see \href{https://en.wikipedia.org/wiki/Hard_link}{this Wikipedia
 ##' page for more information}).  This is great, as if the file is
 ##' large, then only one copy needs to be stored.  However, this means
 ##' that if a change is made to one copy of the file, it is
