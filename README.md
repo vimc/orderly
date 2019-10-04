@@ -42,7 +42,7 @@ The `orderly` package helps by
 * removing any manual work in tracking information about these external resources
 * allowing running reports multiple times and making it easy to see what changed and why
 
-The core problem is that analyses have no general _interface_.  Consider in contrast that role that functions take in programming.  All functions have a set of arguments (inputs) and a return value (outputs).  With `orderly`, we borrow this idea, and each piece of analysis will require that the user describes what is needed and what will be produced.
+The core problem is that analyses have no general _interface_.  Consider in contrast the role that functions take in programming.  All functions have a set of arguments (inputs) and a return value (outputs).  With `orderly`, we borrow this idea, and each piece of analysis will require that the user describes what is needed and what will be produced.
 
 ### The process
 
@@ -63,10 +63,12 @@ Then `orderly`:
 3. loads only the declared packages
 4. loads the declared R sources
 5. evaluates any sql queries to create R objects
-6. then runs then analysis
+6. then runs the analysis
 7. verifies that the declared artefacts are produced
 
 It then stores metadata alongside the analysis including [md5 hashes](https://en.wikipedia.org/wiki/Hash_function) of all inputs and outputs, copies of data extracted from the database, a record of all R packages loaded at the end of the session, and (if using git) information about the git state (hash, branch and status).
+
+Then if one of the dependencies of a report changes (the used data, code, etc), we have metadata that can be queried to identify the likely source of the change.
 
 
 ## Workflows with `orderly`
