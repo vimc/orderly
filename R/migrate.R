@@ -266,6 +266,7 @@ migrate_clean <- function(config, dry_run) {
               sprintf("%d backup files to delete (%s)", length(files), size))
   if (!dry_run) {
     file.remove(files)
+    orderly_log("clean", "...files deleted")
   }
   invisible()
 }
