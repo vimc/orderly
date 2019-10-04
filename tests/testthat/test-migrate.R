@@ -499,3 +499,28 @@ test_that("migrate => 0.7.15", {
   tab <- DBI::dbReadTable(con, "file_input_global")
   expect_equal(nrow(tab), 1)
 })
+
+
+test_that("clean up migrations", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
+  path <- unpack_reference("0.6.0")
+  files <- list.files(path, "^orderly_run_([0-9]+\\.){3}rds",
+                      recursive = TRUE, full.names = TRUE)
+  expect_true(length(files) == 0)
+  orderly_migrate(path, to = "0.7.15", clean = FALSE)
+  files <- list.files(path, "^orderly_run_([0-9]+\\.){3}rds",
+                      recursive = TRUE, full.names = TRUE)
+  expect_true(length(files) > 0)
+
+  orderly_migrate(path, to = "0.7.15", clean = TRUE, dry_run = TRUE)
+  expect_true(all(file.exists(files)))
+
+  orderly_migrate(path, to = "0.7.15", clean = TRUE)
+  expect_false(any(file.exists(files)))
+
+  files <- list.files(path, "^orderly_run_([0-9]+\\.){3}rds",
+                      recursive = TRUE, full.names = TRUE)
+  expect_equal(files, character(0))
+})
