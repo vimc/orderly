@@ -215,6 +215,8 @@ test_that("exit on no httr", {
 ## underlying data changes again, while the above tests with mock data
 ## will continue to work.
 test_that("slack payload is correct given actual run data", {
+  skip_on_cran()
+  skip_on_appveyor()
   path <- prepare_orderly_git_example()
   path1 <- path[["origin"]]
   id <- orderly_run("minimal", root = path1, echo = FALSE)

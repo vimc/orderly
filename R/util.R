@@ -275,6 +275,9 @@ git_info_call <- function(root, args) {
 }
 
 git_info <- function(root) {
+  if (isTRUE(getOption("orderly.nogit", FALSE))) {
+    return(NULL)
+  }
   sha <- git_info_call(root, c("rev-parse", "HEAD"))
   if (is.null(sha)) {
     return(NULL)

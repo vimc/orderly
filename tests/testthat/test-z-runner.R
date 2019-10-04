@@ -114,6 +114,7 @@ test_that("run: error", {
 
 test_that("run report with parameters", {
   testthat::skip_on_cran()
+  skip_on_windows()
   path <- prepare_orderly_example("demo")
   runner <- orderly_runner(path)
   pars <- '{"nmin":0.5}'
