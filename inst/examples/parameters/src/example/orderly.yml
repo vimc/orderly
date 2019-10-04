@@ -1,9 +1,10 @@
 data: ~
 script: script.R
 parameters:
-  - a
-  - b
-  - c
+  a: ~
+  b: ~
+  c:
+    default: 1
 artefacts:
   data:
     description: A graph of things
