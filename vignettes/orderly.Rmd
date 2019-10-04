@@ -103,7 +103,7 @@ The `orderly` package helps by
 * removing any manual work in tracking information about these external resources
 * allowing running reports multiple times and making it easy to see what changed and why
 
-The core problem is that analyses have no general _interface_.  Consider in contrast that role that functions take in programming.  All functions have a set of arguments (inputs) and a return value (outputs).  With `orderly`, we borrow this idea, and each piece of analysis will require that the user describes what is needed and what will be produced.
+The core problem is that analyses have no general _interface_.  Consider in contrast the role that functions take in programming.  All functions have a set of arguments (inputs) and a return value (outputs).  With `orderly`, we borrow this idea, and each piece of analysis will require that the user describes what is needed and what will be produced.
 
 ### The process
 
@@ -124,7 +124,7 @@ Then `orderly`:
 3. loads only the declared packages
 4. loads the declared R sources
 5. evaluates any sql queries to create R objects
-6. then runs then analysis
+6. then runs the analysis
 7. verifies that the declared artefacts are produced
 
 It then stores metadata alongside the analysis including [md5 hashes](https://en.wikipedia.org/wiki/Hash_function) of all inputs and outputs, copies of data extracted from the database, a record of all R packages loaded at the end of the session, and (if using git) information about the git state (hash, branch and status).
@@ -135,13 +135,13 @@ Then if one of the dependencies of a report changes (the used data, code, etc), 
 
 ## Example
 
-We start with a minimal example and will build it up to demonstrate orderly features. In the most minimal example, we want to run a script that creates a graph.  It uses no external resources.
+We start with a minimal example and will build it up to demonstrate `orderly` features. In the most minimal example, we want to run a script that creates a graph.  It uses no external resources.
 
 ``` {r results = "asis", echo = FALSE}
 plain_output(tree(path, "<root>"))
 ```
 
-In this example, the `orderly_config.yml` file is completely empty, but serves to mark the root of the orderly project.  We have one report, called `example`, and its configuration is within `orderly.yml`:
+In this example, the `orderly_config.yml` file is completely empty, but serves to mark the root of the `orderly` project.  We have one report, called `example`, and its configuration is within `orderly.yml`:
 
 ``` {r results = "asis", echo = FALSE}
 yaml_output(readLines(file.path(path_example, "orderly.yml")))
@@ -159,11 +159,11 @@ r_output(readLines(file.path(path_example, "script.R")))
 ```
 
 The R code can be as long or as short as needed and can use whatever packages it needs.  `orderly` does not do anything with the script apart from run it so
-it can be formatted however (there are no magic comments, etc).  There is no restrictions on what can be done except that it must produce the artefacts listed in `orderly.yml`.  If not, an error will be thrown describing what was missing.
+it can be formatted however (there are no magic comments, etc).  There are no restrictions on what can be done except that it must produce the artefacts listed in `orderly.yml`.  If not, an error will be thrown describing what was missing.
 
 ### Running the report
 
-To run the report, use `orderly::orderly_run` (typically one would be in the orderly root and so the `root` directory could be ommitted, but within this vignette we use a temporary directory):
+To run the report, use `orderly::orderly_run` (typically one would be in the `orderly` root and so the `root` directory could be omitted, but within this vignette we use a temporary directory):
 
 ```{r}
 id <- orderly::orderly_run("example", root = path)
@@ -201,9 +201,9 @@ Every time a report is run it will create a new directory at this
 level with a new id.  Running the report again now might create the
 directory ``r file.path("example", orderly:::new_report_id())``
 
-We store the copies of files as run by orderly so that even if the
+We store the copies of files as run by `orderly` so that even if the
 input files change we can still easily get back to previous
-versions of the inputs, along side the outputs, and these are safe
+versions of the inputs, alongside the outputs, and these are safe
 from any changes to the underlying source.
 
 You can see the list of draft reports like so:
@@ -224,7 +224,7 @@ After this step our directory structure looks like:
 plain_output(tree(path, "<root>"))
 ```
 
-Which looks very like the previous, but files have been moved from being within `draft` to being within `archive`.  The other difference is that the index `orderly.sqlite` has been created.  This is a machine-readable index to all the orderly metadata that can be used to build applications around orderly (for example [OrderlyWeb](https://github.com/vimc/orderly-web), a web portal for `orderly`).  The documentation for the database format is available on the [orderly website](https://vimc.github.io/orderly/schema).
+This looks very like the previous, but files have been moved from being within `draft` to being within `archive`.  The other difference is that the index `orderly.sqlite` has been created.  This is a machine-readable index to all the `orderly` metadata that can be used to build applications around `orderly` (for example [OrderlyWeb](https://github.com/vimc/orderly-web), a web portal for `orderly`).  The documentation for the database format is available on the [`orderly` website](https://vimc.github.io/orderly/schema).
 
 ## Developing a report
 
@@ -238,13 +238,13 @@ orderly::orderly_new("new", root = path)
 
 As a report becomes more complex, the function
 `orderly::orderly_test_start` will become useful; this function
-creates the isolated environment that orderly uses to run a report,
+creates the isolated environment that `orderly` uses to run a report,
 but then leaves you to interactively work with your report.
 
 ## Resources, sources and artefacts
 
 Resources to a report are expected to be read only files that are used
-by the script to produce the report. Examples of the sort files that
+by the script to produce the report. Examples of the sort of files that
 should be used as resources are:
 
  * Moderately sized data files (large datasets should be accessed from
@@ -252,11 +252,11 @@ should be used as resources are:
  * A markdown file used to create a report,
  * Documentation for the report.
 
-Resources can not be modified by the report; if orderly detects that a
+Resources cannot be modified by the report; if `orderly` detects that a
 resource has been changed an error will be returned.
 
-Orderly will automatically detect any files named README.md in a
-report's source directory and copy them across a resources.
+`orderly` will automatically detect any files named README.md in a
+report's source directory and copy them to the new directory too.
 
 ```yaml
 resources: 
@@ -269,11 +269,11 @@ resources:
 Sources are files containing R code that will be sourced (via the R
 function `source()`) before the main script is run. Often this file
 contains functions or variables used by the main script. All of the
-copying and sourcing will be handled by orderly itself so there is no
-need to explictly source the files in the main script.
+copying and sourcing will be handled by `orderly` itself so there is no
+need to explicitly source the files in the main script.
 
 Artefacts are the output of the report. At least one artefact must be
-listed and file created during the running of the script must be
+listed and files created during the running of the script must be
 included as artefacts (or deleted before the script finishes) or an
 error will be returned.
 
@@ -304,14 +304,13 @@ artefacts:
 When declaring an artefact we have to specify what format the artefact
 is. Currently supported formats are :`data`, `report`, `staticgraph`,
 `interactivegraph` and `interactivehtml`. These tags reflect the
-intent of use of the file, they have no special meaning within orderly
-itself.
+intent of use of the file, they have no special meaning within `orderly` itself.
 
 ## Using artefacts from other reports
 
 It is often the case that we would like to write a report that depends
 on an earlier report, _e.g._ one report produces a large dataset and a
-later report produces a high level summary. Orderly allows a report to
+later report produces a high level summary. `orderly` allows a report to
 directly copy an artefact file from and existing report without having
 to manually copy it into the report source directory. This is handled
 in `depends` block of the report's `orderly.yml`.
@@ -333,9 +332,9 @@ depends:
 This will copy the file the `huge-data-set.rds` from the report
 `big-data-report` with `id` `20190425-163691-b8451bbf` and rename it
 `data.rds`. This file can then be used by the report as if it were in
-the source directory. The field `draft` tells orderly to only use
+the source directory. The field `draft` tells `orderly` to only use
 completed reports in the archive as opposed to drafts. Setting this to
-true allows uncommited reports in `draft` to be used. This can be
+true allows uncommitted reports in `draft` to be used. This can be
 useful when developing a chain of related reports.
 
 If we want to a report to always use the latest version of a report we
@@ -412,7 +411,7 @@ always be included.
 
 ## Using global resources
 
-There might be files that are used in (almost) every report, examples
+There might be files that are used in (almost) every report.  Examples
 of these sorts of files might be document templates or organisation
 logos. To set up a global resource create a directory
 `your_global_dir` in `<root>` and the following to the
@@ -439,7 +438,7 @@ multiple report must be included in each report directory separately.
 The functionality to include global source code may be added in future
 versions.
 
-## Using SQL databases with orderly
+## Using SQL databases with `orderly`
 
 One of the original aims of `orderly` was to provide a set of tools for use of SQL databases within reproducible reporting.  Because the SQL database is an external global resource it is difficult to work with any concept of "versioning" from R (there is no git history, no way of easily rolling back to previous versions etc).  If using a central SQL server, there is configuration that should be kept *out* of any analysis, particularly things like passwords.  Configuration problems multiply when using both "production" and "staging" systems as we would like to be able to switch between different configurations.
 
@@ -482,7 +481,7 @@ data:
 
 In this case, the query `SELECT * FROM mtcars WHERE cyl = 4` will be run against the `source` database to create an object `cars` in the report environment.  The actual report code can use that object without having ever created the database connection or evaluating the query.
 
-Further, the data used in the query will be captured in orderly's `data` directory, and hashes of the data will be stored alongside the results.  This means that even if the data in the database is a constantly moving target we can still detect if changes to the data are resposible for changes in the result of a report.
+Further, the data used in the query will be captured in `orderly`'s `data` directory, and hashes of the data will be stored alongside the results.  This means that even if the data in the database is a constantly moving target we can still detect if changes to the data are responsible for changes in the result of a report.
 
 ### Advanced use
 
