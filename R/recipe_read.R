@@ -449,7 +449,7 @@ recipe_read_check_parameters <- function(parameters, filename) {
   }
 
   name <- function(p) {
-    sprintf("%s:parameters:%s", p)
+    sprintf("%s:parameters:%s", filename, p)
   }
 
   assert_named(parameters, TRUE, sprintf("%s:parameters", filename))
