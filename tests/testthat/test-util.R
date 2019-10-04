@@ -161,6 +161,15 @@ test_that("git", {
   info <- git_info(path)
   expect_true(all(c("sha_short", "sha", "branch", "status") %in% names(info)))
 
+  nogit <- (Sys.getenv("NOT_CRAN") != "true")
+  options(orderly.nogit = TRUE)
+  not_cran <- git_info(NULL)
+  options(orderly.nogit = FALSE)
+  cran <- git_info(NULL)
+  options(orderly.nogit = nogit)
+  expect_equal(not_cran, cran)
+  expect_null(cran)
+
   expect_equal(info$branch, "master")
   expect_null(info$status)
   expect_match(info$sha_short, "^[[:xdigit:]]{7}$")

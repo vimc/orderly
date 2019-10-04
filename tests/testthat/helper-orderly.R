@@ -130,3 +130,7 @@ new_counter <- function() {
     e$x
   }
 }
+
+if (Sys.getenv("NOT_CRAN") != "true") {
+  options(orderly.nogit = TRUE)
+}
