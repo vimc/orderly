@@ -2,7 +2,7 @@ data:
   extract:
     query: SELECT name, number FROM thing WHERE number > ?nmin
 parameters:
-  nmin
+  nmin: ~
 script: script.R
 artefacts:
   - data:
