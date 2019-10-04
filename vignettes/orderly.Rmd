@@ -458,7 +458,7 @@ database:
       dbname: mydb
 ```
 
-This database will be refered to elsewhere as `source` and it will be connected with the `RPostgres::Postgres` driver (from the [RPostgres](https://cran.r-project.org/package=RPostgres) package).  Arguments within the `args` block will be passed to the driver, in this case being the equivalent of:
+This database will be referred to elsewhere as `source` and it will be connected with the `RPostgres::Postgres` driver (from the [RPostgres](https://cran.r-project.org/package=RPostgres) package).  Arguments within the `args` block will be passed to the driver, in this case being the equivalent of:
 
 ```r
 DBI::dbConnect(RPostgres::Postgres, host = "dbhost.example.org", port = 5432,
