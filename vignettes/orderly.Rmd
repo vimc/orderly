@@ -566,6 +566,62 @@ multiple report must be included in each report directory separately.
 The functionality to include global source code may be added in future
 versions.
 
+## Using SQL databases with orderly
+
+One of the original aims of `orderly` was to provide a set of tools for use of SQL databases within reproducible reporting.  Because the SQL database is an external global resource it is difficult to work with any concept of "versioning" from R (there is no git history, no way of easily rolling back to previous versions etc).  If using a central SQL server, there is configuration that should be kept *out* of any analysis, particularly things like passwords.  Configuration problems multiply when using both "production" and "staging" systems as we would like to be able to switch between different configurations.
+
+### Configuration
+
+The root `orderly_config.yml` configuration specifies the locations of databases (there can be any number), for example:
+
+```yaml
+database:
+  source:
+    driver: RPostgres::Postgres
+    args:
+      host: dbhost.example.org
+      port: 5432
+      user: myusername
+      password: s3cret
+      dbname: mydb
+```
+
+This database will be refered to elsewhere as `source` and it will be connected with the `RPostgres::Postgres` driver (from the [RPostgres](https://cran.r-project.org/package=RPostgres) package).  Arguments within the `args` block will be passed to the driver, in this case being the equivalent of:
+
+```r
+DBI::dbConnect(RPostgres::Postgres, host = "dbhost.example.org", port = 5432,
+               user = "myusername", password = "s3cret", dbname = "mydb")
+```
+
+The values used in the `args` blocks can be environment values (e.g., `password: $DB_PASSWORD`) in which case they will be resolved from the environment before connecting.  This will be useful for keeping secrets out of source control.
+
+For [SQLite](https://cran.r-project.org/package=RSQLite) databases, the `args` block will typically contain only `dbname` which is the path to the database file.
+
+### Use within a report
+
+Within a report configuration (`orderly.yml`) can contain a `data` block, which contains sql queries, such as:
+
+```yaml
+data:
+  cars:
+    query: SELECT * FROM mtcars WHERE cyl = 4
+```
+
+In this case, the query `SELECT * FROM mtcars WHERE cyl = 4` will be run against the `source` database to create an object `cars` in the report environment.  The actual report code can use that object without having ever created the database connection or evaluating the query.
+
+Further, the data used in the query will be captured in orderly's `data` directory, and hashes of the data will be stored alongside the results.  This means that even if the data in the database is a constantly moving target we can still detect if changes to the data are resposible for changes in the result of a report.
+
+### Advanced use
+
+If you need to perform complicated SQL queries, then you can export the database connection directly by adding a block:
+
+```yaml
+connection:
+  con: source
+```
+
+which will save the connection to the `source` database as the R object `con`.  We have used this where a report requires running queries in a loop that depend on the results of a previous query or additional data loaded into a report, or where the result of the query will be very large and we do not want to save it to disk.
+
 ## Customising the configuration
 
 The contents of `orderly_config.yml` may contain things like secrets
