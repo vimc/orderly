@@ -226,6 +226,7 @@ test_that("migrate", {
   res <- cli_args_process(args)
   expect_equal(res$command, "migrate")
   expect_false(res$options$dry_run)
+  expect_false(res$options$clean)
   expect_null(res$options$to)
   expect_identical(res$target, main_do_migrate)
 
@@ -237,10 +238,11 @@ test_that("migrate", {
 
 test_that("migrate: args", {
   path <- prepare_orderly_example("minimal")
-  args <- c("--root", path, "migrate", "--to", "0.3.3", "--dry-run")
+  args <- c("--root", path, "migrate", "--to", "0.3.3", "--dry-run", "--clean")
   res <- cli_args_process(args)
   expect_equal(res$command, "migrate")
   expect_true(res$options$dry_run)
+  expect_true(res$options$clean)
   expect_equal(res$options$to, "0.3.3")
   expect_identical(res$target, main_do_migrate)
 })

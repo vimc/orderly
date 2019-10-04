@@ -1,3 +1,7 @@
+# 0.7.16
+
+* `orderly_migrate` can now clean up old migration backup files.  These should generally be quite safe to delete, but it would be better to do this directly from orderly (VIMC-3157)
+
 # 0.7.15
 
 * Global resources can now be renamed on copy, allowing use of subdirectories to structure them.  Using global resources as a set of strings is now deprecated (VIMC-2961).

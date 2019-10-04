@@ -269,14 +269,16 @@ usage_migrate <- "Usage:
 
 Options:
   --to=VERSION  Version to migrate to
-  --dry-run     Test run the migration only"
+  --dry-run     Test run the migration only
+  --clean       Clean migration backup files"
 
 
 main_do_migrate <- function(x) {
   root <- x$options$root
   dry_run <- x$options$dry_run
   to <- x$options$to
-  orderly_migrate(root, to = to, dry_run = dry_run)
+  clean <- x$options$clean
+  orderly_migrate(root, to = to, dry_run = dry_run, clean = clean)
 }
 
 
