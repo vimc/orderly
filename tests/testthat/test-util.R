@@ -173,6 +173,22 @@ test_that("git", {
                info[c("sha_short", "sha", "branch")])
 })
 
+test_that("git_info non-cran", {
+  skip_on_cran()
+  skip_if_no_git()
+
+  path <- unzip_git_demo()
+
+  withr::with_options(
+    list(orderly.nogit = TRUE),
+    expect_null(git_info(path)))
+
+  res <- withr::with_options(
+    list(orderly.nogit = FALSE),
+    git_info(path))
+  expect_is(res, "list")
+  expect_is(res$branch, "character")
+})
 
 test_that("git_clean_url", {
   expect_null(git_clean_url(NULL))
