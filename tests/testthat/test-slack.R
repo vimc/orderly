@@ -10,10 +10,10 @@ test_that("slack payload is correct", {
                           id = "20181213-123456-fedcba98",
                           name = "example"),
               git = NULL)
-  d <- slack_data(dat, server_name, server_url, server_is_primary)
-
   report_url <- sprintf("%s/reports/%s/%s/", server_url,
                         dat$meta$name, dat$meta$id)
+  d <- slack_data(dat, server_name, report_url, server_is_primary)
+
   expect_equal(
     d,
     list(
