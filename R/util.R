@@ -212,7 +212,9 @@ last <- function(x) {
 
 orderly_env <- function() {
   env <- Sys.getenv()
-  as.list(env[grepl("^ORDERLY_", names(env))])
+  nms <- names(env)
+  i <- grepl("^ORDERLY_", nms) & !grepl("(TOKEN|PAT|PASS)", nms)
+  as.list(env[i])
 }
 
 session_info <- function(path = ".") {
