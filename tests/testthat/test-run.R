@@ -8,7 +8,7 @@ test_that("minimal", {
   config <- orderly_config(path)
   info <- recipe_read(file.path(path, "src/example"), config)
   data <- recipe_data(config, info, NULL, new.env(parent = .GlobalEnv))
-  expect_is(data$dat, "data.frame")
+  expect_is(data$dest$dat, "data.frame")
 
   expect_error(
     recipe_data(config, info, list(a = 1), new.env(parent = .GlobalEnv)),

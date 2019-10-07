@@ -3,8 +3,8 @@ data:
     query: SELECT name, number FROM thing
 script: script.R
 parameters:
-  - time
-  - poll
+  time: ~
+  poll: ~
 artefacts:
   staticgraph:
     description: A graph of things

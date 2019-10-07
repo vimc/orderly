@@ -63,8 +63,15 @@ artefacts: ~
 # description:
 
 # Optional parameters to the report.  These will be substituted into
-# the SQL queries.  This interface might change at some point.  Must
-# be a string or array of strings.
+# the SQL queries.  For example:
+#
+# parameters:
+#   a:
+#     default: 1
+#   b: ~
+#
+# would declare a parameter called 'a' with a default value of 1, and
+# a parameter of b with no default.
 #
 # parameters:
 

@@ -1,3 +1,7 @@
+# 0.8.1
+
+* Parameters now accept defaults in `orderly.yml`, and the format has altered slightly (VIMC-2413, #8).
+
 # 0.8.0
 
 * Deprecated functions `pull_archive`, `pull_dependencies`, `set_default_remote` have been removed (VIMC-2946, deprecated in VIMC-2944 / 0.7.2).

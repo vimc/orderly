@@ -409,6 +409,36 @@ versions of the same report. Since including the dashes will never
 cause a problem but omitting them might, we advise that they should
 always be included.
 
+## Parameterised reports
+
+Sometimes it can be useful to control how a report runs by a parameter.  This could be the name of a country that an analysis applies to (though we hope to develop a better interface for this soon) through to controlling the number of iterations that an analysis runs for.  Parameters are declared in the `orderly.yml` like:
+
+```yaml
+parameters:
+  a:
+    default: 1
+  b: ~
+```
+
+This would declare that a report takes two parameters `a` (with a default of 1), and `b` (with no default).  Running the report would then look like:
+
+```r
+orderly::orderly_run("reportname", list(a = 10, b = 100))
+```
+
+These parameters are then present in the environment of the report, so the code can use values `a` and `b`.
+
+The parameters will also be interpolated into any SQL queries before they are run, so if the `orderly.yml` contains:
+
+```yaml
+data:
+  cars:
+    query: SELECT * FROM mtcars WHERE cyl > ?a
+```
+
+then this will be evaluated on the SQL server with `a` substituted in where the query says `?a` (this is done with `DBI::sqlInterpolate`).
+
+
 ## Using global resources
 
 There might be files that are used in (almost) every report.  Examples

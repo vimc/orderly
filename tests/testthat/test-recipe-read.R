@@ -426,3 +426,43 @@ test_that("old style global resources deprecated", {
     res$global_resources,
     c(data.csv = "data.csv"))
 })
+
+
+test_that("read parameters", {
+  path <- prepare_orderly_example("parameters")
+  path_example <- file.path(path, "src", "example")
+  info <- recipe_read(path_example, orderly_config(path))
+  expect_equal(info$parameters,
+               list(a = NULL, b = NULL, c = list(default = 1)))
+})
+
+
+test_that("read old-style parameters", {
+  path <- prepare_orderly_example("parameters")
+  path_example <- file.path(path, "src", "example")
+  path_orderly <- file.path(path_example, "orderly.yml")
+  dat <- yaml_read(path_orderly)
+  dat$parameters <- list("a", "b", "c")
+  yaml_write(dat, path_orderly)
+  expect_warning(
+    info <- recipe_read(path_example, orderly_config(path)),
+    "Use of strings for parameters: is deprecated")
+  expect_equal(info$parameters,
+               list(a = NULL, b = NULL, c = NULL))
+})
+
+
+test_that("validate parameters", {
+  path <- prepare_orderly_example("parameters")
+  path_example <- file.path(path, "src", "example")
+  path_orderly <- file.path(path_example, "orderly.yml")
+  config <- orderly_config(path)
+
+  dat <- yaml_read(path_orderly)
+  dat$parameters <- list(a = list(something = 1))
+  yaml_write(dat, path_orderly)
+
+  expect_error(
+    recipe_read(path_example, config),
+    "Unknown fields in .*orderly.yml:parameters:a: something")
+})
