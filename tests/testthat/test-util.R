@@ -146,7 +146,6 @@ test_that("which_max_time", {
 test_that("git", {
   skip_if_no_git()
   skip_on_appveyor() # needs some git work
-  testthat::skip_on_cran()
 
   path <- tempfile()
   code <- system2("git", c("init", path), stdout = FALSE, stderr = FALSE)
@@ -175,7 +174,6 @@ test_that("git", {
 })
 
 test_that("git_info non-cran", {
-  skip_on_cran()
   skip_if_no_git()
 
   path <- unzip_git_demo()
