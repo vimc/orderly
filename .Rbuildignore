@@ -16,3 +16,4 @@
 ^man-roxygen$
 ^reference$
 ^README\.md\.in$
+^orderly_.*\.tar\.gz$

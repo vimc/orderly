@@ -588,3 +588,27 @@ test_that("pretty_bytes", {
   expect_equal(pretty_bytes(12345678901), "12.35 GB")
   expect_equal(pretty_bytes(123456789012), "123.46 GB")
 })
+
+
+test_that("orderly_env picks up ORDERLY variables", {
+  env <- c("ORDERLY_A" = "a", "ORDERLY_B" = "b")
+  v <- withr::with_envvar(
+    env,
+    orderly_env())
+  expect_true(all(names(env) %in% names(v)))
+  expect_equal(v[names(env)], as.list(env))
+})
+
+
+test_that("orderly_env excludes sensitive data", {
+  env1 <- c("ORDERLY_SERVER_PASSWORD" = "passw0rd",
+           "ORDERLY_SERVER_TOKEN" = "secr7et",
+           "ORDERLY_GITHUB_PAT" = "pat")
+  env2 <- c("ORDERLY_A" = "a", "ORDERLY_B" = "b")
+  v <- withr::with_envvar(
+    c(env1, env2),
+    orderly_env())
+  expect_false(any(names(env1) %in% names(v)))
+  expect_true(all(names(env2) %in% names(v)))
+  expect_equal(v[names(env2)], as.list(env2))
+})
