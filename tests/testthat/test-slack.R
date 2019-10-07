@@ -135,19 +135,29 @@ test_that("sending messages is not a failure", {
 
 test_that("main interface", {
   skip_if_no_internet()
-  dat <- list(meta = list(elapsed = 10,
-                          id = "20181213-123456-fedcba98",
-                          name = "example"),
+  skip_if_not_installed("jsonlite")
+
+  path <- prepare_orderly_example("minimal")
+  id <- "20181213-123456-fedcba98"
+  name <- "example"
+  dat <- list(meta = list(elapsed = 10, id = id, name = name),
               git = NULL)
+
   config <- list(remote_identity = "myserver",
                  remote = list(
                    myserver = list(
+                     driver = c("orderly", "orderly_remote_path"),
+                     args = list(path = path),
                      slack_url = "https://httpbin.org/post",
                      name = "myserver",
                      primary = FALSE,
                      url = "https://example.com")))
   r <- slack_post_success(dat, config)
+
   expect_equal(r$status_code, 200L)
+  res <- jsonlite::fromJSON(httr::content(r)$data, FALSE)
+  expect_equal(res$attachments[[1]]$actions[[1]]$url,
+               orderly_remote_path(path)$url_report(name, id))
 })
 
 
