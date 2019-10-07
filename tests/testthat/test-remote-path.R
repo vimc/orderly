@@ -157,3 +157,11 @@ test_that("pull report with dependencies", {
   on.exit(DBI::dbDisconnect(con))
   expect_setequal(d$id, DBI::dbReadTable(con, "report_version")$id)
 })
+
+
+test_that("remote_path implements url_report", {
+  path <- prepare_orderly_example("minimal")
+  remote <- orderly_remote_path(path)
+  expect_equal(remote$url_report("name", "id"),
+               file.path(path, "name", "id", fsep = "/"))
+})
