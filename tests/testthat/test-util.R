@@ -174,7 +174,6 @@ test_that("git", {
 })
 
 test_that("git_info non-cran", {
-  skip_on_cran()
   skip_if_no_git()
 
   path <- unzip_git_demo()

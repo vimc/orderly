@@ -5,6 +5,7 @@ with_wd <- function(path, code) {
 }
 
 skip_if_no_git <- function() {
+  testthat::skip_on_cran()
   if (nzchar(Sys.which("git"))) {
     return()
   }
