@@ -1,8 +1,6 @@
 # orderly
 
-[![Project Status: Active – The project has reached a stable, usable state and i
-s being actively developed.](https://www.repostatus.org/badges/latest/active.svg
-)](https://www.repostatus.org/#active)
+[![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Build Status](https://travis-ci.org/vimc/orderly.svg?branch=master)](https://travis-ci.org/vimc/orderly)
 [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/vimc/orderly?branch=master&svg=true)](https://ci.appveyor.com/project/richfitz/orderly)
 [![codecov.io](https://codecov.io/github/vimc/orderly/coverage.svg?branch=master)](https://codecov.io/github/vimc/orderly?branch=master)
