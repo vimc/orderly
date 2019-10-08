@@ -17,7 +17,9 @@ Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
              person("Martin", "Eden", role = "aut"),
              person("Wes", "Hinsley", role = "aut"),
              person("Emma", "Russell", role = "aut"),
-             person("James", "Thompson", role = "aut"))
+             person("James", "Thompson", role = "aut"),
+             person("Imperial College of Science, Technology and Medicine",
+                    role = "cph"))
 URL: https://github.com/vimc/orderly
 BugReports: https://github.com/vimc/orderly/issues
 SystemRequirements: git
