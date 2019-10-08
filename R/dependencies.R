@@ -51,18 +51,19 @@ get_dependencies_db <- function(name, id = NULL, root = NULL, upstream = FALSE,
                          "depends.use = file_artefact.id)",
                          "WHERE", filt_qry), collapse = " ")
 
-  print("                                                                     ")
+##  print("                                                                     ")
 
   db_art_ret <- DBI::dbGetQuery(con, sql_art_qry)
 
-  print(db_ret)
-  print(db_art_ret)
+##  print(db_ret)
+##  print(db_art_ret)
 
   if (nrow(db_ret) == 0) {
     return(NULL)
   }
 
-  db_ret$out_of_date <- sapply(db_ret$report_version, is_latest_in_db, con = con)
+  db_ret$out_of_date <- sapply(db_ret$report_version,
+                               is_latest_in_db, con = con)
   if (use_latest) {
     db_ret <- db_ret[which(db_ret$out_of_date), ]
   }
@@ -190,10 +191,10 @@ build_tree <- function(name, id = "latest", depth = 0, parent = NULL,
 
   ## if this is no tree, create a tree
   if (is.null(tree)) {
-    v <- Vertex$new(NULL, name, id, (id == latest_id$id))
+    v <- Vertex$new(NULL, name, id, (id != latest_id$id))
     tree <- Tree$new(v)
   } else {
-    v <- tree$add_child(parent, name, id, (id == latest_id$id))
+    v <- tree$add_child(parent, name, id, (id != latest_id$id))
   }
 
   dep_ids <- get_dependencies_db(name = name, id = id,
@@ -321,7 +322,7 @@ Tree <- R6::R6Class("Tree", list(
   },
   # this is stupidly hacky to get the formatting right
   print_tree = function(vertex = self$root, fvector = c()) {
-    console_colour <- if (vertex$out_of_date) {crayon::blue} else {crayon::red}
+    console_colour <- if (vertex$out_of_date) {crayon::red} else {crayon::blue}
 
     if (length(fvector) == 0) {
       message(console_colour(sprintf("%s", vertex$to_string())))
