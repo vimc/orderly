@@ -65,6 +65,6 @@ R6_orderly_remote_path <- R6::R6Class(
     },
 
     url_report = function(name, id) {
-      file.path(self$config$root, name, id, fsep ="/")
+      file.path(self$config$root, name, id, fsep = "/")
     }
   ))
