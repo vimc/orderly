@@ -29,41 +29,8 @@ unlink(file.path(path, "data"), recursive = TRUE)
 unlink(file.path(path, "README.md"))
 unlink(file.path(path, "src", "README.md"))
 
-tree <- function(path, header = path) {
-  paste1 <- function(a, b) {
-    paste(rep_len(a, length(b)), b)
-  }
-  indent <- function(x, files) {
-    paste0(if (files) "| " else "  ", x)
-  }
-  is_directory <- function(x) {
-    unname(file.info(x)[, "isdir"])
-  }
-  sort_files <- function(x) {
-    i <- grepl("^[A-Z]", x)
-    c(x[i], x[!i])
-  }
-  prefix_file <- "|--="
-  prefix_dir  <- "|-+="
-
-  files <- sort_files(dir(path))
-  files_full <- file.path(path, files)
-  isdir <- is_directory(files_full)
-
-  ret <- as.list(c(paste1(prefix_dir, files[isdir]),
-                   paste1(prefix_file, files[!isdir])))
-  files_full <- c(files_full[isdir], files_full[!isdir])
-  isdir <- c(isdir[isdir], isdir[!isdir])
-
-  n <- length(ret)
-  if (n > 0) {
-    ret[[n]] <- sub("|", "\\", ret[[n]], fixed = TRUE)
-    tmp <- lapply(which(isdir), function(i)
-      c(ret[[i]], indent(tree(files_full[[i]], NULL), !all(isdir))))
-    ret[isdir] <- tmp
-  }
-
-  c(header, unlist(ret))
+dir_tree <- function(path) {
+  withr::with_dir(path, fs::dir_tree("."))
 }
 ```
 
@@ -137,8 +104,8 @@ Then if one of the dependencies of a report changes (the used data, code, etc), 
 
 We start with a minimal example and will build it up to demonstrate `orderly` features. In the most minimal example, we want to run a script that creates a graph.  It uses no external resources.
 
-``` {r results = "asis", echo = FALSE}
-plain_output(tree(path, "<root>"))
+``` {r comment = NA, echo = FALSE}
+dir_tree(path)
 ```
 
 In this example, the `orderly_config.yml` file is completely empty, but serves to mark the root of the `orderly` project.  We have one report, called `example`, and its configuration is within `orderly.yml`:
@@ -181,8 +148,8 @@ id
 
 Having run the report, the directory layout now looks like:
 
-``` {r results = "asis", echo = FALSE}
-plain_output(tree(path, "<root>"))
+``` {r comment = NA, echo = FALSE}
+dir_tree(path)
 ```
 
 Within `drafts`, the directory ``r file.path("example", id)`` has been
@@ -220,8 +187,8 @@ orderly::orderly_commit(id, root = path)
 
 After this step our directory structure looks like:
 
-``` {r results = "asis", echo = FALSE}
-plain_output(tree(path, "<root>"))
+``` {r comment = NA, echo = FALSE}
+dir_tree(path)
 ```
 
 This looks very like the previous, but files have been moved from being within `draft` to being within `archive`.  The other difference is that the index `orderly.sqlite` has been created.  This is a machine-readable index to all the `orderly` metadata that can be used to build applications around `orderly` (for example [OrderlyWeb](https://github.com/vimc/orderly-web), a web portal for `orderly`).  The documentation for the database format is available on the [`orderly` website](https://vimc.github.io/orderly/schema).
