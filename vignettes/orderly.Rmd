@@ -524,7 +524,7 @@ connection:
 
 which will save the connection to the `source` database as the R object `con`.  We have used this where a report requires running queries in a loop that depend on the results of a previous query or additional data loaded into a report, or where the result of the query will be very large and we do not want to save it to disk.
 
-## Customising the configuration
+### Customising the database configuration
 
 The contents of `orderly_config.yml` may contain things like secrets
 (passwords) or hostnames that vary depending on deployment (e.g.,
@@ -536,11 +536,12 @@ rather than writing
 database:
   source:
     driver: RPostgres::Postgres
-    host: localhost
-    port: 5432
-    user: myuser
-    dbname: databasename
-    password: p4ssw0rd
+    args:
+      host: localhost
+      port: 5432
+      user: myuser
+      dbname: databasename
+      password: p4ssw0rd
 ```
 
 you might write
@@ -549,11 +550,12 @@ you might write
 database:
   source:
     driver: RPostgres::Postgres
-    host: $MY_DBHOST
-    port: $MY_DBPORT
-    user: $MY_DBUSER
-    dbname: $MY_DBNAME
-    password: $MY_PASSWORD
+    args:
+      host: $MY_DBHOST
+      port: $MY_DBPORT
+      user: $MY_DBUSER
+      dbname: $MY_DBNAME
+      password: $MY_PASSWORD
 ```
 
 environment variables, as used this way **must** begin with a
@@ -573,24 +575,30 @@ MY_PASSWORD: p4ssw0rd
 ```
 
 This will be read every time that `orderly_config.yml` is read (in
-contrast with .Renviron which is read only at the start of a
+contrast with `.Renviron` which is read only at the start of a
 session).  This will likely be more pleasant to work with.
 
 The advantage of using environment variables is that you can add
 the `orderly_envir.yml` file to your `.gitignore` and avoid
 committing system-dependent data to the central repository.
 
-To avoid leaving passwords in plain text, you can use `vault` to
-retrieve them.  To do this, set the value of the field to
-`VAULT:<path>:<field>`, where `<path>` is the name of a vault
-secret path (probably beginning with `/secret/` and `field` is the
-name of the field at that path.  So, for example:
+To avoid leaving passwords in plain text, you can use [`vault`](https://www.vaultproject.io) (along with the R client [`vaultr`](https://cran.r-project.org/package=vaultr)) to
+retrieve them.
 
+To do this, you should include the address if your vault server in the `orderly_config.yml` as
+
+```yaml
+vault_server: https://example.com:8200
 ```
-password: VAULT:/secret/users/database_user:password
+
+Then, for values that you want to retrieve from the vault, set the value of the field to `VAULT:<path>:<field>`, where `<path>` is the name of a vault
+secret path (probably beginning with `/secret/` and `field` is the name of the field at that path.  So, for example:
+
+```yaml
+      password: VAULT:/secret/users/database_user:password
 ```
 
 would look up the field `password` at the path
 `/secret/users/database_user`.  This can be stored in
 `orderly_config.yml`, in the contents of an environment variable or
-in `orderly_envir.yml`.
+in `orderly_envir.yml` (currently this only uses the vault [version 1 key-value storage](https://www.vaultproject.io/docs/secrets/kv/kv-v1.html))
