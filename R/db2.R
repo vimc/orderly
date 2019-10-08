@@ -299,8 +299,6 @@ report_data_import <- function(con, name, id, config) {
     if (length(msg)) {
       i <- data$hash %in% msg & !duplicated(data$hash)
       cols <- c("hash", "size_csv", "size_rds")
-      # missing_values <- which(is.na(data$size_csv))
-      # data[missing_values, c("size_csv", "size_rds")] <- NA
       DBI::dbWriteTable(con, "data", data[i, cols], append = TRUE)
     }
 
