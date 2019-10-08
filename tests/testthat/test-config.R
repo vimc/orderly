@@ -258,3 +258,23 @@ test_that("warn when reading old-style db config", {
     list(orderly.nowarnings = TRUE),
     expect_warning(orderly_config(path), NA))
 })
+
+
+test_that("warn when using url in remote definition", {
+  path <- prepare_orderly_example("minimal")
+  append_lines(c(
+    "remote:",
+    "  testing:",
+    "    driver: orderly::orderly_remote_path",
+    "    url: https://example.com",
+    "    args:",
+    sprintf("      path: %s", path),
+    "    slack_url: https://httpbin.org/post"),
+    file.path(path, "orderly_config.yml"))
+  expect_warning(
+    orderly_config(path),
+    "deprecated and will be dropped")
+  withr::with_options(
+    list(orderly.nowarnings = TRUE),
+    expect_warning(orderly_config(path), NA))
+})
