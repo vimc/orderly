@@ -2,16 +2,21 @@
 slack_post_success <- function(dat, config) {
   if (!is.null(config$remote_identity)) {
     remote <- config$remote[[config$remote_identity]]
+
     slack_url <- resolve_secrets(remote$slack_url, config)[[1L]]
+
+    driver <- get_remote(config$remote_identity, config)
+    report_url <- driver$url_report(dat$meta$name, dat$meta$id)
+
     if (!is.null(slack_url)) {
-      data <- slack_data(dat, remote$name, remote$url, remote$primary)
+      data <- slack_data(dat, remote$name, report_url, remote$primary)
       do_slack_post_success(slack_url, data)
     }
   }
 }
 
 
-slack_data <- function(dat, remote_name, remote_url, remote_is_primary) {
+slack_data <- function(dat, remote_name, report_url, remote_is_primary) {
   id <- dat$meta$id
   name <- dat$meta$name
   elapsed <- format(as.difftime(dat$meta$elapsed, units = "secs"), digits = 2)
@@ -29,7 +34,6 @@ slack_data <- function(dat, remote_name, remote_url, remote_is_primary) {
     git <- sprintf("%s@%s", branch, sha)
   }
 
-  report_url <- sprintf("%s/reports/%s/%s/", remote_url, name, id)
   title <- sprintf("Ran report '%s'", name)
   text <- sprintf("on server *%s* in %s", remote_name, elapsed)
   fallback <- sprintf("Ran '%s' as '%s'; view at %s", name, id, report_url)

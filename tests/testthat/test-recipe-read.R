@@ -375,3 +375,94 @@ test_that("sources and resources are exclusive", {
     recipe_read(file.path(path, "src", "other"), config),
     "Do not list source files \\(sources\\) as resources:\\s+- functions\\.R")
 })
+
+
+test_that("trailing slash on resource directory", {
+  path <- prepare_orderly_example("demo")
+  ## in report directory create a file called README.md
+  report_path <- file.path(path, "src", "use_resource")
+  #rewrite yml to include extra readme file
+  yml_path <- file.path(report_path, "orderly.yml")
+  yml <- c("data:",
+           "  dat:",
+           "    query: SELECT name, number FROM thing",
+           "script: script.R",
+           "resources:",
+           "  - meta/",
+           "artefacts:",
+           "  staticgraph:",
+           "    description: A graph of things",
+           "    filenames: mygraph.png",
+           "author: Dr Serious",
+           "requester: ACME"
+           )
+  writeLines(yml, file.path(yml_path))
+  id <- orderly_run("use_resource", root = path, echo = FALSE)
+  p <- file.path(path, "draft", "use_resource", id)
+
+  # make sure the directory has been copied across
+  expect_true(file.exists(file.path(p, "meta")))
+  orderly_commit(id, root = path)
+  con <- orderly_db("destination", root = path)
+  on.exit(DBI::dbDisconnect(con))
+  dat <- DBI::dbReadTable(con, "file_input")
+  # make sure the resource filename does not contain a double slash //
+  expect_true("meta/data.csv" %in% dat$filename)
+})
+
+
+test_that("old style global resources deprecated", {
+  path <- prepare_orderly_example("global")
+  path_example <- file.path(path, "src", "example")
+  path_yaml <- file.path(path_example, "orderly.yml")
+  config_lines <- readLines(path_yaml)
+  config_lines[[11]] <- "  data.csv"
+  writeLines(config_lines, path_yaml)
+
+  expect_warning(
+    res <- recipe_read(path_example, orderly_config(path)),
+    "Use of strings for global_resources: is deprecated")
+  expect_equal(
+    res$global_resources,
+    c(data.csv = "data.csv"))
+})
+
+
+test_that("read parameters", {
+  path <- prepare_orderly_example("parameters")
+  path_example <- file.path(path, "src", "example")
+  info <- recipe_read(path_example, orderly_config(path))
+  expect_equal(info$parameters,
+               list(a = NULL, b = NULL, c = list(default = 1)))
+})
+
+
+test_that("read old-style parameters", {
+  path <- prepare_orderly_example("parameters")
+  path_example <- file.path(path, "src", "example")
+  path_orderly <- file.path(path_example, "orderly.yml")
+  dat <- yaml_read(path_orderly)
+  dat$parameters <- list("a", "b", "c")
+  yaml_write(dat, path_orderly)
+  expect_warning(
+    info <- recipe_read(path_example, orderly_config(path)),
+    "Use of strings for parameters: is deprecated")
+  expect_equal(info$parameters,
+               list(a = NULL, b = NULL, c = NULL))
+})
+
+
+test_that("validate parameters", {
+  path <- prepare_orderly_example("parameters")
+  path_example <- file.path(path, "src", "example")
+  path_orderly <- file.path(path_example, "orderly.yml")
+  config <- orderly_config(path)
+
+  dat <- yaml_read(path_orderly)
+  dat$parameters <- list(a = list(something = 1))
+  yaml_write(dat, path_orderly)
+
+  expect_error(
+    recipe_read(path_example, config),
+    "Unknown fields in .*orderly.yml:parameters:a: something")
+})

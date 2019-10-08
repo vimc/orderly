@@ -47,10 +47,9 @@ test_that("failed migrations are rolled back", {
   path <- unpack_reference("0.3.2")
   hash <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
 
-  counter <- 0L
+  counter <- new_counter()
   fun <- function(data, path, config) {
-    counter <<- counter + 1L
-    if (counter >= 3L) {
+    if (counter() >= 3L) {
       stop("some sort of migration failure")
     }
     ## any old bit to indicate a change:
@@ -73,10 +72,9 @@ test_that("failed migrations can be skipped", {
   path <- unpack_reference("0.3.2")
   hash <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
 
-  counter <- 0L
+  counter <- new_counter()
   fun <- function(data, path, config) {
-    counter <<- counter + 1L
-    if (counter >= 5L) {
+    if (counter() >= 5L) {
       stop("some sort of migration failure")
     }
     ## any old bit to indicate a change:
@@ -106,10 +104,9 @@ test_that("failed migrations warned in dry run", {
   path <- unpack_reference("0.3.2")
   hash <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
 
-  counter <- 0L
+  counter <- new_counter()
   fun <- function(data, path, config) {
-    counter <<- counter + 1L
-    if (counter >= 5L) {
+    if (counter() >= 5L) {
       stop("some sort of migration failure")
     }
     ## any old bit to indicate a change:
@@ -434,4 +431,96 @@ test_that("migrate => 0.6.8", {
   new_file_input <- new$file_input[j, -1]
   rownames(old_file_input) <- rownames(new_file_input) <- NULL
   expect_equal(old_file_input, new_file_input)
+})
+
+
+test_that("patch modified artefact", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+  path <- unpack_reference("0.6.0")
+  orderly_migrate(path, to = "0.6.8")
+
+  sql <- paste("SELECT file_artefact.* from file_artefact",
+               "JOIN report_version_artefact",
+               "  ON report_version_artefact.id = file_artefact.artefact",
+               "WHERE report_version_artefact.report_version = $1")
+
+  list <- orderly_list_archive(path)
+  id <- list$id[list$name == "multi-artefact"]
+
+  con <- orderly_db("destination", path, validate = FALSE)
+  old <- DBI::dbGetQuery(con, sql, id)
+  DBI::dbDisconnect(con)
+
+  path_rds <- file.path(path, "archive", "multi-artefact", id,
+                        "orderly_run.rds")
+
+  ## modify an artefact:
+  p <- file.path(path, "archive", "multi-artefact", id, "subset.csv")
+  h1 <- hash_files(p, FALSE)
+  txt <- readLines(p)
+  writeLines(txt[-length(txt)], p)
+  h2 <- hash_files(p, FALSE)
+
+  ## Preflight check:
+  expect_equal(readRDS(path_rds)$meta$file_info_artefacts$file_hash[[2]], h1)
+  expect_equal(old$file_hash[old$filename == "subset.csv"], h1)
+
+  ## Do the migration
+  orderly_migrate(path, "0.7.12")
+  orderly_rebuild(path)
+
+  ## Confirm we pick up the changes
+  con <- orderly_db("destination", path, validate = FALSE)
+  new <- DBI::dbGetQuery(con, sql, id)
+  DBI::dbDisconnect(con)
+
+  expect_equal(readRDS(path_rds)$meta$file_info_artefacts$file_hash[[2]], h2)
+  expect_equal(new$file_hash[new$filename == "subset.csv"], h2)
+})
+
+
+test_that("migrate => 0.7.15", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
+  path <- unpack_reference("0.6.0")
+  orderly_migrate(path, to = "0.7.15")
+  orderly_rebuild(path)
+
+  list <- orderly_list_archive(path)
+  id <- list$id[list$name == "global"]
+
+  d <- readRDS(path_orderly_run_rds(file.path(path, "archive", "global", id)))
+  expect_equal(d$meta$global_resources, c("data.csv" = "data.csv"))
+
+  con <- orderly_db("destination", path, validate = FALSE)
+  on.exit(DBI::dbDisconnect(con), add = TRUE)
+  tab <- DBI::dbReadTable(con, "file_input_global")
+  expect_equal(nrow(tab), 1)
+})
+
+
+test_that("clean up migrations", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
+  path <- unpack_reference("0.6.0")
+  files <- list.files(path, "^orderly_run_([0-9]+\\.){3}rds",
+                      recursive = TRUE, full.names = TRUE)
+  expect_true(length(files) == 0)
+  orderly_migrate(path, to = "0.7.15", clean = FALSE)
+  files <- list.files(path, "^orderly_run_([0-9]+\\.){3}rds",
+                      recursive = TRUE, full.names = TRUE)
+  expect_true(length(files) > 0)
+
+  orderly_migrate(path, to = "0.7.15", clean = TRUE, dry_run = TRUE)
+  expect_true(all(file.exists(files)))
+
+  orderly_migrate(path, to = "0.7.15", clean = TRUE)
+  expect_false(any(file.exists(files)))
+
+  files <- list.files(path, "^orderly_run_([0-9]+\\.){3}rds",
+                      recursive = TRUE, full.names = TRUE)
+  expect_equal(files, character(0))
 })

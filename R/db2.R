@@ -8,7 +8,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-ORDERLY_SCHEMA_VERSION <- "0.0.8"
+ORDERLY_SCHEMA_VERSION <- "0.0.9"
 
 ## These will be used in a few places and even though they're not
 ## super likely to change it would be good
@@ -342,6 +342,18 @@ report_data_import <- function(con, name, id, config) {
     dat_rds$meta$file_info_inputs[c("file_hash", "filename", "file_purpose")],
     stringsAsFactors = FALSE)
   DBI::dbWriteTable(con, "file_input", file_input, append = TRUE)
+
+  if (!is.null(dat_rds$meta$global_resources)) {
+    sql <- c("SELECT id, filename FROM file_input",
+             " WHERE report_version = $1 AND file_purpose = 'global'")
+    tmp <- DBI::dbGetQuery(con, paste(sql, collapse = " "), id)
+    i <- match(names(dat_rds$meta$global_resources), tmp$filename)
+    file_input_global <- data_frame(
+      file_input = tmp$id[i],
+      filename = unname(dat_rds$meta$global_resources))
+    DBI::dbWriteTable(con, "file_input_global", file_input_global,
+                      append = TRUE)
+  }
 
   ## Artefacts:
   report_data_add_files(con, dat_rds$meta$file_info_artefacts)

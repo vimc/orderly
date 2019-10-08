@@ -5,7 +5,7 @@
 \title{Migrate an orderly archive}
 \usage{
 orderly_migrate(root = NULL, locate = TRUE, to = NULL,
-  dry_run = FALSE, skip_failed = FALSE)
+  dry_run = FALSE, skip_failed = FALSE, clean = FALSE)
 }
 \arguments{
 \item{root}{The path to an orderly root directory, or \code{NULL}
@@ -31,6 +31,11 @@ useful on local archives only because it violates the
 append-only nature of orderly.  However, if a local archive
 contains unusual copies of orderly archives that can't be
 migrated this might come in helpful.}
+
+\item{clean}{Logical, where \code{TRUE} (and where the migration
+was successful and \code{dry_run} is \code{FALSE}) orderly will
+clean up all migration backup files.  Use this periodically to
+clean up the archive.}
 }
 \description{
 Migrate an orderly archive.  This is needed periodically when the

@@ -13,7 +13,7 @@ recipe_read <- function(path, config, validate = TRUE) {
   optional <- c("displayname",
                 "description",
                 "data",
-                "parameters", # character >= 1
+                "parameters",
                 "views",
                 "packages",
                 "sources",
@@ -36,14 +36,14 @@ recipe_read <- function(path, config, validate = TRUE) {
 
   info$artefacts <- recipe_read_check_artefacts(info$artefacts, filename, path)
   info$resources <- recipe_read_check_resources(info$resources, filename, path)
+  info$global_resources <- recipe_read_check_global_resources(
+    info$global_resources, filename, config)
   info$depends <-
     recipe_read_check_depends(info$depends, filename, config, validate)
 
   assert_scalar_character(info$script, fieldname("script"))
 
-  if (!is.null(info$parameters)) {
-    assert_character(info$parameters, fieldname("parameters"))
-  }
+  info$parameters <- recipe_read_check_parameters(info$parameters, filename)
   if (!is.null(info$packages)) {
     assert_character(info$packages, fieldname("packages"))
   }
@@ -210,6 +210,16 @@ recipe_read_check_resources <- function(x, filename, path) {
   if (is.null(x)) {
     return(NULL)
   }
+
+  # make sure that a directory resource does not have a trailing /
+  # There is much more sanitation that could be done here...
+  is_dir <- is_directory(file.path(path, x))
+  trailing <- grepl(pattern = "(\\/)$", x)
+  bad_resource <- is_dir & trailing
+  if (any(bad_resource)) {
+    x[bad_resource] <- sub("(\\/)$", "", x[bad_resource])
+  }
+
   assert_character(x, sprintf("%s:%s", filename, "resouces"))
   assert_file_exists(x, workdir = path, name = "Resource file")
   ## TODO: this is not quite right because the files need to be
@@ -222,6 +232,40 @@ recipe_read_check_resources <- function(x, filename, path) {
   ## TODO: At this point we should also return the normalised
   ## *relative* path perhaps to prevent valid, but absolute, paths
   ## being used.
+  x
+}
+
+
+recipe_read_check_global_resources <- function(x, filename, config) {
+  if (is.null(x)) {
+    return(NULL)
+  }
+
+  if (is.character(x)) {
+    msg <- c("Use of strings for global_resources: is deprecated and will be",
+             "removed in a future orderly version - please use",
+             "<as>: <from> mapping pairs instead.")
+    orderly_warning(flow_text(msg))
+    x <- set_names(as.list(x), basename(x))
+  }
+
+  prefix <- sprintf("%s:global_resources", filename)
+
+  assert_named(x, name = prefix)
+  for (i in seq_along(x)) {
+    assert_scalar_character(x[[i]], sprintf("%s:%s", prefix, names(x)[[i]]))
+  }
+  x <- list_to_character(x)
+
+  global_path <- file.path(config$root, config$global_resources)
+  assert_file_exists(
+    x, check_case = TRUE, workdir = global_path,
+    name = sprintf("Global resources in '%s'", global_path))
+
+  if (any(is_directory(file.path(global_path, x)))) {
+    stop("global resources cannot yet be directories")
+  }
+
   x
 }
 
@@ -386,4 +430,32 @@ recipe_read_query <- function(field, info, filename, config) {
     info[[field]] <- d
   }
   info
+}
+
+
+recipe_read_check_parameters <- function(parameters, filename) {
+  if (is.null(parameters) || length(parameters) == 0L) {
+    return(NULL)
+  }
+
+  if (is.character(parameters)) {
+    msg <- c("Use of strings for parameters: is deprecated and will be",
+             "removed in a future orderly version - please use",
+             "'name: ~' for each parameter instead (or add a default).",
+             "See the main package vignette for details")
+    orderly_warning(flow_text(msg))
+    parameters <- set_names(rep(list(NULL), length(parameters)),
+                            parameters)
+  }
+
+  name <- function(p) {
+    sprintf("%s:parameters:%s", filename, p)
+  }
+
+  assert_named(parameters, TRUE, sprintf("%s:parameters", filename))
+  for (p in names(parameters)) {
+    check_fields(parameters[[p]], name(p), NULL, "default")
+  }
+
+  parameters
 }

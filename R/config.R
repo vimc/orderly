@@ -159,8 +159,11 @@ config_check_remote <- function(dat, filename) {
 
     ## optionals:
     if (!is.null(remote$url)) {
-      assert_scalar_character(remote$url, field_name("url"))
-      remote$url <- sub("/$", "", remote$url)
+      msg <- c("The 'url' field (used in",
+               sprintf("%s:remote:%s", filename, name),
+               "is deprecated and will be dropped in a future version of",
+               "orderly.  Please remove it from your orderly_config.yml")
+      orderly_warning(flow_text(msg))
     }
     if (!is.null(remote$slack_url)) {
       assert_scalar_character(remote$slack_url, field_name("slack_url"))

@@ -53,13 +53,18 @@ R6_orderly_remote_path <- R6::R6Class(
       d$id[d$name == name]
     },
 
-    pull = function(name, id, root) {
+    pull = function(name, id) {
       src <- file.path(path_archive(self$config$root), name, id)
-      dest <- file.path(path_archive(root), name, id)
+      dest <- tempfile()
       copy_directory(src, dest, TRUE)
+      dest
     },
 
     run = function(...) {
       stop("'orderly_remote_path' remotes do not run")
+    },
+
+    url_report = function(name, id) {
+      file.path(self$config$root, name, id, fsep = "/")
     }
   ))

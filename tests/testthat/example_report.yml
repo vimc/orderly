@@ -18,7 +18,7 @@ data:
         helper.value >= ?minvalue
 
 parameters:
-  - minvalue
+  minvalue: ~
 
 script: script.R
 

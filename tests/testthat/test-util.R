@@ -173,6 +173,21 @@ test_that("git", {
                info[c("sha_short", "sha", "branch")])
 })
 
+test_that("git_info non-cran", {
+  skip_if_no_git()
+
+  path <- unzip_git_demo()
+
+  withr::with_options(
+    list(orderly.nogit = TRUE),
+    expect_null(git_info(path)))
+
+  res <- withr::with_options(
+    list(orderly.nogit = FALSE),
+    git_info(path))
+  expect_is(res, "list")
+  expect_is(res$branch, "character")
+})
 
 test_that("git_clean_url", {
   expect_null(git_clean_url(NULL))
@@ -346,13 +361,6 @@ test_that("sys_which", {
 })
 
 
-test_that("zip_dir", {
-  testthat::skip_on_cran()
-  mockery::stub(zip_dir, "utils::zip", function(...) -1)
-  expect_error(zip_dir(tempfile()), "error running zip")
-})
-
-
 test_that("open_directory: windows", {
   mockery::stub(open_directory, "system2", list)
   mockery::stub(open_directory, "is_windows", TRUE)
@@ -507,19 +515,23 @@ test_that("show_question interactive", {
 
 
 test_that("periodic", {
+  e <- new.env(parent = emptyenv())
+  e$x <- 1
+
   skip_on_windows() # timing on windows is a pain
   skip_on_cran() # gc may cause occasional failures here
   gc() # avoid slow collections during this test
-  x <- 1
-  f <- function() x <<- x + 1
+  f <- function() {
+    e$x <- e$x + 1
+  }
   g <- periodic(f, 0.1)
   g()
-  expect_equal(x, 1)
+  expect_equal(e$x, 1)
   Sys.sleep(0.2)
   g()
-  expect_equal(x, 2)
+  expect_equal(e$x, 2)
   g()
-  expect_equal(x, 2)
+  expect_equal(e$x, 2)
 })
 
 
@@ -558,4 +570,45 @@ test_that("backup db", {
   expect_true(file.exists(dest_prev))
   expect_setequal(list_tables(path_db), list_tables(dest))
   expect_setequal(list_tables(path_db), list_tables(dest_prev))
+})
+
+
+test_that("pretty_bytes", {
+  expect_equal(pretty_bytes(0), "0 B")
+  expect_equal(pretty_bytes(1), "1 B")
+  expect_equal(pretty_bytes(12), "12 B")
+  expect_equal(pretty_bytes(123), "123 B")
+  expect_equal(pretty_bytes(1234), "1.23 kB")
+  expect_equal(pretty_bytes(12345), "12.35 kB")
+  expect_equal(pretty_bytes(123456), "123.46 kB")
+  expect_equal(pretty_bytes(1234567), "1.23 MB")
+  expect_equal(pretty_bytes(12345678), "12.35 MB")
+  expect_equal(pretty_bytes(123456789), "123.46 MB")
+  expect_equal(pretty_bytes(1234567890), "1.23 GB")
+  expect_equal(pretty_bytes(12345678901), "12.35 GB")
+  expect_equal(pretty_bytes(123456789012), "123.46 GB")
+})
+
+
+test_that("orderly_env picks up ORDERLY variables", {
+  env <- c("ORDERLY_A" = "a", "ORDERLY_B" = "b")
+  v <- withr::with_envvar(
+    env,
+    orderly_env())
+  expect_true(all(names(env) %in% names(v)))
+  expect_equal(v[names(env)], as.list(env))
+})
+
+
+test_that("orderly_env excludes sensitive data", {
+  env1 <- c("ORDERLY_SERVER_PASSWORD" = "passw0rd",
+           "ORDERLY_SERVER_TOKEN" = "secr7et",
+           "ORDERLY_GITHUB_PAT" = "pat")
+  env2 <- c("ORDERLY_A" = "a", "ORDERLY_B" = "b")
+  v <- withr::with_envvar(
+    c(env1, env2),
+    orderly_env())
+  expect_false(any(names(env1) %in% names(v)))
+  expect_true(all(names(env2) %in% names(v)))
+  expect_equal(v[names(env2)], as.list(env2))
 })

@@ -19,9 +19,6 @@ check:
 check_all:
 	${RSCRIPT} -e "rcmdcheck::rcmdcheck(args = c('--as-cran', '--no-manual'))"
 
-vignettes/%.Rmd: vignettes/src/%.R
-	${RSCRIPT} -e 'library(sowsear); sowsear("$<", output="$@")'
-
 ## This will eventually swap out for devtools::build_vignettes(), but
 ## in current version it's not working when offline.  For now I'll
 ## just do the copy manually.
@@ -32,5 +29,8 @@ vignettes: vignettes/orderly.Rmd
 
 tests/testthat/montagu-reports:
 	git clone git@github.com:vimc/montagu-reports $@
+
+README.md: README.md.in vignettes/orderly.Rmd
+	scripts/build_readme
 
 .PHONY: test roxygen install build check check_all vignettes

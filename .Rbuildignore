@@ -13,5 +13,7 @@
 ^docs$
 ^update_web\.sh$
 ^tests/testthat/montagu-reports$
-^tests/testthat/create-reference\.R$
 ^man-roxygen$
+^reference$
+^README\.md\.in$
+^orderly_.*\.tar\.gz$

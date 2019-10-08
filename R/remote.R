@@ -101,27 +101,24 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
     orderly_log("pull", sprintf("%s already exists, skipping", label))
   } else {
     orderly_log("pull", label)
-    path <- file.path(config$root, "archive", name, id)
+    path <- remote$pull(name, id)
+
+    ## There's an assumption here that the depenency resolution here
+    ## will not be badly affected by migrations.  If a migration
+    ## changes how d$meta$depends is structured (if d$meta$depends
+    ## stops being a data.frame that includes name and id as
+    ## columns) then we'll need to deal with that when checking
+    ## dependencies too.
+    orderly_pull_resolve_dependencies(path, remote, config)
+
+    ## Only migrate after dependencies have been resolved because
+    ## some migrations do check dependencies.
+    migrate_single(path, config)
+
     withCallingHandlers({
-      ## TODO (VIMC-2953): it would be might to have the remote pull
-      ## into a temporary directory and handle the copy ourselves for
-      ## easier rollback and less logic
-      remote$pull(name, id, config$root)
-
-      ## There's an assumption here that the depenency resolution here
-      ## will not be badly affected by migrations.  If a migration
-      ## changes how d$meta$depends is structured (if d$meta$depends
-      ## stops being a data.frame that includes name and id as
-      ## columns) then we'll need to deal with that when checking
-      ## dependencies too.
-      orderly_pull_resolve_dependencies(path, remote, config)
-
-      ## Only migrate after dependencies have been resolved because
-      ## some migrations do check dependencies.
-      migrate_single(path, config)
-
+      copy_directory(path, dest)
       report_db_import(name, id, config)
-    }, error = function(e) unlink(path, recursive = TRUE))
+    }, error = function(e) unlink(dest, recursive = TRUE))
   }
 }
 
@@ -321,7 +318,8 @@ implements_remote <- function(x) {
     is.function(x$list_reports) &&
     is.function(x$list_versions) &&
     is.function(x$pull) &&
-    is.function(x$run)
+    is.function(x$run) &&
+    is.function(x$url_report)
 }
 
 

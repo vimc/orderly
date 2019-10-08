@@ -98,7 +98,7 @@ orderly_data <- function(name, parameters = NULL, envir = NULL,
   config <- orderly_config_get(root, locate)
   info <- recipe_read(file.path(path_src(config$root), name), config)
   envir <- orderly_environment(envir)
-  recipe_data(config, info, parameters, envir)
+  recipe_data(config, info, parameters, envir)$dest
 }
 
 
@@ -282,6 +282,8 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   }
 
   recipe_check_device_stack(prep$n_dev)
+  recipe_check_sink_stack(prep$n_sink)
+  recipe_check_connections(info)
   hash_artefacts <- recipe_check_artefacts(info)
 
   hash_data_csv <- con_csv$mset(prep$data)
@@ -326,7 +328,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
 
   meta <- list(id = info$id,
                name = info$name,
-               parameters = parameters,
+               parameters = prep$parameters,
                date = as.character(Sys.time()),
                displayname = info$displayname %||% NA_character_,
                description = info$description %||% NA_character_,
@@ -335,6 +337,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                packages = info$packages,
                file_info_inputs = info$inputs,
                file_info_artefacts = file_info_artefacts,
+               global_resources = info$global_resources,
                artefacts = artefacts,
                depends = depends,
                elapsed = as.numeric(elapsed, "secs"),
@@ -371,24 +374,40 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
 }
 
 
-recipe_substitute <- function(info, parameters) {
+recipe_parameters <- function(info, parameters) {
   if (!is.null(parameters)) {
     assert_named(parameters, unique = TRUE)
   }
-  msg <- setdiff(info$parameters, names(parameters))
+
+  has_default <- names(info$parameters)[vlapply(info$parameters, function(x)
+    "default" %in% names(x))]
+  msg <- setdiff(setdiff(names(info$parameters), names(parameters)),
+                 has_default)
   if (length(msg) > 0L) {
     stop("Missing parameters: ", pasteq(msg))
   }
-  extra <- setdiff(names(parameters), info$parameters)
+  extra <- setdiff(names(parameters), names(info$parameters))
   if (length(extra) > 0L) {
     stop("Extra parameters: ", pasteq(extra))
   }
+
+  use_default <- setdiff(has_default, names(parameters))
+  if (length(use_default) > 0L) {
+    parameters[use_default] <-
+      lapply(info$parameters[use_default], "[[", "default")
+  }
+
+  parameters
+}
+
+
+recipe_substitute <- function(info, parameters) {
   if (length(parameters) > 0L) {
     info$views <- sql_str_sub(info$views, parameters)
     info$data <- sql_str_sub(info$data, parameters)
     orderly_log("parameter", sprintf("%s: %s", names(parameters), parameters))
   }
-  info$hash_parameters <- digest::digest(parameters)
+
   info
 }
 
@@ -398,13 +417,16 @@ recipe_data <- function(config, info, parameters, dest) {
     stop("Invalid input for 'dest'")
   }
 
-  info <- recipe_substitute(info, parameters)
+  parameters <- recipe_parameters(info, parameters)
   if (!is.null(parameters)) {
     list2env(parameters, dest)
+    info <- recipe_substitute(info, parameters)
   }
 
+  ret <- list(dest = dest, parameters = parameters)
+
   if (length(info$data) == 0 && is.null(info$connection)) {
-    return(dest)
+    return(ret)
   }
 
   con <- orderly_db("source", config)
@@ -417,16 +439,20 @@ recipe_data <- function(config, info, parameters, dest) {
     DBI::dbExecute(con[[views[[v]]$database]], sql)
   }
 
+  data <- list()
   for (v in names(info$data)) {
     database <- info$data[[v]]$database
     query <- info$data[[v]]$query
     withCallingHandlers(
-      dest[[v]] <- DBI::dbGetQuery(con[[database]], query),
+      data[[v]] <- dest[[v]] <- DBI::dbGetQuery(con[[database]], query),
       error = function(e)
         orderly_log("data", sprintf("%s => %s: <error>", database, v)))
     orderly_log("data",
                 sprintf("%s => %s: %s x %s",
                         database, v, nrow(dest[[v]]), ncol(dest[[v]])))
+  }
+  if (length(data) > 0L) {
+    ret$data <- data
   }
 
   if (!is.null(info$connection)) {
@@ -438,7 +464,7 @@ recipe_data <- function(config, info, parameters, dest) {
                        names(config$database))]
   }
 
-  dest
+  ret
 }
 
 recipe_prepare_workdir <- function(info, message, config) {
@@ -506,37 +532,18 @@ recipe_exists_artefacts <- function(info, id) {
 }
 
 recipe_unexpected_artefacts <- function(info, id) {
-  ## TODO: filter out globals
-  # expected artefacts
-  expected <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
-  # expected resources
-  resources <- c()
-  if (!is.null(info$resources)) {
-    resources <- info$resources
-  }
-  # expected dependencies
-  dependencies <- c()
-  if (!is.null(info$depends)) {
-    dependencies <- info$depends$as
-  }
-  ## we expect to see all artefacts from the config, the source file
-  ## and the yml config; the changelog may or may not be present, but
-  ## it's never unexpected.
-  expected <- c(expected, resources, dependencies, info$script, "orderly.yml")
+  artefacts <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
+  resources <- info$inputs$filename
+  dependencies <- info$depends$as
+  expected <- c(artefacts, resources, dependencies)
 
-  # this is set to recursive to ensure that artefacts created in directories
-  # are tracked
+  ## this is set to recursive to ensure that artefacts created in directories
+  ## are tracked
   found <- list.files(recursive = TRUE)
-  # TODO do we need to track when a user unexpectedly creates an empty directory ?
+  ## TODO do we need to track when a user unexpectedly creates an
+  ## empty directory ?
 
-  # what files have we found that were not contained in expected
-  unexpected <- setdiff(found, expected)
-
-  # remove any files of the form readme or readme.md
-  unexpected <- unexpected[!grepl("^readme(|.md)$", unexpected,
-                                  ignore.case = TRUE)]
-
-  unexpected
+  setdiff(found, expected)
 }
 
 iso_time_str <- function(time = Sys.time()) {
@@ -570,6 +577,22 @@ recipe_check_device_stack <- function(expected) {
   }
 }
 
+recipe_check_sink_stack <- function(expected) {
+  check <- sink.number() - expected
+  if (check == 0) {
+    return()
+  } else if (check > 0) {
+    for (i in seq_len(check)) {
+      sink(NULL)
+    }
+    stop(ngettext(check,
+                  "Report left 1 sink open",
+                  sprintf("Report left %d sinks open", check)))
+  } else {
+    stop(sprintf("Report closed %d more sinks than it opened!", abs(check)))
+  }
+}
+
 orderly_environment <- function(envir) {
   if (is.null(envir)) {
     new.env(parent = .GlobalEnv)
@@ -582,27 +605,25 @@ orderly_environment <- function(envir) {
 
 
 orderly_prepare_data <- function(config, info, parameters, envir) {
-  ## Because the script (including the files in sources) might modify
-  ## the data we need to make sure that we grab a copy of it now (as a
-  ## list 'ldata') to pass back
-  data <- recipe_data(config, info, parameters, envir)
-  ldata <- as.list(data)[names(info$data)]
+  res <- recipe_data(config, info, parameters, envir)
 
   ## Compute the device stack size before starting work too
   n_dev <- length(grDevices::dev.list())
+  n_sink <- sink.number()
 
   missing_packages <- setdiff(info$packages, .packages(TRUE))
   if (length(missing_packages) > 0) {
     handle_missing_packages(missing_packages)
   }
 
-  ret <- list(data = ldata, n_dev = n_dev)
+  ret <- list(data = res$data, parameters = res$parameters,
+              n_dev = n_dev, n_sink = n_sink)
 
   if (!is.null(info$connection)) {
     ## NOTE: this is a copy of exported connections so that we can
     ## close them once the report finishes running.
     con <- list_to_character(info$connection)
-    ret$con <- lapply(names(con)[!duplicated(con)], function(nm) data[[nm]])
+    ret$con <- lapply(names(con)[!duplicated(con)], function(nm) res$data[[nm]])
   }
 
   for (p in info$packages) {
@@ -673,10 +694,8 @@ recipe_file_inputs <- function(info) {
     script = file_info(info$script),
     readme = file_info(info$readme),
     source = file_info(info$sources),
-    ## TODO: What we really should do is not have put the sources in
-    ## here in the first place, then this bit would not be necessary.
     resource = file_info(info$resources),
-    global = file_info(info$global_resources))
+    global = file_info(names(info$global_resources)))
 }
 
 
@@ -730,29 +749,33 @@ recipe_copy_readme <- function(info, src) {
   src_files <- dir(src)
   readme_file <- src_files[tolower(src_files) == "readme.md"]
 
+  readme_files <- dir(src, pattern = "README(\\.md)?$",
+                      ignore.case = TRUE, recursive = TRUE)
   ## Two readme files e.g. README.md and Readme.MD can happen on unix
   ## systems; it is not clear what we should do here, so we just
   ## ignore the readme silently for now.
-  if (length(readme_file) == 1) {
+  if (length(readme_files) > 0) {
     ## we copy the readme.md file to README.md irrespective of what
     ## case filename the user has used
-    file_copy(file.path(src, readme_file), "README.md")
-    info$readme <- "README.md"
+    dir_create(dirname(readme_files))
+    canonical_readme_files <- sub("README(|.md)$", "README\\1", readme_files,
+                                  ignore.case = TRUE)
+    file_copy(file.path(src, readme_files), canonical_readme_files)
+    info$readme <- canonical_readme_files
 
     ## now check if README is a resource
     if (length(info$resources) > 0) {
-      i <- grepl("README.md", info$resources, ignore.case = FALSE)
+      i <- grepl("README(|.md)$", info$resources, ignore.case = TRUE)
       if (any(i)) {
         ## WARNING
-        orderly_log("readme",
-                    "README.md should not be listed as a resource")
+        orderly_log("readme", "README.md should not be listed as a resource")
         info$resources <- info$resources[!i]
       }
     }
 
     ## now check if README is an artefact
     artefact_files <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
-    if (any(grepl("README.md", artefact_files, ignore.case = TRUE))) {
+    if (any(grepl("README(|.md)$", artefact_files, ignore.case = TRUE))) {
       stop("README.md should not be listed as an artefact")
     }
   }
@@ -800,22 +823,13 @@ recipe_copy_resources <- function(info, src) {
 recipe_copy_global <- function(info, config) {
   if (!is.null(info$global_resources)) {
     global_path <- file.path(config$root, config$global_resources)
-    assert_file_exists(
-      info$global_resources, check_case = TRUE, workdir = global_path,
-      name = sprintf("Global resources in '%s'", global_path))
-
-    global_src <- file.path(global_path, info$global_resources)
-    ## See VIMC-2961: the copy here is different to sources and
-    ## resources because we can't rename files as they're copied; we
-    ## don't support directories and we're pretty limited in how
-    ## copying can happen.  I believe the "." that is the destination
-    ## of the copy will strip all leading path fragments (path/to/x
-    ## becoming x).
-    if (any(is_directory(global_src))) {
-      stop("global resources cannot yet be directories")
-    }
-    orderly_log("global", info$global_resources)
-    file_copy(global_src, ".", recursive = TRUE)
+    src <- file.path(global_path, info$global_resources)
+    dest <- names(info$global_resources)
+    dir_create(dirname(dest))
+    file_copy(src, dest)
+    orderly_log("global",
+                sprintf("%s -> %s",
+                        info$global_resources, names(info$global_resources)))
   }
   info
 }
@@ -853,5 +867,20 @@ recipe_check_unique_inputs <- function(info) {
     stop(sprintf("Orderly configuration implies duplicate files:%s",
                  paste(details, collapse = "")),
          call. = FALSE)
+  }
+}
+
+
+recipe_check_connections <- function(info) {
+  cons <- getAllConnections()
+  cons <- cons[cons > 2] # drop stdin, stdout, stderr
+  if (length(cons) > 0L) {
+    open <- basename(vcapply(cons, function(x)
+      summary.connection(x)$description))
+    ours <- unlist(info$artefacts[, "filenames"], FALSE, FALSE)
+    err <- ours[basename(ours) %in% open]
+    if (any(ours %in% open)) {
+      stop("File left open: ", paste(err, collapse = ", "))
+    }
   }
 }

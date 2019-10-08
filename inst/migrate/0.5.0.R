@@ -1,12 +1,12 @@
-.order <- NULL
+e <- new.env(parent = emptyenv())
 get_order <- function(root) {
-  if (is.null(.order)) {
+  if (is.null(e$order)) {
     archive <- orderly_list_archive(root, FALSE)
     archive <- archive[order(archive$id), ]
     rownames(archive) <- NULL
-    .order <<- archive
+    e$order <- archive
   }
-  .order
+  e$order
 }
 
 

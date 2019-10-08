@@ -171,6 +171,7 @@ demo_change_time <- function(id, time, path) {
   id_new
 }
 
+
 ## This version will eventually go into a yml thing but it's a bit
 ## nasty to deal with at the moment.  This means it's not easily
 ## extendable...
@@ -215,7 +216,7 @@ unzip_git_demo <- function(path = tempfile()) {
   tmp <- tempfile()
   dir.create(tmp, FALSE, TRUE)
   demo <- getOption("orderly.server.demo", build_git_demo())
-  utils::unzip(demo, exdir = tmp)
+  zip::unzip(demo, exdir = tmp)
   dir.create(path, FALSE, TRUE)
   src <- dir(file.path(tmp, "demo"), full.names = TRUE, all.files = TRUE,
              no.. = TRUE)

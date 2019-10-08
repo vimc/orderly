@@ -1,3 +1,35 @@
+# 0.8.1
+
+* Parameters now accept defaults in `orderly.yml`, and the format has altered slightly (VIMC-2413, #8).
+
+# 0.8.0
+
+* Deprecated functions `pull_archive`, `pull_dependencies`, `set_default_remote` have been removed (VIMC-2946, deprecated in VIMC-2944 / 0.7.2).
+
+# 0.7.16
+
+* `orderly_migrate` can now clean up old migration backup files.  These should generally be quite safe to delete, but it would be better to do this directly from orderly (VIMC-3157)
+
+# 0.7.15
+
+* Global resources can now be renamed on copy, allowing use of subdirectories to structure them.  Using global resources as a set of strings is now deprecated (VIMC-2961).
+
+# 0.7.14
+
+* The command line interface has been overhauled, in particular the parameter passing interface (VIMC-2469) which now accepts key-value pairs and not json
+
+# 0.7.13
+
+* It is now possible to deduplicate an orderly archive using `orderly::orderly_deduplicate` (VIMC-731).
+
+# 0.7.12
+
+* `orderly_run` now checks for sink imbalance, in the same way that device imbalances are currently checked for, preventing odd errors when sinks are left open or too many are closed (VIMC-3129)
+
+# 0.7.9
+
+* All README files are copied into destination directory, not just top level (VIMC-3065)
+
 # 0.7.7
 
 * Pulling from remotes now imports the report into the local orderly db, and also pulls all dependent reports (VIMC-2855, VIMC-3054).

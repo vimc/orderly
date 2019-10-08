@@ -2,7 +2,7 @@ data:
   cars:
     query: SELECT * FROM mtcars WHERE cyl = ?cyl
 parameters:
-  - cyl
+  cyl: ~
 script: script.R
 artefacts:
   - staticgraph:

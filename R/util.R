@@ -209,14 +209,12 @@ last <- function(x) {
   x[[length(x)]]
 }
 
-modify_list <- function(a, b) {
-  a[names(b)] <- b
-  a
-}
 
 orderly_env <- function() {
   env <- Sys.getenv()
-  as.list(env[grepl("^ORDERLY_", names(env))])
+  nms <- names(env)
+  i <- grepl("^ORDERLY_", nms) & !grepl("(TOKEN|PAT|PASS)", nms)
+  as.list(env[i])
 }
 
 session_info <- function(path = ".") {
@@ -279,6 +277,9 @@ git_info_call <- function(root, args) {
 }
 
 git_info <- function(root) {
+  if (isTRUE(getOption("orderly.nogit", FALSE))) {
+    return(NULL)
+  }
   sha <- git_info_call(root, c("rev-parse", "HEAD"))
   if (is.null(sha)) {
     return(NULL)
@@ -401,10 +402,7 @@ sys_which <- function(name) {
 zip_dir <- function(path, dest = paste0(basename(path), ".zip")) {
   owd <- setwd(dirname(path))
   on.exit(setwd(owd))
-  code <- utils::zip(dest, basename(path), extras = "-q")
-  if (code != 0) {
-    stop("error running zip")
-  }
+  zip::zipr(dest, basename(path))
   normalizePath(dest)
 }
 
@@ -654,12 +652,13 @@ sqlite_backup <- function(src, dest) {
 periodic <- function(fun, period) {
   fun <- match.fun(fun)
   force(period)
-  last <- Sys.time()
+  env <- new.env(parent = emptyenv())
+  env$last <- Sys.time()
   function() {
     now <- Sys.time()
-    if (now > last + period) {
+    if (now > env$last + period) {
       fun()
-      last <<- now
+      env$last <- now
     }
   }
 }
@@ -700,4 +699,11 @@ file_in_data <- function(...) {
                stringsAsFactors = FALSE)
   rownames(ret) <- NULL
   ret
+}
+
+
+pretty_bytes <- function(bytes) {
+  unit <- c("", "k", "M", "G")
+  exponent <- max(0, min(floor(log(bytes, 1000)), length(unit) - 1))
+  sprintf("%s %sB", round(bytes / 1000^exponent, 2), unit[exponent + 1])
 }

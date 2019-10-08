@@ -189,3 +189,17 @@ test_that("onload can be rerun", {
   orderly:::.onLoad()
   expect_equal(cache$current_archive_version, v)
 })
+
+
+test_that("default parameter values are used", {
+  path <- prepare_orderly_example("parameters")
+
+  id <- orderly_run("example", list(a = 1, b = 2), root = path, echo = FALSE)
+  d <- readRDS(path_orderly_run_rds(file.path(path, "draft", "example", id)))
+  expect_equal(d$meta$parameters, list(a = 1, b = 2, c = 1))
+
+  id <- orderly_run("example", list(a = 1, b = 2, c = 3),
+                    root = path, echo = FALSE)
+  d <- readRDS(path_orderly_run_rds(file.path(path, "draft", "example", id)))
+  expect_equal(d$meta$parameters, list(a = 1, b = 2, c = 3))
+})

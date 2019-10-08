@@ -16,14 +16,16 @@ RUN install2.r \
   RPostgres \
   RSQLite \
   digest \
+  docopt \
+  fs \
   ids \
   jsonlite \
   knitr \
-  optparse \
   remotes \
   rmarkdown \
   withr \
-  yaml
+  yaml \
+  zip
 
 RUN Rscript -e 'remove.packages("BH")'
 

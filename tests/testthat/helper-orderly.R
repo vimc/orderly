@@ -5,6 +5,7 @@ with_wd <- function(path, code) {
 }
 
 skip_if_no_git <- function() {
+  testthat::skip_on_cran()
   if (nzchar(Sys.which("git"))) {
     return()
   }
@@ -41,7 +42,16 @@ skip_if_no_internet <- function() {
 }
 
 unpack_reference <- function(version, path = tempfile()) {
-  unzip(sprintf("reference/%s.zip", version), exdir = path)
+  src <- sprintf("reference/%s.zip", version)
+  if (!file.exists(src)) {
+    msg <- sprintf("Reference data %s not available", version)
+    if (identical(Sys.getenv("TRAVIS"), "true")) {
+      stop(msg)
+    } else {
+      testthat::skip(msg)
+    }
+  }
+  zip::unzip(src, exdir = path)
   file.path(path, version)
 }
 
@@ -111,3 +121,17 @@ local({
     gc()
   })
 })
+
+
+new_counter <- function() {
+  e <- new.env(parent = emptyenv())
+  e$x <- 0L
+  function() {
+    e$x <- e$x + 1L
+    e$x
+  }
+}
+
+if (Sys.getenv("NOT_CRAN") != "true") {
+  options(orderly.nogit = TRUE)
+}
