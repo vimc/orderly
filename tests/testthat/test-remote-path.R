@@ -163,5 +163,5 @@ test_that("remote_path implements url_report", {
   path <- prepare_orderly_example("minimal")
   remote <- orderly_remote_path(path)
   expect_equal(remote$url_report("name", "id"),
-               file.path(path, "name", "id", fsep = "/"))
+               file.path(remote$config$root, "name", "id", fsep = "/"))
 })
