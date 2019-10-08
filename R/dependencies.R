@@ -18,18 +18,18 @@ get_dependencies_db <- function(name, id = NULL, root = NULL, upstream = FALSE,
   if (is.null(id)) {
     id <- get_latest_in_db(name = name, con = con)$id
   }
-  
+
   ## now construct the SQL query
   if (upstream) {
     filt_qry <- sprintf("depends.report_version='%s'", id)
   } else {
     filt_qry <- sprintf("report_version.id='%s'", id)
   }
-  
+
   sql_qry <- paste(c("SELECT",
                "depends.report_version, ",
                "report_version.report, report_version.id, ",
-               "file_artefact.filename",
+               "file_artefact.filename, ", "file_artefact.file_hash",
                "FROM", "(depends",
                "INNER JOIN", "file_artefact", "ON",
                "depends.use=file_artefact.id",
@@ -41,15 +41,32 @@ get_dependencies_db <- function(name, id = NULL, root = NULL, upstream = FALSE,
 
   db_ret <- DBI::dbGetQuery(con, sql_qry)
 
+
+## This is only relevant when going upstream
+  sql_art_qry <- paste(c("SELECT" , "filename, ", "file_hash",
+                         "FROM", "(depends",
+                         "INNER JOIN", "report_version", "ON",
+                         "depends.report_version=report_version.id",
+                         "INNER JOIN", "file_artefact", "ON",
+                         "depends.use = file_artefact.id)",
+                         "WHERE", filt_qry), collapse = " ")
+
+  print("                                                                     ")
+
+  db_art_ret <- DBI::dbGetQuery(con, sql_art_qry)
+
+  print(db_ret)
+  print(db_art_ret)
+
   if (nrow(db_ret) == 0) {
     return(NULL)
   }
 
-  db_ret$latest <- sapply(db_ret$report_version, is_latest_in_db, con = con)
+  db_ret$out_of_date <- sapply(db_ret$report_version, is_latest_in_db, con = con)
   if (use_latest) {
-    db_ret <- db_ret[which(db_ret$latest), ]
+    db_ret <- db_ret[which(db_ret$out_of_date), ]
   }
-  
+
   # if we're going uptree
   if (upstream) {
     return(unique(db_ret$id))
@@ -87,7 +104,7 @@ id_to_name <- function(con, id) {
                "WHERE", sprintf("report_version.id='%s'", id)
   )
   db_ret <- DBI::dbGetQuery(con, paste(sql_qry, collapse = " "))
-  
+
   return(db_ret$report)
 }
 
@@ -97,8 +114,36 @@ id_to_name <- function(con, id) {
 ##' @param con A connection to a database
 is_latest_in_db <- function(con, id) {
   latest <- get_latest_in_db(con, id_to_name(con, id))
-  
+
   return(latest$id == id)
+}
+
+is_out_of_date <- function(con, parent_id, child_id) {
+  par_qry <- sprintf("depends.report_version='%s'", parent_id)
+  sql_par_qry <- paste(c("SELECT" , "report_version.id, ",
+                                    "filename, ",
+                                    "file_hash",
+                         "FROM", "(depends",
+                         "INNER JOIN", "report_version", "ON",
+                                       "depends.report_version=report_version.id",
+                         "INNER JOIN", "file_artefact", "ON",
+                                       "depends.use = file_artefact.id)",
+                         "WHERE", par_qry), collapse = " ")
+
+  db_par <- DBI::dbGetQuery(con, sql_par_qry)
+
+  chd_qry <- sprintf("report_version.id='%s'", child_id)
+  sql_chd_qry <- paste(c("SELECT", "report_version.id, ",
+                                   "file_artefact.filename, ",
+                                   "file_artefact.file_hash",
+                         "FROM", "(report_version",
+                         "INNER JOIN", "report_version_artefact", "ON",
+                                       "report_version.id = report_version_artefact.report_version",
+                         "INNER JOIN", "file_artefact", "ON",
+                                       "file_artefact.artefact = report_version_artefact.id)",
+                         "WHERE", chd_qry), collapse = " ")
+
+  db_chd <- DBI::dbGetQuery(con, sql_chd_qry)
 }
 
 ##' @title Recursively builds a tree for a given report
@@ -142,7 +187,7 @@ build_tree <- function(name, id = "latest", depth = 0, parent = NULL,
       stop("id does not match report name")
     }
   }
-  
+
   ## if this is no tree, create a tree
   if (is.null(tree)) {
     v <- Vertex$new(NULL, name, id, (id == latest_id$id))
@@ -150,7 +195,7 @@ build_tree <- function(name, id = "latest", depth = 0, parent = NULL,
   } else {
     v <- tree$add_child(parent, name, id, (id == latest_id$id))
   }
-  
+
   dep_ids <- get_dependencies_db(name = name, id = id,
                                  root = root, locate = TRUE, con = con,
                                  upstream = upstream)
@@ -164,9 +209,9 @@ build_tree <- function(name, id = "latest", depth = 0, parent = NULL,
                con = con,
                root = root,
                locate = locate,
-               upstream = upstream)    
+               upstream = upstream)
   }
-  
+
   return(tree)
 }
 
@@ -182,8 +227,9 @@ build_tree <- function(name, id = "latest", depth = 0, parent = NULL,
 ##'                  through the tree
 ##'
 ##' @export
-print_dep_tree <- function(name, id = "latest", root = NULL, locate = TRUE,
-                           upstream = FALSE, con = NULL, propagate = FALSE) {
+orderly_print_dep_tree <- function(name, id = "latest", root = NULL,
+                                   locate = TRUE, upstream = FALSE, con = NULL,
+                                   propagate = FALSE) {
   if (is.null(con)) {
     con <- orderly_db("destination", orderly_config_get(root, locate))
     on.exit(DBI::dbDisconnect(con))
@@ -214,16 +260,16 @@ print_dep_tree <- function(name, id = "latest", root = NULL, locate = TRUE,
 propagate <- function(vertex, upstream) {
   for (child in vertex$children) {
     if (!upstream) {
-      if (!vertex$latest) {
-        child$latest = FALSE
+      if (!vertex$out_of_date) {
+        child$out_of_date = FALSE
       }
     }
 
     propagate(child, upstream)
 
     if (upstream) {
-      if (!child$latest) {
-        vertex$latest = FALSE
+      if (!child$out_of_date) {
+        vertex$out_of_date = FALSE
       }
     }
   }
@@ -235,19 +281,19 @@ Vertex <- R6::R6Class("Vertex", list(
   children = list(),
   name = NULL,
   id = NULL,
-  latest = NULL,
-  initialize = function(parent, name, id, latest) {
+  out_of_date = NULL,
+  initialize = function(parent, name, id, out_of_date) {
     # add some type safety here
     self$parent <- parent
     self$name <- name
     self$id <- id
-    self$latest <- latest
+    self$out_of_date <- out_of_date
   },
   add_child = function(child) {
     self$children <- append(self$children, list(child))
   },
   to_string = function() {
-    return(sprintf("%s [%s]", self$name, self$id))  
+    return(sprintf("%s [%s]", self$name, self$id))
   }
   )
 )
@@ -260,8 +306,8 @@ Tree <- R6::R6Class("Tree", list(
     self$vertices <- append(self$vertices, list(root))
     self$root <- root
   },
-  add_child = function(parent, name, id, latest) {
-    child <- Vertex$new(parent, name, id, latest)
+  add_child = function(parent, name, id, out_of_date) {
+    child <- Vertex$new(parent, name, id, out_of_date)
     parent$add_child(child)
     self$vertices <- append(self$vertices, list(child))
     return(child)
@@ -275,7 +321,7 @@ Tree <- R6::R6Class("Tree", list(
   },
   # this is stupidly hacky to get the formatting right
   print_tree = function(vertex = self$root, fvector = c()) {
-    console_colour <- if (vertex$latest) {crayon::blue} else {crayon::red}
+    console_colour <- if (vertex$out_of_date) {crayon::blue} else {crayon::red}
 
     if (length(fvector) == 0) {
       message(console_colour(sprintf("%s", vertex$to_string())))
