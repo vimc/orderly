@@ -32,11 +32,15 @@ another package).  If left \code{NULL}, then the default remote
 for this orderly repository is used - by default that is the
 first listed remote.}
 
-\item{id}{The identifier (for \code{orderly_pull_archive}.  The default is
+\item{id}{The identifier (for \code{orderly_pull_archive}).  The default is
 to use the latest report.}
 }
 \description{
-Download dependent reports.
+Download dependent reports from an orderly remote.  This can only
+be used if the \code{orderly_config.yml} lists a remote.  This
+allows for a centralised workflow where a central orderly store
+exists and holds the canonical copy of a report, from which
+versions can be downloaded into local stores.
 }
 \details{
 The \code{orderly_pull_archive} function pulls report directly
@@ -111,4 +115,6 @@ orderly::orderly_list_archive(root = path_local)
   remote interface for orderly repositories at a local path.  See
   also \href{https://github.com/vimc/orderly-web}{OrderlyWeb} for
   a system for hosting orderly repositories over an HTTP API.
+  \code{vignette("remote", package = "orderly")} describes the
+  remote system in more detail.
 }

@@ -22,7 +22,9 @@ then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
 }
 \description{
-Commit a generated report
+Commit a generated report, moving it from the \code{draft/}
+directory to \code{archive/} and updating the orderly index.  Once
+committed, reports should not be deleted.
 }
 \examples{
 # In a new example orderly, run a report

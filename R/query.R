@@ -6,7 +6,10 @@ VERSION_ID_RE <- "^([0-9]{8}-[0-9]{6})-([[:xdigit:]]{4})([[:xdigit:]]{4})$"
 ## getting targets that one can run.
 
 ##' List the \emph{names} of reports known to orderly.  These are the
-##' \emph{source} names, not the results of running reports.
+##' \emph{source} names, not the results of running reports.  Note
+##' that if a report has been committed from a different branch it
+##' will not appear here, as this is simply the set of reports in the
+##' \code{src} directory that can be run.
 ##'
 ##' @title List orderly reports
 ##'
@@ -36,15 +39,15 @@ orderly_list <- function(root = NULL, locate = TRUE) {
 }
 
 ##' List draft and archived reports.  This returns a data.frame with
-##' columns \code{name} (see \code{\link{orderly_list}} and \code{id}.
-##' It will expand in future.
+##' columns \code{name} (see \code{\link{orderly_list}}) and \code{id}.
 ##'
 ##' @title List draft and archived reports
 ##'
 ##' @inheritParams orderly_list
 ##'
 ##' @seealso \code{\link{orderly_list}}, which lists the names of
-##'   source reports that can be run
+##'   source reports that can be run, and \code{\link{orderly_latest}}
+##'   which returns the id of the most recent report.
 ##'
 ##' @export
 ##' @examples
@@ -82,7 +85,10 @@ orderly_list_archive <- function(root = NULL, locate = TRUE) {
   orderly_list2(FALSE, root, locate)
 }
 
-##' Find most recent version of an orderly report
+##' Find most recent version of an orderly report.  The most recent
+##' report is always the most recently run report that has been
+##' committed (regardless of the order in which they were committed).
+##'
 ##' @title Find most recent report
 ##'
 ##' @param name Name of the report to find; if \code{NULL} returns the
@@ -94,6 +100,11 @@ orderly_list_archive <- function(root = NULL, locate = TRUE) {
 ##'   returns \code{NA_character_}.
 ##'
 ##' @inheritParams orderly_list
+##'
+##' @seealso \code{\link{orderly_list}} and
+##'   \code{\link{orderly_list_archive}} for listing report names and
+##'   versions.
+##'
 ##' @export
 ##' @examples
 ##' path <- orderly::orderly_example("minimal")

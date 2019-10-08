@@ -30,7 +30,7 @@ path <- orderly::orderly_init(tempfile())
 
 # This has created the directory skeleton that you need to get
 # started using orderly:
-dir(path)
+fs::dir_tree(path)
 
 # As instructed, the next thing to do is to edit the
 # orderly_config.yml file to match your needs:

@@ -32,7 +32,9 @@ end-of-run metadata).  This will also clean up drafts created by
 Clean up orderly draft and data directories.  Deletes all drafts
 (possibly just for a set of report names) and then deletes
 dangling data sets that are not pointed to by any draft or
-committed reports
+committed reports.  Running cleanup does not affect any reports
+that have been commited with \code{\link{orderly_commit}} (i.e.,
+the contents of the \code{archive/} directory).
 }
 \examples{
 # In a new example orderly, run two reports and commit only the

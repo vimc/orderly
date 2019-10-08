@@ -1,5 +1,9 @@
-##' Run a report.  The \code{orderly_data} function is for testing the
-##' queries (and developing the report).
+##' Run a report.  This will create a new directory in
+##' \code{drafts/<reportname>}, copy your declared resources there,
+##' extract data from databases (if you are using them), run your
+##' script and check that all expected artefacts were created.  Once
+##' successfully run you can use \code{\link{orderly_commit}} to move
+##' it to the \code{archive} directory.
 ##'
 ##' If \code{ref} is provided then before running a report orderly
 ##' will try to check out (as a detached \code{HEAD}) \code{ref},
@@ -17,7 +21,7 @@
 ##'   \code{\link{orderly_list}}).
 ##'
 ##' @param parameters Parameters passed to the report. A named list of
-##'   parameters declared in the orderly.yml.
+##'   parameters declared in the \code{orderly.yml}.
 ##'
 ##' @param envir The parent of environment to evaluate the report in;
 ##'   by default a new environment will be made with the global
@@ -83,7 +87,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
 }
 
 ##' @export
-##' @rdname orderly_run
+##' @rdname orderly_test_start
 ##' @examples
 ##' # The function orderly_data does all the preparation work that
 ##' # orderly_run does, but does not run the report; instead it
@@ -108,7 +112,8 @@ orderly_data <- function(name, parameters = NULL, envir = NULL,
 ##' copies over any dependent reports) but then rather than running
 ##' the report hands back to the user.  The prompt \emph{looks} like
 ##' \code{\link{browser}} but it is just a plain old R prompt and the
-##' code runs in the global environment.
+##' code runs in the global environment.  The \code{orderly_data}
+##' function returens an environment with the extracted data.
 ##'
 ##' To quit run \code{orderly_test_end()} (or enter \code{Q}, like
 ##' \code{browser}).  To test if all artefacts have been created run
@@ -165,7 +170,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
                      info = info,
                      prompt = getOption("prompt"))
   options(prompt = "[orderly test] > ")
-  makeActiveBinding(quote("Q"), test_mode_end, .GlobalEnv)
+  makeActiveBinding(quote("Q"), test_mode_end, envir)
   orderly_log("setwd", "running in test draft directory")
   on.exit()
 }

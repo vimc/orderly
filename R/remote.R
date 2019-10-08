@@ -1,4 +1,8 @@
-##' Download dependent reports.
+##' Download dependent reports from an orderly remote.  This can only
+##' be used if the \code{orderly_config.yml} lists a remote.  This
+##' allows for a centralised workflow where a central orderly store
+##' exists and holds the canonical copy of a report, from which
+##' versions can be downloaded into local stores.
 ##'
 ##' The \code{orderly_pull_archive} function pulls report directly
 ##' (without it being a dependent report).
@@ -41,6 +45,8 @@
 ##'   remote interface for orderly repositories at a local path.  See
 ##'   also \href{https://github.com/vimc/orderly-web}{OrderlyWeb} for
 ##'   a system for hosting orderly repositories over an HTTP API.
+##'   \code{vignette("remote", package = "orderly")} describes the
+##'   remote system in more detail.
 ##'
 ##' @example man-roxygen/example-remote.R
 orderly_pull_dependencies <- function(name, root = NULL, locate = TRUE,
@@ -69,7 +75,7 @@ orderly_pull_dependencies <- function(name, root = NULL, locate = TRUE,
 ##' @export
 ##' @rdname orderly_pull_dependencies
 ##'
-##' @param id The identifier (for \code{orderly_pull_archive}.  The default is
+##' @param id The identifier (for \code{orderly_pull_archive}).  The default is
 ##'   to use the latest report.
 orderly_pull_archive <- function(name, id = "latest", root = NULL,
                                  locate = TRUE, remote = NULL) {

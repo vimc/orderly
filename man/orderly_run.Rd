@@ -2,22 +2,18 @@
 % Please edit documentation in R/recipe_run.R
 \name{orderly_run}
 \alias{orderly_run}
-\alias{orderly_data}
 \title{Run a report}
 \usage{
 orderly_run(name, parameters = NULL, envir = NULL, root = NULL,
   locate = TRUE, echo = TRUE, id_file = NULL, fetch = FALSE,
   ref = NULL, message = NULL)
-
-orderly_data(name, parameters = NULL, envir = NULL, root = NULL,
-  locate = TRUE)
 }
 \arguments{
 \item{name}{Name of the report to run (see
 \code{\link{orderly_list}}).}
 
 \item{parameters}{Parameters passed to the report. A named list of
-parameters declared in the orderly.yml.}
+parameters declared in the \code{orderly.yml}.}
 
 \item{envir}{The parent of environment to evaluate the report in;
 by default a new environment will be made with the global
@@ -45,8 +41,12 @@ checking out the reference \code{ref}.}
 explaining why the report was run}
 }
 \description{
-Run a report.  The \code{orderly_data} function is for testing the
-queries (and developing the report).
+Run a report.  This will create a new directory in
+\code{drafts/<reportname>}, copy your declared resources there,
+extract data from databases (if you are using them), run your
+script and check that all expected artefacts were created.  Once
+successfully run you can use \code{\link{orderly_commit}} to move
+it to the \code{archive} directory.
 }
 \details{
 If \code{ref} is provided then before running a report orderly
@@ -86,14 +86,6 @@ id <- orderly::orderly_run("other", list(nmin = 0.2), root = path)
 
 # These parameters can be used in SQL queries or in the report
 # code.
-# The function orderly_data does all the preparation work that
-# orderly_run does, but does not run the report; instead it
-# returns the created environment with all the data and parameters
-# set.
-env <- orderly::orderly_data("other", list(nmin = 0.2), root = path)
-ls(env)
-env$nmin
-env$extract
 }
 \seealso{
 \code{\link{orderly_log}} for controlling display of log

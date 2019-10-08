@@ -25,7 +25,24 @@ be validated on open (currently only applicable with \code{type
 }
 \description{
 Connect to the orderly databases.  These should be treated as as
-\emph{read only} (with the exception of \code{source}).
+\emph{read only}.
+}
+\details{
+Orderly has several databases:
+
+\describe{
+
+\item{source}{All of the databases named in the \code{database}
+  section of the \code{orderly_config.yml}}
+
+\item{destination}{The orderly index database (typically a SQLite
+database stored at the orderly root)}
+
+\item{csv}{The cache of datababase query results, in csv format}
+
+\item{rds}{The cache of datababase query results, in rds format}
+
+}
 }
 \examples{
 # Create an orderly that has a single commited report:

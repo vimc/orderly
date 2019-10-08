@@ -27,8 +27,8 @@ fast enough to call regularly.}
 }
 \description{
 Rebuild the report database.  This is necessary when the orderly
-  database schema changes, and you will be prompted to run this
-  function after upgrading orderly in that case.
+database schema changes, and you will be prompted to run this
+function after upgrading orderly in that case.
 }
 \details{
 The report database (orderly's "destination" database) is
