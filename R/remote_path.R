@@ -62,5 +62,9 @@ R6_orderly_remote_path <- R6::R6Class(
 
     run = function(...) {
       stop("'orderly_remote_path' remotes do not run")
+    },
+
+    url_report = function(name, id) {
+      file.path(self$config$root, name, id, fsep = "/")
     }
   ))

@@ -318,7 +318,8 @@ implements_remote <- function(x) {
     is.function(x$list_reports) &&
     is.function(x$list_versions) &&
     is.function(x$pull) &&
-    is.function(x$run)
+    is.function(x$run) &&
+    is.function(x$url_report)
 }
 
 
