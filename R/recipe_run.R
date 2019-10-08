@@ -86,25 +86,6 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   info$id
 }
 
-##' @export
-##' @rdname orderly_test_start
-##' @examples
-##' # The function orderly_data does all the preparation work that
-##' # orderly_run does, but does not run the report; instead it
-##' # returns the created environment with all the data and parameters
-##' # set.
-##' env <- orderly::orderly_data("other", list(nmin = 0.2), root = path)
-##' ls(env)
-##' env$nmin
-##' env$extract
-orderly_data <- function(name, parameters = NULL, envir = NULL,
-                         root = NULL, locate = TRUE) {
-  config <- orderly_config_get(root, locate)
-  info <- recipe_read(file.path(path_src(config$root), name), config)
-  envir <- orderly_environment(envir)
-  recipe_data(config, info, parameters, envir)$dest
-}
-
 
 ##' For interactive testing of orderly code.  This runs through and
 ##' sets everything up as orderly would (creates a new working
@@ -223,6 +204,28 @@ orderly_test_check <- function() {
   orderly_log("artefact", sprintf("%s: %s", artefacts, h))
   invisible(all(found))
 }
+
+
+##' @export
+##' @rdname orderly_test_start
+##' @examples
+##' # The function orderly_data does all the preparation work that
+##' # orderly_run does, but does not run the report; instead it
+##' # returns the created environment with all the data and parameters
+##' # set.
+##' path <- orderly::orderly_example("demo")
+##' env <- orderly::orderly_data("other", list(nmin = 0.2), root = path)
+##' ls(env)
+##' env$nmin
+##' env$extract
+orderly_data <- function(name, parameters = NULL, envir = NULL,
+                         root = NULL, locate = TRUE) {
+  config <- orderly_config_get(root, locate)
+  info <- recipe_read(file.path(path_src(config$root), name), config)
+  envir <- orderly_environment(envir)
+  recipe_data(config, info, parameters, envir)$dest
+}
+
 
 recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
                            fetch = FALSE, message = NULL) {
