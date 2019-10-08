@@ -53,7 +53,7 @@ copies over any dependent reports) but then rather than running
 the report hands back to the user.  The prompt \emph{looks} like
 \code{\link{browser}} but it is just a plain old R prompt and the
 code runs in the global environment.  The \code{orderly_data}
-function returens an environment with the extracted data.
+function returns an environment with the extracted data.
 }
 \details{
 To quit run \code{orderly_test_end()} (or enter \code{Q}, like

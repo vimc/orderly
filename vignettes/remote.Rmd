@@ -31,7 +31,7 @@ A [diagram may help show how the pieces fit together](https://raw.githubusercont
 
 Getting OrderlyWeb installed requires a little work, and you will need access to an appropriate server running docker, our [python-based deployment tool](https://github.com/vimc/orderly-web-deploy/), and TLS certificates for the server that you are using.  We recommend using [vault](https://www.vaultproject.io) for storing certificates and any secrets used in deployment.
 
-OrderlyWeb will use github for authentication, the setup for which [is described here](https://github.com/vimc/orderly-web/blob/master/docs/auth.md#authenticating-with-github).
+OrderlyWeb will use GitHub for authentication, the setup for which [is described here](https://github.com/vimc/orderly-web/blob/master/docs/auth.md#authenticating-with-github).
 
 ## Configuring `orderly` to talk to OrderlyWeb
 
@@ -53,7 +53,7 @@ remote:
       token: $GITHUB_TOKEN
 ```
 
-where `$GITHUB_TOKEN` is an environment variable that holds a [github token](https://github.com/settings/tokens) with "user" scope.  The `testing` remote is listed first, and so will be the default one used in any remote-using command.
+where `$GITHUB_TOKEN` is an environment variable that holds a [GitHub token](https://github.com/settings/tokens) with "user" scope.  The `testing` remote is listed first, and so will be the default one used in any remote-using command.
 
 ## Interacting with the remote server
 
@@ -65,4 +65,4 @@ Several commands can interact with the remote server:
 
 ## Future developments
 
-We hope that this system will become easier to deploy in future.  We use it internally on two projects with orderly archives that hold GBs of analyses, and it has evolved to meet our needs.  If you think it might work for you but can't get started, please get in touch.
+We hope that this system will become easier to deploy in future.  We use it internally on two projects with orderly archives that hold gigabytes of analyses, and it has evolved to meet our needs.  If you think it might work for you but can't get started, please get in touch.

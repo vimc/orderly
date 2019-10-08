@@ -2,7 +2,7 @@
 ##' (possibly just for a set of report names) and then deletes
 ##' dangling data sets that are not pointed to by any draft or
 ##' committed reports.  Running cleanup does not affect any reports
-##' that have been commited with \code{\link{orderly_commit}} (i.e.,
+##' that have been committed with \code{\link{orderly_commit}} (i.e.,
 ##' the contents of the \code{archive/} directory).
 ##'
 ##' @title Orderly cleanup

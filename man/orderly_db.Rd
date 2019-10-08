@@ -38,9 +38,9 @@ Orderly has several databases:
 \item{destination}{The orderly index database (typically a SQLite
 database stored at the orderly root)}
 
-\item{csv}{The cache of datababase query results, in csv format}
+\item{csv}{The cache of database query results, in csv format}
 
-\item{rds}{The cache of datababase query results, in rds format}
+\item{rds}{The cache of database query results, in rds format}
 
 }
 }
