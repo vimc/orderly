@@ -102,7 +102,7 @@ Then if one of the dependencies of a report changes (the used data, code, etc), 
 
 ## Example
 
-We start with a minimal example and will build it up to demonstrate `orderly` features. In the most minimal example, we want to run a script that creates a graph.  It uses no external resources.
+To illustrate, we will start with a minimal example (you can use `orderly::orderly_init` to create a similar structure directly), and we will build it up to demonstrate `orderly` features. In the most minimal example, we want to run a script that creates a graph.  It uses no external resources.
 
 ``` {r comment = NA, echo = FALSE}
 dir_tree(path)
