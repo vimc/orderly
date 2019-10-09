@@ -110,10 +110,7 @@
 
 # orderly 0.5.14
 
-* README.md is automatically treated as resource if present (VIMC-2230)
-
-# orderly 0.5.14
-
+* `README.md` is automatically treated as resource if present (VIMC-2230)
 * Fix handling of remote environment variables (VIMC-2553)
 
 # orderly 0.5.13
