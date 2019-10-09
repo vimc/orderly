@@ -35,7 +35,7 @@ configuration. Minimally, this can be empty, but it must exist.}
 be placed under version control, and contain a number of reports,
 each in their own directory with an \code{orderly.yml} describing
 their inputs and outputs (artefacts).  The
-\code{\code{orderly_new}} function can be used to accelerate
+\code{\link{orderly_new}} function can be used to accelerate
 creation of new reports.}
 
 \item{\code{draft}}{A directory where reports will be run using
