@@ -12,7 +12,7 @@
 
 # orderly 0.7.16
 
-* `orderly_migrate` can now clean up old migration backup files.  These should generally be quite safe to delete, but it would be better to do this directly from orderly (VIMC-3157)
+* `orderly_migrate` can now clean up old migration backup files.  These should generally be quite safe to delete, but it would be better to do this directly from `orderly` (VIMC-3157)
 
 # orderly 0.7.15
 
@@ -24,7 +24,7 @@
 
 # orderly 0.7.13
 
-* It is now possible to deduplicate an orderly archive using `orderly::orderly_deduplicate` (VIMC-731).
+* It is now possible to deduplicate an `orderly` archive using `orderly::orderly_deduplicate` (VIMC-731).
 
 # orderly 0.7.12
 
@@ -36,7 +36,7 @@
 
 # orderly 0.7.7
 
-* Pulling from remotes now imports the report into the local orderly db, and also pulls all dependent reports (VIMC-2855, VIMC-3054).
+* Pulling from remotes now imports the report into the local `orderly` db, and also pulls all dependent reports (VIMC-2855, VIMC-3054).
 
 # orderly 0.7.6
 
@@ -73,7 +73,7 @@
 
 # orderly 0.6.5
 
-* The orderly "runner" (`orderly_runner`) will now periodically backup the destination database, which will be useful in cases where other applications store information in it (VIMC-2882)
+* The `orderly` "runner" (`orderly_runner`) will now periodically backup the destination database, which will be useful in cases where other applications store information in it (VIMC-2882)
 
 # orderly 0.6.4
 
@@ -81,11 +81,11 @@
 
 # orderly 0.6.3
 
-* The `orderly_run.yml` script has now been removed and `orderly_run.rds` is the sole source of truth for the orderly run metadata (VIMC-2873).
+* The `orderly_run.yml` script has now been removed and `orderly_run.rds` is the sole source of truth for the `orderly` run metadata (VIMC-2873).
 
 # orderly 0.6.0
 
-* Allow multiple databases (or no database) to be be used in the orderly configuration (VIMC-2795)
+* Allow multiple databases (or no database) to be be used in the `orderly` configuration (VIMC-2795)
 
 # orderly 0.5.18
 
@@ -134,10 +134,10 @@
 
 # orderly 0.5.8
 
-* Better error messages when unexpected files are found in the orderly archive (VIMC-1761)
-* Include parameters used in the orderly database (VIMC-2397)
+* Better error messages when unexpected files are found in the `orderly` archive (VIMC-1761)
+* Include parameters used in the `orderly` database (VIMC-2397)
 * Better error message when migration is needed (VIMC-2392)
-* Orderly works with report repository clones that lack an `archive` directory (VIMC-2383)
+* `orderly` works with report repository clones that lack an `archive` directory (VIMC-2383)
 
 # orderly 0.5.7
 
@@ -145,15 +145,15 @@
 
 # orderly 0.5.6
 
-* The `displayname` and `description` fields are correctly copied into the new orderly database.
+* The `displayname` and `description` fields are correctly copied into the new `orderly` database.
 
 # orderly 0.5.5
 
-* New `connection` column in the `report_version` table in orderly's database (VIMC-2327)
+* New `connection` column in the `report_version` table in `orderly`'s database (VIMC-2327)
 
 # orderly 0.5.4
 
-* New `latest` column in the `report` table in orderly's database (VIMC-2298)
+* New `latest` column in the `report` table in `orderly`'s database (VIMC-2298)
 
 # orderly 0.5.3
 
@@ -163,7 +163,7 @@
 
 * Introduces "global resources" support for assets used in multiple reports that are not themselves dependencies.
 * The database schema includes a `published` field (VIMC-2251)
-* New option `if_schema_changed` to rebuild orderly database (`orderly_rebuild`) only on a schema change (VIMC-2280)
+* New option `if_schema_changed` to rebuild `orderly` database (`orderly_rebuild`) only on a schema change (VIMC-2280)
 
 # orderly 0.5.0
 
@@ -185,7 +185,7 @@
 
 # orderly 0.4.5
 
-* Copy a template report from the `orderly/template.yml` within the orderly root if available, then falling back on the version in the package.
+* Copy a template report from the `orderly/template.yml` within the `orderly` root if available, then falling back on the version in the package.
 * `push_archive`, the inverse of `pull_archive` for copying an archive report elsewhere (VIMC-1811).  Currently only supported for `remote` as a path.
 * `orderly::orderly_run_info()` can return information about the current run, including information on dependencies.
 
@@ -195,7 +195,7 @@
 * Runner can kill reports
 * Git is reset to previous HEAD immediately after preparing workdir
 * `orderly_run` gains a `--fetch` argument, used when `--ref` is specified to run `git fetch` before resolving `ref`
-* The orderly runner looks up a the `sha` for a `ref` at the point of queuing, rather than the point of running
+* The `orderly` runner looks up a the `sha` for a `ref` at the point of queuing, rather than the point of running
 * The cli tool gets a `--pull` and `--fetch` argument
 
 # orderly 0.4.1
