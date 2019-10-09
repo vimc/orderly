@@ -24,6 +24,38 @@ It is not required to use - you can create the orderly structure
 yourself (all that is compulsory is the \code{orderly_config.yml}
 file).
 }
+\details{
+This function creates a minimal orderly structure, containing:
+\description{
+
+\item{\code{orderly_config.yml}}{The orderly
+configuration. Minimally, this can be empty, but it must exist.}
+
+\item{\code{src}}{The path where report sources live. This should
+be placed under version control, and contain a number of reports,
+each in their own directory with an \code{orderly.yml} describing
+their inputs and outputs (artefacts).  The
+\code{\code{orderly_new}} function can be used to accelerate
+creation of new reports.}
+
+\item{\code{draft}}{A directory where reports will be run using
+\code{\link{orderly_run}}.  This directory should be excluded from
+version control. \code{orderly} will create it as needed if it
+does not exist when a report is run.}
+
+\item{\code{archive}}{A directory where successfully run reports
+will be moved to after being committed with
+\code{\link{orderly_commit}}.  This directory should be excluded
+from version control. \code{orderly} will create it as needed if
+it does not exist when a report is committed.}
+
+\item{\code{data}}{A direcrory where data extracted from the
+database (if used) will be stored.  This directory should be
+excluded from version control. \code{orderly} will create it as
+needed if it does not exist when a report is run.}
+
+}
+}
 \examples{
 # Initialise a new orderly repository in an temporary directory:
 path <- orderly::orderly_init(tempfile())

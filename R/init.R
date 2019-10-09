@@ -15,7 +15,7 @@
 ##' each in their own directory with an \code{orderly.yml} describing
 ##' their inputs and outputs (artefacts).  The
 ##' \code{\code{orderly_new}} function can be used to accelerate
-##' creation of new reports.
+##' creation of new reports.}
 ##'
 ##' \item{\code{draft}}{A directory where reports will be run using
 ##' \code{\link{orderly_run}}.  This directory should be excluded from
