@@ -25,7 +25,6 @@ Imports:
     DBI,
     R6,
     RSQLite,
-    crayon,
     digest,
     docopt,
     fs,
@@ -34,6 +33,7 @@ Imports:
     yaml,
     zip (>= 2.0.0)
 Suggests:
+    crayon,
     httr,
     jsonlite,
     knitr,
