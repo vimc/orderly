@@ -15,7 +15,7 @@ orderly_default_remote_get(root = NULL, locate = TRUE)
 
 \item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
-directory if \code{locate} is \code{TRUE}).}
+directory if \code{locate} is \code{TRUE}.}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
@@ -41,7 +41,7 @@ orderly::orderly_commit(id, root = path_remote)
 # And a local orderly
 path_local <- orderly::orderly_example("demo")
 
-# We'll create a an object to interact with this remote using
+# We'll create an object to interact with this remote using
 # orderly_remote_path.
 remote <- orderly::orderly_remote_path(path_remote)
 

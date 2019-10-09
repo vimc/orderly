@@ -16,7 +16,7 @@ orderly_pull_archive(name, id = "latest", root = NULL, locate = TRUE,
 
 \item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
-directory if \code{locate} is \code{TRUE}).}
+directory if \code{locate} is \code{TRUE}.}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
@@ -39,7 +39,7 @@ to use the latest report.}
 Download dependent reports from an orderly remote.  This can only
 be used if the \code{orderly_config.yml} lists a remote.  This
 allows for a centralised workflow where a central orderly store
-exists and holds the canonical copy of a report, from which
+exists and holds the canonical copies of reports, from which
 versions can be downloaded into local stores.
 }
 \details{

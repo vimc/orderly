@@ -23,9 +23,9 @@
 ##' @param parameters Parameters passed to the report. A named list of
 ##'   parameters declared in the \code{orderly.yml}.
 ##'
-##' @param envir The parent of environment to evaluate the report in;
-##'   by default a new environment will be made with the global
-##'   environment as the parent.
+##' @param envir The parent of the environment that will be used to
+##'   evaluate the report script; by default a new environment will be
+##'   made with the global environment as the parent.
 ##'
 ##' @param ref A git reference to use for this run (see Details)
 ##'
@@ -162,7 +162,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
 ##' @param cleanup Delete testing directory on exit?  If \code{FALSE}
 ##'   then you will probably want to use \code{\link{orderly_cleanup}}
 ##'   later to delete the test directory.  Note that it is not
-##'   possible to commit the results of an orderly test run
+##'   possible to commit the results of an orderly test run.
 orderly_test_end <- function(cleanup = FALSE) {
   if (is.null(cache$test)) {
     stop("Not running in test mode")

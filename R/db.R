@@ -1,5 +1,5 @@
 ##' Connect to the orderly databases.  These should be treated as as
-##' \emph{read only}.
+##' \emph{read-only}.
 ##'
 ##' Orderly has several databases:
 ##'

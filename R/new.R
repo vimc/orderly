@@ -6,7 +6,7 @@
 ##' To create a custom template, create a directory \code{templates}
 ##' within your orderly root.  Within that directory create
 ##' directories containing all the files that you would like a report
-##' to contain.  This \code{emph} must contain a file
+##' to contain.  This \emph{must} contain a file
 ##' \code{orderly.yml} but may contain further files (for example, you
 ##' might want a default script and Rmd file).
 ##'

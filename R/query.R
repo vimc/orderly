@@ -15,7 +15,7 @@ VERSION_ID_RE <- "^([0-9]{8}-[0-9]{6})-([[:xdigit:]]{4})([[:xdigit:]]{4})$"
 ##'
 ##' @param root The path to an orderly root directory, or \code{NULL}
 ##'   (the default) to search for one from the current working
-##'   directory if \code{locate} is \code{TRUE}).
+##'   directory if \code{locate} is \code{TRUE}.
 ##'
 ##' @param locate Logical, indicating if the configuration should be
 ##'   searched for.  If \code{TRUE} and \code{config} is not given,

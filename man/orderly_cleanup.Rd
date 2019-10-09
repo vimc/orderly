@@ -12,17 +12,17 @@ orderly_cleanup(name = NULL, root = NULL, locate = TRUE,
 
 \item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
-directory if \code{locate} is \code{TRUE}).}
+directory if \code{locate} is \code{TRUE}.}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
 
-\item{draft}{Remove drafts?}
+\item{draft}{Logical, inicating if drafts should be removed}
 
-\item{data}{Remove dangling data (data not used by any draft or
-archived report).}
+\item{data}{Logical, indicating if dangling data should be removed
+(data not used by any draft or archived report).}
 
 \item{failed_only}{Delete only failed reports (those without the
 end-of-run metadata).  This will also clean up drafts created by

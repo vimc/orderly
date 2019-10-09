@@ -27,13 +27,13 @@ orderly_data(name, parameters = NULL, envir = NULL, root = NULL,
 \item{parameters}{Parameters passed to the report. A named list of
 parameters declared in the \code{orderly.yml}.}
 
-\item{envir}{The parent of environment to evaluate the report in;
-by default a new environment will be made with the global
-environment as the parent.}
+\item{envir}{The parent of the environment that will be used to
+evaluate the report script; by default a new environment will be
+made with the global environment as the parent.}
 
 \item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
-directory if \code{locate} is \code{TRUE}).}
+directory if \code{locate} is \code{TRUE}.}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
@@ -43,7 +43,7 @@ parents until it finds an \code{orderly_config.yml} file.}
 \item{cleanup}{Delete testing directory on exit?  If \code{FALSE}
 then you will probably want to use \code{\link{orderly_cleanup}}
 later to delete the test directory.  Note that it is not
-possible to commit the results of an orderly test run}
+possible to commit the results of an orderly test run.}
 }
 \description{
 For interactive testing of orderly code.  This runs through and

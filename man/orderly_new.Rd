@@ -12,7 +12,7 @@ orderly_new(name, root = NULL, locate = TRUE, quiet = FALSE,
 
 \item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
-directory if \code{locate} is \code{TRUE}).}
+directory if \code{locate} is \code{TRUE}.}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
@@ -38,7 +38,7 @@ orderly.
 To create a custom template, create a directory \code{templates}
 within your orderly root.  Within that directory create
 directories containing all the files that you would like a report
-to contain.  This \code{emph} must contain a file
+to contain.  This \emph{must} contain a file
 \code{orderly.yml} but may contain further files (for example, you
 might want a default script and Rmd file).
 

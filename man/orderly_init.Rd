@@ -49,7 +49,7 @@ will be moved to after being committed with
 from version control. \code{orderly} will create it as needed if
 it does not exist when a report is committed.}
 
-\item{\code{data}}{A direcrory where data extracted from the
+\item{\code{data}}{A directory where data extracted from the
 database (if used) will be stored.  This directory should be
 excluded from version control. \code{orderly} will create it as
 needed if it does not exist when a report is run.}
