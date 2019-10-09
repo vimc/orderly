@@ -26,7 +26,7 @@ file).
 }
 \details{
 This function creates a minimal orderly structure, containing:
-\description{
+\describe{
 
 \item{\code{orderly_config.yml}}{The orderly
 configuration. Minimally, this can be empty, but it must exist.}
