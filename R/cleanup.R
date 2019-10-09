@@ -8,7 +8,7 @@
 ##' @title Orderly cleanup
 ##' @param name Optional name; in this case only clean up drafts with this name
 ##'
-##' @param draft Logical, inicating if drafts should be removed
+##' @param draft Logical, indicating if drafts should be removed
 ##'
 ##' @param data Logical, indicating if dangling data should be removed
 ##'   (data not used by any draft or archived report).

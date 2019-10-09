@@ -19,7 +19,7 @@ searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
 
-\item{draft}{Logical, inicating if drafts should be removed}
+\item{draft}{Logical, indicating if drafts should be removed}
 
 \item{data}{Logical, indicating if dangling data should be removed
 (data not used by any draft or archived report).}
