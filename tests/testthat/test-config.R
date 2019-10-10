@@ -167,7 +167,7 @@ test_that("remote parse check", {
 })
 
 test_that("no global folder", {
-  path <- prepare_orderly_example("global")
+  path <- prepare_orderly_example("global", testing = TRUE)
   # now we break the orderly_config.yml
   path_config <- file.path(path, "orderly_config.yml")
   dat <- yaml_read(path_config)
@@ -214,14 +214,14 @@ test_that("can't use both database and source sections", {
 
 
 test_that("can read a configuration with no database", {
-  path <- prepare_orderly_example("db0")
+  path <- prepare_orderly_example("db0", testing = TRUE)
   config <- orderly_config(path)
   expect_false("database" %in% names(config))
 })
 
 
 test_that("can read a configuration with two databases", {
-  path <- prepare_orderly_example("db2")
+  path <- prepare_orderly_example("db2", testing = TRUE)
   config <- orderly_config(path)
   expect_setequal(names(config$database), c("source1", "source2"))
   expect_equal(config$database$source1$args, list(dbname = "source1.sqlite"))
@@ -236,7 +236,7 @@ test_that("can read a configuration with two databases", {
 test_that("warn when reading old-style configuration", {
   path <- withr::with_options(
     list(orderly.nowarnings = TRUE),
-    prepare_orderly_example("olddb"))
+    prepare_orderly_example("olddb", testing = TRUE))
 
   expect_warning(orderly_config(path),
                  "Use of 'source' is deprecated and will be removed")

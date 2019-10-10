@@ -48,14 +48,14 @@ orderly_init <- function(root, doc = TRUE, quiet = FALSE) {
     readme <- function(path) {
       file.path(root, path, "README.md")
     }
-    file_copy(orderly_file("readme_src.md"), readme("src"))
-    file_copy(orderly_file("readme_data.md"), readme("data"))
-    file_copy(orderly_file("readme_draft.md"), readme("draft"))
-    file_copy(orderly_file("readme_archive.md"), readme("archive"))
-    file_copy(orderly_file("readme_root.md"),
+    file_copy(orderly_file("init/readme_src.md"), readme("src"))
+    file_copy(orderly_file("init/readme_data.md"), readme("data"))
+    file_copy(orderly_file("init/readme_draft.md"), readme("draft"))
+    file_copy(orderly_file("init/readme_archive.md"), readme("archive"))
+    file_copy(orderly_file("init/readme_root.md"),
               file.path(root, "README.md"))
   }
-  file_copy(orderly_file("orderly_config_example.yml"),
+  file_copy(orderly_file("init/orderly_config.yml"),
             path_orderly_config_yml(root))
   write_orderly_archive_version(cache$current_archive_version, root)
   if (!quiet) {
