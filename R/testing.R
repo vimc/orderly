@@ -95,8 +95,13 @@ fake_db <- function(con, seed = 1) {
 
 ## Copy an example directory from 'inst/' and set up the source
 ## database ready to be used.
-prepare_orderly_example <- function(name, path = tempfile()) {
-  src <- orderly_file(file.path("examples", name))
+prepare_orderly_example <- function(name, path = tempfile(), testing = FALSE) {
+  if (testing) {
+    src <- file.path("examples", name)
+    stopifnot(file.exists(src))
+  } else {
+    src <- orderly_file(file.path("examples", name))
+  }
   orderly_init(path, quiet = TRUE)
   src_files <- dir(src, full.names = TRUE)
   file_copy(src_files, path, overwrite = TRUE, recursive = TRUE)

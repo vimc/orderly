@@ -76,7 +76,7 @@ test_that("custom template can be overriden by system", {
 
   orderly_new("testing", path, quiet = TRUE, template = "system")
   expect_identical(readLines(file.path(path, "src", "testing", "orderly.yml")),
-                   readLines(orderly_file("orderly_example.yml")))
+                   readLines(orderly_file("init/orderly.yml")))
 })
 
 

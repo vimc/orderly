@@ -83,7 +83,7 @@ orderly_new <- function(name, root = NULL, locate = TRUE, quiet = FALSE,
 
 orderly_new_system <- function(dest, config) {
   dir.create(dest)
-  template <- orderly_file("orderly_example.yml")
+  template <- orderly_file("init/orderly.yml")
   dest_yml <- file.path(dest, "orderly.yml")
 
   if (nrow(config$fields) == 0L) {

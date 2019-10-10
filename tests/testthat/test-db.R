@@ -64,8 +64,8 @@ test_that("no transient db", {
 
 
 test_that("db includes parameters", {
-  path <- prepare_orderly_example("example")
-  id <- orderly_run("example", parameters = list(cyl = 4), root = path,
+  path <- prepare_orderly_example("demo")
+  id <- orderly_run("other", parameters = list(nmin = 0.1), root = path,
                     echo = FALSE)
   orderly_commit(id, root = path)
   con <- orderly_db("destination", root = path)
@@ -73,14 +73,14 @@ test_that("db includes parameters", {
   DBI::dbDisconnect(con)
   expect_equal(d, data_frame(id = 1,
                              report_version = id,
-                             name = "cyl",
+                             name = "nmin",
                              type = "number",
-                             value = "4"))
+                             value = "0.1"))
 })
 
 
 test_that("different parameter types are stored correctly", {
-  path <- prepare_orderly_example("parameters")
+  path <- prepare_orderly_example("parameters", testing = TRUE)
   id <- orderly_run("example", parameters = list(a = 1, b = TRUE, c = "one"),
                     root = path, echo = FALSE)
   orderly_commit(id, root = path)
@@ -96,7 +96,7 @@ test_that("different parameter types are stored correctly", {
 
 
 test_that("avoid unserialisable parameters", {
-  path <- prepare_orderly_example("parameters")
+  path <- prepare_orderly_example("parameters", testing = TRUE)
   t <- Sys.Date()
   id <- orderly_run("example", parameters = list(a = t, b = TRUE, c = "one"),
                     root = path, echo = FALSE)
