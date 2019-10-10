@@ -161,19 +161,6 @@ test_that("leave connection open", {
 })
 
 
-test_that("included other", {
-  path <- prepare_orderly_example("other")
-  id <- orderly_run("other", list(nmin = 0), root = path, echo = FALSE)
-  p <- orderly_commit(id, root = path)
-  info <- recipe_read(file.path(path_src(path), "other"),
-                      orderly_config(path))
-  con <- orderly_db("destination", root = path)
-  on.exit(DBI::dbDisconnect(con))
-  dat <- DBI::dbReadTable(con, "report_version")
-  expect_equal(dat$description, info$description)
-  expect_equal(dat$displayname, info$displayname)
-})
-
 test_that("connection", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))

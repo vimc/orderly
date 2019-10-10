@@ -86,13 +86,6 @@ test_that("minimal", {
                "orderly.yml:packages' must be character")
 })
 
-test_that("other", {
-  path <- prepare_orderly_example("other")
-  config <- orderly_config(path)
-  info <- recipe_read(file.path(path_src(path), "other"), config)
-  expect_is(info$displayname, "character")
-  expect_is(info$description, "character")
-})
 
 test_that("ill formed artefacts", {
   path <- prepare_orderly_example("minimal")
