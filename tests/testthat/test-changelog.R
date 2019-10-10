@@ -260,7 +260,7 @@ test_that("label values are checked", {
 
 
 test_that("reports can't use changelogs if not enabled", {
-  path <- prepare_orderly_example("minimal", testing = TRUE)
+  path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
   path_cl <- path_changelog_txt(path_example)
