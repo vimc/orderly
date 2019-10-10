@@ -55,7 +55,7 @@ orderly_init <- function(root, doc = TRUE, quiet = FALSE) {
     file_copy(orderly_file("init/readme_root.md"),
               file.path(root, "README.md"))
   }
-  file_copy(orderly_file("orderly_config.yml"),
+  file_copy(orderly_file("init/orderly_config.yml"),
             path_orderly_config_yml(root))
   write_orderly_archive_version(cache$current_archive_version, root)
   if (!quiet) {
