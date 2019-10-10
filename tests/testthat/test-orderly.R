@@ -192,7 +192,7 @@ test_that("onload can be rerun", {
 
 
 test_that("default parameter values are used", {
-  path <- prepare_orderly_example("parameters")
+  path <- prepare_orderly_example("parameters", testing = TRUE)
 
   id <- orderly_run("example", list(a = 1, b = 2), root = path, echo = FALSE)
   d <- readRDS(path_orderly_run_rds(file.path(path, "draft", "example", id)))

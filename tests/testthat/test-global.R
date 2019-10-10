@@ -1,7 +1,7 @@
 context("globals")
 
 test_that("global", {
-  path <- prepare_orderly_example("global")
+  path <- prepare_orderly_example("global", testing = TRUE)
   tmp <- tempfile()
   expect_error(
     orderly_run("example", root = path, id_file = tmp, echo = FALSE),
@@ -10,7 +10,7 @@ test_that("global", {
 })
 
 test_that("missing global file", {
-  path <- prepare_orderly_example("global")
+  path <- prepare_orderly_example("global", testing = TRUE)
   # now we break the report yaml
   path_example <- file.path(path, "src", "example")
   path_yaml <- file.path(path_example, "orderly.yml")
@@ -29,7 +29,7 @@ test_that("missing global file", {
 
 
 test_that("global resources end up in db", {
-  path <- prepare_orderly_example("global")
+  path <- prepare_orderly_example("global", testing = TRUE)
   tmp <- tempfile()
   id <- orderly_run("example", root = path, id_file = tmp, echo = FALSE)
   orderly_commit(id, root = path)
@@ -49,7 +49,7 @@ test_that("global resources end up in db", {
 
 ## We can relax this once VIMC-2961 is resolved
 test_that("directories of global resources are forbidden", {
-  path <- prepare_orderly_example("global")
+  path <- prepare_orderly_example("global", testing = TRUE)
   p_global <- file.path(path, "global", "dir")
   dir.create(p_global)
 
@@ -65,7 +65,7 @@ test_that("directories of global resources are forbidden", {
 
 
 test_that("global resource from a subdir", {
-  path <- prepare_orderly_example("global")
+  path <- prepare_orderly_example("global", testing = TRUE)
   dir.create(file.path(path, "global", "dir"))
   file.rename(file.path(path, "global", "data.csv"),
               file.path(path, "global", "dir", "data.csv"))
@@ -95,7 +95,7 @@ test_that("global resource from a subdir", {
 
 
 test_that("rename global resource on import, into new dir", {
-  path <- prepare_orderly_example("global")
+  path <- prepare_orderly_example("global", testing = TRUE)
   dir.create(file.path(path, "global", "dir"))
   file.rename(file.path(path, "global", "data.csv"),
               file.path(path, "global", "dir", "globaldata.csv"))

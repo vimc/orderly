@@ -203,7 +203,7 @@ test_that("data field is optional", {
 
 
 test_that("can't use database in configurations that lack them", {
-  path <- prepare_orderly_example("db0")
+  path <- prepare_orderly_example("db0", testing = TRUE)
   p <- file.path(path, "src", "example", "orderly.yml")
   txt <- readLines(p)
   dat <- list(data = list(dat = list(query = "SELECT name, number FROM thing")))
@@ -215,7 +215,7 @@ test_that("can't use database in configurations that lack them", {
 
 
 test_that("can't use connection in configurations that lack databases", {
-  path <- prepare_orderly_example("db0")
+  path <- prepare_orderly_example("db0", testing = TRUE)
   p <- file.path(path, "src", "example", "orderly.yml")
   txt <- readLines(p)
   dat <- list(connection = "con")
@@ -227,7 +227,7 @@ test_that("can't use connection in configurations that lack databases", {
 
 
 test_that("database names are required with more than one db", {
-  path <- prepare_orderly_example("db2")
+  path <- prepare_orderly_example("db2", testing = TRUE)
   p <- file.path(path, "src", "example", "orderly.yml")
   dat <- yaml_read(p)
   dat$data$dat1$database <- NULL
@@ -239,7 +239,7 @@ test_that("database names are required with more than one db", {
 
 
 test_that("connection names are required with more than one db", {
-  path <- prepare_orderly_example("db2")
+  path <- prepare_orderly_example("db2", testing = TRUE)
   p <- file.path(path, "src", "connection", "orderly.yml")
   dat <- yaml_read(p)
   dat$connection <- "con"
@@ -252,7 +252,7 @@ test_that("connection names are required with more than one db", {
 
 ## This is not *strictly* necessary, but let's roll with it for now
 test_that("Can't use database name on old style configuration", {
-  path <- prepare_orderly_example("db1")
+  path <- prepare_orderly_example("db1", testing = TRUE)
   p <- file.path(path, "orderly_config.yml")
   dat <- yaml_read(p)
   writeLines(yaml::as.yaml(list(source = dat$database$source1)), p)
@@ -277,7 +277,7 @@ test_that("Can't use database name on old style configuration", {
 
 
 test_that("validate database names", {
-  path <- prepare_orderly_example("db2")
+  path <- prepare_orderly_example("db2", testing = TRUE)
   p <- file.path(path, "orderly_config.yml")
   dat <- yaml_read(p)
   names(dat$database) <- c("db1", "db2")
@@ -297,7 +297,7 @@ test_that("validate database names", {
 test_that("warn old style db", {
   path <- withr::with_options(
     list(orderly.nowarnings = TRUE),
-    prepare_orderly_example("olddb"))
+    prepare_orderly_example("olddb", testing = TRUE))
   cfg <- withr::with_options(
     list(orderly.nowarnings = TRUE),
     orderly_config(path))
@@ -412,7 +412,7 @@ test_that("trailing slash on resource directory", {
 
 
 test_that("old style global resources deprecated", {
-  path <- prepare_orderly_example("global")
+  path <- prepare_orderly_example("global", testing = TRUE)
   path_example <- file.path(path, "src", "example")
   path_yaml <- file.path(path_example, "orderly.yml")
   config_lines <- readLines(path_yaml)
@@ -429,7 +429,7 @@ test_that("old style global resources deprecated", {
 
 
 test_that("read parameters", {
-  path <- prepare_orderly_example("parameters")
+  path <- prepare_orderly_example("parameters", testing = TRUE)
   path_example <- file.path(path, "src", "example")
   info <- recipe_read(path_example, orderly_config(path))
   expect_equal(info$parameters,
@@ -438,7 +438,7 @@ test_that("read parameters", {
 
 
 test_that("read old-style parameters", {
-  path <- prepare_orderly_example("parameters")
+  path <- prepare_orderly_example("parameters", testing = TRUE)
   path_example <- file.path(path, "src", "example")
   path_orderly <- file.path(path_example, "orderly.yml")
   dat <- yaml_read(path_orderly)
@@ -453,7 +453,7 @@ test_that("read old-style parameters", {
 
 
 test_that("validate parameters", {
-  path <- prepare_orderly_example("parameters")
+  path <- prepare_orderly_example("parameters", testing = TRUE)
   path_example <- file.path(path, "src", "example")
   path_orderly <- file.path(path_example, "orderly.yml")
   config <- orderly_config(path)

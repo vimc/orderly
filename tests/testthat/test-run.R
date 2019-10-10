@@ -161,18 +161,6 @@ test_that("leave connection open", {
 })
 
 
-test_that("included example", {
-  path <- prepare_orderly_example("example")
-  id <- orderly_run("example", list(cyl = 4), root = path, echo = FALSE)
-  p <- orderly_commit(id, root = path)
-  expect_true(is_directory(p))
-  con <- orderly_db("destination", root = path)
-  on.exit(DBI::dbDisconnect(con))
-  dat <- DBI::dbReadTable(con, "report_version")
-  expect_equal(dat$description, NA_character_)
-  expect_equal(dat$displayname, NA_character_)
-})
-
 test_that("included other", {
   path <- prepare_orderly_example("other")
   id <- orderly_run("other", list(nmin = 0), root = path, echo = FALSE)
@@ -310,7 +298,7 @@ test_that("Can't commit report using nonexistant id", {
 })
 
 test_that("resources", {
-  path <- prepare_orderly_example("resources")
+  path <- prepare_orderly_example("resources", testing = TRUE)
   id <- orderly_run("use_resource", root = path, echo = FALSE)
   p <- file.path(path, "draft", "use_resource", id)
   expect_true(file.exists(file.path(p, "meta/data.csv")))
@@ -329,18 +317,20 @@ test_that("resources", {
 
 
 test_that("markdown", {
-  path <- prepare_orderly_example("knitr")
+  path <- prepare_orderly_example("demo")
 
-  id <- orderly_run("example", root = path, echo = FALSE)
+  id <- orderly_run("html", root = path, echo = FALSE)
 
-  report <- file.path(path, "draft", "example", id, "report.html")
+  report <- file.path(path, "draft", "html", id, "myreport.html")
   expect_true(file.exists(report))
   expect_true(any(grepl("ANSWER:2", readLines(report))))
 })
 
 test_that("database is not loaded unless needed", {
   vars <- c(SOME_ENVVAR = "source.sqlite")
-  path <- withr::with_envvar(vars, prepare_orderly_example("nodb"))
+  path <- withr::with_envvar(
+    vars,
+    prepare_orderly_example("nodb", testing = TRUE))
 
   expect_identical(as.list(orderly_data("example", root = path)), list())
   id <- orderly_run("example", root = path, echo = FALSE)
@@ -412,7 +402,7 @@ test_that("test mode end", {
 
 
 test_that("run with message", {
-  path <- prepare_orderly_example("changelog")
+  path <- prepare_orderly_example("changelog", testing = TRUE)
   test_message <- "[label1] test"
   id <- orderly_run("example", root = path, echo = FALSE,
                     message = test_message)
@@ -629,13 +619,13 @@ test_that("can't commit report twice", {
 
 
 test_that("missing parameters throws an error", {
-  path <- prepare_orderly_example("example")
+  path <- prepare_orderly_example("demo")
   on.exit(unlink(path, recursive = TRUE))
 
-  expect_error(orderly_run("example", root = path),
-               "Missing parameters: 'cyl'")
-  expect_error(orderly_run("example", list(cl = 2), root = path),
-               "Missing parameters: 'cyl'")
+  expect_error(orderly_run("other", root = path),
+               "Missing parameters: 'nmin'")
+  expect_error(orderly_run("other", list(cl = 2), root = path),
+               "Missing parameters: 'nmin'")
 })
 
 
@@ -648,7 +638,7 @@ test_that("orderly_environment", {
 })
 
 test_that("modify one resource", {
-  path <- prepare_orderly_example("resources")
+  path <- prepare_orderly_example("resources", testing = TRUE)
   path_example <- file.path(path, "src", "use_resource")
   script_path <- file.path(path_example, "script.R")
 
@@ -663,7 +653,7 @@ test_that("modify one resource", {
 
 
 test_that("modify multiple resources", {
-  path <- prepare_orderly_example("resources")
+  path <- prepare_orderly_example("resources", testing = TRUE)
   path_example <- file.path(path, "src", "multiple_resources")
   script_path <- file.path(path_example, "script.R")
 
@@ -680,7 +670,7 @@ test_that("modify multiple resources", {
 
 test_that("delete a resource", {
   ## delete 1 resource
-  path <- prepare_orderly_example("resources")
+  path <- prepare_orderly_example("resources", testing = TRUE)
   path_example <- file.path(path, "src", "use_resource")
   script_path <- file.path(path_example, "script.R")
 
@@ -695,7 +685,7 @@ test_that("delete a resource", {
 
 
 test_that("delete multiple resources", {
-  path <- prepare_orderly_example("resources")
+  path <- prepare_orderly_example("resources", testing = TRUE)
   path_example <- file.path(path, "src", "multiple_resources")
   script_path <- file.path(path_example, "script.R")
 
@@ -714,7 +704,7 @@ test_that("delete multiple resources", {
 })
 
 test_that("multiple resources", {
-  path <- prepare_orderly_example("resources")
+  path <- prepare_orderly_example("resources", testing = TRUE)
   id <- orderly_run("multiple_resources", root = path, echo = FALSE)
   p <- file.path(path, "draft", "multiple_resources", id)
   expect_true(file.exists(file.path(p, "meta/data.csv")))
@@ -761,7 +751,7 @@ test_that("can run report with a view", {
 
 
 test_that("can run a report from orderly with no database", {
-  path <- prepare_orderly_example("db0")
+  path <- prepare_orderly_example("db0", testing = TRUE)
   id <- orderly_run("example", root = path, echo = FALSE)
   expect_true(file.exists(
     file.path(path, "draft", "example", id, "mygraph.png")))
@@ -771,7 +761,7 @@ test_that("can run a report from orderly with no database", {
 
 
 test_that("can run a report from orderly with one (named) database", {
-  path <- prepare_orderly_example("db1")
+  path <- prepare_orderly_example("db1", testing = TRUE)
   id <- orderly_run("example", root = path, echo = FALSE)
   expect_true(file.exists(
     file.path(path, "draft", "example", id, "mygraph.png")))
@@ -781,7 +771,7 @@ test_that("can run a report from orderly with one (named) database", {
 
 
 test_that("can run a report from orderly with two databases", {
-  path <- prepare_orderly_example("db2")
+  path <- prepare_orderly_example("db2", testing = TRUE)
   id <- orderly_run("example", root = path, echo = FALSE)
   expect_true(file.exists(
     file.path(path, "draft", "example", id, "mygraph.png")))
@@ -791,7 +781,7 @@ test_that("can run a report from orderly with two databases", {
 
 
 test_that("Can use connections with two databases", {
-  path <- prepare_orderly_example("db2")
+  path <- prepare_orderly_example("db2", testing = TRUE)
   id <- orderly_run("connection", root = path, echo = FALSE)
   expect_true(file.exists(
     file.path(path, "draft", "connection", id, "mygraph.png")))

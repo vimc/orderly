@@ -97,8 +97,8 @@ fake_db <- function(con, seed = 1) {
 ## database ready to be used.
 prepare_orderly_example <- function(name, path = tempfile(), testing = FALSE) {
   if (testing) {
-    stopifnot(identical(Sys.getenv("TESTTHAT"), "true"))
     src <- file.path("examples", name)
+    stopifnot(file.exists(src))
   } else {
     src <- orderly_file(file.path("examples", name))
   }

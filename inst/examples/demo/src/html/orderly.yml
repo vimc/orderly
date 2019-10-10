@@ -12,3 +12,4 @@ requester: Funder McFunderface
 comment: This is a comment
 resources:
   - myreport.Rmd
+  - support.R
