@@ -662,17 +662,21 @@ recipe_current_run_clear <- function() {
 ##'
 ##' @export
 ##' @examples
-##' path <- orderly::orderly_example("depends")
+##' path <- orderly::orderly_example("demo")
 ##'
 ##' # This example uses orderly_run_info within its script, saving the
 ##' # output to "output.rds"
-##' readLines(file.path(path, "src", "depend", "script.R"))
+##' readLines(file.path(path, "src", "use_dependency", "script.R"))
 ##'
-##' orderly::orderly_run("example", root = path)
-##' id <- orderly::orderly_run("depend", root = path)
+##' # Run the dependency:
+##' id <- orderly::orderly_run("other", list(nmin = 0), root = path)
+##' orderly::orderly_commit(id, root = path)
+##'
+##' # Then the report
+##' id <- orderly::orderly_run("use_dependency", root = path)
 ##'
 ##' # This is the contents:
-##' readRDS(file.path(path, "draft", "depend", id, "output.rds"))
+##' readRDS(file.path(path, "draft", "use_dependency", id, "info.rds"))
 orderly_run_info <- function() {
   info <- recipe_current_run_get()
   if (is.null(info)) {

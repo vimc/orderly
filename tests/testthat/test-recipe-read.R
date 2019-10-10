@@ -166,7 +166,7 @@ test_that("resource case matters", {
 })
 
 test_that("dependencies must be scalar", {
-  path <- prepare_orderly_example("depends")
+  path <- prepare_orderly_example("depends", testing = TRUE)
   id <- orderly_run("example", root = path, echo = FALSE)
 
   filename <- file.path(path, "src", "depend", "orderly.yml")
@@ -180,7 +180,7 @@ test_that("dependencies must be scalar", {
 
 
 test_that("dependencies must exist", {
-  path <- prepare_orderly_example("depends")
+  path <- prepare_orderly_example("depends", testing = TRUE)
   id <- orderly_run("example", root = path, echo = FALSE)
 
   filename <- file.path(path, "src", "depend", "orderly.yml")

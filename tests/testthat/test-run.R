@@ -245,7 +245,7 @@ test_that("no data", {
 })
 
 test_that("use artefact", {
-  path <- prepare_orderly_example("depends")
+  path <- prepare_orderly_example("depends", testing = TRUE)
 
   path_example <- file.path(path, "src", "example")
   path_depend <- file.path(path, "src", "depend")
@@ -289,7 +289,7 @@ test_that("use artefact", {
 })
 
 test_that("Can't commit report using nonexistant id", {
-  path <- prepare_orderly_example("depends")
+  path <- prepare_orderly_example("depends", testing = TRUE)
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("depend", root = path, echo = FALSE)
   unlink(file.path(path, "draft", "example", id1), recursive = TRUE)
@@ -431,7 +431,7 @@ test_that("no unexpected artefact", {
 
 
 test_that("renamed dependencies are expected", {
-  path <- prepare_orderly_example("depends")
+  path <- prepare_orderly_example("depends", testing = TRUE)
   orderly_run("example", root = path, echo = FALSE)
   messages <- capture_messages(
     orderly_run("depend", root = path, echo = FALSE))
@@ -479,7 +479,7 @@ test_that("multiple non-existent packages", {
 })
 
 test_that("use multiple versions of an artefact", {
-  path <- prepare_orderly_example("depends")
+  path <- prepare_orderly_example("depends", testing = TRUE)
 
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("example", root = path, echo = FALSE)
@@ -791,7 +791,7 @@ test_that("Can use connections with two databases", {
 
 
 test_that("prevent duplicate filenames", {
-  path <- prepare_orderly_example("depends")
+  path <- prepare_orderly_example("depends", testing = TRUE)
   id1 <- orderly_run("example", root = path, echo = FALSE)
 
   p <- file.path(path, "src", "depend", "orderly.yml")

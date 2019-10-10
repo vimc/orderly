@@ -60,7 +60,7 @@ prepare_orderly_remote_example <- function(path = tempfile()) {
   path_remote <- file.path(path, "remote")
   path_local <- file.path(path, "local")
 
-  prepare_orderly_example("depends", path_remote)
+  prepare_orderly_example("depends", path_remote, testing = TRUE)
 
   id1 <- orderly_run("example", root = path_remote, echo = FALSE)
   id2 <- orderly_run("example", root = path_remote, echo = FALSE)
@@ -68,7 +68,7 @@ prepare_orderly_remote_example <- function(path = tempfile()) {
   orderly_commit(id2, root = path_remote)
   remote_path <- orderly_remote_path(path_remote)
 
-  path_local <- prepare_orderly_example("depends")
+  path_local <- prepare_orderly_example("depends", testing = TRUE)
 
   ## Patch the report to use non-draft dependencies:
   p <- file.path(path_local, "src", "depend", "orderly.yml")
