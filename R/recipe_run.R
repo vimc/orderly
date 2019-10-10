@@ -15,6 +15,18 @@
 ##' tree will revert back to the original branch at completion (or
 ##' failure to complete) the report.
 ##'
+##' Parameters are passed to the report as a named list, for example
+##'
+##' \code{
+##' id <- orderly::orderly_run("other", list(nmin = 0.2), root = path)
+##' }
+##'
+##' (see the examples).  The names of the parameters (here,
+##' \code{nmin}) must correspond to declared parameters in the
+##' \code{orderly.yml}.  It is an error if parameters without a
+##' default are omitted, and it is an error if unknown parameters are
+##' provided.
+##'
 ##' @title Run a report
 ##'
 ##' @param name Name of the report to run (see
