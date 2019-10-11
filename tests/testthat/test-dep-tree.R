@@ -5,6 +5,7 @@ test_that("basic tree example", {
 
   demo <- c("- name: other", "  parameters:", "    nmin: 0",
             "- name: use_dependency",
+            "- name: use_dependency_2",
             "- name: use_dependency_2")
   writeLines(demo, file.path(path, "demo.yml"))
   run_orderly_demo(path)
@@ -21,7 +22,7 @@ test_that("basic tree example", {
   readable_child_1 <- child_1$format()
   expect_match(readable_child_1,
                "use_dependency \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
-  expect_true(length(child_1$children) == 1)
+  expect_true(length(child_1$children) == 2)
 
   child_2 <- child_1$children[[1]]
   readable_child_2 <- child_2$format()
@@ -86,14 +87,22 @@ test_that("has dependencies upstream", {
 
   demo <- c("- name: other", "  parameters:", "    nmin: 0",
             "- name: use_dependency",
-            "- name: use_dependency_2",
             "- name: use_dependency_2")
   writeLines(demo, file.path(path, "demo.yml"))
   run_orderly_demo(path)
 
+  ## top report so has no dependencies upstream
   tree <- orderly_build_dep_tree("other", root = path, upstream = TRUE)
+  root <- tree$root
+  expect_true(length(root$children) == 0)
 
   tree <- orderly_build_dep_tree("use_dependency_2", root = path, upstream = TRUE)
+  root <- tree$root
+  expect_true(length(root$children) == 1)
+  child_1 <- root$children[[1]]
+  expect_true(length(child_1$children) == 1)
+  child_2 <- child_1$children[[1]]
+  expect_true(length(child_2$children) == 0)
 })
 
 test_that("out of date dependencies", {
@@ -108,7 +117,25 @@ test_that("out of date dependencies", {
   writeLines(demo, file.path(path, "demo.yml"))
   run_orderly_demo(path)
 
-  tree <- orderly_build_dep_tree("other", root = path, upstream = FALSE)
+  tree <- orderly_build_dep_tree("other", root = path)
+
+  root <- tree$root
+  expect_true(!root$out_of_date)
+
+  dep_1_1 <- root$children[[1]]
+  expect_true(dep_1_1$out_of_date)
+
+  dep_1_2 <- root$children[[2]]
+  expect_true(!dep_1_2$out_of_date)
+
+  dep_2_1 <- dep_1_1$children[[1]]
+  expect_true(dep_2_1$out_of_date)
+
+  dep_2_2 <- dep_1_2$children[[1]]
+  expect_true(dep_2_2$out_of_date)
+
+  dep_2_3 <- dep_1_2$children[[2]]
+  expect_true(!dep_2_3$out_of_date)
 })
 
 test_that("propagate", {
@@ -122,4 +149,15 @@ test_that("propagate", {
   run_orderly_demo(path)
 
   tree <- orderly_build_dep_tree("other", root = path, propagate = TRUE)
+  root <- tree$root
+  expect_true(!root$out_of_date)
+
+  dep_1_1 <- root$children[[1]]
+  expect_true(dep_1_1$out_of_date)
+
+  dep_2_1 <- dep_1_1$children[[1]]
+  expect_true(dep_2_1$out_of_date)
+
+  dep_1_2 <- root$children[[2]]
+  expect_true(!dep_1_2$out_of_date)
 })
