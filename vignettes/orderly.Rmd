@@ -29,41 +29,8 @@ unlink(file.path(path, "data"), recursive = TRUE)
 unlink(file.path(path, "README.md"))
 unlink(file.path(path, "src", "README.md"))
 
-tree <- function(path, header = path) {
-  paste1 <- function(a, b) {
-    paste(rep_len(a, length(b)), b)
-  }
-  indent <- function(x, files) {
-    paste0(if (files) "| " else "  ", x)
-  }
-  is_directory <- function(x) {
-    unname(file.info(x)[, "isdir"])
-  }
-  sort_files <- function(x) {
-    i <- grepl("^[A-Z]", x)
-    c(x[i], x[!i])
-  }
-  prefix_file <- "|--="
-  prefix_dir  <- "|-+="
-
-  files <- sort_files(dir(path))
-  files_full <- file.path(path, files)
-  isdir <- is_directory(files_full)
-
-  ret <- as.list(c(paste1(prefix_dir, files[isdir]),
-                   paste1(prefix_file, files[!isdir])))
-  files_full <- c(files_full[isdir], files_full[!isdir])
-  isdir <- c(isdir[isdir], isdir[!isdir])
-
-  n <- length(ret)
-  if (n > 0) {
-    ret[[n]] <- sub("|", "\\", ret[[n]], fixed = TRUE)
-    tmp <- lapply(which(isdir), function(i)
-      c(ret[[i]], indent(tree(files_full[[i]], NULL), !all(isdir))))
-    ret[isdir] <- tmp
-  }
-
-  c(header, unlist(ret))
+dir_tree <- function(path) {
+  withr::with_dir(path, fs::dir_tree("."))
 }
 ```
 
@@ -135,10 +102,10 @@ Then if one of the dependencies of a report changes (the used data, code, etc), 
 
 ## Example
 
-We start with a minimal example and will build it up to demonstrate `orderly` features. In the most minimal example, we want to run a script that creates a graph.  It uses no external resources.
+To illustrate, we will start with a minimal example (you can use `orderly::orderly_init` to create a similar structure directly), and we will build it up to demonstrate `orderly` features. In the most minimal example, we want to run a script that creates a graph.  It uses no external resources.
 
-``` {r results = "asis", echo = FALSE}
-plain_output(tree(path, "<root>"))
+``` {r comment = NA, echo = FALSE}
+dir_tree(path)
 ```
 
 In this example, the `orderly_config.yml` file is completely empty, but serves to mark the root of the `orderly` project.  We have one report, called `example`, and its configuration is within `orderly.yml`:
@@ -159,7 +126,7 @@ r_output(readLines(file.path(path_example, "script.R")))
 ```
 
 The R code can be as long or as short as needed and can use whatever packages it needs.  `orderly` does not do anything with the script apart from run it so
-it can be formatted however (there are no magic comments, etc).  There are no restrictions on what can be done except that it must produce the artefacts listed in `orderly.yml`.  If not, an error will be thrown describing what was missing.
+it can be formatted freely (there are no magic comments, etc).  There are no restrictions on what can be done except that it must produce the artefacts listed in `orderly.yml`.  If not, an error will be thrown describing what was missing.
 
 ### Running the report
 
@@ -170,8 +137,8 @@ id <- orderly::orderly_run("example", root = path)
 ```
 
 The return value is the id of the report (also printed on the
-second line of log output) and is always in the format
-`YYYYMMDD-HHMMSS-abcdef01` where the last 8 characters are a hex
+third line of log output) and is always in the format
+`YYYYMMDD-HHMMSS-abcdef01` where the last 8 characters are hex
 digits (i.e., 4 random bytes).  This means reports will
 automatically sort nicely but we'll have some collision resistance.
 
@@ -181,8 +148,8 @@ id
 
 Having run the report, the directory layout now looks like:
 
-``` {r results = "asis", echo = FALSE}
-plain_output(tree(path, "<root>"))
+``` {r comment = NA, echo = FALSE}
+dir_tree(path)
 ```
 
 Within `drafts`, the directory ``r file.path("example", id)`` has been
@@ -220,30 +187,29 @@ orderly::orderly_commit(id, root = path)
 
 After this step our directory structure looks like:
 
-``` {r results = "asis", echo = FALSE}
-plain_output(tree(path, "<root>"))
+``` {r comment = NA, echo = FALSE}
+dir_tree(path)
 ```
 
-This looks very like the previous, but files have been moved from being within `draft` to being within `archive`.  The other difference is that the index `orderly.sqlite` has been created.  This is a machine-readable index to all the `orderly` metadata that can be used to build applications around `orderly` (for example [OrderlyWeb](https://github.com/vimc/orderly-web), a web portal for `orderly`).  The documentation for the database format is available on the [`orderly` website](https://vimc.github.io/orderly/schema).
+This looks very like the previous, but files have been moved from being within `draft` to being within `archive`.  The other difference is that the index `orderly.sqlite` has been created.  This is a machine-readable index to all the `orderly` metadata that can be used to build applications around `orderly` (for example [OrderlyWeb](https://github.com/vimc/orderly-web), a web portal for `orderly` - see the "remotes" vignette).  The documentation for the database format is available on the [`orderly` website](https://vimc.github.io/orderly/schema).
 
-## Developing a report
+## Creating a report
 
-First, create a directory within `src`.  The name is important and
-should not contain spaces (nor should it change as this will change
-the key report id and you'll lose a chain of history), then edit
-the file `orderly.yml` within that directory.
+First, run `orderly::orderly_new` to create a directory within `src`.  The name is important and should not contain spaces (nor should it change as this will change the key report id and you'll lose a chain of history), then edit the file `orderly.yml` within that directory.
+
 ``` {r }
 orderly::orderly_new("new", root = path)
 ```
 
-As a report becomes more complex, the function
-`orderly::orderly_test_start` will become useful; this function
-creates the isolated environment that `orderly` uses to run a report,
-but then leaves you to interactively work with your report.
+which results in a directory structure like:
+
+```{r comment = NA, echo = FALSE}
+dir_tree(path)
+```
 
 ## Resources, sources and artefacts
 
-Resources to a report are expected to be read only files that are used
+Resources to a report are expected to be read-only files that are used
 by the script to produce the report. Examples of the sort of files that
 should be used as resources are:
 
@@ -252,10 +218,10 @@ should be used as resources are:
  * A markdown file used to create a report,
  * Documentation for the report.
 
-Resources cannot be modified by the report; if `orderly` detects that a
-resource has been changed an error will be returned.
+"Resources" cannot be modified by the report; if `orderly` detects that a
+resource has been changed an error will be thrown.
 
-`orderly` will automatically detect any files named README.md in a
+`orderly` will automatically detect any files named `README.md` in a
 report's source directory and copy them to the new directory too.
 
 ```yaml
@@ -266,13 +232,13 @@ resources:
   - code_documentation.md
 ```
 
-Sources are files containing R code that will be sourced (via the R
+"Sources" are files containing R code that will be sourced (via the R
 function `source()`) before the main script is run. Often this file
 contains functions or variables used by the main script. All of the
 copying and sourcing will be handled by `orderly` itself so there is no
 need to explicitly source the files in the main script.
 
-Artefacts are the output of the report. At least one artefact must be
+"Artefacts" are the output of the report. At least one artefact must be
 listed and files created during the running of the script must be
 included as artefacts (or deleted before the script finishes) or an
 error will be returned.
@@ -311,9 +277,9 @@ intent of use of the file, they have no special meaning within `orderly` itself.
 It is often the case that we would like to write a report that depends
 on an earlier report, _e.g._ one report produces a large dataset and a
 later report produces a high level summary. `orderly` allows a report to
-directly copy an artefact file from and existing report without having
+directly copy an artefact file from an existing report without having
 to manually copy it into the report source directory. This is handled
-in `depends` block of the report's `orderly.yml`.
+in the `depends` block of the report's `orderly.yml`.
 
 *To use a file as a dependency it must be explicitly listed as an
 artefact.*
@@ -337,8 +303,7 @@ completed reports in the archive as opposed to drafts. Setting this to
 true allows uncommitted reports in `draft` to be used. This can be
 useful when developing a chain of related reports.
 
-If we want to a report to always use the latest version of a report we
-can set the `id` field to `latest`, _e.g._:
+If we want a report to always use the latest version of a report `big-data-report` we can set the `id` field to `latest`, _e.g._:
 
 ```yaml
 depends:
@@ -383,9 +348,9 @@ depends:
       draft: false
 ```
 
-We can also use the same artefact from different versions of the same
+We can also use the same artefact from _different versions_ of the same
 report. This might come up if we want to write a report that compares
-the output from versions of another report. The yaml pattern for this
+the output from different versions of another report. The yaml pattern for this
 is:
 
 ```yaml
@@ -464,11 +429,11 @@ global_resources:
 
 Currently code _i.e._ R source code cannot be sourced from the global
 resources directory. So for example utility functions common across
-multiple report must be included in each report directory separately.
+multiple reports must be included in each report directory separately.
 The functionality to include global source code may be added in future
 versions.
 
-## Using SQL databases with `orderly`
+## Using SQL databases
 
 One of the original aims of `orderly` was to provide a set of tools for use of SQL databases within reproducible reporting.  Because the SQL database is an external global resource it is difficult to work with any concept of "versioning" from R (there is no git history, no way of easily rolling back to previous versions etc).  If using a central SQL server, there is configuration that should be kept *out* of any analysis, particularly things like passwords.  Configuration problems multiply when using both "production" and "staging" systems as we would like to be able to switch between different configurations.
 
@@ -501,12 +466,13 @@ For [SQLite](https://cran.r-project.org/package=RSQLite) databases, the `args` b
 
 ### Use within a report
 
-Within a report configuration (`orderly.yml`) can contain a `data` block, which contains sql queries, such as:
+A report configuration (`orderly.yml`) can contain a `data` block, which contains sql queries, such as:
 
 ```yaml
 data:
   cars:
     query: SELECT * FROM mtcars WHERE cyl = 4
+    database: source
 ```
 
 In this case, the query `SELECT * FROM mtcars WHERE cyl = 4` will be run against the `source` database to create an object `cars` in the report environment.  The actual report code can use that object without having ever created the database connection or evaluating the query.
@@ -523,6 +489,8 @@ connection:
 ```
 
 which will save the connection to the `source` database as the R object `con`.  We have used this where a report requires running queries in a loop that depend on the results of a previous query or additional data loaded into a report, or where the result of the query will be very large and we do not want to save it to disk.
+
+Note that this reduces the amount of tracking that `orderly` can do, as we have no way of knowing what is done with the connection once passed to the script.
 
 ### Customising the database configuration
 
@@ -575,7 +543,7 @@ MY_PASSWORD: p4ssw0rd
 ```
 
 This will be read every time that `orderly_config.yml` is read (in
-contrast with `.Renviron` which is read only at the start of a
+contrast with `.Renviron` which is read-only at the start of a
 session).  This will likely be more pleasant to work with.
 
 The advantage of using environment variables is that you can add
@@ -585,7 +553,7 @@ committing system-dependent data to the central repository.
 To avoid leaving passwords in plain text, you can use [`vault`](https://www.vaultproject.io) (along with the R client [`vaultr`](https://cran.r-project.org/package=vaultr)) to
 retrieve them.
 
-To do this, you should include the address if your vault server in the `orderly_config.yml` as
+To do this, you should include the address of your vault server in the `orderly_config.yml` as
 
 ```yaml
 vault_server: https://example.com:8200
@@ -602,3 +570,10 @@ would look up the field `password` at the path
 `/secret/users/database_user`.  This can be stored in
 `orderly_config.yml`, in the contents of an environment variable or
 in `orderly_envir.yml` (currently this only uses the vault [version 1 key-value storage](https://www.vaultproject.io/docs/secrets/kv/kv-v1.html))
+
+## Debugging a report
+
+As a report becomes more complex, the function
+`orderly::orderly_test_start` will become useful; this function
+creates the isolated environment that `orderly` uses to run a report,
+but then leaves you to interactively work with your report.

@@ -1,5 +1,9 @@
-##' Run a report.  The \code{orderly_data} function is for testing the
-##' queries (and developing the report).
+##' Run a report.  This will create a new directory in
+##' \code{drafts/<reportname>}, copy your declared resources there,
+##' extract data from databases (if you are using them), run your
+##' script and check that all expected artefacts were created.  Once
+##' successfully run you can use \code{\link{orderly_commit}} to move
+##' it to the \code{archive} directory.
 ##'
 ##' If \code{ref} is provided then before running a report orderly
 ##' will try to check out (as a detached \code{HEAD}) \code{ref},
@@ -11,17 +15,29 @@
 ##' tree will revert back to the original branch at completion (or
 ##' failure to complete) the report.
 ##'
+##' Parameters are passed to the report as a named list, for example
+##'
+##' \code{
+##' id <- orderly::orderly_run("other", list(nmin = 0.2), root = path)
+##' }
+##'
+##' (see the examples).  The names of the parameters (here,
+##' \code{nmin}) must correspond to declared parameters in the
+##' \code{orderly.yml}.  It is an error if parameters without a
+##' default are omitted, and it is an error if unknown parameters are
+##' provided.
+##'
 ##' @title Run a report
 ##'
 ##' @param name Name of the report to run (see
 ##'   \code{\link{orderly_list}}).
 ##'
 ##' @param parameters Parameters passed to the report. A named list of
-##'   parameters declared in the orderly.yml.
+##'   parameters declared in the \code{orderly.yml}.
 ##'
-##' @param envir The parent of environment to evaluate the report in;
-##'   by default a new environment will be made with the global
-##'   environment as the parent.
+##' @param envir The parent of the environment that will be used to
+##'   evaluate the report script; by default a new environment will be
+##'   made with the global environment as the parent.
 ##'
 ##' @param ref A git reference to use for this run (see Details)
 ##'
@@ -82,25 +98,6 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   info$id
 }
 
-##' @export
-##' @rdname orderly_run
-##' @examples
-##' # The function orderly_data does all the preparation work that
-##' # orderly_run does, but does not run the report; instead it
-##' # returns the created environment with all the data and parameters
-##' # set.
-##' env <- orderly::orderly_data("other", list(nmin = 0.2), root = path)
-##' ls(env)
-##' env$nmin
-##' env$extract
-orderly_data <- function(name, parameters = NULL, envir = NULL,
-                         root = NULL, locate = TRUE) {
-  config <- orderly_config_get(root, locate)
-  info <- recipe_read(file.path(path_src(config$root), name), config)
-  envir <- orderly_environment(envir)
-  recipe_data(config, info, parameters, envir)$dest
-}
-
 
 ##' For interactive testing of orderly code.  This runs through and
 ##' sets everything up as orderly would (creates a new working
@@ -108,7 +105,8 @@ orderly_data <- function(name, parameters = NULL, envir = NULL,
 ##' copies over any dependent reports) but then rather than running
 ##' the report hands back to the user.  The prompt \emph{looks} like
 ##' \code{\link{browser}} but it is just a plain old R prompt and the
-##' code runs in the global environment.
+##' code runs in the global environment.  The \code{orderly_data}
+##' function returns an environment with the extracted data.
 ##'
 ##' To quit run \code{orderly_test_end()} (or enter \code{Q}, like
 ##' \code{browser}).  To test if all artefacts have been created run
@@ -165,7 +163,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
                      info = info,
                      prompt = getOption("prompt"))
   options(prompt = "[orderly test] > ")
-  makeActiveBinding(quote("Q"), test_mode_end, .GlobalEnv)
+  makeActiveBinding(quote("Q"), test_mode_end, envir)
   orderly_log("setwd", "running in test draft directory")
   on.exit()
 }
@@ -176,7 +174,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
 ##' @param cleanup Delete testing directory on exit?  If \code{FALSE}
 ##'   then you will probably want to use \code{\link{orderly_cleanup}}
 ##'   later to delete the test directory.  Note that it is not
-##'   possible to commit the results of an orderly test run
+##'   possible to commit the results of an orderly test run.
 orderly_test_end <- function(cleanup = FALSE) {
   if (is.null(cache$test)) {
     stop("Not running in test mode")
@@ -218,6 +216,28 @@ orderly_test_check <- function() {
   orderly_log("artefact", sprintf("%s: %s", artefacts, h))
   invisible(all(found))
 }
+
+
+##' @export
+##' @rdname orderly_test_start
+##' @examples
+##' # The function orderly_data does all the preparation work that
+##' # orderly_run does, but does not run the report; instead it
+##' # returns the created environment with all the data and parameters
+##' # set.
+##' path <- orderly::orderly_example("demo")
+##' env <- orderly::orderly_data("other", list(nmin = 0.2), root = path)
+##' ls(env)
+##' env$nmin
+##' env$extract
+orderly_data <- function(name, parameters = NULL, envir = NULL,
+                         root = NULL, locate = TRUE) {
+  config <- orderly_config_get(root, locate)
+  info <- recipe_read(file.path(path_src(config$root), name), config)
+  envir <- orderly_environment(envir)
+  recipe_data(config, info, parameters, envir)$dest
+}
+
 
 recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
                            fetch = FALSE, message = NULL) {
@@ -662,17 +682,21 @@ recipe_current_run_clear <- function() {
 ##'
 ##' @export
 ##' @examples
-##' path <- orderly::orderly_example("depends")
+##' path <- orderly::orderly_example("demo")
 ##'
 ##' # This example uses orderly_run_info within its script, saving the
 ##' # output to "output.rds"
-##' readLines(file.path(path, "src", "depend", "script.R"))
+##' readLines(file.path(path, "src", "use_dependency", "script.R"))
 ##'
-##' orderly::orderly_run("example", root = path)
-##' id <- orderly::orderly_run("depend", root = path)
+##' # Run the dependency:
+##' id <- orderly::orderly_run("other", list(nmin = 0), root = path)
+##' orderly::orderly_commit(id, root = path)
+##'
+##' # Then the report
+##' id <- orderly::orderly_run("use_dependency", root = path)
 ##'
 ##' # This is the contents:
-##' readRDS(file.path(path, "draft", "depend", id, "output.rds"))
+##' readRDS(file.path(path, "draft", "use_dependency", id, "info.rds"))
 orderly_run_info <- function() {
   info <- recipe_current_run_get()
   if (is.null(info)) {

@@ -9,3 +9,21 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 Aliquet porttitor lacus luctus accumsan tortor posuere. Quis eleifend quam adipiscing vitae proin sagittis. Dui faucibus in ornare quam viverra. Egestas congue quisque egestas diam in arcu cursus. Malesuada proin libero nunc consequat interdum varius. A iaculis at erat pellentesque adipiscing commodo elit at imperdiet. Nunc faucibus a pellentesque sit. Aliquet porttitor lacus luctus accumsan tortor posuere ac ut consequat. Sit amet dictum sit amet justo donec enim. Molestie a iaculis at erat pellentesque adipiscing commodo elit at. Amet nisl purus in mollis nunc sed id semper risus.
 
 Adipiscing tristique risus nec feugiat in fermentum posuere urna nec. Mollis aliquam ut porttitor leo a diam sollicitudin. Aliquam malesuada bibendum arcu vitae. Arcu ac tortor dignissim convallis aenean et tortor. Semper feugiat nibh sed pulvinar. Pellentesque sit amet porttitor eget dolor morbi non arcu. Neque volutpat ac tincidunt vitae semper quis lectus. Mauris pellentesque pulvinar pellentesque habitant morbi. Tincidunt ornare massa eget egestas purus viverra. Amet venenatis urna cursus eget nunc scelerisque. In fermentum et sollicitudin ac. Laoreet sit amet cursus sit amet dictum sit amet. Mauris rhoncus aenean vel elit scelerisque mauris pellentesque. Velit ut tortor pretium viverra suspendisse. Urna neque viverra justo nec ultrices dui. Ac auctor augue mauris augue neque gravida in fermentum et. Scelerisque purus semper eget duis at tellus at urna.
+
+``` {r echo=FALSE, results="hide"}
+knitr::opts_chunk$set(error=FALSE)
+```
+
+Define a constant here that we expect our functions to find
+
+```{r}
+foo <- 1
+```
+
+```{r}
+source("support.R", local = TRUE)
+```
+
+```{r}
+myfunction()
+```

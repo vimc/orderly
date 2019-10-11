@@ -5,6 +5,7 @@
 \alias{orderly_test_end}
 \alias{orderly_test_restart}
 \alias{orderly_test_check}
+\alias{orderly_data}
 \title{Prepare a directory for orderly to use}
 \usage{
 orderly_test_start(name, parameters = NULL, envir = .GlobalEnv,
@@ -15,21 +16,24 @@ orderly_test_end(cleanup = FALSE)
 orderly_test_restart(cleanup = TRUE)
 
 orderly_test_check()
+
+orderly_data(name, parameters = NULL, envir = NULL, root = NULL,
+  locate = TRUE)
 }
 \arguments{
 \item{name}{Name of the report to run (see
 \code{\link{orderly_list}}).}
 
 \item{parameters}{Parameters passed to the report. A named list of
-parameters declared in the orderly.yml.}
+parameters declared in the \code{orderly.yml}.}
 
-\item{envir}{The parent of environment to evaluate the report in;
-by default a new environment will be made with the global
-environment as the parent.}
+\item{envir}{The parent of the environment that will be used to
+evaluate the report script; by default a new environment will be
+made with the global environment as the parent.}
 
 \item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
-directory if \code{locate} is \code{TRUE}).}
+directory if \code{locate} is \code{TRUE}.}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
@@ -39,7 +43,7 @@ parents until it finds an \code{orderly_config.yml} file.}
 \item{cleanup}{Delete testing directory on exit?  If \code{FALSE}
 then you will probably want to use \code{\link{orderly_cleanup}}
 later to delete the test directory.  Note that it is not
-possible to commit the results of an orderly test run}
+possible to commit the results of an orderly test run.}
 }
 \description{
 For interactive testing of orderly code.  This runs through and
@@ -48,7 +52,8 @@ directory and changes into it, pulls data from the database,
 copies over any dependent reports) but then rather than running
 the report hands back to the user.  The prompt \emph{looks} like
 \code{\link{browser}} but it is just a plain old R prompt and the
-code runs in the global environment.
+code runs in the global environment.  The \code{orderly_data}
+function returns an environment with the extracted data.
 }
 \details{
 To quit run \code{orderly_test_end()} (or enter \code{Q}, like
@@ -80,4 +85,13 @@ orderly::orderly_test_check()
 
 # Revert back to the original directory:
 orderly::orderly_test_end()
+# The function orderly_data does all the preparation work that
+# orderly_run does, but does not run the report; instead it
+# returns the created environment with all the data and parameters
+# set.
+path <- orderly::orderly_example("demo")
+env <- orderly::orderly_data("other", list(nmin = 0.2), root = path)
+ls(env)
+env$nmin
+env$extract
 }

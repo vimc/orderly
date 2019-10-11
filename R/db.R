@@ -1,5 +1,21 @@
 ##' Connect to the orderly databases.  These should be treated as as
-##' \emph{read only} (with the exception of \code{source}).
+##' \emph{read-only}.
+##'
+##' Orderly has several databases:
+##'
+##' \describe{
+##'
+##' \item{source}{All of the databases named in the \code{database}
+##'   section of the \code{orderly_config.yml}}
+##'
+##' \item{destination}{The orderly index database (typically a SQLite
+##' database stored at the orderly root)}
+##'
+##' \item{csv}{The cache of database query results, in csv format}
+##'
+##' \item{rds}{The cache of database query results, in rds format}
+##'
+##' }
 ##'
 ##' @title Connect to orderly databases
 ##' @inheritParams orderly_list
@@ -84,8 +100,8 @@ orderly_db_args <- function(x, config) {
 
 
 ##' Rebuild the report database.  This is necessary when the orderly
-##'   database schema changes, and you will be prompted to run this
-##'   function after upgrading orderly in that case.
+##' database schema changes, and you will be prompted to run this
+##' function after upgrading orderly in that case.
 ##'
 ##' The report database (orderly's "destination" database) is
 ##' essentially an index over all the metadata associated with

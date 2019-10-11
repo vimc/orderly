@@ -52,7 +52,7 @@ test_that("init - no doc", {
 
 
 test_that("orderly_run_info reports on artefacts", {
-  path <- prepare_orderly_example("depends")
+  path <- prepare_orderly_example("depends", testing = TRUE)
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("depend", root = path, echo = FALSE)
 
@@ -68,7 +68,7 @@ test_that("orderly_run_info errors when not running", {
 
 
 test_that("orderly_run_info is usable from test_start", {
-  path <- prepare_orderly_example("depends")
+  path <- prepare_orderly_example("depends", testing = TRUE)
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_test_start("depend", root = path)
   on.exit(orderly_test_end())
@@ -84,7 +84,7 @@ test_that("orderly_run_info is usable from test_start", {
 
 
 test_that("orderly_run_info: is_latest detects latest version", {
-  path <- prepare_orderly_example("depends")
+  path <- prepare_orderly_example("depends", testing = TRUE)
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("example", root = path, echo = FALSE)
 
@@ -127,7 +127,7 @@ test_that("orderly_test_start failure resets working directory", {
 
 
 test_that("can't depend on non artefacts", {
-  path <- prepare_orderly_example("depends")
+  path <- prepare_orderly_example("depends", testing = TRUE)
   id <- orderly_run("example", root = path, echo = FALSE)
 
   path_yml <- file.path(path, "src", "depend", "orderly.yml")
@@ -192,7 +192,7 @@ test_that("onload can be rerun", {
 
 
 test_that("default parameter values are used", {
-  path <- prepare_orderly_example("parameters")
+  path <- prepare_orderly_example("parameters", testing = TRUE)
 
   id <- orderly_run("example", list(a = 1, b = 2), root = path, echo = FALSE)
   d <- readRDS(path_orderly_run_rds(file.path(path, "draft", "example", id)))

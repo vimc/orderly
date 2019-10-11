@@ -1,4 +1,8 @@
-##' Download dependent reports.
+##' Download dependent reports from an orderly remote.  This can only
+##' be used if the \code{orderly_config.yml} lists a remote.  This
+##' allows for a centralised workflow where a central orderly store
+##' exists and holds the canonical copies of reports, from which
+##' versions can be downloaded into local stores.
 ##'
 ##' The \code{orderly_pull_archive} function pulls report directly
 ##' (without it being a dependent report).
@@ -41,6 +45,8 @@
 ##'   remote interface for orderly repositories at a local path.  See
 ##'   also \href{https://github.com/vimc/orderly-web}{OrderlyWeb} for
 ##'   a system for hosting orderly repositories over an HTTP API.
+##'   \code{vignette("remote", package = "orderly")} describes the
+##'   remote system in more detail.
 ##'
 ##' @example man-roxygen/example-remote.R
 orderly_pull_dependencies <- function(name, root = NULL, locate = TRUE,
@@ -69,7 +75,7 @@ orderly_pull_dependencies <- function(name, root = NULL, locate = TRUE,
 ##' @export
 ##' @rdname orderly_pull_dependencies
 ##'
-##' @param id The identifier (for \code{orderly_pull_archive}.  The default is
+##' @param id The identifier (for \code{orderly_pull_archive}).  The default is
 ##'   to use the latest report.
 orderly_pull_archive <- function(name, id = "latest", root = NULL,
                                  locate = TRUE, remote = NULL) {
@@ -138,7 +144,7 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
 ##' @param wait Time to wait for the report to be run; if the report
 ##'   takes longer than this time to run but \code{timeout} is longer
 ##'   it will remain running on the server but we will stop waiting
-##'   for it and instead thrown an error.
+##'   for it and instead throw an error.
 ##'
 ##' @param poll Period to poll the server for results (in seconds)
 ##'
@@ -148,7 +154,7 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
 ##' @param stop_on_error Logical, indicating if we should throw an
 ##'   error if the report fails.  If you set this to \code{FALSE} it
 ##'   will be much easier to debug, but more annoying in scripts.  If
-##'   the times out on the server (i.e., takes longer than
+##'   the report times out on the server (i.e., takes longer than
 ##'   \code{timeout}) that counts as an error.
 ##'
 ##' @param stop_on_timeout Logical, indicating if we should throw an
@@ -212,7 +218,7 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
 ##' # And a local orderly
 ##' path_local <- orderly::orderly_example("demo")
 ##'
-##' # We'll create a an object to interact with this remote using
+##' # We'll create an object to interact with this remote using
 ##' # orderly_remote_path.
 ##' remote <- orderly::orderly_remote_path(path_remote)
 ##'

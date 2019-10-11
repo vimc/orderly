@@ -2,30 +2,26 @@
 % Please edit documentation in R/recipe_run.R
 \name{orderly_run}
 \alias{orderly_run}
-\alias{orderly_data}
 \title{Run a report}
 \usage{
 orderly_run(name, parameters = NULL, envir = NULL, root = NULL,
   locate = TRUE, echo = TRUE, id_file = NULL, fetch = FALSE,
   ref = NULL, message = NULL)
-
-orderly_data(name, parameters = NULL, envir = NULL, root = NULL,
-  locate = TRUE)
 }
 \arguments{
 \item{name}{Name of the report to run (see
 \code{\link{orderly_list}}).}
 
 \item{parameters}{Parameters passed to the report. A named list of
-parameters declared in the orderly.yml.}
+parameters declared in the \code{orderly.yml}.}
 
-\item{envir}{The parent of environment to evaluate the report in;
-by default a new environment will be made with the global
-environment as the parent.}
+\item{envir}{The parent of the environment that will be used to
+evaluate the report script; by default a new environment will be
+made with the global environment as the parent.}
 
 \item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
-directory if \code{locate} is \code{TRUE}).}
+directory if \code{locate} is \code{TRUE}.}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
@@ -45,8 +41,12 @@ checking out the reference \code{ref}.}
 explaining why the report was run}
 }
 \description{
-Run a report.  The \code{orderly_data} function is for testing the
-queries (and developing the report).
+Run a report.  This will create a new directory in
+\code{drafts/<reportname>}, copy your declared resources there,
+extract data from databases (if you are using them), run your
+script and check that all expected artefacts were created.  Once
+successfully run you can use \code{\link{orderly_commit}} to move
+it to the \code{archive} directory.
 }
 \details{
 If \code{ref} is provided then before running a report orderly
@@ -58,6 +58,18 @@ some careful use of \code{.gitignore} to exclude \code{draft},
 \code{archive}, \code{data} and \code{orderly.sqlite}.  The git
 tree will revert back to the original branch at completion (or
 failure to complete) the report.
+
+Parameters are passed to the report as a named list, for example
+
+\code{
+id <- orderly::orderly_run("other", list(nmin = 0.2), root = path)
+}
+
+(see the examples).  The names of the parameters (here,
+\code{nmin}) must correspond to declared parameters in the
+\code{orderly.yml}.  It is an error if parameters without a
+default are omitted, and it is an error if unknown parameters are
+provided.
 }
 \examples{
 path <- orderly::orderly_example("demo")
@@ -86,14 +98,6 @@ id <- orderly::orderly_run("other", list(nmin = 0.2), root = path)
 
 # These parameters can be used in SQL queries or in the report
 # code.
-# The function orderly_data does all the preparation work that
-# orderly_run does, but does not run the report; instead it
-# returns the created environment with all the data and parameters
-# set.
-env <- orderly::orderly_data("other", list(nmin = 0.2), root = path)
-ls(env)
-env$nmin
-env$extract
 }
 \seealso{
 \code{\link{orderly_log}} for controlling display of log

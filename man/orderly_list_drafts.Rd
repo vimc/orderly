@@ -12,7 +12,7 @@ orderly_list_archive(root = NULL, locate = TRUE)
 \arguments{
 \item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
-directory if \code{locate} is \code{TRUE}).}
+directory if \code{locate} is \code{TRUE}.}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
@@ -21,8 +21,7 @@ parents until it finds an \code{orderly_config.yml} file.}
 }
 \description{
 List draft and archived reports.  This returns a data.frame with
-columns \code{name} (see \code{\link{orderly_list}} and \code{id}.
-It will expand in future.
+columns \code{name} (see \code{\link{orderly_list}}) and \code{id}.
 }
 \examples{
 # The orderly demo, with lots of potential reports:
@@ -52,5 +51,6 @@ orderly::orderly_list_archive(path)
 }
 \seealso{
 \code{\link{orderly_list}}, which lists the names of
-  source reports that can be run
+  source reports that can be run, and \code{\link{orderly_latest}}
+  which returns the id of the most recent report.
 }

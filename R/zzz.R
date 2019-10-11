@@ -1,3 +1,4 @@
+##' @importFrom R6 R6Class
 cache <- new.env(parent = emptyenv())
 
 .onLoad <- function(...) {

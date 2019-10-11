@@ -9,7 +9,7 @@ orderly_list(root = NULL, locate = TRUE)
 \arguments{
 \item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
-directory if \code{locate} is \code{TRUE}).}
+directory if \code{locate} is \code{TRUE}.}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
@@ -18,7 +18,10 @@ parents until it finds an \code{orderly_config.yml} file.}
 }
 \description{
 List the \emph{names} of reports known to orderly.  These are the
-\emph{source} names, not the results of running reports.
+\emph{source} names, not the results of running reports.  Note
+that if a report has been committed from a different branch it
+will not appear here, as this is simply the set of reports in the
+\code{src} directory that can be run.
 }
 \examples{
 # The orderly demo, with lots of potential reports:

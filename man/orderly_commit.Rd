@@ -14,7 +14,7 @@ name will be determined from the \code{id}.}
 
 \item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
-directory if \code{locate} is \code{TRUE}).}
+directory if \code{locate} is \code{TRUE}.}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
@@ -22,7 +22,9 @@ then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
 }
 \description{
-Commit a generated report
+Commit a generated report, moving it from the \code{draft/}
+directory to \code{archive/} and updating the orderly index.  Once
+committed, reports should not be deleted.
 }
 \examples{
 # In a new example orderly, run a report

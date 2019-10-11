@@ -306,7 +306,7 @@ test_that("list", {
 
 test_that("run: message", {
   ## Should have no errors
-  path <- prepare_orderly_example("changelog")
+  path <- prepare_orderly_example("changelog", testing = TRUE)
   message <- "[label1] This is a test message."
   args <- c("--root", path, "run", "--message", squote(message), "example")
   res <- cli_args_process(args)
@@ -332,7 +332,7 @@ test_that("run: message", {
 
 test_that("run: bad message", {
   ## mal-formatted message
-  path <- prepare_orderly_example("changelog")
+  path <- prepare_orderly_example("changelog", testing = TRUE)
   message <- "Invalid message"
   args <- c("--root", path, "run", "--message", squote(message), "example")
   res <- cli_args_process(args)

@@ -13,7 +13,7 @@ most recent report across all names}
 
 \item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
-directory if \code{locate} is \code{TRUE}).}
+directory if \code{locate} is \code{TRUE}.}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
@@ -26,7 +26,9 @@ parents until it finds an \code{orderly_config.yml} file.}
 returns \code{NA_character_}.}
 }
 \description{
-Find most recent version of an orderly report
+Find most recent version of an orderly report.  The most recent
+report is always the most recently run report that has been
+committed (regardless of the order in which they were committed).
 }
 \examples{
 path <- orderly::orderly_example("minimal")
@@ -43,4 +45,9 @@ orderly::orderly_latest("example", root = path)
 # Commit the second report and it will be reported as latest instead:
 orderly::orderly_commit(id2, root = path)
 orderly::orderly_latest("example", root = path)
+}
+\seealso{
+\code{\link{orderly_list}} and
+  \code{\link{orderly_list_archive}} for listing report names and
+  versions.
 }

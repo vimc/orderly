@@ -168,7 +168,7 @@ test_that("parse messages", {
 
 
 test_that("append changelog", {
-  path <- prepare_orderly_example("changelog")
+  path <- prepare_orderly_example("changelog", testing = TRUE)
 
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
@@ -219,7 +219,7 @@ test_that("append changelog", {
 
 
 test_that("label change requires rebuild", {
-  path <- prepare_orderly_example("changelog")
+  path <- prepare_orderly_example("changelog", testing = TRUE)
 
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
@@ -246,7 +246,7 @@ test_that("label change requires rebuild", {
 
 
 test_that("label values are checked", {
-  path <- prepare_orderly_example("changelog")
+  path <- prepare_orderly_example("changelog", testing = TRUE)
 
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
@@ -273,7 +273,7 @@ test_that("reports can't use changelogs if not enabled", {
 
 
 test_that("public changelog", {
-  path <- prepare_orderly_example("changelog")
+  path <- prepare_orderly_example("changelog", testing = TRUE)
 
   name <- "example"
   ids <- character(10)
@@ -314,7 +314,7 @@ test_that("public changelog", {
 
 
 test_that("public changelog with multiple entries", {
-  path <- prepare_orderly_example("changelog")
+  path <- prepare_orderly_example("changelog", testing = TRUE)
 
   name <- "example"
   ids <- character(3)
@@ -355,7 +355,7 @@ test_that("public changelog with multiple entries", {
 
 
 test_that("public version has no changelog", {
-  path <- prepare_orderly_example("changelog")
+  path <- prepare_orderly_example("changelog", testing = TRUE)
 
   name <- "example"
   ids <- character(4)

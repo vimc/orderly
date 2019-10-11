@@ -12,7 +12,7 @@ orderly_db(type, root = NULL, locate = TRUE, validate = TRUE)
 
 \item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
-directory if \code{locate} is \code{TRUE}).}
+directory if \code{locate} is \code{TRUE}.}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
@@ -25,7 +25,24 @@ be validated on open (currently only applicable with \code{type
 }
 \description{
 Connect to the orderly databases.  These should be treated as as
-\emph{read only} (with the exception of \code{source}).
+\emph{read-only}.
+}
+\details{
+Orderly has several databases:
+
+\describe{
+
+\item{source}{All of the databases named in the \code{database}
+  section of the \code{orderly_config.yml}}
+
+\item{destination}{The orderly index database (typically a SQLite
+database stored at the orderly root)}
+
+\item{csv}{The cache of database query results, in csv format}
+
+\item{rds}{The cache of database query results, in rds format}
+
+}
 }
 \examples{
 # Create an orderly that has a single commited report:
