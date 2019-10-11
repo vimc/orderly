@@ -1,4 +1,7 @@
-##' Commit a generated report
+##' Commit a generated report, moving it from the \code{draft/}
+##' directory to \code{archive/} and updating the orderly index.  Once
+##' committed, reports should not be deleted.
+##'
 ##' @title Commit a generated report
 ##'
 ##' @param id The identifier of the report

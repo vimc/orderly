@@ -1,0 +1,68 @@
+---
+title: "orderly remotes"
+author: "Rich FitzJohn"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{orderly remotes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Orderly supports a centralised workflow, where a central server holds the canonical version of a report.  In order to make this workflow work, we need a number of things:
+
+* To be able to run a report on a central server
+* To be able to get copies of reports from the central server in order to use them as dependencies of locally run reports
+* To be able to share these centrally run reports with someone
+
+To make this workflow work, we have developed some additional software.
+
+First, we have a docker-based server system called [OrderlyWeb](https://github.com/vimc/orderly-web) which can be deployed onto a server.  We will communicate with this server over https using a package [`orderlyweb`](https://github.com/vimc/orderlyweb) which will follow `orderly` onto CRAN.
+
+## OrderlyWeb
+
+The OrderlyWeb server software provides a number of things
+
+1. A persistent copy of R running `orderly` that can run reports as needed using the `orderly::orderly_runner` function
+2. A web server that exposes a user-friendly web portal showing versions of orderly reports and an http api (this application is written in [Kotlin](https://kotlinlang.org))
+3. A [reverse proxy](https://en.wikipedia.org/wiki/Reverse_proxy) used to secure the application with https
+
+A [diagram may help show how the pieces fit together](https://raw.githubusercontent.com/vimc/montagu-machine/master/docs/diagrams/OrderlyWeb%20architecture.png)
+
+Getting OrderlyWeb installed requires a little work, and you will need access to an appropriate server running docker, our [python-based deployment tool](https://github.com/vimc/orderly-web-deploy/), and TLS certificates for the server that you are using.  We recommend using [vault](https://www.vaultproject.io) for storing certificates and any secrets used in deployment.
+
+OrderlyWeb will use GitHub for authentication, the setup for which [is described here](https://github.com/vimc/orderly-web/blob/master/docs/auth.md#authenticating-with-github).
+
+## Configuring `orderly` to talk to OrderlyWeb
+
+Once OrderlyWeb is running, we can tell `orderly` about it by adding an appropriate setting to the `orderly_config.yml` file.  For example, if you had one testing and one production instance
+
+```yaml
+remote:
+  testing:
+    driver: orderlyweb::orderlyweb_remote
+    args:
+      host: testing.example.com
+      port: 443
+      token: $GITHUB_TOKEN
+  production:
+    driver: orderlyweb::orderlyweb_remote
+    args:
+      host: production.example.com
+      port: 443
+      token: $GITHUB_TOKEN
+```
+
+where `$GITHUB_TOKEN` is an environment variable that holds a [GitHub token](https://github.com/settings/tokens) with "user" scope.  The `testing` remote is listed first, and so will be the default one used in any remote-using command.
+
+## Interacting with the remote server
+
+Several commands can interact with the remote server:
+
+* `orderly::orderly_run_remote` will run a report on a remote server, committing it immediately. This will save the log alongside the report.
+* `orderly::orderly_pull_archive` will pull a version of a report from a remote server
+* `orderly::orderly_pull_dependencies` will pull all the dependencies of a report from the remote server (i.e., versions of reports declared in the `depends:` section of a report)
+
+## Future developments
+
+We hope that this system will become easier to deploy in future.  We use it internally on two projects with orderly archives that hold gigabytes of analyses, and it has evolved to meet our needs.  If you think it might work for you but can't get started, please get in touch.

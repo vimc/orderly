@@ -1,6 +1,6 @@
 Package: orderly
 Title: Lightweight Reproducible Reporting
-Version: 0.8.2
+Version: 1.0.0
 Description: Order, create and store reports from R.  By defining a
     lightweight interface around the inputs and outputs of an
     analysis, a lot of the repetitive work for reproducible research
@@ -17,7 +17,9 @@ Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
              person("Martin", "Eden", role = "aut"),
              person("Wes", "Hinsley", role = "aut"),
              person("Emma", "Russell", role = "aut"),
-             person("James", "Thompson", role = "aut"))
+             person("James", "Thompson", role = "aut"),
+             person("Imperial College of Science, Technology and Medicine",
+                    role = "cph"))
 URL: https://github.com/vimc/orderly
 BugReports: https://github.com/vimc/orderly/issues
 SystemRequirements: git
@@ -27,7 +29,7 @@ Imports:
     RSQLite,
     digest,
     docopt,
-    fs,
+    fs (>= 1.2.7),
     ids,
     withr,
     yaml,

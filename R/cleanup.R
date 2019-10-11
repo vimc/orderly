@@ -1,15 +1,17 @@
 ##' Clean up orderly draft and data directories.  Deletes all drafts
 ##' (possibly just for a set of report names) and then deletes
 ##' dangling data sets that are not pointed to by any draft or
-##' committed reports
+##' committed reports.  Running cleanup does not affect any reports
+##' that have been committed with \code{\link{orderly_commit}} (i.e.,
+##' the contents of the \code{archive/} directory).
 ##'
 ##' @title Orderly cleanup
 ##' @param name Optional name; in this case only clean up drafts with this name
 ##'
-##' @param draft Remove drafts?
+##' @param draft Logical, indicating if drafts should be removed
 ##'
-##' @param data Remove dangling data (data not used by any draft or
-##'   archived report).
+##' @param data Logical, indicating if dangling data should be removed
+##'   (data not used by any draft or archived report).
 ##'
 ##' @param failed_only Delete only failed reports (those without the
 ##'   end-of-run metadata).  This will also clean up drafts created by

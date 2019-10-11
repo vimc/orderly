@@ -8,7 +8,7 @@
 ##' applications or users to enable and disable log messages.
 ##'
 ##' The interface here may expand by adding arguments or change
-##' behaviour based on global options Future versions may support
+##' behaviour based on global options. Future versions may support
 ##' logging to a file, or adding timestamps, or logging in json
 ##' format, etc.
 ##'
@@ -26,7 +26,7 @@
 ##' }
 ##'
 ##' to disable logging within a function (the \code{on.exit} block
-##'   will be run when the function exits.
+##'   will be run when the function exits).
 ##'
 ##' @seealso \code{\link{orderly_run}}, which makes use of these log
 ##'   messages

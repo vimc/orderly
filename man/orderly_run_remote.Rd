@@ -24,7 +24,7 @@ report.}
 \item{wait}{Time to wait for the report to be run; if the report
 takes longer than this time to run but \code{timeout} is longer
 it will remain running on the server but we will stop waiting
-for it and instead thrown an error.}
+for it and instead throw an error.}
 
 \item{poll}{Period to poll the server for results (in seconds)}
 
@@ -34,7 +34,7 @@ a browser on completion (if supported by the remote)}
 \item{stop_on_error}{Logical, indicating if we should throw an
 error if the report fails.  If you set this to \code{FALSE} it
 will be much easier to debug, but more annoying in scripts.  If
-the times out on the server (i.e., takes longer than
+the report times out on the server (i.e., takes longer than
 \code{timeout}) that counts as an error.}
 
 \item{stop_on_timeout}{Logical, indicating if we should throw an
@@ -46,7 +46,7 @@ be included.}
 
 \item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
-directory if \code{locate} is \code{TRUE}).}
+directory if \code{locate} is \code{TRUE}.}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,

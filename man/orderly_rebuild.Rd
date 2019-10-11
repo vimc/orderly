@@ -10,7 +10,7 @@ orderly_rebuild(root = NULL, locate = TRUE, verbose = TRUE,
 \arguments{
 \item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
-directory if \code{locate} is \code{TRUE}).}
+directory if \code{locate} is \code{TRUE}.}
 
 \item{locate}{Logical, indicating if the configuration should be
 searched for.  If \code{TRUE} and \code{config} is not given,
@@ -27,8 +27,8 @@ fast enough to call regularly.}
 }
 \description{
 Rebuild the report database.  This is necessary when the orderly
-  database schema changes, and you will be prompted to run this
-  function after upgrading orderly in that case.
+database schema changes, and you will be prompted to run this
+function after upgrading orderly in that case.
 }
 \details{
 The report database (orderly's "destination" database) is
