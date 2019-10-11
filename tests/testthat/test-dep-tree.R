@@ -48,6 +48,25 @@ test_that("no dependendent reports", {
   expect_true(length(root$children) == 0)
 })
 
+test_that("nonexistant reports ", {
+  path <- prepare_orderly_example("demo")
+
+  demo <- c("- name: other", "  parameters:", "    nmin: 0",
+            "- name: use_dependency")
+  writeLines(demo, file.path(path, "demo.yml"))
+  run_orderly_demo(path)
+  other_id <- dir(file.path(path, "archive", "other"))
+
+  expect_error(orderly_build_dep_tree("bad_report", root = path),
+               "This report does not exist")
+
+  expect_error(orderly_build_dep_tree("other", id = "bad_id", root = path),
+               "no report with this id in the database")
+
+  expect_error(orderly_build_dep_tree("use_dependency", id = other_id, root = path),
+               "id does not match report name")
+})
+
 # check reports with recursive dependencies
 # example
 # - depend
@@ -150,7 +169,7 @@ test_that("propagate", {
 
   tree <- orderly_build_dep_tree("other", root = path, propagate = TRUE)
   root <- tree$root
-  expect_true(!root$out_of_date)
+  expect_false(root$out_of_date)
 
   dep_1_1 <- root$children[[1]]
   expect_true(dep_1_1$out_of_date)
@@ -159,5 +178,17 @@ test_that("propagate", {
   expect_true(dep_2_1$out_of_date)
 
   dep_1_2 <- root$children[[2]]
-  expect_true(!dep_1_2$out_of_date)
+  expect_false(dep_1_2$out_of_date)
+
+  tree <- orderly_build_dep_tree("use_dependency_2", root = path,
+                                 propagate = TRUE, upstream = TRUE)
+print(tree)
+  root <- tree$root
+  expect_false(!root$out_of_date)
+
+  dep_1_1 <- root$children[[1]]
+  expect_true(dep_1_1$out_of_date)
+
+  dep_2_1 <- dep_1_1$children[[1]]
+  expect_false(dep_2_1$out_of_date)
 })
