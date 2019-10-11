@@ -48,7 +48,7 @@ get_dependencies_db <- function(name, id, upstream, con,
     return(NULL)
   }
 
-  db_ret$out_of_date <- sapply(db_ret$report_version,
+  db_ret$out_of_date <- !sapply(db_ret$report_version,
                                is_latest_in_db, con = con)
   if (use_latest) {
     db_ret <- db_ret[which(db_ret$out_of_date), ]
@@ -237,16 +237,16 @@ orderly_build_dep_tree <- function(name, id = "latest", root = NULL,
 propagate <- function(vertex, upstream) {
   for (child in vertex$children) {
     if (!upstream) {
-      if (!vertex$out_of_date) {
-        child$out_of_date = FALSE
+      if (vertex$out_of_date) {
+        child$out_of_date = TRUE
       }
     }
 
     propagate(child, upstream)
 
     if (upstream) {
-      if (!child$out_of_date) {
-        vertex$out_of_date = FALSE
+      if (child$out_of_date) {
+        vertex$out_of_date = TRUE
       }
     }
   }
