@@ -1,19 +1,50 @@
 context("dep_tree")
 
-# check a report with no dependencies
-test_that("no dependencies", {
-  path <- prepare_orderly_example("minimal")
-  tmp <- tempfile()
-  id <- orderly_run("example", root = path, echo = FALSE)
-  orderly_commit(id, root = path)
+test_that("basic tree example", {
+  path <- prepare_orderly_example("demo")
 
-  messages <- capture_messages(
-    orderly_print_dep_tree("example", root = path)
-  )
-  exp_message <-
-    c(paste(crayon::green("+++++DOWNSTREAM+++++"), "\n", sep=""),
-      paste(crayon::blue(sprintf("example [%s]", id)), "\n", sep=""))
-  expect_equal(messages, exp_message)
+  demo <- c("- name: other", "  parameters:", "    nmin: 0",
+            "- name: use_dependency",
+            "- name: use_dependency_2")
+  writeLines(demo, file.path(path, "demo.yml"))
+  run_orderly_demo(path)
+
+  tree <- orderly_build_dep_tree("other", root = path)
+
+  root <- tree$root
+  readble_root <- root$format()
+  expect_match(readble_root,
+               "other \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
+  expect_true(length(root$children) == 1)
+
+  child_1 <- root$children[[1]]
+  readable_child_1 <- child_1$format()
+  expect_match(readable_child_1,
+               "use_dependency \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
+  expect_true(length(child_1$children) == 1)
+
+  child_2 <- child_1$children[[1]]
+  readable_child_2 <- child_2$format()
+  expect_match(readable_child_2,
+               "use_dependency_2 \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
+  expect_true(length(child_2$children) == 0)
+})
+
+# check a report with no dependencies
+test_that("no dependendent reports", {
+  path <- prepare_orderly_example("demo")
+
+  demo <- c("- name: other", "  parameters:", "    nmin: 0")
+  writeLines(demo, file.path(path, "demo.yml"))
+  run_orderly_demo(path)
+
+  tree <- orderly_build_dep_tree("other", root = path)
+
+  root <- tree$root
+  readble_root <- root$format()
+  expect_match(readble_root,
+               "other \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
+  expect_true(length(root$children) == 0)
 })
 
 # check reports with recursive dependencies
@@ -21,97 +52,74 @@ test_that("no dependencies", {
 # - depend
 #   - depend3
 test_that("has dependencies downstream", {
-  path <- prepare_orderly_example("depends")
-  tmp <- tempfile()
-  r1 <- orderly_run("example", root = path, echo = FALSE)
-  r2 <- orderly_run("depend", root = path, echo = FALSE)
-  r3 <- orderly_run("depend3", root = path, echo = FALSE)
-  orderly_commit(r1, root = path)
-  orderly_commit(r2, root = path)
-  orderly_commit(r3, root = path)
+  path <- prepare_orderly_example("demo")
 
-  messages <- capture_messages(
-    orderly_print_dep_tree("example", root = path)
-  )
-  exp_message <-
-    c(paste(crayon::green("+++++DOWNSTREAM+++++"), "\n", sep=""),
-      paste(crayon::blue(sprintf("example [%s]", r1)), "\n", sep=""),
-      paste(crayon::blue(sprintf("|___depend [%s]", r2)), "\n", sep=""),
-      paste(crayon::blue(sprintf("  |___depend3 [%s]", r3)), "\n", sep=""))
+  demo <- c("- name: other", "  parameters:", "    nmin: 0",
+            "- name: use_dependency",
+            "- name: use_dependency_2")
+  writeLines(demo, file.path(path, "demo.yml"))
+  run_orderly_demo(path)
 
-  expect_equal(messages, exp_message)
-  
-  messages <- capture_messages(
-    orderly_print_dep_tree("depend", root = path)
-  )
-  exp_message <- c("\033[32m+++++DOWNSTREAM+++++\033[39m\n",
-                   sprintf("\033[34mdepend [%s]\033[39m\n", r2),
-                   sprintf("\033[34m|___depend3 [%s]\033[39m\n", r3))
+  tree <- orderly_build_dep_tree("use_dependency", root = path)
+  root <- tree$root
+  readble_root <- root$format()
+  expect_match(readble_root,
+               "use_dependency \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
+  expect_true(length(root$children) == 1)
 
-  exp_message <-
-    c(paste(crayon::green("+++++DOWNSTREAM+++++"), "\n", sep=""),
-      paste(crayon::blue(sprintf("depend [%s]", r2)), "\n", sep=""),
-      paste(crayon::blue(sprintf("|___depend3 [%s]", r3)), "\n", sep=""))
-  
-  expect_equal(messages, exp_message)
+  child_1 <- root$children[[1]]
+  readable_child_1 <- child_1$format()
+  expect_match(readable_child_1,
+               "use_dependency_2 \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
+  expect_true(length(child_1$children) == 0)
+
+  tree <- orderly_build_dep_tree("use_dependency_2", root = path)
+  root <- tree$root
+  readble_root <- root$format()
+  expect_match(readble_root,
+               "use_dependency_2 \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
+  expect_true(length(root$children) == 0)
 })
 
 test_that("has dependencies upstream", {
-  path <- prepare_orderly_example("depends")
-  tmp <- tempfile()
-  r1 <- orderly_run("example", root = path, echo = FALSE)
-  r2 <- orderly_run("depend", root = path, echo = FALSE)
-  r3 <- orderly_run("depend3", root = path, echo = FALSE)
-  orderly_commit(r1, root = path)
-  orderly_commit(r2, root = path)
-  orderly_commit(r3, root = path)
+  path <- prepare_orderly_example("demo")
 
-  messages <- capture_messages(
-    orderly_print_dep_tree("example", root = path, upstream = TRUE)
-  )
+  demo <- c("- name: other", "  parameters:", "    nmin: 0",
+            "- name: use_dependency",
+            "- name: use_dependency_2",
+            "- name: use_dependency_2")
+  writeLines(demo, file.path(path, "demo.yml"))
+  run_orderly_demo(path)
 
-  exp_message <-
-    c(paste(crayon::yellow("++++++UPSTREAM++++++"), "\n", sep=""),
-      paste(crayon::blue(sprintf("example [%s]", r1)), "\n", sep=""))
-  expect_equal(messages, exp_message)
-  
-  messages <- capture_messages(
-    orderly_print_dep_tree("depend3", root = path, upstream = TRUE)
-  )
-  exp_message <-
-    c(paste(crayon::yellow("++++++UPSTREAM++++++"), "\n", sep=""),
-      paste(crayon::blue(sprintf("depend3 [%s]", r3)), "\n", sep=""),
-      paste(crayon::blue(sprintf("|___depend [%s]", r2)), "\n", sep=""),
-      paste(crayon::blue(sprintf("  |___example [%s]", r1)), "\n", sep=""))
-  
-  expect_equal(messages, exp_message)
+  tree <- orderly_build_dep_tree("other", root = path, upstream = TRUE)
+
+  tree <- orderly_build_dep_tree("use_dependency_2", root = path, upstream = TRUE)
 })
 
 test_that("out of date dependencies", {
-  path <- prepare_orderly_example("depends")
-  tmp <- tempfile()
-  r1 <- orderly_run("example", root = path, echo = FALSE)
-  r2 <- orderly_run("depend", root = path, echo = FALSE)
-  r3_1 <- orderly_run("depend3", root = path, echo = FALSE)
-  ## We now add a mysterious sleep command to ensure that report 3_2 is later
-  ## than report 3_1. Without this pause the test can fail non-deterministicly!!
-  Sys.sleep(1.0)
-  r3_2 <- orderly_run("depend3", root = path, echo = FALSE)
-  orderly_commit(r1, root = path)
-  orderly_commit(r2, root = path)
-  orderly_commit(r3_1, root = path)
-  orderly_commit(r3_2, root = path)
+  path <- prepare_orderly_example("demo")
 
-  messages <- capture_messages(
-    orderly_print_dep_tree("example", root = path)
-  )
-  exp_message <-
-    c(paste(crayon::green("+++++DOWNSTREAM+++++"), "\n", sep=""),
-      paste(crayon::blue(sprintf("example [%s]", r1)), "\n", sep=""),
-      paste(crayon::blue(sprintf("|___depend [%s]", r2)), "\n", sep=""),
-      ## this row should be red because this report has been re-run
-      paste(crayon::red( sprintf("  |___depend3 [%s]", r3_1)), "\n", sep=""),
-      paste(crayon::blue(sprintf("  |___depend3 [%s]", r3_2)), "\n", sep=""))
+  demo <- c("- name: other", "  parameters:", "    nmin: 0",
+            "- name: use_dependency",
+            "- name: use_dependency_2",
+            "- name: use_dependency",
+            "- name: use_dependency_2",
+            "- name: use_dependency_2")
+  writeLines(demo, file.path(path, "demo.yml"))
+  run_orderly_demo(path)
 
-  expect_equal(messages, exp_message)
+  tree <- orderly_build_dep_tree("other", root = path, upstream = FALSE)
+})
+
+test_that("propagate", {
+  path <- prepare_orderly_example("demo")
+
+  demo <- c("- name: other", "  parameters:", "    nmin: 0",
+            "- name: use_dependency",
+            "- name: use_dependency_2",
+            "- name: use_dependency")
+  writeLines(demo, file.path(path, "demo.yml"))
+  run_orderly_demo(path)
+
+  tree <- orderly_build_dep_tree("other", root = path, propagate = TRUE)
 })

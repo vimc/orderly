@@ -2,23 +2,10 @@
 ##'
 ##' @param name the name of the report
 ##' @param id the id of the report, if omitted, use the id of the latest report
-##' @param root
 ##' @param upstream A boolean indicating if we want to move up or down the tree
-##' @param locate
 ##' @param con A connection to a database
-get_dependencies_db <- function(name, id = NULL, root = NULL, upstream = FALSE,
-                                locate = TRUE, con = NULL, use_latest = FALSE) {
-  ## get a connection to the database
-  if (is.null(con)) {
-    con <- orderly_db("destination", orderly_config_get(root, locate))
-    on.exit(DBI::dbDisconnect(con))
-  }
-
-  ## find the latest version of this report in the database
-  if (is.null(id)) {
-    id <- get_latest_in_db(name = name, con = con)$id
-  }
-
+get_dependencies_db <- function(name, id, upstream, con,
+                                use_latest = FALSE) {
   ## now construct the SQL query
   if (upstream) {
     filt_qry <- sprintf("depends.report_version='%s'", id)
@@ -41,8 +28,7 @@ get_dependencies_db <- function(name, id = NULL, root = NULL, upstream = FALSE,
 
   db_ret <- DBI::dbGetQuery(con, sql_qry)
 
-
-## This is only relevant when going upstream
+  ## This is only relevant when going upstream
   sql_art_qry <- paste(c("SELECT" , "filename, ", "file_hash",
                          "FROM", "(depends",
                          "INNER JOIN", "report_version", "ON",
@@ -160,17 +146,11 @@ is_out_of_date <- function(con, parent_id, child_id) {
 ##' @param root
 ##' @param locate
 ##' @param upstream A boolean indicating if we want to move up or down the tree
-build_tree <- function(name, id = "latest", depth = 0, parent = NULL,
-                       tree = NULL, con = NULL, root = NULL, locate = TRUE,
-                       upstream = FALSE) {
+build_tree <- function(name, id, depth = 0, parent = NULL,
+                       tree = NULL, con, upstream = FALSE) {
   if (depth > 10) {
     print("*WARNING* There appears to be a circular dependency")
     return(tree)
-  }
-
-  if (is.null(con)) {
-    con <- orderly_db("destination", orderly_config_get(root, locate))
-    on.exit(DBI::dbDisconnect(con))
   }
 
   # make sure a report with this name exists
@@ -179,7 +159,7 @@ build_tree <- function(name, id = "latest", depth = 0, parent = NULL,
     stop("This report does not exist")
   }
 
-  # we need to go find the latest version of the report
+    # we need to go find the latest version of the report
   latest_id <- get_latest_in_db(con, name)
   if (id == "latest") {
     id <- latest_id$id
@@ -198,7 +178,7 @@ build_tree <- function(name, id = "latest", depth = 0, parent = NULL,
   }
 
   dep_ids <- get_dependencies_db(name = name, id = id,
-                                 root = root, locate = TRUE, con = con,
+                                 con = con,
                                  upstream = upstream)
   for (dep_id in dep_ids) {
     dep_name <- id_to_name(id = dep_id, con = con)
@@ -208,8 +188,6 @@ build_tree <- function(name, id = "latest", depth = 0, parent = NULL,
                parent = v,
                tree = tree,
                con = con,
-               root = root,
-               locate = locate,
                upstream = upstream)
   }
 
@@ -228,7 +206,7 @@ build_tree <- function(name, id = "latest", depth = 0, parent = NULL,
 ##'                  through the tree
 ##'
 ##' @export
-orderly_print_dep_tree <- function(name, id = "latest", root = NULL,
+orderly_build_dep_tree <- function(name, id = "latest", root = NULL,
                                    locate = TRUE, upstream = FALSE, con = NULL,
                                    propagate = FALSE) {
   if (is.null(con)) {
@@ -236,9 +214,7 @@ orderly_print_dep_tree <- function(name, id = "latest", root = NULL,
     on.exit(DBI::dbDisconnect(con))
   }
 
-  dep_tree <- build_tree(name = name, id = id,
-                         root = root, locate = TRUE, con = con,
-                         upstream = upstream)
+  dep_tree <- build_tree(name = name, id = id, con = con, upstream = upstream)
   if (upstream) {
     message(crayon::yellow("++++++UPSTREAM++++++"))
   } else {
@@ -254,7 +230,7 @@ orderly_print_dep_tree <- function(name, id = "latest", root = NULL,
     orderly_log("dep tree", "Nothing to update.")
   }
 
-  dep_tree$print_tree()
+  dep_tree
 }
 
 
@@ -293,7 +269,7 @@ Vertex <- R6::R6Class("Vertex", list(
   add_child = function(child) {
     self$children <- append(self$children, list(child))
   },
-  to_string = function() {
+  format = function() {
     return(sprintf("%s [%s]", self$name, self$id))
   }
   )
@@ -321,14 +297,14 @@ Tree <- R6::R6Class("Tree", list(
     }
   },
   # this is stupidly hacky to get the formatting right
-  print_tree = function(vertex = self$root, fvector = c()) {
+  format_helper = function(vertex = self$root, fvector = c(), str="") {
     console_colour <- if (vertex$out_of_date) {crayon::red} else {crayon::blue}
 
     if (length(fvector) == 0) {
-      message(console_colour(sprintf("%s", vertex$to_string())))
+      str <- paste(str, console_colour(sprintf("%s", vertex$format())), "\n", collapse = "")
     } else {
       spacing <- paste(ifelse(head(fvector, -1), "| ", "  "), collapse = "")
-      message(console_colour(sprintf("%s|___%s", spacing, vertex$to_string())))
+      str <- paste(str, console_colour(sprintf("%s|___%s", spacing, vertex$format())), "\n", collapse = "")
     }
 
     if (length(vertex$children) > 0) {
@@ -336,12 +312,16 @@ Tree <- R6::R6Class("Tree", list(
         child <- vertex$children[[i]]
 
         if (i != length(vertex$children)) {
-          self$print_tree(child, c(fvector, TRUE))
+          str <- self$format_helper(child, c(fvector, TRUE), str)
         } else {
-          self$print_tree(child, c(fvector, FALSE))
+          str <- self$format_helper(child, c(fvector, FALSE), str)
         }
       }
     }
+    str
+  },
+  format = function() {
+    self$format_helper()
   }
   )
 )
