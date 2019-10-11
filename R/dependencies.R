@@ -92,7 +92,11 @@ id_to_name <- function(con, id) {
   )
   db_ret <- DBI::dbGetQuery(con, paste(sql_qry, collapse = " "))
 
-  return(db_ret$report)
+  if (nrow(db_ret) == 0) {
+    return(NULL)
+  } else {
+    return(db_ret$report)
+  }
 }
 
 ##' @title Is the id the latest version of the report in the database
@@ -164,8 +168,13 @@ build_tree <- function(name, id, depth = 0, parent = NULL,
   if (id == "latest") {
     id <- latest_id$id
   } else {
-    if (name != id_to_name(con, id)) {
-      stop("id does not match report name")
+    db_id <- id_to_name(con, id)
+    if (is.null(db_id)) {
+      stop("no report with this id in the database")
+    } else {
+      if (name != id_to_name(con, id)) {
+        stop("id does not match report name")
+      }
     }
   }
 
@@ -226,10 +235,6 @@ orderly_build_dep_tree <- function(name, id = "latest", root = NULL,
     propagate(dep_tree$root, upstream)
   }
 
-  if (length(dep_tree) == 0) {
-    orderly_log("dep tree", "Nothing to update.")
-  }
-
   dep_tree
 }
 
@@ -251,7 +256,6 @@ propagate <- function(vertex, upstream) {
     }
   }
 }
-
 
 Vertex <- R6::R6Class("Vertex", list(
   parent = NULL,
