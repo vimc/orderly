@@ -137,6 +137,24 @@ is_out_of_date <- function(con, parent_id, child_id) {
   db_chd <- DBI::dbGetQuery(con, sql_chd_qry)
 }
 
+##' @title 
+##' Recursively check that none of the parents share the same name as the
+##' current report. TRUE if there is a match (bad!) FALSE if the is no match
+##' (good!)
+##'
+##' @param parent_vertex The vertex whose name we want to check
+##' @param name The name we want to match
+check_parents <- function(parent_vertex, name) {
+  if (parent_vertex$name == name) {
+    return(TRUE)
+  } else {
+    if (!is.null(parent_vertex$parent)) {
+      return(check_parents(parent_vertex$parent, name))
+    }
+  }
+  return(FALSE)
+}
+
 ##' @title Recursively builds a tree for a given report
 ##'
 ##' @param name the name of the report
@@ -152,9 +170,18 @@ is_out_of_date <- function(con, parent_id, child_id) {
 ##' @param upstream A boolean indicating if we want to move up or down the tree
 build_tree <- function(name, id, depth = 0, parent = NULL,
                        tree = NULL, con, upstream = FALSE) {
-  if (depth > 10) {
-    print("*WARNING* There appears to be a circular dependency")
-    return(tree)
+  ## this should never get triggered - it only exists the prevent an infinite
+  ## recursion
+  if (depth > 100) {
+    stop("WARNING the tree is very large")
+  }
+
+  if (!is.null(parent)) {
+    circ <- check_parents(parent, name)
+    if (circ) {
+      tree$message <- "WARNING There appears to be a circular dependency"
+      return(tree)
+    }
   }
 
   # make sure a report with this name exists
@@ -283,9 +310,11 @@ Vertex <- R6::R6Class("Vertex", list(
 Tree <- R6::R6Class("Tree", list(
   vertices = NULL,
   root = NULL,
+  message = NULL,
   initialize = function(root) {
     self$vertices <- append(self$vertices, list(root))
     self$root <- root
+    self$message <- NULL
   },
   add_child = function(parent, name, id, out_of_date) {
     child <- Vertex$new(parent, name, id, out_of_date)
@@ -293,15 +322,14 @@ Tree <- R6::R6Class("Tree", list(
     self$vertices <- append(self$vertices, list(child))
     return(child)
   },
-  get_vertex = function(name, id) {
-    for (vertex in self$vertices) {
-      if ((name == vertex$name) && (id == vertex$id)) {
-        return(vertex)
-      }
-    }
-  },
   # this is stupidly hacky to get the formatting right
   format_helper = function(vertex = self$root, fvector = c(), str="") {
+    ## if the tree has a warning message, append it to the front in the red
+    if (!is.null(self$message)) {
+      str <- paste(str, crayon::red(self$message), "\n", collapse = "")
+      self$message <- NULL
+    }
+
     console_colour <- if (vertex$out_of_date) {crayon::red} else {crayon::blue}
 
     if (length(fvector) == 0) {

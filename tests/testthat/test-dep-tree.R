@@ -182,7 +182,7 @@ test_that("propagate", {
 
   tree <- orderly_build_dep_tree("use_dependency_2", root = path,
                                  propagate = TRUE, upstream = TRUE)
-print(tree)
+
   root <- tree$root
   expect_false(!root$out_of_date)
 
@@ -191,4 +191,37 @@ print(tree)
 
   dep_2_1 <- dep_1_1$children[[1]]
   expect_false(dep_2_1$out_of_date)
+})
+
+test_that("circular dependency", {
+  ## A circular dependency is difficult to create
+  ## we need two reports A,B s.t A -> B
+  ## run A
+  ## the modify A so that B -> A then run B
+  path <- prepare_orderly_example("demo")
+  ## run report other
+  demo <- c("- name: other", "  parameters:", "    nmin: 0")
+  writeLines(demo, file.path(path, "demo.yml"))
+  run_orderly_demo(path)
+
+  ## add dependency to report other
+  other_path <- file.path(path, "src", "other")
+  dep_str <- c("depends:",
+               "  use_dependency:",
+               "    id: latest",
+               "    use:",
+               "      info: info.rds")
+  write(dep_str, file = file.path(other_path, "orderly.yml"), append = TRUE)
+
+  ## run use_dependency and re-run the modified other
+  demo <- c("- name: use_dependency",
+            "- name: other", "  parameters:", "    nmin: 0")
+  writeLines(demo, file.path(path, "demo.yml"))
+  run_orderly_demo(path)
+  first_other <- head(dir(file.path(path, "archive", "other")), n=1)
+
+  tree <- orderly_build_dep_tree("other", id = first_other, root = path)
+  circ_tree <- tree$format()[1]
+  expect_match(circ_tree,
+               "WARNING There appears to be a circular dependency")
 })
