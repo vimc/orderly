@@ -55,6 +55,7 @@
 ##'   messages (not just R output)
 ##'
 ##' @export
+##' @return The id of the newly created report
 ##' @examples
 ##' path <- orderly::orderly_example("demo")
 ##'
@@ -552,6 +553,7 @@ recipe_current_run_clear <- function() {
 ##'   \code{\link{orderly_test_start}}
 ##'
 ##' @export
+##' @return A list of metadata about the current report
 ##' @examples
 ##' path <- orderly::orderly_example("demo")
 ##'

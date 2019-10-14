@@ -23,6 +23,10 @@ parents until it finds an \code{orderly_config.yml} file.}
 be validated on open (currently only applicable with \code{type
 = "destination"}).  This is primarily intended for internal use.}
 }
+\value{
+A database connection, or list of connections in the case
+  of \code{source}.
+}
 \description{
 Connect to the orderly databases.  These should be treated as as
 \emph{read-only}.

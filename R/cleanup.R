@@ -17,6 +17,7 @@
 ##'   end-of-run metadata).  This will also clean up drafts created by
 ##'   \code{\link{orderly_test_start}}
 ##' @inheritParams orderly_list
+##' @return No return value, this function is called only for its side effects
 ##' @export
 ##' @examples
 ##' # In a new example orderly, run two reports and commit only the

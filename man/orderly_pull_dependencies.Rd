@@ -35,6 +35,10 @@ first listed remote.}
 \item{id}{The identifier (for \code{orderly_pull_archive}).  The default is
 to use the latest report.}
 }
+\value{
+No return value, these functions are called only for its
+  side effects
+}
 \description{
 Download dependent reports from an orderly remote.  This can only
 be used if the \code{orderly_config.yml} lists a remote.  This

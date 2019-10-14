@@ -28,6 +28,9 @@ the name of a directory within a directory \code{templates} in
 your project root.  The special label "orderly" will use
 orderly's builtin template.}
 }
+\value{
+The path of the new source directory, invisibly
+}
 \description{
 Create new report, starting from a template.  Orderly comes with a
 set of templates, but projects can bring their own templates; see

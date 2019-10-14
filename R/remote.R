@@ -41,6 +41,9 @@
 ##' @inheritParams orderly_list
 ##' @export
 ##'
+##' @return No return value, these functions are called only for its
+##'   side effects
+##'
 ##' @seealso \code{\link{orderly_remote_path}}, which implements the
 ##'   remote interface for orderly repositories at a local path.  See
 ##'   also \href{https://github.com/vimc/orderly-web}{OrderlyWeb} for
@@ -171,6 +174,7 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
 ##' @inheritParams orderly_pull_dependencies
 ##'
 ##' @export
+##' @return No return value, this function is called only for its side effects
 ##' @examples
 ##' path_remote <- orderly::orderly_example("demo")
 ##' path_local <- orderly::orderly_example("demo")
@@ -204,6 +208,12 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
 ##'
 ##' @inheritParams orderly_list
 ##' @export
+##'
+##' @return The default remote (for
+##'   \code{orderly_default_remote_get}). The function
+##'   \code{orderly_default_remote_set} is called for its side effects
+##'   only.
+##'
 ##' @rdname orderly_default_remote
 ##' @examples
 ##' # Same setup as in orderly_remote_path, with a remote orderly:

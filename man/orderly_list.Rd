@@ -16,6 +16,9 @@ searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
 }
+\value{
+A character vector of report names
+}
 \description{
 List the \emph{names} of reports known to orderly.  These are the
 \emph{source} names, not the results of running reports.  Note

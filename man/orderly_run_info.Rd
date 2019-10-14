@@ -12,6 +12,9 @@ be left as \code{NULL} when running a report, and the path to
 the report being run should be used when using
 \code{\link{orderly_test_start}}}
 }
+\value{
+A list of metadata about the current report
+}
 \description{
 This function allows inspection of some of orderly's metadata
 during an orderly run.  The format returned is internal to orderly

@@ -28,6 +28,9 @@ parents until it finds an \code{orderly_config.yml} file.}
 end-of-run metadata).  This will also clean up drafts created by
 \code{\link{orderly_test_start}}}
 }
+\value{
+No return value, this function is called only for its side effects
+}
 \description{
 Clean up orderly draft and data directories.  Deletes all drafts
 (possibly just for a set of report names) and then deletes

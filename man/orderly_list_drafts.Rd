@@ -19,6 +19,11 @@ searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
 }
+\value{
+A \code{data.frame} with columns \code{name} and
+  \code{id}, containing character vectors of report names and
+  versions, respectively.
+}
 \description{
 List draft and archived reports.  This returns a data.frame with
 columns \code{name} (see \code{\link{orderly_list}}) and \code{id}.
