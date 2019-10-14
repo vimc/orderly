@@ -84,6 +84,7 @@ png(file.path(p, "mygraph.png"))
 barplot(setNames(dat$number, dat$name), las = 2)
 dev.off()
 
+# We now confirm that the artefact has been created:
 orderly::orderly_test_check(p)
 # The function orderly_data does all the preparation work that
 # orderly_run does, but does not run the report; instead it

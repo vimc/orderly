@@ -45,6 +45,7 @@
 ##' barplot(setNames(dat$number, dat$name), las = 2)
 ##' dev.off()
 ##'
+##' # We now confirm that the artefact has been created:
 ##' orderly::orderly_test_check(p)
 orderly_test_start <- function(name, parameters = NULL, envir = parent.frame(),
                                root = NULL, locate = TRUE) {
@@ -96,7 +97,7 @@ orderly_test_check <- function(path = NULL) {
   if (is.null(info)) {
     stop(sprintf("Not running in test mode (for path %s)", path))
   }
-  found <- withr::with_dir(path, recipe_exists_artefacts(info$info))
+  found <- withr::with_dir(path, recipe_exists_artefacts(info))
   msg <- sprintf("%7s: %s", ifelse(found, "found", "missing"), names(found))
   artefacts <- names(found)
   h <- withr::with_dir(path, hash_artefacts(artefacts))
