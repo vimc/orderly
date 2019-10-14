@@ -546,6 +546,11 @@ recipe_current_run_clear <- function() {
 ##'
 ##' @title Information on current orderly run
 ##'
+##' @param path Path to the report currently being run.  This should
+##'   be left as \code{NULL} when running a report, and the path to
+##'   the report being run should be used when using
+##'   \code{\link{orderly_test_start}}
+##'
 ##' @export
 ##' @examples
 ##' path <- orderly::orderly_example("demo")
