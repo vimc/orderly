@@ -45,9 +45,6 @@
 ##' dev.off()
 ##'
 ##' orderly::orderly_test_check()
-##'
-##' # Revert back to the original directory:
-##' orderly::orderly_test_end()
 orderly_test_start <- function(name, parameters = NULL, envir = parent.frame(),
                                root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)

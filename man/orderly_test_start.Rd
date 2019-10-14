@@ -80,9 +80,6 @@ barplot(setNames(dat$number, dat$name), las = 2)
 dev.off()
 
 orderly::orderly_test_check()
-
-# Revert back to the original directory:
-orderly::orderly_test_end()
 # The function orderly_data does all the preparation work that
 # orderly_run does, but does not run the report; instead it
 # returns the created environment with all the data and parameters
