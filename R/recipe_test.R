@@ -44,7 +44,7 @@
 ##' barplot(setNames(dat$number, dat$name), las = 2)
 ##' dev.off()
 ##'
-##' orderly::orderly_test_check()
+##' orderly::orderly_test_check(info$path)
 orderly_test_start <- function(name, parameters = NULL, envir = parent.frame(),
                                root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
