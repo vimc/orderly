@@ -27,24 +27,25 @@
 ##'
 ##' @title Prepare a directory for orderly to use
 ##' @inheritParams orderly_run
+##' @return The path to the report directory
 ##' @export
 ##' @examples
 ##'
 ##' path <- orderly::orderly_example("minimal")
-##' info <- orderly::orderly_test_start("example", root = path)
+##' p <- orderly::orderly_test_start("example", root = path)
 ##'
 ##' # The data in the orderly example is now available to use
 ##' dat
 ##'
 ##' # Check to see which artefacts have been created so far:
-##' orderly::orderly_test_check(info$path)
+##' orderly::orderly_test_check(p)
 ##'
 ##' # Manually the code that this report has in its script
-##' png("mygraph.png")
+##' png(file.path(p, "mygraph.png"))
 ##' barplot(setNames(dat$number, dat$name), las = 2)
 ##' dev.off()
 ##'
-##' orderly::orderly_test_check(info$path)
+##' orderly::orderly_test_check(p)
 orderly_test_start <- function(name, parameters = NULL, envir = parent.frame(),
                                root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
@@ -54,21 +55,13 @@ orderly_test_start <- function(name, parameters = NULL, envir = parent.frame(),
     info$workdir,
     orderly_prepare_data(config, info, parameters, envir))
 
-  ret <- list(
-    owd = getwd(),
-    path = info$workdir,
-    name = name,
-    id = info$id,
-    parameters = parameters,
-    config = config,
-    info = info)
-
   ## We take the opportunity here to filter out any no-longer-existing
   ## test reports.
   if (length(cache$test) > 0) {
     cache$test <- cache$test[file.exists(names(cache$test))]
   }
-  cache$test[[normalizePath(info$workdir)]] <- ret
+
+  cache$test[[normalizePath(info$workdir)]] <- info
 
   msg <- c("orderly has prepared your files at the path",
            "",
@@ -89,7 +82,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = parent.frame(),
            "more details")
   message(paste(msg, collapse = "\n"))
 
-  invisible(ret)
+  info$workdir
 }
 
 

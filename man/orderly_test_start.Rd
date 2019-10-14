@@ -36,6 +36,9 @@ parents until it finds an \code{orderly_config.yml} file.}
 
 \item{path}{Path to the report that is currently being run}
 }
+\value{
+The path to the report directory
+}
 \description{
 For interactive testing of orderly code.  This runs through and
 sets everything up as orderly would (creates a new working
@@ -68,20 +71,20 @@ The new suggested workflow is:
 \examples{
 
 path <- orderly::orderly_example("minimal")
-info <- orderly::orderly_test_start("example", root = path)
+p <- orderly::orderly_test_start("example", root = path)
 
 # The data in the orderly example is now available to use
 dat
 
 # Check to see which artefacts have been created so far:
-orderly::orderly_test_check(info$path)
+orderly::orderly_test_check(p)
 
 # Manually the code that this report has in its script
-png("mygraph.png")
+png(file.path(p, "mygraph.png"))
 barplot(setNames(dat$number, dat$name), las = 2)
 dev.off()
 
-orderly::orderly_test_check(info$path)
+orderly::orderly_test_check(p)
 # The function orderly_data does all the preparation work that
 # orderly_run does, but does not run the report; instead it
 # returns the created environment with all the data and parameters

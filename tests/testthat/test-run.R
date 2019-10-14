@@ -340,12 +340,12 @@ test_that("test mode artefacts", {
   on.exit(setwd(owd))
 
   path <- prepare_orderly_example("minimal")
-  info <- orderly_test_start("example", root = path)
+  p <- orderly_test_start("example", root = path)
 
-  expect_false(orderly_test_check(info$path))
+  expect_false(orderly_test_check(p))
 
-  writeLines(character(0), file.path(info$path, "mygraph.png"))
-  expect_true(orderly_test_check(info$path))
+  writeLines(character(0), file.path(p, "mygraph.png"))
+  expect_true(orderly_test_check(p))
 })
 
 
