@@ -572,12 +572,6 @@ orderly_run_info <- function(path = NULL) {
 }
 
 
-test_mode_end <- function(env = .GlobalEnv) {
-  suppressWarnings(rm(list = "Q", envir = env))
-  tryCatch(orderly_test_end(), error = function(e) NULL)
-}
-
-
 recipe_file_inputs <- function(info) {
   file_in_data(
     orderly_yml = file_info("orderly.yml"),

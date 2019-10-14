@@ -354,14 +354,6 @@ test_that("orderly_test_check requires test mode", {
 })
 
 
-test_that("test mode end", {
-  env <- new.env()
-  env$Q <- TRUE
-  test_mode_end(env)
-  expect_null(env$Q)
-})
-
-
 test_that("run with message", {
   path <- prepare_orderly_example("changelog", testing = TRUE)
   test_message <- "[label1] test"
