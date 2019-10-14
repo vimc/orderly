@@ -1,14 +1,20 @@
 language: r
 sudo: false
 cache: packages
+
+matrix:
+  include:
+  - r: devel
+  - r: release
+    after_success:
+    - Rscript -e 'covr::codecov()'
+
 r_packages:
   - covr
 before_script:
   - Rscript -e 'vaultr::vault_test_server_install()'
   - cp -r reference tests/testthat
   - R CMD INSTALL .
-after_success:
-  - Rscript -e 'covr::codecov()'
 env:
   global:
     - VAULTR_TEST_SERVER_INSTALL=true
