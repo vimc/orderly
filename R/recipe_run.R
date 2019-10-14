@@ -91,151 +91,13 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   config <- check_orderly_archive_version(config)
 
   info <- recipe_prepare(config, name, id_file, ref, fetch, message)
+
+  recipe_current_run_set(info)
   on.exit(recipe_current_run_clear())
 
   info <- recipe_run(info, parameters, envir, config, echo = echo)
 
   info$id
-}
-
-
-##' For interactive testing of orderly code.  This runs through and
-##' sets everything up as orderly would (creates a new working
-##' directory and changes into it, pulls data from the database,
-##' copies over any dependent reports) but then rather than running
-##' the report hands back to the user.  The prompt \emph{looks} like
-##' \code{\link{browser}} but it is just a plain old R prompt and the
-##' code runs in the global environment.  The \code{orderly_data}
-##' function returns an environment with the extracted data.
-##'
-##' To quit run \code{orderly_test_end()} (or enter \code{Q}, like
-##' \code{browser}).  To test if all artefacts have been created run
-##' \code{orderly_test_check()}.
-##'
-##' @title Prepare a directory for orderly to use
-##' @inheritParams orderly_run
-##' @export
-##' @examples
-##'
-##' path <- orderly::orderly_example("minimal")
-##' orderly::orderly_test_start("example", root = path)
-##'
-##' # R is now running from the newly created draft directory for this
-##' # report:
-##' getwd()
-##'
-##' # The data in the orderly example is now available to use
-##' dat
-##'
-##' # Check to see which artefacts have been created so far:
-##' orderly::orderly_test_check()
-##'
-##' # Manually the code that this report has in its script
-##' png("mygraph.png")
-##' par(mar = c(15, 4, .5, .5))
-##' barplot(setNames(dat$number, dat$name), las = 2)
-##' dev.off()
-##'
-##' orderly::orderly_test_check()
-##'
-##' # Revert back to the original directory:
-##' orderly::orderly_test_end()
-orderly_test_start <- function(name, parameters = NULL, envir = .GlobalEnv,
-                               root = NULL, locate = TRUE) {
-  if (!is.null(cache$test)) {
-    stop("Already running in test mode")
-  }
-
-  config <- orderly_config_get(root, locate)
-  info <- recipe_prepare(config, name, id_file = NULL, ref = NULL,
-                         fetch = FALSE, message = NULL)
-  owd <- setwd(info$workdir)
-  ## Ensure that if anything goes wrong we'll end up back where we
-  ## started (see VIMC-1870)
-  on.exit(setwd(owd))
-  prep <- orderly_prepare_data(config, info, parameters, envir)
-
-  cache$test <- list(owd = owd,
-                     name = name,
-                     id = info$id,
-                     parameters = parameters,
-                     config = config,
-                     info = info,
-                     prompt = getOption("prompt"))
-  options(prompt = "[orderly test] > ")
-  makeActiveBinding(quote("Q"), test_mode_end, envir)
-  orderly_log("setwd", "running in test draft directory")
-  on.exit()
-}
-
-##' @export
-##' @rdname orderly_test_start
-##'
-##' @param cleanup Delete testing directory on exit?  If \code{FALSE}
-##'   then you will probably want to use \code{\link{orderly_cleanup}}
-##'   later to delete the test directory.  Note that it is not
-##'   possible to commit the results of an orderly test run.
-orderly_test_end <- function(cleanup = FALSE) {
-  if (is.null(cache$test)) {
-    stop("Not running in test mode")
-  }
-  testdir <- setwd(cache$test$owd)
-  orderly_log("setwd", "reverting to original directory")
-  options(prompt = cache$test$prompt)
-  cache$test <- NULL
-  recipe_current_run_clear()
-  if (cleanup) {
-    unlink(testdir, recursive = TRUE)
-  }
-}
-
-##' @export
-##' @rdname orderly_test_start
-orderly_test_restart <- function(cleanup = TRUE) {
-  if (is.null(cache$test)) {
-    stop("Not running in test mode")
-  }
-  name <- cache$test$name
-  parameters <- cache$test$parameters
-  config <- cache$test$config
-  orderly_test_end(cleanup)
-  orderly_test_start(name, parameters, root = config)
-}
-
-##' @export
-##' @rdname orderly_test_start
-orderly_test_check <- function() {
-  if (is.null(cache$test)) {
-    stop("Not running in test mode")
-  }
-  found <- recipe_exists_artefacts(cache$test$info)
-  msg <- sprintf("%7s: %s", ifelse(found, "found", "missing"), names(found))
-  artefacts <- names(found)
-  h <- hash_artefacts(artefacts)
-  h[is.na(h)] <- "<missing>"
-  orderly_log("artefact", sprintf("%s: %s", artefacts, h))
-  invisible(all(found))
-}
-
-
-##' @export
-##' @rdname orderly_test_start
-##' @examples
-##' # The function orderly_data does all the preparation work that
-##' # orderly_run does, but does not run the report; instead it
-##' # returns the created environment with all the data and parameters
-##' # set.
-##' path <- orderly::orderly_example("demo")
-##' env <- orderly::orderly_data("other", list(nmin = 0.2), root = path)
-##' ls(env)
-##' env$nmin
-##' env$extract
-orderly_data <- function(name, parameters = NULL, envir = NULL,
-                         root = NULL, locate = TRUE) {
-  config <- orderly_config_get(root, locate)
-  info <- recipe_read(file.path(path_src(config$root), name), config)
-  envir <- orderly_environment(envir)
-  recipe_data(config, info, parameters, envir)$dest
 }
 
 
@@ -266,8 +128,6 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
   info$workdir <- file.path(path_draft(config$root), info$name, id)
   info <- recipe_prepare_workdir(info, message, config)
   info$git <- git_info(info$path)
-
-  recipe_current_run_set(info)
 
   info
 }
@@ -662,8 +522,13 @@ recipe_current_run_set <- function(info) {
 }
 
 
-recipe_current_run_get <- function() {
-  cache$current
+recipe_current_run_get <- function(path) {
+  if (is.null(path)) {
+    cache$current
+  } else {
+    assert_is_directory(path)
+    cache$test[[normalizePath(path)]]
+  }
 }
 
 
@@ -673,10 +538,11 @@ recipe_current_run_clear <- function() {
 
 
 ##' This function allows inspection of some of orderly's metadata
-##'   during an orderly run.  The format returned is internal to
-##'   orderly and subject to change.  It is designed to be used either
-##'   within report code, or in conjunction with
-##'   \code{\link{orderly_test_start}}
+##' during an orderly run.  The format returned is internal to orderly
+##' and subject to change.  It is designed to be used either within
+##' report code.  To use in conjunction with
+##' \code{\link{orderly_test_start}}, you must pass in the path to the
+##' report in question.
 ##'
 ##' @title Information on current orderly run
 ##'
@@ -697,8 +563,8 @@ recipe_current_run_clear <- function() {
 ##'
 ##' # This is the contents:
 ##' readRDS(file.path(path, "draft", "use_dependency", id, "info.rds"))
-orderly_run_info <- function() {
-  info <- recipe_current_run_get()
+orderly_run_info <- function(path = NULL) {
+  info <- recipe_current_run_get(path)
   if (is.null(info)) {
     stop("Not currently running an orderly report")
   }

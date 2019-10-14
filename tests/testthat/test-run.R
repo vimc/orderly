@@ -334,44 +334,18 @@ test_that("id file", {
   expect_equal(readLines(tmp), id)
 })
 
-test_that("test_start, test_restart", {
-  owd <- getwd()
-  on.exit(setwd(owd))
-
-  path <- prepare_orderly_example("minimal")
-  orderly_test_start("example", root = path)
-
-  expect_equal(normalizePath(dirname(getwd())),
-               normalizePath(file.path(path, "draft/example")))
-  id <- basename(getwd())
-  expect_equal(orderly_list_drafts(path)$id, id)
-
-  expect_error(orderly_test_start("example", root = path),
-               "Already running in test mode")
-
-  orderly_test_restart()
-  id2 <- basename(getwd())
-  expect_false(id2 == id)
-  expect_equal(orderly_list_drafts(path)$id, id2)
-
-  orderly_test_end()
-  expect_equal(getwd(), owd)
-  expect_error(orderly_test_end(), "Not running in test mode")
-  expect_error(orderly_test_restart(), "Not running in test mode")
-})
 
 test_that("test mode artefacts", {
   owd <- getwd()
   on.exit(setwd(owd))
 
   path <- prepare_orderly_example("minimal")
-  orderly_test_start("example", root = path)
-  on.exit(orderly_test_end(), add = FALSE)
+  info <- orderly_test_start("example", root = path)
 
-  expect_false(orderly_test_check())
+  expect_false(orderly_test_check(info$path))
 
-  writeLines(character(0), "mygraph.png")
-  expect_true(orderly_test_check())
+  writeLines(character(0), file.path(info$path, "mygraph.png"))
+  expect_true(orderly_test_check(info$path))
 })
 
 

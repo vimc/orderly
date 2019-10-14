@@ -8,4 +8,5 @@ cache <- new.env(parent = emptyenv())
   cache$default_remote <- list()
   cache$remotes <- list()
   cache$schema <- list()
+  cache$test <- list()
 }
