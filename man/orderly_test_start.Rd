@@ -33,6 +33,8 @@ directory if \code{locate} is \code{TRUE}.}
 searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
+
+\item{path}{Path to the report that is currently being run}
 }
 \description{
 For interactive testing of orderly code.  This runs through and
