@@ -36,7 +36,7 @@ first listed remote.}
 to use the latest report.}
 }
 \value{
-No return value, these functions are called only for its
+No return value, these functions are called only for their
   side effects
 }
 \description{

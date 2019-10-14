@@ -540,8 +540,8 @@ recipe_current_run_clear <- function() {
 
 ##' This function allows inspection of some of orderly's metadata
 ##' during an orderly run.  The format returned is internal to orderly
-##' and subject to change.  It is designed to be used either within
-##' report code.  To use in conjunction with
+##' and subject to change.  It is designed to be used within report
+##' code.  To use in conjunction with
 ##' \code{\link{orderly_test_start}}, you must pass in the path to the
 ##' report in question.
 ##'

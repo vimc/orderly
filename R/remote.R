@@ -41,7 +41,7 @@
 ##' @inheritParams orderly_list
 ##' @export
 ##'
-##' @return No return value, these functions are called only for its
+##' @return No return value, these functions are called only for their
 ##'   side effects
 ##'
 ##' @seealso \code{\link{orderly_remote_path}}, which implements the
