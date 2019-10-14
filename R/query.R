@@ -27,6 +27,7 @@ VERSION_ID_RE <- "^([0-9]{8}-[0-9]{6})-([[:xdigit:]]{4})([[:xdigit:]]{4})$"
 ##'   (committed) and draft reports and their versions.
 ##'
 ##' @export
+##' @return A character vector of report names
 ##' @examples
 ##' # The orderly demo, with lots of potential reports:
 ##' path <- orderly::orderly_example("demo")
@@ -50,6 +51,11 @@ orderly_list <- function(root = NULL, locate = TRUE) {
 ##'   which returns the id of the most recent report.
 ##'
 ##' @export
+##'
+##' @return A \code{data.frame} with columns \code{name} and
+##'   \code{id}, containing character vectors of report names and
+##'   versions, respectively.
+##'
 ##' @examples
 ##' # The orderly demo, with lots of potential reports:
 ##' path <- orderly::orderly_example("demo")
@@ -104,6 +110,8 @@ orderly_list_archive <- function(root = NULL, locate = TRUE) {
 ##' @seealso \code{\link{orderly_list}} and
 ##'   \code{\link{orderly_list_archive}} for listing report names and
 ##'   versions.
+##'
+##' @return A character string with the id of the most recent report
 ##'
 ##' @export
 ##' @examples

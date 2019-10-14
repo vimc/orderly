@@ -39,6 +39,7 @@
 ##'   repository.
 ##'
 ##' @export
+##' @return The path of the new source directory, invisibly
 ##' @examples
 ##' path <- orderly::orderly_example("minimal")
 ##'

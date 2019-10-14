@@ -17,6 +17,9 @@ of making these directories noticeable by git.}
 \item{quiet}{Logical, indicating if informational messages should
 be suppressed.}
 }
+\value{
+The path to the newly created archive
+}
 \description{
 Initialise an orderly store.  This is a helper function that
 automates getting started with using orderly for a new project.

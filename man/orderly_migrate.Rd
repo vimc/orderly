@@ -37,6 +37,9 @@ was successful and \code{dry_run} is \code{FALSE}) orderly will
 clean up all migration backup files.  Use this periodically to
 clean up the archive.}
 }
+\value{
+No return value, this function is called only for its side effects
+}
 \description{
 Migrate an orderly archive.  This is needed periodically when the
 orderly archive version changes.  If you get a message like

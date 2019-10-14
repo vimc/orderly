@@ -40,6 +40,9 @@ checking out the reference \code{ref}.}
 \item{message}{An optional character string containing a message
 explaining why the report was run}
 }
+\value{
+The id of the newly created report
+}
 \description{
 Run a report.  This will create a new directory in
 \code{drafts/<reportname>}, copy your declared resources there,

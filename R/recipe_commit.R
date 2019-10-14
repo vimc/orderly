@@ -10,6 +10,9 @@
 ##'   name will be determined from the \code{id}.
 ##'
 ##' @inheritParams orderly_list
+##'
+##' @return The path to the newly committed report
+##'
 ##' @export
 ##' @examples
 ##' # In a new example orderly, run a report

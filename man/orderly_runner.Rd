@@ -27,6 +27,9 @@ backup can be manually moved into place.  This is only needed if
 you are storing information alongside the core orderly tables
 (as done by OrderlyWeb).}
 }
+\value{
+A runner object, with methods designed for internal use only.
+}
 \description{
 An orderly runner.  This is used to run reports as a server
 process.  It's designed to be used in conjunction with OrderlyWeb,

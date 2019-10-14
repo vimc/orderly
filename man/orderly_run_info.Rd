@@ -4,14 +4,24 @@
 \alias{orderly_run_info}
 \title{Information on current orderly run}
 \usage{
-orderly_run_info()
+orderly_run_info(path = NULL)
+}
+\arguments{
+\item{path}{Path to the report currently being run.  This should
+be left as \code{NULL} when running a report, and the path to
+the report being run should be used when using
+\code{\link{orderly_test_start}}}
+}
+\value{
+A list of metadata about the current report
 }
 \description{
 This function allows inspection of some of orderly's metadata
-  during an orderly run.  The format returned is internal to
-  orderly and subject to change.  It is designed to be used either
-  within report code, or in conjunction with
-  \code{\link{orderly_test_start}}
+during an orderly run.  The format returned is internal to orderly
+and subject to change.  It is designed to be used within report
+code.  To use in conjunction with
+\code{\link{orderly_test_start}}, you must pass in the path to the
+report in question.
 }
 \examples{
 path <- orderly::orderly_example("demo")

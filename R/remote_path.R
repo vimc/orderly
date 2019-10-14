@@ -12,6 +12,9 @@
 ##'
 ##' @param name Name of the remote
 ##'
+##' @return An \code{orderly_remote_path} object, with methods that
+##'   orderly will use in order to control this remote
+##'
 ##' @export
 ##' @seealso \code{\link{orderly_pull_dependencies}} and
 ##'   \code{\link{orderly_pull_archive}}, which are the primary ways
