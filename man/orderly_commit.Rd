@@ -21,6 +21,9 @@ searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
 }
+\value{
+The path to the newly committed report
+}
 \description{
 Commit a generated report, moving it from the \code{draft/}
 directory to \code{archive/} and updating the orderly index.  Once

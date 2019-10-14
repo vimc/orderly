@@ -1,3 +1,7 @@
+# orderly 1.0.1
+
+* In orderly to comply with CRAN policies, the functionality of `orderly::orderly_test_start` and related functions has been severely reduced.  Functions `orderly::orderly_test_end` and `orderly::orderly_test_restart` have been removed and `orderly::orderly_test_start` no longer directly provides a useable environment for testing reports (VIMC-3178).
+
 # orderly 1.0.0
 
 * Initial release to CRAN

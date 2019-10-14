@@ -35,6 +35,7 @@
 ##'   clean up the archive.
 ##'
 ##' @export
+##' @return No return value, this function is called only for its side effects
 ##' @examples
 ##' # Without an orderly repository created by a previous version of
 ##' # orderly, this function does nothing interesting:

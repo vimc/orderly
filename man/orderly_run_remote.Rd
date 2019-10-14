@@ -62,6 +62,9 @@ another package).  If left \code{NULL}, then the default remote
 for this orderly repository is used - by default that is the
 first listed remote.}
 }
+\value{
+No return value, this function is called only for its side effects
+}
 \description{
 Run a report on a remote server.  Note that this is only supported
 for remotes using OrderlyWeb at present.

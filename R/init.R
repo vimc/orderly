@@ -52,6 +52,8 @@
 ##' @seealso \code{\link{orderly_new}} for creating new reports within
 ##'   a configured orderly repository.
 ##'
+##' @return The path to the newly created archive
+##'
 ##' @examples
 ##' # Initialise a new orderly repository in an temporary directory:
 ##' path <- orderly::orderly_init(tempfile())

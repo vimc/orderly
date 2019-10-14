@@ -22,6 +22,12 @@ searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
 }
+\value{
+The default remote (for
+  \code{orderly_default_remote_get}). The function
+  \code{orderly_default_remote_set} is called for its side effects
+  only.
+}
 \description{
 Set and get default remote locations.  Default locations are
 specific to an orderly repository (based on the path of the

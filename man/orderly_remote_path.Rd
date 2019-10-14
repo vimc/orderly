@@ -11,6 +11,10 @@ orderly_remote_path(path, name = NULL)
 
 \item{name}{Name of the remote}
 }
+\value{
+An \code{orderly_remote_path} object, with methods that
+  orderly will use in order to control this remote
+}
 \description{
 Create a "handle" for interacting with orderly repositories that
 are hosted at a different path.  This might be useful in cases

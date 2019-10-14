@@ -27,6 +27,9 @@
 ##'   be validated on open (currently only applicable with \code{type
 ##'   = "destination"}).  This is primarily intended for internal use.
 ##'
+##' @return A database connection, or list of connections in the case
+##'   of \code{source}.
+##'
 ##' @export
 ##' @examples
 ##' # Create an orderly that has a single commited report:
@@ -125,6 +128,7 @@ orderly_db_args <- function(x, config) {
 ##'   fast enough to call regularly.
 ##'
 ##' @export
+##' @return No return value, this function is called only for its side effects
 ##' @examples
 ##' path <- orderly::orderly_example("minimal")
 ##' id <- orderly::orderly_run("example", root = path)

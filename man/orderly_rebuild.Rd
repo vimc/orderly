@@ -25,6 +25,9 @@ take place only if the schema has changed.  This is designed to
 be safe to use in (say) deployment scripts because it will be
 fast enough to call regularly.}
 }
+\value{
+No return value, this function is called only for its side effects
+}
 \description{
 Rebuild the report database.  This is necessary when the orderly
 database schema changes, and you will be prompted to run this
