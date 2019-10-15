@@ -76,14 +76,6 @@ get_latest_in_db <- function(con, name) {
   return(db_ret)
 }
 
-get_latest_in_db_id <- function(con, id) {
-  if (is_latest_in_db(con, id)) {
-    return(id)
-  } else {
-    return(get_latest_in_db(con, id_to_name(con, id))$id)
-  }
-}
-
 ##' @title Get the name of a report for a given id
 ##'
 ##' @param id the id of the report
