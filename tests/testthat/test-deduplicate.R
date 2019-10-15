@@ -29,12 +29,12 @@ test_that("deduplicate demo", {
   ## This will need updating every time we change the demo pretty
   ## much.
 
-  expect_equal(nrow(plan), 43)
+  expect_equal(nrow(plan), 40)
 
   orderly_deduplicate_run(plan)
 
   y <- orderly_deduplicate_info(config)
-  expect_equal(sum(y$files$state == "linked"), 43)
+  expect_equal(sum(y$files$state == "linked"), 40)
   expect_equal(sum(y$files$state == "duplicated"), 0)
   expect_equal(x$files$state == "distinct",
                y$files$state == "distinct")
