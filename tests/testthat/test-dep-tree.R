@@ -67,40 +67,6 @@ test_that("nonexistant reports ", {
                "id does not match report name")
 })
 
-# check reports with recursive dependencies
-# example
-# - depend
-#   - depend3
-test_that("has dependencies downstream", {
-  path <- prepare_orderly_example("demo")
-
-  demo <- c("- name: other", "  parameters:", "    nmin: 0",
-            "- name: use_dependency",
-            "- name: use_dependency_2")
-  writeLines(demo, file.path(path, "demo.yml"))
-  run_orderly_demo(path)
-
-  tree <- orderly_build_dep_tree("use_dependency", root = path)
-  root <- tree$root
-  readble_root <- root$format()
-  expect_match(readble_root,
-               "use_dependency \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
-  expect_true(length(root$children) == 1)
-
-  child_1 <- root$children[[1]]
-  readable_child_1 <- child_1$format()
-  expect_match(readable_child_1,
-               "use_dependency_2 \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
-  expect_true(length(child_1$children) == 0)
-
-  tree <- orderly_build_dep_tree("use_dependency_2", root = path)
-  root <- tree$root
-  readble_root <- root$format()
-  expect_match(readble_root,
-               "use_dependency_2 \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
-  expect_true(length(root$children) == 0)
-})
-
 test_that("has dependencies upstream", {
   path <- prepare_orderly_example("demo")
 
@@ -124,37 +90,37 @@ test_that("has dependencies upstream", {
   expect_true(length(child_2$children) == 0)
 })
 
+## this is a a bit hacky since reports only get flagged as out of date if the
+## artefact we depend on has changed
 test_that("out of date dependencies", {
   path <- prepare_orderly_example("demo")
 
   demo <- c("- name: other", "  parameters:", "    nmin: 0",
             "- name: use_dependency",
             "- name: use_dependency_2",
-            "- name: use_dependency",
-            "- name: use_dependency_2",
-            "- name: use_dependency_2")
+            "- name: other", "  parameters:", "    nmin: 0")
   writeLines(demo, file.path(path, "demo.yml"))
   run_orderly_demo(path)
 
-  tree <- orderly_build_dep_tree("other", root = path)
+  first_other <- head(dir(file.path(path, "archive", "other")), n=1)
+  tree <- orderly_build_dep_tree("other", id = first_other, root = path)
 
   root <- tree$root
-  expect_true(!root$out_of_date)
+  ## this report SHOULD NOT be out of date - there is a newer version of this 
+  ## report, but none of ancestor reports have changed
+  expect_false(root$out_of_date)
 
-  dep_1_1 <- root$children[[1]]
-  expect_true(dep_1_1$out_of_date)
+  dep_1 <- root$children[[1]]
+  ## this report should be out of date - this report depends on other which has
+  ## been re-run
+  expect_true(dep_1$out_of_date)
 
-  dep_1_2 <- root$children[[2]]
-  expect_true(!dep_1_2$out_of_date)
+  dep_2 <- dep_1$children[[1]]
+  ## this report SHOULD NOT be out of date - since its parent report has not
+  ## changed (its grandparent report has but that is picked up the propogate
+  ## test below)
+  expect_false(dep_2$out_of_date)
 
-  dep_2_1 <- dep_1_1$children[[1]]
-  expect_true(dep_2_1$out_of_date)
-
-  dep_2_2 <- dep_1_2$children[[1]]
-  expect_true(dep_2_2$out_of_date)
-
-  dep_2_3 <- dep_1_2$children[[2]]
-  expect_true(!dep_2_3$out_of_date)
 })
 
 test_that("propagate", {
@@ -163,31 +129,34 @@ test_that("propagate", {
   demo <- c("- name: other", "  parameters:", "    nmin: 0",
             "- name: use_dependency",
             "- name: use_dependency_2",
-            "- name: use_dependency")
+            "- name: other", "  parameters:", "    nmin: 0")
   writeLines(demo, file.path(path, "demo.yml"))
   run_orderly_demo(path)
 
-  tree <- orderly_build_dep_tree("other", root = path, propagate = TRUE)
+  first_other <- head(dir(file.path(path, "archive", "other")), n=1)
+  tree <- orderly_build_dep_tree("other", id = first_other, root = path,
+                                 propagate = TRUE)
+
+  root <- tree$root
+  ## SHOULD NOT be out of date
+  expect_false(root$out_of_date)
+
+  dep_1<- root$children[[1]]
+  ## SHOULD be out of date
+  expect_true(dep_1$out_of_date)
+
+  dep_2 <- dep_1$children[[1]]
+  ## SHOULD be out of date
+  expect_true(dep_2$out_of_date)
+
+  tree <- orderly_build_dep_tree("use_dependency_2", root = path,
+                                 propagate = TRUE, upstream = TRUE)
+  ## none of these reports should be out of date since we are going up the tree
   root <- tree$root
   expect_false(root$out_of_date)
 
   dep_1_1 <- root$children[[1]]
-  expect_true(dep_1_1$out_of_date)
-
-  dep_2_1 <- dep_1_1$children[[1]]
-  expect_true(dep_2_1$out_of_date)
-
-  dep_1_2 <- root$children[[2]]
-  expect_false(dep_1_2$out_of_date)
-
-  tree <- orderly_build_dep_tree("use_dependency_2", root = path,
-                                 propagate = TRUE, upstream = TRUE)
-
-  root <- tree$root
-  expect_false(!root$out_of_date)
-
-  dep_1_1 <- root$children[[1]]
-  expect_true(dep_1_1$out_of_date)
+  expect_false(dep_1_1$out_of_date)
 
   dep_2_1 <- dep_1_1$children[[1]]
   expect_false(dep_2_1$out_of_date)
@@ -196,8 +165,7 @@ test_that("propagate", {
 test_that("circular dependency", {
   ## A circular dependency is difficult to create
   ## we need two reports A,B s.t A -> B
-  ## run A
-  ## the modify A so that B -> A then run B
+  ## run A; then modify A so that B -> A then run B
   path <- prepare_orderly_example("demo")
   ## run report other
   demo <- c("- name: other", "  parameters:", "    nmin: 0")
