@@ -191,5 +191,19 @@ test_that("circular dependency", {
   tree <- orderly_build_dep_tree("other", id = first_other, root = path)
   circ_tree <- tree$format()[1]
   expect_match(circ_tree,
-               "WARNING There appears to be a circular dependency")
+               "There appears to be a circular dependency.")
+})
+
+test_that("infinite recursion", {
+  path <- prepare_orderly_example("demo")
+
+  demo <- c("- name: other", "  parameters:", "    nmin: 0",
+            "- name: use_dependency",
+            "- name: use_dependency_2",
+            "- name: use_dependency_2")
+  writeLines(demo, file.path(path, "demo.yml"))
+  run_orderly_demo(path)
+
+  expect_error(orderly_build_dep_tree("other", max_depth = 1, root = path),
+               "The tree is very large or degenerate.")
 })

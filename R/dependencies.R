@@ -222,14 +222,14 @@ build_tree <- function(name, id, depth = 0, parent = NULL,
                        tree = NULL, con, upstream = FALSE) {
   ## this should never get triggered - it only exists the prevent an infinite
   ## recursion
-  if (depth > 100) {
-    stop("WARNING the tree is very large")
+  if (depth < 0) {
+    stop("The tree is very large or degenerate.")
   }
 
   if (!is.null(parent)) {
     circ <- check_parents(parent, name)
     if (circ) {
-      tree$message <- "WARNING There appears to be a circular dependency"
+      tree$message <- "There appears to be a circular dependency."
       return(tree)
     }
   }
@@ -275,7 +275,7 @@ build_tree <- function(name, id, depth = 0, parent = NULL,
     dep_name <- id_to_name(id = dep_id, con = con)
     build_tree(name = dep_name,
                id = dep_id,
-               depth = depth + 1,
+               depth = depth - 1,
                parent = v,
                tree = tree,
                con = con,
@@ -322,13 +322,14 @@ out_ot_date_reports <- function(vertex, reports = c()) {
 ##' @export
 orderly_build_dep_tree <- function(name, id = "latest", root = NULL,
                                    locate = TRUE, upstream = FALSE, con = NULL,
-                                   propagate = FALSE) {
+                                   propagate = FALSE, max_depth = 100) {
   if (is.null(con)) {
     con <- orderly_db("destination", orderly_config_get(root, locate))
     on.exit(DBI::dbDisconnect(con))
   }
 
-  dep_tree <- build_tree(name = name, id = id, con = con, upstream = upstream)
+  dep_tree <- build_tree(name = name, id = id, depth = max_depth, con = con,
+                         upstream = upstream)
 
   # propagate out-of-date
   if (propagate) {
