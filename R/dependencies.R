@@ -152,7 +152,16 @@ is_out_of_date <- function(con, child_id) {
     file_hash <- db_chd$file_hash[i]
     report_id <- db_chd$report_version[i]
     ## we need to find the id latest version of the report with id = report_id
-    latest_id <- get_latest_by_id(con, report_id)
+    if (!db_chd$is_pinned[i]) { ## if not pinned...
+      latest_id <- get_latest_by_id(con, report_id) ## ..use latest
+    } else { ## if pinned to..
+      if (!db_chd$is_latest[i]) { ## ..not latest..
+        latest_id <- report_id ## ..use the pinned id
+      } else { ## pinned to latest
+        latest_id <- report_id
+      }
+    }
+
 
     ## we return a dataframe with columns:
     ## filename - the filename of the artefact
@@ -320,11 +329,6 @@ orderly_build_dep_tree <- function(name, id = "latest", root = NULL,
   }
 
   dep_tree <- build_tree(name = name, id = id, con = con, upstream = upstream)
-  if (upstream) {
-    message(crayon::yellow("++++++UPSTREAM++++++"))
-  } else {
-    message(crayon::green("+++++DOWNSTREAM+++++"))
-  }
 
   # propagate out-of-date
   if (propagate) {
