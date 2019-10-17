@@ -10,7 +10,7 @@ test_that("basic tree example", {
   writeLines(demo, file.path(path, "demo.yml"))
   run_orderly_demo(path)
 
-  tree <- orderly_build_dep_tree("other", root = path)
+  tree <- orderly_build_dep_tree("other", root = path, list_all = TRUE)
 
   root <- tree$root
   readble_root <- root$format()
@@ -61,10 +61,10 @@ test_that("nonexistant reports ", {
                "This report does not exist")
 
   expect_error(orderly_build_dep_tree("other", id = "bad_id", root = path),
-               "no report with this id in the database")
+               "No report with id bad_id in the database")
 
   expect_error(orderly_build_dep_tree("use_dependency", id = other_id, root = path),
-               "id does not match report name")
+               sprintf("id %s does not match report name use_dependency", other_id))
 })
 
 test_that("has dependencies upstream", {
@@ -153,10 +153,10 @@ test_that("propagate", {
                                  propagate = TRUE, upstream = TRUE)
   ## none of these reports should be out of date since we are going up the tree
   root <- tree$root
-  expect_false(root$out_of_date)
+  expect_true(root$out_of_date)
 
   dep_1_1 <- root$children[[1]]
-  expect_false(dep_1_1$out_of_date)
+  expect_true(dep_1_1$out_of_date)
 
   dep_2_1 <- dep_1_1$children[[1]]
   expect_false(dep_2_1$out_of_date)

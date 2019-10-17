@@ -4,8 +4,7 @@
 ##' @param id the id of the report, if omitted, use the id of the latest report
 ##' @param upstream A boolean indicating if we want to move up or down the tree
 ##' @param con A connection to a database
-get_dependencies_db <- function(name, id, upstream, con,
-                                use_latest = FALSE) {
+get_dependencies_db <- function(name, id, upstream, con, list_all = FALSE) {
   ## now construct the SQL query
   if (upstream) {
     filt_qry <- sprintf("depends.report_version='%s'", id)
@@ -28,24 +27,13 @@ get_dependencies_db <- function(name, id, upstream, con,
 
   db_ret <- DBI::dbGetQuery(con, sql_qry)
 
-  ## This is only relevant when going upstream
-  sql_art_qry <- paste(c("SELECT" , "filename, ", "file_hash",
-                         "FROM", "(depends",
-                         "INNER JOIN", "report_version", "ON",
-                         "depends.report_version=report_version.id",
-                         "INNER JOIN", "file_artefact", "ON",
-                         "depends.use = file_artefact.id)",
-                         "WHERE", filt_qry), collapse = " ")
-
-  db_art_ret <- DBI::dbGetQuery(con, sql_art_qry)
-
   if (nrow(db_ret) == 0) {
     return(NULL)
   }
 
   db_ret$is_latest <- sapply(db_ret$report_version,
                                is_latest_in_db, con = con)
-  if (use_latest) {
+  if (!list_all) {
     db_ret <- db_ret[which(db_ret$is_latest), ]
   }
 
@@ -62,16 +50,11 @@ get_dependencies_db <- function(name, id, upstream, con,
 ##' @param name the name of the report
 ##' @param con A connection to a database
 get_latest_by_name <- function(con, name) {
-  sql_qry <- paste("SELECT",
-                   "id, report, date FROM report_version",
-                   "WHERE",
-                   sprintf("report='%s'", name),
-                   "AND",
-                   "date=(SELECT MAX(date)",
-                   "FROM",
-                   "report_version",
-                   sprintf("WHERE report='%s')", name)
-  )
+  sql_qry <- paste("SELECT", "id, report, date FROM report_version",
+                   "WHERE", sprintf("report='%s'", name),
+                   "AND", "date=(SELECT MAX(date)",
+                   "FROM", "report_version",
+                   sprintf("WHERE report='%s')", name))
   db_ret <- DBI::dbGetQuery(con, sql_qry)
   return(db_ret)
 }
@@ -114,10 +97,6 @@ is_latest_in_db <- function(con, id) {
 ##' get the artefact hashes from A
 ##' match them against the depends hashes from B
 is_out_of_date <- function(con, child_id) {
-  if (is.null(child_id)) {
-    return(FALSE)
-  }
-
   ## filename - the name of the artefact B used (not the use name)
   ## file_hash - the hash of the artefact B used
   ## report_version - the id of the report where the artefact came from
@@ -125,19 +104,20 @@ is_out_of_date <- function(con, child_id) {
   ## is_latest - if the report was pinned was it to the lastest version
   ## !NOTE! It is unclear what we do when both is_pinned and is_latest are true
   chd_qry <- sprintf("depends.report_version='%s'", child_id)
-  sql_chd_qry <- paste(c("SELECT" , "filename,",
-                                    "file_hash,",
-                                    "is_pinned,",
-                                    "is_latest,",
-                                    "report_version_artefact.report_version",
-                         "FROM", "(depends",
-                         "INNER JOIN", "report_version", "ON",
-                                       "depends.report_version=report_version.id",
-                         "INNER JOIN", "file_artefact", "ON",
-                                       "depends.use = file_artefact.id",
-                         "INNER JOIN", "report_version_artefact", "ON",
-                                       "report_version_artefact.id = file_artefact.artefact)",
-                         "WHERE", chd_qry), collapse = " ")
+  sql_chd_qry <-
+    paste(c("SELECT", "filename,",
+                      "file_hash,",
+                      "is_pinned,",
+                      "is_latest,",
+                      "report_version_artefact.report_version",
+            "FROM", "(depends",
+            "INNER JOIN", "report_version", "ON",
+                          "depends.report_version=report_version.id",
+            "INNER JOIN", "file_artefact", "ON",
+                          "depends.use = file_artefact.id",
+            "INNER JOIN", "report_version_artefact", "ON",
+                          "report_version_artefact.id = file_artefact.artefact)",
+            "WHERE", chd_qry), collapse = " ")
 
   db_chd <- DBI::dbGetQuery(con, sql_chd_qry)
 
@@ -167,14 +147,15 @@ is_out_of_date <- function(con, child_id) {
     ## filename - the filename of the artefact
     ## file_hash - the hash of the artefact
     par_qry <- sprintf("report_version.id='%s'", latest_id)
-    sql_par_qry <- paste(c("SELECT", "file_artefact.filename,",
-                                    "file_artefact.file_hash",
-                         "FROM", "(report_version",
-                         "INNER JOIN", "report_version_artefact", "ON",
-                                       "report_version.id = report_version_artefact.report_version",
-                         "INNER JOIN", "file_artefact", "ON",
-                                       "file_artefact.artefact = report_version_artefact.id)",
-                         "WHERE", par_qry), collapse = " ")
+    sql_par_qry <-
+      paste(c("SELECT", "file_artefact.filename,",
+                        "file_artefact.file_hash",
+             "FROM", "(report_version",
+             "INNER JOIN", "report_version_artefact", "ON",
+                           "report_version.id = report_version_artefact.report_version",
+             "INNER JOIN", "file_artefact", "ON",
+                           "file_artefact.artefact = report_version_artefact.id)",
+             "WHERE", par_qry), collapse = " ")
 
     db_par <- DBI::dbGetQuery(con, sql_par_qry)
     i <- which(db_par$filename == filename)
@@ -218,8 +199,8 @@ check_parents <- function(parent_vertex, name) {
 ##' @param upstream A boolean indicating if we want to move up or down the tree
 ##'
 ##' @return An R6 tree object
-build_tree <- function(name, id, depth = 0, parent = NULL,
-                       tree = NULL, con, upstream = FALSE) {
+build_tree <- function(name, id, depth = 100, parent = NULL,
+                       tree = NULL, con, upstream = FALSE, list_all = FALSE) {
   ## this should never get triggered - it only exists the prevent an infinite
   ## recursion
   if (depth < 0) {
@@ -246,17 +227,17 @@ build_tree <- function(name, id, depth = 0, parent = NULL,
   } else {
     db_id <- id_to_name(con, id)
     if (is.null(db_id)) {
-      stop("no report with this id in the database")
+      stop(sprintf("No report with id %s in the database", id))
     } else {
       if (name != id_to_name(con, id)) {
-        stop("id does not match report name")
+        stop(sprintf("id %s does not match report name %s", id, name))
       }
     }
   }
 
   if (upstream) {
-    ## when going upstream the concept of out-of-date doesn't make sense
-    ood <- FALSE
+    ## when going upstream the concept of out-of-date doesn't make sense?
+    ood <- is_out_of_date(con, id)
   } else {
     ood <- is_out_of_date(con, id)
   }
@@ -270,32 +251,28 @@ build_tree <- function(name, id, depth = 0, parent = NULL,
   }
 
   dep_ids <- get_dependencies_db(name = name, id = id, con = con,
-                                 upstream = upstream)
+                                 upstream = upstream, list_all = list_all)
   for (dep_id in dep_ids) {
     dep_name <- id_to_name(id = dep_id, con = con)
-    build_tree(name = dep_name,
-               id = dep_id,
-               depth = depth - 1,
-               parent = v,
-               tree = tree,
-               con = con,
-               upstream = upstream)
+    build_tree(name = dep_name, id = dep_id, depth = depth - 1, parent = v,
+               tree = tree, con = con, upstream = upstream, list_all = list_all)
   }
 
   return(tree)
 }
 
 ##' @title Given a tree return a list of reports to be re-run (and the order
-##' that they should be re-un)
+##' that they should be re-run)
 ##'
 ##' @tree A vertex object
 ##'
 ##' @return A list of report names
 out_ot_date_reports <- function(vertex, reports = c()) {
   if (vertex$out_of_date) {
-    if (!(vertex$name %in% reports)) {
-      reports <- c(reports, vertex$name)
+    if (vertex$name %in% reports) {
+      reports <- setdiff(reports, vertex$name)
     }
+    reports <- c(reports, vertex$name) ## add it to the list
   }
 
   if (length(vertex$children) > 0) {
@@ -322,14 +299,15 @@ out_ot_date_reports <- function(vertex, reports = c()) {
 ##' @export
 orderly_build_dep_tree <- function(name, id = "latest", root = NULL,
                                    locate = TRUE, upstream = FALSE, con = NULL,
-                                   propagate = FALSE, max_depth = 100) {
+                                   propagate = FALSE, max_depth = 100,
+                                   list_all = FALSE) {
   if (is.null(con)) {
     con <- orderly_db("destination", orderly_config_get(root, locate))
     on.exit(DBI::dbDisconnect(con))
   }
 
   dep_tree <- build_tree(name = name, id = id, depth = max_depth, con = con,
-                         upstream = upstream)
+                         upstream = upstream, list_all = list_all)
 
   # propagate out-of-date
   if (propagate) {
