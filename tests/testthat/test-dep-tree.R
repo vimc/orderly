@@ -29,6 +29,9 @@ test_that("basic tree example", {
   expect_match(readable_child_2,
                "use_dependency_2 \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
   expect_true(length(child_2$children) == 0)
+
+  bad_reports <- out_ot_date_reports(tree$root)
+  expect_equal(length(bad_reports), 0)
 })
 
 # check a report with no dependencies
@@ -206,4 +209,22 @@ test_that("infinite recursion", {
 
   expect_error(orderly_build_dep_tree("other", max_depth = 1, root = path),
                "The tree is very large or degenerate.")
+})
+
+test_that("List out of date", {
+  path <- prepare_orderly_example("demo")
+
+  demo <- c("- name: other", "  parameters:", "    nmin: 0",
+            "- name: use_dependency",
+            "- name: use_dependency_2",
+            "- name: other", "  parameters:", "    nmin: 0")
+  writeLines(demo, file.path(path, "demo.yml"))
+  run_orderly_demo(path)
+  first_other <- head(dir(file.path(path, "archive", "other")), n=1)
+
+  tree <- orderly_build_dep_tree("other", root = path, id = first_other,
+                                 propagate = TRUE)
+
+  bad_reports <- out_ot_date_reports(tree$root)
+  expect_equal(bad_reports, c("use_dependency", "use_dependency_2"))
 })
