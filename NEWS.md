@@ -1,3 +1,7 @@
+# orderly 1.0.2
+
+* `orderly::orderly_test_check` is no longer case sensitive with paths, preventing issues when used from directories that do not have canonical casing (VIMC-3205)
+
 # orderly 1.0.1
 
 * In orderly to comply with CRAN policies, the functionality of `orderly::orderly_test_start` and related functions has been severely reduced.  Functions `orderly::orderly_test_end` and `orderly::orderly_test_restart` have been removed and `orderly::orderly_test_start` no longer directly provides a useable environment for testing reports (VIMC-3178).
