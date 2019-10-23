@@ -92,7 +92,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = parent.frame(),
 ##' @param path Path to the report that is currently being run
 orderly_test_check <- function(path = NULL) {
   path <- path %||% getwd()
-  assert_is_directory(path)
+  assert_is_directory(path, FALSE)
   info <- cache$test[[normalizePath(path)]]
   if (is.null(info)) {
     stop(sprintf("Not running in test mode (for path %s)", path))

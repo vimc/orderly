@@ -350,7 +350,10 @@ test_that("test mode artefacts", {
 
 
 test_that("orderly_test_check requires test mode", {
-  expect_error(orderly_test_check(), "Not running in test mode")
+  p <- tempfile()
+  dir.create(p)
+  on.exit(unlink(p, recursive = TRUE))
+  expect_error(orderly_test_check(p), "Not running in test mode")
 })
 
 
