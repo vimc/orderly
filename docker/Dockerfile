@@ -30,7 +30,7 @@ RUN install2.r \
 RUN Rscript -e 'remove.packages("BH")'
 
 # Install Pandoc
-ENV PANDOC_VERSION "1.19.2.1"
+ENV PANDOC_VERSION "2.7.3"
 RUN wget https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-1-amd64.deb \
   && dpkg --install pandoc-${PANDOC_VERSION}-1-amd64.deb \
   && rm pandoc-${PANDOC_VERSION}-1-amd64.deb
