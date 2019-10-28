@@ -132,6 +132,7 @@ test_that("run report with parameters", {
 
 
 test_that("rebuild", {
+  testthat::skip_on_cran()
   path <- prepare_orderly_example("minimal")
   runner <- orderly_runner(path)
 
@@ -428,21 +429,23 @@ test_that("allow ref logic", {
   config <- list(server_options = list(master_only = FALSE),
                  root = path)
 
-  expect_false(runner_allow_ref(FALSE, config))
-  expect_true(runner_allow_ref(TRUE, config))
-  expect_true(runner_allow_ref(NULL, config))
+  expect_false(runner_allow_ref(FALSE, TRUE, config))
+
+  expect_false(runner_allow_ref(TRUE, FALSE, config))
+  expect_true(runner_allow_ref(TRUE, TRUE, config))
+  expect_true(runner_allow_ref(TRUE, NULL, config))
 
   config <- list(server_options = list(master_only = TRUE),
                  root = path)
-  expect_false(runner_allow_ref(FALSE, config))
-  expect_true(runner_allow_ref(TRUE, config))
-  expect_false(runner_allow_ref(NULL, config))
+  expect_false(runner_allow_ref(TRUE, FALSE, config))
+  expect_true(runner_allow_ref(TRUE, TRUE, config))
+  expect_false(runner_allow_ref(TRUE, NULL, config))
 
   config <- list(server_options = list(master_only = FALSE),
                  root = tempfile())
-  expect_false(runner_allow_ref(FALSE, config))
-  expect_false(runner_allow_ref(TRUE, config))
-  expect_false(runner_allow_ref(NULL, config))
+  expect_false(runner_allow_ref(TRUE, FALSE, config))
+  expect_false(runner_allow_ref(TRUE, TRUE, config))
+  expect_false(runner_allow_ref(TRUE, NULL, config))
 })
 
 

@@ -67,12 +67,12 @@ R6_orderly_runner <- R6::R6Class(
     initialize = function(path, allow_ref, backup_period) {
       self$path <- path
       self$config <- orderly_config_get(path)
-      self$has_git <- file.exists(file.path(path, ".git"))
+      self$has_git <- runner_has_git(path)
       if (!self$has_git) {
         message("Not enabling git features as this is not version controlled")
       }
 
-      self$allow_ref <- runner_allow_ref(allow_ref, self$config)
+      self$allow_ref <- runner_allow_ref(self$has_git, allow_ref, self$config)
       if (self$has_git && !self$allow_ref) {
         message("Disallowing reference switching in runner")
       }
@@ -432,7 +432,10 @@ R6_runner_queue <- R6::R6Class(
   ))
 
 
-runner_allow_ref <- function(allow_ref, config) {
+runner_allow_ref <- function(has_git, allow_ref, config) {
+  if (!has_git) {
+    allow_ref <- FALSE
+  }
   if (is.null(allow_ref)) {
     allow_ref <- !(config$server_options$master_only %||% FALSE)
   }
@@ -441,4 +444,9 @@ runner_allow_ref <- function(allow_ref, config) {
     allow_ref <- res$success
   }
   allow_ref
+}
+
+
+runner_has_git <- function(path) {
+  nzchar(Sys.which("git")) && file.exists(file.path(path, ".git"))
 }
