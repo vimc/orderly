@@ -760,3 +760,10 @@ test_that("prevent duplicate filenames", {
     orderly_run("depend", root = path, echo = FALSE),
     "Orderly configuration implies duplicate files:\\s+- previous.rds:")
 })
+
+
+test_that("allow src/ in report name during run", {
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("src/example", root = path, echo = FALSE)
+  expect_true(file.exists(file.path(path, "draft", "example", id)))
+})
