@@ -30,7 +30,8 @@
 ##' @title Run a report
 ##'
 ##' @param name Name of the report to run (see
-##'   \code{\link{orderly_list}}).
+##'   \code{\link{orderly_list}}).  A leading \code{src/} will be
+##'   removed if provided, allowing easier use of autocomplete.
 ##'
 ##' @param parameters Parameters passed to the report. A named list of
 ##'   parameters declared in the \code{orderly.yml}.
@@ -90,6 +91,10 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   envir <- orderly_environment(envir)
   config <- orderly_config_get(root, locate)
   config <- check_orderly_archive_version(config)
+
+  if (grepl("^src/.+", name)) {
+    name <- sub("^src/", "", name)
+  }
 
   info <- recipe_prepare(config, name, id_file, ref, fetch, message)
 
