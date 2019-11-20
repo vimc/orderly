@@ -1,5 +1,6 @@
 # orderly 1.0.3
 
+* `orderly::orderly_test_start` prints instructions that are pasteable on windows -- previously they may have contained backslashes (VIMC-3251).
 * `orderly::orderly_run` now strips a leading `src/` if provided, allowing easier tab-completion of report names (VIMC-3226).
 
 # orderly 1.0.2 (CRAN)

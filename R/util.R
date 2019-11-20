@@ -707,3 +707,8 @@ pretty_bytes <- function(bytes) {
   exponent <- max(0, min(floor(log(bytes, 1000)), length(unit) - 1))
   sprintf("%s %sB", round(bytes / 1000^exponent, 2), unit[exponent + 1])
 }
+
+
+clean_path <- function(path) {
+  gsub("\\", "/", path, fixed = TRUE)
+}

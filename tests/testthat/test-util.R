@@ -620,3 +620,11 @@ test_that("orderly_env excludes sensitive data", {
   expect_true(all(names(env2) %in% names(v)))
   expect_equal(v[names(env2)], as.list(env2))
 })
+
+
+test_that("clean_path", {
+  expect_equal(clean_path("c:/My Documents/Projects/whatever"),
+               "c:/My Documents/Projects/whatever")
+  expect_equal(clean_path("c:\\My Documents/Projects\\whatever"),
+               "c:/My Documents/Projects/whatever")
+})
