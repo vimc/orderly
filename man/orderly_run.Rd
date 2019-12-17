@@ -4,13 +4,24 @@
 \alias{orderly_run}
 \title{Run a report}
 \usage{
-orderly_run(name, parameters = NULL, envir = NULL, root = NULL,
-  locate = TRUE, echo = TRUE, id_file = NULL, fetch = FALSE,
-  ref = NULL, message = NULL)
+orderly_run(
+  name,
+  parameters = NULL,
+  envir = NULL,
+  root = NULL,
+  locate = TRUE,
+  echo = TRUE,
+  id_file = NULL,
+  fetch = FALSE,
+  ref = NULL,
+  message = NULL,
+  instance = NULL
+)
 }
 \arguments{
 \item{name}{Name of the report to run (see
-\code{\link{orderly_list}}).}
+\code{\link{orderly_list}}).  A leading \code{src/} will be
+removed if provided, allowing easier use of autocomplete.}
 
 \item{parameters}{Parameters passed to the report. A named list of
 parameters declared in the \code{orderly.yml}.}
@@ -39,6 +50,16 @@ checking out the reference \code{ref}.}
 
 \item{message}{An optional character string containing a message
 explaining why the report was run}
+
+\item{instance}{Select instance of the source database to be used,
+where multiple instances are configured.  Several options here
+are available - use a single \emph{unnamed} character string to
+indicate an instance to match.  If given, then this name must be
+present in all databases that support instances, and will be
+ignored by all that do not.  Otherwise, provide \emph{named}
+character vector with the name being the source database name
+and the value being the instance for this database
+(e.g. \code{source = "production"}).}
 }
 \value{
 The id of the newly created report

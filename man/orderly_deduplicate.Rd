@@ -4,8 +4,7 @@
 \alias{orderly_deduplicate}
 \title{Deduplicate an orderly archive}
 \usage{
-orderly_deduplicate(root = NULL, locate = TRUE, dry_run = TRUE,
-  quiet = FALSE)
+orderly_deduplicate(root = NULL, locate = TRUE, dry_run = TRUE, quiet = FALSE)
 }
 \arguments{
 \item{root}{The path to an orderly root directory, or \code{NULL}

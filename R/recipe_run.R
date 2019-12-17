@@ -48,7 +48,18 @@
 ##' @param message An optional character string containing a message
 ##'   explaining why the report was run
 ##'
+##' @param instance Select instance of the source database to be used,
+##'   where multiple instances are configured.  Several options here
+##'   are available - use a single \emph{unnamed} character string to
+##'   indicate an instance to match.  If given, then this name must be
+##'   present in all databases that support instances, and will be
+##'   ignored by all that do not.  Otherwise, provide \emph{named}
+##'   character vector with the name being the source database name
+##'   and the value being the instance for this database
+##'   (e.g. \code{source = "production"}).
+##'
 ##' @inheritParams orderly_list
+##'
 ##' @param echo Print the result of running the R code to the console
 ##' @param id_file Write the identifier into a file
 ##'
@@ -87,7 +98,7 @@
 orderly_run <- function(name, parameters = NULL, envir = NULL,
                         root = NULL, locate = TRUE, echo = TRUE,
                         id_file = NULL, fetch = FALSE, ref = NULL,
-                        message = NULL) {
+                        message = NULL, instance = NULL) {
   envir <- orderly_environment(envir)
   config <- orderly_config_get(root, locate)
   config <- check_orderly_archive_version(config)
@@ -101,7 +112,8 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   recipe_current_run_set(info)
   on.exit(recipe_current_run_clear())
 
-  info <- recipe_run(info, parameters, envir, config, echo = echo)
+  info <- recipe_run(info, parameters, envir, config, echo = echo,
+                     instance = instance)
 
   info$id
 }
@@ -139,7 +151,8 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
 }
 
 
-recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
+recipe_run <- function(info, parameters, envir, config, echo = TRUE,
+                       instance = NULL) {
   assert_is(config, "orderly_config")
 
   owd <- setwd(info$workdir)
@@ -149,7 +162,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   con_rds <- orderly_db("rds", config, FALSE)
   con_csv <- orderly_db("csv", config, FALSE)
 
-  prep <- orderly_prepare_data(config, info, parameters, envir)
+  prep <- orderly_prepare_data(config, info, parameters, envir, instance)
   resource_info <- info$resource_info
 
   t0 <- Sys.time()
@@ -298,7 +311,7 @@ recipe_substitute <- function(info, parameters) {
   info
 }
 
-recipe_data <- function(config, info, parameters, dest) {
+recipe_data <- function(config, info, parameters, dest, instance) {
   assert_is(config, "orderly_config")
   if (!is.environment(dest)) {
     stop("Invalid input for 'dest'")
@@ -316,7 +329,7 @@ recipe_data <- function(config, info, parameters, dest) {
     return(ret)
   }
 
-  con <- orderly_db("source", config)
+  con <- orderly_db("source", config, instance = instance)
   on.exit(lapply(con, DBI::dbDisconnect))
 
   views <- info$views
@@ -491,8 +504,8 @@ orderly_environment <- function(envir) {
 }
 
 
-orderly_prepare_data <- function(config, info, parameters, envir) {
-  res <- recipe_data(config, info, parameters, envir)
+orderly_prepare_data <- function(config, info, parameters, envir, instance) {
+  res <- recipe_data(config, info, parameters, envir, instance)
 
   ## Compute the device stack size before starting work too
   n_dev <- length(grDevices::dev.list())
