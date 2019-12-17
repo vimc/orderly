@@ -300,3 +300,43 @@ test_that("multiple database configurations", {
                list(staging = list(dbname = "staging.sqlite"),
                     production = list(dbname = "production.sqlite")))
 })
+
+
+test_that("instances not supported for destination db", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "orderly_config.yml")
+  writeLines(c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    args:",
+    "        dbname: staging.sqlite",
+    "destination:",
+    "    driver: RSQLite::SQLite",
+    "    instances:",
+    "      staging:",
+    "        dbname: dest-staging.sqlite",
+    "      production:",
+    "        dbname: dest-production.sqlite"),
+    p)
+  expect_error(
+    orderly_config(path),
+    "Unknown fields in .*orderly_config.yml:destination: instances")
+})
+
+
+test_that("default_instance not allowed without instances", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "orderly_config.yml")
+  writeLines(c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    args:",
+    "      dbname: destination.sqlite",
+    "    default_instance: production"),
+    p)
+  expect_error(
+    orderly_config(path),
+    "Can't specify 'default_instance' with no defined instances")
+})

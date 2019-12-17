@@ -222,33 +222,38 @@ config_read_db <- function(name, info, filename) {
   ## awkward in its own right because it affects the configuration
   ## during migration tests.
   if (any(c("args", "instances") %in% names(dat))) {
-    name <- sprintf("%s:%s", filename, paste(name, collapse = ":"))
-    check_fields(dat, name, "driver",
-                 c("args", "instances", "default_instance"))
+    if (identical(name, "destination")) {
+      optional <- "args"
+    } else {
+      optional <- c("args", "instances", "default_instance")
+    }
+    label <- sprintf("%s:%s", filename, paste(name, collapse = ":"))
+    check_fields(dat, label, "driver", optional)
+
     if (!is.null(dat$instances)) {
       if (identical(name, "destination")) {
         stop("Instances only supported for 'database', not 'destination'")
       }
-      assert_named(dat$instances, TRUE, paste0(name, ":instances"))
+      assert_named(dat$instances, TRUE, paste0(label, ":instances"))
       for (i in names(dat$instances)) {
-        assert_named(dat$instances[[i]], TRUE, paste0(name, ":instances:", i))
+        assert_named(dat$instances[[i]], TRUE, paste0(label, ":instances:", i))
       }
       base <- dat$args %||% set_names(list(), character())
-      assert_named(base, TRUE, paste0(name, ":args"))
+      assert_named(base, TRUE, paste0(label, ":args"))
       instances <- lapply(dat$instances, modifyList, x = base)
     } else {
-      assert_named(dat$args, TRUE, paste0(name, ":args"))
+      assert_named(dat$args, TRUE, paste0(label, ":args"))
     }
 
     if (!is.null(dat$default_instance)) {
       if (is.null(instances)) {
         msg <- c(
           "Can't specify 'default_instance' with no defined instances in",
-          name)
+          label)
         stop(flow_text(msg), call. = FALSE)
       }
       match_value(dat$default_instance, names(instances),
-                  paste0(name, ":default_instance"))
+                  paste0(label, ":default_instance"))
     }
 
     if (is.null(instances)) {
