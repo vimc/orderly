@@ -278,3 +278,26 @@ test_that("warn when using url in remote definition", {
     list(orderly.nowarnings = TRUE),
     expect_warning(orderly_config(path), NA))
 })
+
+
+test_that("multiple database configurations", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "orderly_config.yml")
+  writeLines(c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    args:",
+    "      dbname: source.sqlite",
+    "    instances:",
+    "      staging:",
+    "        dbname: staging.sqlite",
+    "      production:",
+    "        dbname: production.sqlite"),
+    p)
+  cfg <- orderly_config(path)
+  expect_equal(cfg$database$source$args, list(dbname = "staging.sqlite"))
+  expect_equal(cfg$database$source$instances,
+               list(staging = list(dbname = "staging.sqlite"),
+                    production = list(dbname = "production.sqlite")))
+})

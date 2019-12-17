@@ -547,6 +547,11 @@ list_to_integer <- function(x, named = TRUE) {
 }
 
 
+list_to_logical <- function(x, named = TRUE) {
+  vlapply(x, identity, USE.NAMES = named)
+}
+
+
 source_to_function <- function(filename, name, parent) {
   e <- new.env(parent = parent)
   sys.source(filename, e)

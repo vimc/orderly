@@ -246,3 +246,34 @@ test_that("db includes file information", {
                                    artefact_hash),
                           size = file_size(file.path(p, filenames))))
 })
+
+
+test_that("connect to database instances", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "orderly_config.yml")
+  writeLines(c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    args:",
+    "      dbname: source.sqlite",
+    "    instances:",
+    "      staging:",
+    "        dbname: staging.sqlite",
+    "      production:",
+    "        dbname: production.sqlite"),
+    p)
+
+  f <- function(x) {
+    basename(x$source@dbname)
+  }
+  expect_equal(
+    f(orderly_db("source", root = path)),
+    "staging.sqlite")
+  expect_equal(
+    f(orderly_db("source", root = path, instance = "staging")),
+    "staging.sqlite")
+  expect_equal(
+    f(orderly_db("source", root = path, instance = "production")),
+    "production.sqlite")
+})
