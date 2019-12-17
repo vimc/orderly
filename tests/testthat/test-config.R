@@ -287,16 +287,15 @@ test_that("multiple database configurations", {
     "database:",
     "  source:",
     "    driver: RSQLite::SQLite",
-    "    args:",
-    "      dbname: source.sqlite",
     "    instances:",
     "      staging:",
     "        dbname: staging.sqlite",
     "      production:",
-    "        dbname: production.sqlite"),
+    "        dbname: production.sqlite",
+    "    default_instance: production"),
     p)
   cfg <- orderly_config(path)
-  expect_equal(cfg$database$source$args, list(dbname = "staging.sqlite"))
+  expect_equal(cfg$database$source$args, list(dbname = "production.sqlite"))
   expect_equal(cfg$database$source$instances,
                list(staging = list(dbname = "staging.sqlite"),
                     production = list(dbname = "production.sqlite")))
