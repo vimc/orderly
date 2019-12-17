@@ -353,3 +353,18 @@ test_that("db instance select with two instanced databases", {
   expect_error(db_instance_select(c(z = "a"), config_db),
                "Invalid database name 'z' in provided instance")
 })
+
+
+test_that("db instance select rejects instance when no dbs support it", {
+  config_db <- list(
+    x = list(
+      driver = c("RSQLite", "SQLite"),
+      args = list(name = "a")),
+    y = list(
+      driver = c("RSQLite", "SQLite"),
+      args = list(name = "b")))
+
+  expect_identical(db_instance_select(NULL, config_db), config_db)
+  expect_error(db_instance_select("a", config_db),
+               "Can't specify 'instance' with no databases supporting it")
+})
