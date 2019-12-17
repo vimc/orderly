@@ -1,3 +1,7 @@
+# orderly 1.0.6
+
+* Database configurations now support the concept of "instances" to allow switching between different versions of a database (e.g., production and staging) without manually altering the configuration or environment variables. Functions `orderly::orderly_run`, `orderly::orderly_db`, `orderly::orderly_test_start` and `orderly::orderly_data` all get a `instance` argument to support this (VIMC-3302).
+
 # orderly 1.0.5
 
 * The metadata now includes the state of `.Random.seed`, if present (VIMC-3375)
