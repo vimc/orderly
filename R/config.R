@@ -231,9 +231,6 @@ config_read_db <- function(name, info, filename) {
     check_fields(dat, label, "driver", optional)
 
     if (!is.null(dat$instances)) {
-      if (identical(name, "destination")) {
-        stop("Instances only supported for 'database', not 'destination'")
-      }
       assert_named(dat$instances, TRUE, paste0(label, ":instances"))
       for (i in names(dat$instances)) {
         assert_named(dat$instances[[i]], TRUE, paste0(label, ":instances:", i))
