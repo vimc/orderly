@@ -571,6 +571,38 @@ would look up the field `password` at the path
 `orderly_config.yml`, in the contents of an environment variable or
 in `orderly_envir.yml` (currently this only uses the vault [version 1 key-value storage](https://www.vaultproject.io/docs/secrets/kv/kv-v1.html))
 
+The above approach can be used to switch databases by using different environmental variables, but that can become tiresome.  If you have multiple database "instances" corresponding to different realisations of the same logical database (e.g., production and staging), then you can configure and switch between these by using the `instances` field.  List commmon arguments within the `args` block as before, then add named instances:
+
+```
+database:
+  source:
+    driver: RPostgres::Postgres
+    args:
+      port: 5432
+      user: user
+      dbname: mydb
+    instances:
+      production:
+        host: production.example.org
+        password: $PASSWORD_PRODUCTION
+      staging:
+        host: staging.example.org
+        password: $PASSWORD_STAGING
+    default_instance: $DEFAULT_INSTANCE
+```
+
+Here - staging and production have different hostnames (`production.example.org` and `staging.example.org`) and different passwords (retrieved using environment variables) and the default instance is set with another environnent variable (`$DEFAULT_INSTANCE`, which must be one of `production` or `staging`).  To switch between databases, you can set that variable, or pass the `instance` argument to `orderly::orderly_run` and friends, as:
+
+```r
+orderly::orderly_run(name, instance = "production")
+```
+
+or
+
+```r
+orderly::orderly_run(name, instance = "staging")
+```
+
 ## Debugging a report
 
 As a report becomes more complex, the function
