@@ -249,8 +249,12 @@ config_read_db <- function(name, info, filename) {
           label)
         stop(flow_text(msg), call. = FALSE)
       }
-      match_value(dat$default_instance, names(instances),
-                  paste0(label, ":default_instance"))
+      dat["default_instance"] <-
+        resolve_env(dat["default_instance"], error = FALSE, default = NULL)
+      if (!is.null(dat$default_instance)) {
+        match_value(dat$default_instance, names(instances),
+                    paste0(label, ":default_instance"))
+      }
     }
 
     if (is.null(instances)) {

@@ -340,3 +340,32 @@ test_that("default_instance not allowed without instances", {
     orderly_config(path),
     "Can't specify 'default_instance' with no defined instances")
 })
+
+
+test_that("default instance from an environmental variable", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "orderly_config.yml")
+  writeLines(c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    instances:",
+    "      staging:",
+    "        dbname: staging.sqlite",
+    "      production:",
+    "        dbname: production.sqlite",
+    "    default_instance: $ORDERLY_TEST_DEFAULT_INSTANCE"),
+    p)
+  cfg <- orderly_config(path)
+  expect_equal(cfg$database$source$args, list(dbname = "staging.sqlite"))
+
+  cfg <- withr::with_envvar(
+    c("ORDERLY_TEST_DEFAULT_INSTANCE" = "production"),
+    orderly_config(path))
+  expect_equal(cfg$database$source$args, list(dbname = "production.sqlite"))
+
+  writeLines("ORDERLY_TEST_DEFAULT_INSTANCE: production",
+             file.path(path, "orderly_envir.yml"))
+  cfg <- orderly_config(path)
+  expect_equal(cfg$database$source$args, list(dbname = "production.sqlite"))
+})
