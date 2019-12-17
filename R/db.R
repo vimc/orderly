@@ -242,7 +242,7 @@ db_instance_select <- function(instance, config_db) {
            call. = FALSE)
     }
     ## 2. Validate all instance names (unname(instance)) are in each db
-    err <- !list_to_logical(Map(`%in%`, instance, instances))
+    err <- !list_to_logical(Map(`%in%`, instance, instances[names(instance)]))
     if (any(err)) {
       msg <- sprintf("'%s' for '%s'", instance[err], names(instance)[err])
       stop(sprintf("Invalid %s: %s",
