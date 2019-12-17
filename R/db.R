@@ -27,6 +27,16 @@
 ##'   be validated on open (currently only applicable with \code{type
 ##'   = "destination"}).  This is primarily intended for internal use.
 ##'
+##' @param instance Used only by \code{type = "source"}, and used to
+##'   select the instance, where multiple instances are configured.
+##'   The options here can vary - use a single \emph{unnamed}
+##'   character string to indicate an instance to match.  If given,
+##'   then this name must be present in all databases that support
+##'   instances, and will be ignored by all that do not.  Otherwise,
+##'   provide \emph{named} character vector with the name being the
+##'   source database name and the value being the instance for this
+##'   database (e.g. \code{source = "production"}).
+##'
 ##' @return A database connection, or list of connections in the case
 ##'   of \code{source}.
 ##'
