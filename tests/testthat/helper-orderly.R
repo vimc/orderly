@@ -62,6 +62,7 @@ unpack_reference <- function(version, path = tempfile()) {
 
 
 prepare_orderly_remote_example <- function(path = tempfile()) {
+  skip_on_cran_windows()
   path_remote <- file.path(path, "remote")
   path_local <- file.path(path, "local")
 

@@ -29,6 +29,7 @@ test_that("missing global file", {
 
 
 test_that("global resources end up in db", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("global", testing = TRUE)
   tmp <- tempfile()
   id <- orderly_run("example", root = path, id_file = tmp, echo = FALSE)
@@ -65,6 +66,7 @@ test_that("directories of global resources are forbidden", {
 
 
 test_that("global resource from a subdir", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("global", testing = TRUE)
   dir.create(file.path(path, "global", "dir"))
   file.rename(file.path(path, "global", "data.csv"),
@@ -95,6 +97,7 @@ test_that("global resource from a subdir", {
 
 
 test_that("rename global resource on import, into new dir", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("global", testing = TRUE)
   dir.create(file.path(path, "global", "dir"))
   file.rename(file.path(path, "global", "data.csv"),

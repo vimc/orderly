@@ -583,6 +583,7 @@ test_that("backup db", {
 
 
 test_that("pretty_bytes", {
+  skip_on_cran_windows()
   expect_equal(pretty_bytes(0), "0 B")
   expect_equal(pretty_bytes(1), "1 B")
   expect_equal(pretty_bytes(11), "11 B")

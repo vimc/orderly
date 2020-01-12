@@ -1,6 +1,7 @@
 context("readme")
 
 test_that("auto copy README.md",  {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   ## in report directory create a file called README.md
   report_path <- file.path(path, "src", "example")
@@ -16,6 +17,7 @@ test_that("auto copy README.md",  {
 })
 
 test_that("lowercase README.md",  {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   ## in report directory create a file called README.md
   report_path <- file.path(path, "src", "example")
@@ -31,6 +33,7 @@ test_that("lowercase README.md",  {
 })
 
 test_that("list README.md as resource",  {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   report_path <- file.path(path, "src", "example")
   ## in report directory create a file called README.md
@@ -57,6 +60,7 @@ test_that("list README.md as resource",  {
 })
 
 test_that("list README.md as artefact",  {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   report_path <- file.path(path, "src", "example")
   ## in report directory create a file called README.md
@@ -84,6 +88,7 @@ test_that("list README.md as artefact",  {
 })
 
 test_that("readme db",  {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   report_path <- file.path(path, "src", "example")
   file.create(file.path(report_path, "README.md"))
@@ -104,6 +109,7 @@ test_that("readme db",  {
 })
 
 test_that("copy readme in sub-directory", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("demo")
   ## in report directory create a file called README.md
   report_path <- file.path(path, "src", "use_resource")
@@ -125,6 +131,7 @@ test_that("copy readme in sub-directory", {
 })
 
 test_that("list README.md as resource in sub-directory", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("demo")
   ## in report directory create a file called README.md
   report_path <- file.path(path, "src", "use_resource")

@@ -26,6 +26,7 @@ test_that("get remote", {
 
 
 test_that("pull report", {
+  skip_on_cran_windows()
   path1 <- prepare_orderly_example("demo")
   id <- orderly_run("multifile-artefact", root = path1, echo = FALSE)
   orderly_commit(id, root = path1)
@@ -57,6 +58,7 @@ test_that("pull report: error not found", {
 
 
 test_that("pull report: already done", {
+  skip_on_cran_windows()
   path1 <- prepare_orderly_example("minimal")
   path2 <- prepare_orderly_example("minimal")
 

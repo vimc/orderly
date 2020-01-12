@@ -83,6 +83,7 @@ test_that("orderly_run_info is usable from test_start", {
 
 
 test_that("orderly_run_info: is_latest detects latest version", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("depends", testing = TRUE)
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("example", root = path, echo = FALSE)
@@ -140,6 +141,7 @@ test_that("can't depend on non artefacts", {
 
 
 test_that("dependency dir can be used", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("demo")
   id <- orderly_run("use_resource_dir", root = path, echo = FALSE)
   p <- orderly_commit(id, root = path)
@@ -156,6 +158,7 @@ test_that("dependency dir can be used", {
 
 
 test_that("commit out of order", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
 
   id1 <- orderly_run("example", root = path, echo = FALSE)

@@ -10,6 +10,7 @@ test_that("nonexistant file", {
 })
 
 test_that("minimal", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path))
 
@@ -316,6 +317,7 @@ test_that("warn old style db", {
 
 
 test_that("detect modified artefacts", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("demo")
   id <- orderly_run("other", parameters = list(nmin = 0),
                     echo = FALSE, root = path)
@@ -331,6 +333,7 @@ test_that("detect modified artefacts", {
 
 
 test_that("modified artefacts when more than one used", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("demo")
 
   id <- orderly_run("multifile-artefact", echo = FALSE, root = path)
@@ -371,6 +374,7 @@ test_that("sources and resources are exclusive", {
 
 
 test_that("trailing slash on resource directory", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("demo")
   ## in report directory create a file called README.md
   report_path <- file.path(path, "src", "use_resource")

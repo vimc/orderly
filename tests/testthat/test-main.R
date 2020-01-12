@@ -44,6 +44,7 @@ test_that("run: id-file", {
 
 
 test_that("pass parameters", {
+  skip_on_cran_windows()
   f <- function(...) {
     cli_args_process(c("run", "report", ...))$options$parameters
   }
@@ -134,6 +135,7 @@ test_that("run: pull before run", {
 
 
 test_that("commit", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   id <- orderly_run("example", root = path, echo = FALSE)
   args <- c("--root", path, "commit", id)
@@ -170,6 +172,7 @@ test_that("latest", {
 
 
 test_that("list", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
 
   args <- c("--root", path, "list")
@@ -267,6 +270,7 @@ test_that("rebuild", {
 
 
 test_that("cleanup", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   id <- orderly_run("example", root = path, echo = FALSE)
 
@@ -285,6 +289,7 @@ test_that("cleanup", {
 
 
 test_that("list", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("example", root = path, echo = FALSE)
@@ -308,6 +313,7 @@ test_that("list", {
 
 
 test_that("run: message", {
+  skip_on_cran_windows()
   ## Should have no errors
   path <- prepare_orderly_example("changelog", testing = TRUE)
   message <- "[label1] This is a test message."
