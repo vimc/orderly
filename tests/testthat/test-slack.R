@@ -202,8 +202,8 @@ test_that("main interface", {
   expect_equal(r$status_code, 200L)
   d <- httr::content(r)
   expect_equal(d$json$attachments[[1]]$color, "good") # primary
-  expect_equal(d$json$attachments[[1]]$actions[[1]]$url,
-               file.path(path, "example", dat$meta$id, fsep = "/"))
+  expect_true(endsWith(d$json$attachments[[1]]$actions[[1]]$url,
+                       file.path("example", dat$meta$id, fsep = "/")))
 
   config <- withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = "testing"),
