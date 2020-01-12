@@ -140,7 +140,7 @@ new_counter <- function() {
 
 skip_on_cran_windows <- function() {
   if (!identical(Sys.getenv("NOT_CRAN"), "true")) {
-    testthat::skip_on_windows()
+    skip_on_windows()
   }
 }
 
