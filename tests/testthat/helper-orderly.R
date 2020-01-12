@@ -140,8 +140,8 @@ new_counter <- function() {
 
 
 skip_on_cran_windows <- function() {
-  if (!identical(Sys.getenv("NOT_CRAN"), "true")) {
-    skip_on_windows()
+  if (!identical(Sys.getenv("NOT_CRAN"), "true") && is_windows()) {
+    testthat::skip("Test is slow on windows and running on CRAN")
   }
 }
 
