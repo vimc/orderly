@@ -26,6 +26,7 @@ test_that("cleanup keeps draft data", {
 })
 
 test_that("cleanup with archive", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("example", root = path, echo = FALSE)

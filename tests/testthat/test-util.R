@@ -560,6 +560,7 @@ test_that("protect", {
 
 
 test_that("backup db", {
+  skip_on_cran_windows()
   list_tables <- function(path) {
     with_sqlite(path, function(con) DBI::dbListTables(con))
   }

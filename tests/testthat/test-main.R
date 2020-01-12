@@ -1,6 +1,7 @@
 context("main")
 
 test_that("run", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   args <- c("--root", path, "run", "example")
   res <- cli_args_process(args)
@@ -19,6 +20,7 @@ test_that("run", {
 
 
 test_that("run: id-file", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   id_file <- tempfile()
   args <- c("--root", path, "run", "--id-file", id_file, "example")
@@ -146,6 +148,7 @@ test_that("commit", {
 
 
 test_that("latest", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   id1 <- orderly_run("example", root = path, echo = FALSE)
   Sys.sleep(0.1)

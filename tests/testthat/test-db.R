@@ -42,6 +42,7 @@ test_that("rebuild empty database", {
 })
 
 test_that("rebuild nonempty database", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   id <- orderly_run("example", root = path, echo = FALSE)
   orderly_commit(id, root = path)
@@ -131,6 +132,7 @@ test_that("dialects", {
 
 
 test_that("sources are listed in db", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("demo")
   id <- orderly_run("other", root = path, parameters = list(nmin = 0),
                     echo = FALSE)
@@ -155,6 +157,7 @@ test_that("sources are listed in db", {
 
 
 test_that("backup", {
+  skip_on_cran_windows()
   path <- create_orderly_demo()
   expect_message(
     orderly_backup(path),
@@ -189,6 +192,7 @@ test_that("db includes custom fields", {
 })
 
 test_that("db includes file information", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("demo")
   id <- orderly_run("multifile-artefact", root = path, echo = FALSE)
   p <- orderly_commit(id, root = path)

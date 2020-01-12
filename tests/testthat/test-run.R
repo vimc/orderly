@@ -232,6 +232,7 @@ test_that("no data", {
 })
 
 test_that("use artefact", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("depends", testing = TRUE)
 
   path_example <- file.path(path, "src", "example")

@@ -137,6 +137,14 @@ new_counter <- function() {
   }
 }
 
+
+skip_on_cran_windows <- function() {
+  if (!identical(Sys.getenv("NOT_CRAN"), "true")) {
+    testthat::skip_on_windows()
+  }
+}
+
+
 if (Sys.getenv("NOT_CRAN") != "true") {
   options(orderly.nogit = TRUE)
 }
