@@ -1,4 +1,4 @@
-FROM rocker/r-ver:3.5.3
+FROM rocker/r-ver:3.6.2
 
 RUN apt-get update && apt-get -y install \
   git \
