@@ -1,3 +1,7 @@
+# orderly 1.0.5
+
+* The metadata now includes the state of `.Random.seed`, if present (VIMC-3375)
+
 # orderly 1.0.3
 
 * `orderly::orderly_test_start` prints instructions that are pasteable on windows -- previously they may have contained backslashes (VIMC-3251).
