@@ -630,3 +630,12 @@ test_that("clean_path", {
   expect_equal(clean_path("c:\\My Documents/Projects\\whatever"),
                "c:/My Documents/Projects/whatever")
 })
+
+
+test_that("random_seed", {
+  e1 <- new.env(parent = emptyenv())
+  e2 <- new.env(parent = e1)
+  e1$.Random.seed <- pi
+  expect_equal(random_seed(e1), pi)
+  expect_null(random_seed(e2))
+})

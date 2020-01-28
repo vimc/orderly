@@ -203,3 +203,14 @@ test_that("default parameter values are used", {
   d <- readRDS(path_orderly_run_rds(file.path(path, "draft", "example", id)))
   expect_equal(d$meta$parameters, list(a = 1, b = 2, c = 3))
 })
+
+
+test_that("store random seed", {
+  skip_on_cran_windows()
+  path <- prepare_orderly_example("minimal")
+  set.seed(1)
+  rs <- .Random.seed
+  id <- orderly_run("example", root = path, echo = FALSE)
+  d <- readRDS(path_orderly_run_rds(file.path(path, "draft", "example", id)))
+  expect_true(identical(d$meta$random_seed, rs))
+})

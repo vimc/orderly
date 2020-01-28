@@ -221,6 +221,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                extra_fields = extra_fields,
                connection = !is.null(info$connection),
                packages = info$packages,
+               random_seed = prep$random_seed,
                file_info_inputs = info$inputs,
                file_info_artefacts = file_info_artefacts,
                global_resources = info$global_resources,
@@ -503,7 +504,7 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
   }
 
   ret <- list(data = res$data, parameters = res$parameters,
-              n_dev = n_dev, n_sink = n_sink)
+              n_dev = n_dev, n_sink = n_sink, random_seed = random_seed())
 
   if (!is.null(info$connection)) {
     ## NOTE: this is a copy of exported connections so that we can
