@@ -712,3 +712,8 @@ pretty_bytes <- function(bytes) {
 clean_path <- function(path) {
   gsub("\\", "/", path, fixed = TRUE)
 }
+
+
+random_seed <- function(envir = globalenv()) {
+  envir$.Random.seed
+}
