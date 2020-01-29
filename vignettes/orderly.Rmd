@@ -575,7 +575,7 @@ in `orderly_envir.yml` (currently this only uses the vault [version 1 key-value 
 
 _In general, you can ignore this section if you only use one global database._
 
-The above approach can be used to switch databases by using different environmental variables, but that can become tiresome.  If you have multiple database "instances" corresponding to different realisations of the same logical database (e.g., production and staging), then you can configure and switch between these directly from `orderly` commands.  At [VIMC](http://vaccineimpact.com) we have several copies of our main database: one called `production`, which is the canonical copy, and then several `staging` copies that we use for experimentation.
+The above approach can be used to switch databases by using different environmental variables, but that can become tiresome.  If you have multiple database "instances" corresponding to different realisations of the same logical database (e.g., production and staging), then you can configure and switch between these directly from `orderly` commands.  At [VIMC](http://vaccineimpact.org) we have several copies of our main database: one called `production`, which is the canonical copy, and then several `staging` copies that we use for experimentation.
 
 To configure this situation, list commmon arguments within the `args` block as before, then add logical database as named entries in an `instances` field:
 
