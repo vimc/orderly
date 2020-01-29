@@ -571,6 +571,106 @@ would look up the field `password` at the path
 `orderly_config.yml`, in the contents of an environment variable or
 in `orderly_envir.yml` (currently this only uses the vault [version 1 key-value storage](https://www.vaultproject.io/docs/secrets/kv/kv-v1.html))
 
+### Advanced database configuration
+
+_In general, you can ignore this section if you only use one global database._
+
+The above approach can be used to switch databases by using different environmental variables, but that can become tiresome.  If you have multiple database "instances" corresponding to different realisations of the same logical database (e.g., production and staging), then you can configure and switch between these directly from `orderly` commands.  At [VIMC](http://vaccineimpact.org) we have several copies of our main database: one called `production`, which is the canonical copy, and then several `staging` copies that we use for experimentation.
+
+To configure this situation, list commmon arguments within the `args` block as before, then add logical databases as named entries in an `instances` field:
+
+```
+database:
+  source:
+    driver: RPostgres::Postgres
+    args:
+      port: 5432
+      user: user
+      dbname: mydb
+    instances:
+      production:
+        host: production.example.org
+        password: $PASSWORD_PRODUCTION
+      staging:
+        host: staging.example.org
+        password: $PASSWORD_STAGING
+    default_instance: $DEFAULT_INSTANCE
+```
+
+Here - staging and production have different hostnames (`production.example.org` and `staging.example.org`) and different passwords (retrieved using environment variables) and the default instance is set with another environnent variable (`$DEFAULT_INSTANCE`, which must be one of `production` or `staging`).  To switch between databases, you can set that variable, or pass the `instance` argument to `orderly::orderly_run` and friends, as:
+
+```r
+orderly::orderly_run(name, instance = "production")
+```
+
+or
+
+```r
+orderly::orderly_run(name, instance = "staging")
+```
+
+If there is more than one database configured, then the interpretation of `instance` is a little more nuanced.  For example, suppose we have this (abridged) database configuration:
+
+```
+database:
+  source:
+    driver: RPostgres::Postgres
+    args:
+      port: 5432
+    instances:
+      production:
+        host: production.example.org
+      staging:
+        host: staging.example.org
+    default_instance: staging
+  extra:
+    driver: RPostgres::Postgres
+    args:
+      port: 5432
+      host: extra.example.org
+```
+
+Then we can pass in a string like `production` in as the instance, e.g.,
+
+```
+orderly::orderly_run(name, instance = "production")
+```
+
+as the `source` database will select the `production` instance and as there are no instances configured for the `extra` database we will ignore the argument when connecting to `extra`.
+
+However, if *both* databases had two instances, such as:
+
+```
+database:
+  source:
+    driver: RPostgres::Postgres
+    args:
+      port: 5432
+    instances:
+      production:
+        host: production.example.org
+      staging:
+        host: staging.example.org
+    default_instance: staging
+  extra:
+    driver: RPostgres::Postgres
+    args:
+      port: 15432
+    instances:
+      production:
+        host: production.example.org
+      staging:
+        host: staging.example.org
+    default_instance: staging
+```
+
+Then it is possible to select *different* instances for each database, such as:
+
+```
+orderly::orderly_run(name,
+                      instance = c(source = "production", extra = "staging"))
+```
+
 ## Debugging a report
 
 As a report becomes more complex, the function

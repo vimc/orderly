@@ -6,17 +6,30 @@
 \alias{orderly_data}
 \title{Prepare a directory for orderly to use}
 \usage{
-orderly_test_start(name, parameters = NULL, envir = parent.frame(),
-  root = NULL, locate = TRUE)
+orderly_test_start(
+  name,
+  parameters = NULL,
+  envir = parent.frame(),
+  root = NULL,
+  locate = TRUE,
+  instance = NULL
+)
 
 orderly_test_check(path = NULL)
 
-orderly_data(name, parameters = NULL, envir = NULL, root = NULL,
-  locate = TRUE)
+orderly_data(
+  name,
+  parameters = NULL,
+  envir = NULL,
+  root = NULL,
+  locate = TRUE,
+  instance = NULL
+)
 }
 \arguments{
 \item{name}{Name of the report to run (see
-\code{\link{orderly_list}}).}
+\code{\link{orderly_list}}).  A leading \code{src/} will be
+removed if provided, allowing easier use of autocomplete.}
 
 \item{parameters}{Parameters passed to the report. A named list of
 parameters declared in the \code{orderly.yml}.}
@@ -33,6 +46,15 @@ directory if \code{locate} is \code{TRUE}.}
 searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
+
+\item{instance}{Select instance of the source database to be used,
+where multiple instances are configured.  Use a single
+\emph{unnamed} character string to indicate an instance to
+match.  If given, then this name must be present in all
+databases where instances are listed in
+\code{orderly_config.yml}, and will be ignored by all database
+where instances are not given.  See the "orderly" vignette for
+further information.}
 
 \item{path}{Path to the report that is currently being run}
 }

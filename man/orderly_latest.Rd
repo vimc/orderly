@@ -4,8 +4,13 @@
 \alias{orderly_latest}
 \title{Find most recent report}
 \usage{
-orderly_latest(name = NULL, root = NULL, locate = TRUE,
-  draft = FALSE, must_work = TRUE)
+orderly_latest(
+  name = NULL,
+  root = NULL,
+  locate = TRUE,
+  draft = FALSE,
+  must_work = TRUE
+)
 }
 \arguments{
 \item{name}{Name of the report to find; if \code{NULL} returns the

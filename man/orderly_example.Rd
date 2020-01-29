@@ -4,8 +4,7 @@
 \alias{orderly_example}
 \title{Set up an orderly example}
 \usage{
-orderly_example(name, path = tempfile(), run_demo = FALSE,
-  quiet = FALSE)
+orderly_example(name, path = tempfile(), run_demo = FALSE, quiet = FALSE)
 }
 \arguments{
 \item{name}{Name of the example}

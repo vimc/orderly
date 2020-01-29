@@ -48,13 +48,13 @@
 ##' # We now confirm that the artefact has been created:
 ##' orderly::orderly_test_check(p)
 orderly_test_start <- function(name, parameters = NULL, envir = parent.frame(),
-                               root = NULL, locate = TRUE) {
+                               root = NULL, locate = TRUE, instance = NULL) {
   config <- orderly_config_get(root, locate)
   info <- recipe_prepare(config, name, id_file = NULL, ref = NULL,
                          fetch = FALSE, message = NULL)
   prep <- withr::with_dir(
     info$workdir,
-    orderly_prepare_data(config, info, parameters, envir))
+    orderly_prepare_data(config, info, parameters, envir, instance))
 
   ## We take the opportunity here to filter out any no-longer-existing
   ## test reports.
@@ -120,9 +120,9 @@ orderly_test_check <- function(path = NULL) {
 ##' env$nmin
 ##' env$extract
 orderly_data <- function(name, parameters = NULL, envir = NULL,
-                         root = NULL, locate = TRUE) {
+                         root = NULL, locate = TRUE, instance = NULL) {
   config <- orderly_config_get(root, locate)
   info <- recipe_read(file.path(path_src(config$root), name), config)
   envir <- orderly_environment(envir)
-  recipe_data(config, info, parameters, envir)$dest
+  recipe_data(config, info, parameters, envir, instance)$dest
 }

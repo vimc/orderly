@@ -21,31 +21,6 @@ orderly_config_read_yaml <- function(filename, root) {
   ## directories; things like the sqlite path.  And I want to be able
   ## to encrypt and decrypt things like passwords.  So we probably
   ## cannot be totally opaque when reading information in.
-
-  driver_config <- function(name) {
-    if (identical(name, "destination") && is.null(info[[name]])) {
-      dat <- list(driver = "RSQLite::SQLite",
-                  args = list(dbname = "orderly.sqlite"))
-    } else {
-      dat <- info[[name]]
-    }
-    label <- sprintf("%s:%s:driver", filename, paste(name, collapse = ":"))
-    driver <- check_symbol_from_str(dat$driver, label)
-    if ("args" %in% names(dat)) {
-      args <- dat$args
-    } else {
-      if (!info$database_old_style) {
-        msg <- c("Please move your database arguments within an 'args'",
-                 "block, as detecting them will be deprecated in a future",
-                 "orderly version.  See the main package vignette for",
-                 "details.  Reported for: ", label)
-        orderly_warning(flow_text(msg))
-      }
-      args <- dat[setdiff(names(dat), "driver")]
-    }
-    list(driver = driver, args = args)
-  }
-
   info$fields <- config_check_fields(info$fields, filename)
   if (!is.null(info$source)) {
     if (!is.null(info$database)) {
@@ -56,15 +31,15 @@ orderly_config_read_yaml <- function(filename, root) {
              "See the main package vignette for details.")
     orderly_warning(flow_text(msg))
     info$database_old_style <- TRUE
-    info$database <- list(source = driver_config("source"))
+    info$database <- list(source = config_read_db("source", info, filename))
   } else if (!is.null(info$database)) {
     assert_named(info$database, unique = TRUE)
     info$database_old_style <- FALSE
     for (nm in names(info$database)) {
-      info$database[[nm]] <- driver_config(c("database", nm))
+      info$database[[nm]] <- config_read_db(c("database", nm), info, filename)
     }
   }
-  info$destination <- driver_config("destination")
+  info$destination <- config_read_db("destination", info, filename)
 
   if (!is.null(info$changelog)) {
     info$changelog <- config_check_changelog(info$changelog, filename)
@@ -228,4 +203,75 @@ orderly_config_get <- function(x, locate = FALSE) {
   } else {
     stop("Invalid input")
   }
+}
+
+
+config_read_db <- function(name, info, filename) {
+  if (identical(name, "destination") && is.null(info[[name]])) {
+    dat <- list(driver = "RSQLite::SQLite",
+                args = list(dbname = "orderly.sqlite"))
+  } else {
+    dat <- info[[name]]
+  }
+  label <- sprintf("%s:%s:driver", filename, paste(name, collapse = ":"))
+  driver <- check_symbol_from_str(dat$driver, label)
+  instances <- NULL
+
+  ## There's a bit of faff required here now - this would be simpler
+  ## if we dropped old-style databases (vimc-3315) but that's
+  ## awkward in its own right because it affects the configuration
+  ## during migration tests.
+  if (any(c("args", "instances") %in% names(dat))) {
+    if (identical(name, "destination")) {
+      optional <- "args"
+    } else {
+      optional <- c("args", "instances", "default_instance")
+    }
+    label <- sprintf("%s:%s", filename, paste(name, collapse = ":"))
+    check_fields(dat, label, "driver", optional)
+
+    if (!is.null(dat$instances)) {
+      assert_named(dat$instances, TRUE, paste0(label, ":instances"))
+      for (i in names(dat$instances)) {
+        assert_named(dat$instances[[i]], TRUE, paste0(label, ":instances:", i))
+      }
+      base <- dat$args %||% set_names(list(), character())
+      assert_named(base, TRUE, paste0(label, ":args"))
+      instances <- lapply(dat$instances, modifyList, x = base)
+    } else {
+      assert_named(dat$args, TRUE, paste0(label, ":args"))
+    }
+
+    if (!is.null(dat$default_instance)) {
+      if (is.null(instances)) {
+        msg <- c(
+          "Can't specify 'default_instance' with no defined instances in",
+          label)
+        stop(flow_text(msg), call. = FALSE)
+      }
+      dat["default_instance"] <-
+        resolve_env(dat["default_instance"], error = FALSE, default = NULL)
+      if (!is.null(dat$default_instance)) {
+        match_value(dat$default_instance, names(instances),
+                    paste0(label, ":default_instance"))
+      }
+    }
+
+    if (is.null(instances)) {
+      args <- dat$args
+    } else {
+      args <- instances[[dat$default_instance %||% 1L]]
+    }
+  } else {
+    if (!info$database_old_style) {
+      msg <- c("Please move your database arguments within an 'args'",
+               "block, as detecting them will be deprecated in a future",
+               "orderly version.  See the main package vignette for",
+               "details.  Reported for: ", label)
+      orderly_warning(flow_text(msg))
+    }
+    args <- dat[setdiff(names(dat), "driver")]
+  }
+
+  list(driver = driver, args = args, instances = instances)
 }

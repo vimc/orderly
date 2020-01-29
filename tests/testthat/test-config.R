@@ -278,3 +278,94 @@ test_that("warn when using url in remote definition", {
     list(orderly.nowarnings = TRUE),
     expect_warning(orderly_config(path), NA))
 })
+
+
+test_that("multiple database configurations", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "orderly_config.yml")
+  writeLines(c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    instances:",
+    "      staging:",
+    "        dbname: staging.sqlite",
+    "      production:",
+    "        dbname: production.sqlite",
+    "    default_instance: production"),
+    p)
+  cfg <- orderly_config(path)
+  expect_equal(cfg$database$source$args, list(dbname = "production.sqlite"))
+  expect_equal(cfg$database$source$instances,
+               list(staging = list(dbname = "staging.sqlite"),
+                    production = list(dbname = "production.sqlite")))
+})
+
+
+test_that("instances not supported for destination db", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "orderly_config.yml")
+  writeLines(c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    args:",
+    "        dbname: staging.sqlite",
+    "destination:",
+    "    driver: RSQLite::SQLite",
+    "    instances:",
+    "      staging:",
+    "        dbname: dest-staging.sqlite",
+    "      production:",
+    "        dbname: dest-production.sqlite"),
+    p)
+  expect_error(
+    orderly_config(path),
+    "Unknown fields in .*orderly_config.yml:destination: instances")
+})
+
+
+test_that("default_instance not allowed without instances", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "orderly_config.yml")
+  writeLines(c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    args:",
+    "      dbname: destination.sqlite",
+    "    default_instance: production"),
+    p)
+  expect_error(
+    orderly_config(path),
+    "Can't specify 'default_instance' with no defined instances")
+})
+
+
+test_that("default instance from an environmental variable", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "orderly_config.yml")
+  writeLines(c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    instances:",
+    "      staging:",
+    "        dbname: staging.sqlite",
+    "      production:",
+    "        dbname: production.sqlite",
+    "    default_instance: $ORDERLY_TEST_DEFAULT_INSTANCE"),
+    p)
+  cfg <- orderly_config(path)
+  expect_equal(cfg$database$source$args, list(dbname = "staging.sqlite"))
+
+  cfg <- withr::with_envvar(
+    c("ORDERLY_TEST_DEFAULT_INSTANCE" = "production"),
+    orderly_config(path))
+  expect_equal(cfg$database$source$args, list(dbname = "production.sqlite"))
+
+  writeLines("ORDERLY_TEST_DEFAULT_INSTANCE: production",
+             file.path(path, "orderly_envir.yml"))
+  cfg <- orderly_config(path)
+  expect_equal(cfg$database$source$args, list(dbname = "production.sqlite"))
+})

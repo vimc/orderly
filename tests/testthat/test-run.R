@@ -7,7 +7,8 @@ test_that("minimal", {
 
   config <- orderly_config(path)
   info <- recipe_read(file.path(path, "src/example"), config)
-  data <- recipe_data(config, info, NULL, new.env(parent = .GlobalEnv))
+  data <- recipe_data(config, info, NULL, new.env(parent = .GlobalEnv),
+                      instance = NULL)
   expect_is(data$dest$dat, "data.frame")
 
   expect_error(
@@ -782,4 +783,40 @@ test_that("allow src/ in report name during run", {
   path <- prepare_orderly_example("minimal")
   id <- orderly_run("src/example", root = path, echo = FALSE)
   expect_true(file.exists(file.path(path, "draft", "example", id)))
+})
+
+
+test_that("run with different database instance", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+
+  p <- file.path(path, "orderly_config.yml")
+  writeLines(c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    instances:",
+    "      default:",
+    "        dbname: source.sqlite",
+    "      alternative:",
+    "        dbname: alternative.sqlite"),
+    p)
+
+  file.copy(file.path(path, "source.sqlite"),
+            file.path(path, "alternative.sqlite"))
+
+  con <- orderly_db("source", root = path, instance = "alternative")
+  DBI::dbExecute(con$source, "DELETE from thing where id > 10")
+
+  id1 <- orderly_run("example", root = path, echo = FALSE)
+  id2 <- orderly_run("example", root = path, echo = FALSE,
+                     instance = "default")
+  id3 <- orderly_run("example", root = path, echo = FALSE,
+                     instance = "alternative")
+
+  f <- function(id) {
+    nrow(readRDS(file.path(path, "draft", "example", id, "data.rds")))
+  }
+  expect_equal(f(id1), 20)
+  expect_equal(f(id2), 20)
+  expect_equal(f(id3), 10)
 })

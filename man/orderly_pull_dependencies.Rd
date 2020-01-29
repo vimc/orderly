@@ -5,11 +5,15 @@
 \alias{orderly_pull_archive}
 \title{Download dependent reports}
 \usage{
-orderly_pull_dependencies(name, root = NULL, locate = TRUE,
-  remote = NULL)
+orderly_pull_dependencies(name, root = NULL, locate = TRUE, remote = NULL)
 
-orderly_pull_archive(name, id = "latest", root = NULL, locate = TRUE,
-  remote = NULL)
+orderly_pull_archive(
+  name,
+  id = "latest",
+  root = NULL,
+  locate = TRUE,
+  remote = NULL
+)
 }
 \arguments{
 \item{name}{Name of the report to download dependencies for}

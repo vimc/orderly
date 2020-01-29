@@ -27,6 +27,15 @@
 ##'   be validated on open (currently only applicable with \code{type
 ##'   = "destination"}).  This is primarily intended for internal use.
 ##'
+##' @param instance Used only by \code{type = "source"}, and used to
+##'   select the instance, where multiple instances are configured.
+##'   Use a single \emph{unnamed} character string to indicate an
+##'   instance to match.  If given, then this name must be present in
+##'   all databases where instances are listed in
+##'   \code{orderly_config.yml}, and will be ignored by all database
+##'   where instances are not given.  See the "orderly" vignette for
+##'   further information.
+##'
 ##' @return A database connection, or list of connections in the case
 ##'   of \code{source}.
 ##'
@@ -55,7 +64,8 @@
 ##' # These tables are documented online:
 ##' # https://vimc.github.io/orderly/schema
 ##' DBI::dbReadTable(db, "report_version")
-orderly_db <- function(type, root = NULL, locate = TRUE, validate = TRUE) {
+orderly_db <- function(type, root = NULL, locate = TRUE, validate = TRUE,
+                       instance = NULL) {
   config <- orderly_config_get(root, locate)
   if (type == "rds") {
     con <- file_store_rds(path_rds(config$root))
@@ -67,7 +77,8 @@ orderly_db <- function(type, root = NULL, locate = TRUE, validate = TRUE) {
       report_db_init(con, config, validate = validate),
       error = function(e) DBI::dbDisconnect(con))
   } else if (type == "source") {
-    con <- lapply(config$database, orderly_db_dbi_connect, config)
+    config_db <- db_instance_select(instance, config$database)
+    con <- lapply(config_db, orderly_db_dbi_connect, config)
   } else {
     stop(sprintf("Invalid db type '%s'", type))
   }
@@ -202,4 +213,57 @@ orderly_backup <- function(config = NULL, locate = TRUE) {
 
     sqlite_backup(curr, dest)
   }
+}
+
+
+db_instance_select <- function(instance, config_db) {
+  if (is.null(instance)) {
+    return(config_db)
+  }
+
+  instances <- lapply(config_db, function(x) names(x$instances))
+  has_instance <- lengths(instances) > 0L
+
+  if (!any(lengths(instances) > 0)) {
+    stop("Can't specify 'instance' with no databases supporting it")
+  }
+
+  assert_character(instance)
+  if (length(instance) == 1L && is.null(names(instance))) {
+    err <- !vlapply(instances[has_instance], function(x) instance %in% x)
+    if (any(err)) {
+      stop(sprintf("Invalid instance '%s' for %s %s",
+                   instance,
+                   ngettext(sum(err), "database", "databases"),
+                   paste(squote(names(err)[err]), collapse = ", ")),
+           call. = FALSE)
+    }
+    instance <- set_names(rep(instance, sum(has_instance)),
+                          names(instances)[has_instance])
+  } else {
+    assert_named(instance, TRUE)
+    ## 1. Validate all database names (names(instance)) are in names(db)
+    err <- setdiff(names(instance), names(config_db))
+    if (length(err) > 0L) {
+      stop(sprintf("Invalid database %s %s in provided instance",
+                   ngettext(length(err), "name", "names"),
+                   paste(squote(err), collapse = ", ")),
+           call. = FALSE)
+    }
+    ## 2. Validate all instance names (unname(instance)) are in each db
+    err <- !list_to_logical(Map(`%in%`, instance, instances[names(instance)]))
+    if (any(err)) {
+      msg <- sprintf("'%s' for '%s'", instance[err], names(instance)[err])
+      stop(sprintf("Invalid %s: %s",
+                   ngettext(length(msg), "instance", "instances"),
+                   paste(msg, collapse = ", ")),
+           call. = FALSE)
+    }
+  }
+
+  for (i in names(instance)) {
+    config_db[[i]]$args <- config_db[[i]]$instances[[instance[[i]]]]
+  }
+
+  config_db
 }

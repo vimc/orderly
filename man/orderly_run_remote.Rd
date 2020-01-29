@@ -4,10 +4,21 @@
 \alias{orderly_run_remote}
 \title{Run a report on a remote server}
 \usage{
-orderly_run_remote(name, parameters = NULL, ref = NULL,
-  timeout = NULL, wait = 3600, poll = 1, open = TRUE,
-  stop_on_error = TRUE, stop_on_timeout = TRUE, progress = TRUE,
-  root = NULL, locate = TRUE, remote = NULL)
+orderly_run_remote(
+  name,
+  parameters = NULL,
+  ref = NULL,
+  timeout = NULL,
+  wait = 3600,
+  poll = 1,
+  open = TRUE,
+  stop_on_error = TRUE,
+  stop_on_timeout = TRUE,
+  progress = TRUE,
+  root = NULL,
+  locate = TRUE,
+  remote = NULL
+)
 }
 \arguments{
 \item{name}{Name of the report}
