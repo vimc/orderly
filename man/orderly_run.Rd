@@ -52,14 +52,13 @@ checking out the reference \code{ref}.}
 explaining why the report was run}
 
 \item{instance}{Select instance of the source database to be used,
-where multiple instances are configured.  Several options here
-are available - use a single \emph{unnamed} character string to
-indicate an instance to match.  If given, then this name must be
-present in all databases that support instances, and will be
-ignored by all that do not.  Otherwise, provide \emph{named}
-character vector with the name being the source database name
-and the value being the instance for this database
-(e.g. \code{source = "production"}).}
+where multiple instances are configured.  Use a single
+\emph{unnamed} character string to indicate an instance to
+match.  If given, then this name must be present in all
+databases where instances are listed in
+\code{orderly_config.yml}, and will be ignored by all database
+where instances are not given.  See the "orderly" vignette for
+further information.}
 }
 \value{
 The id of the newly created report
