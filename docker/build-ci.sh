@@ -24,9 +24,12 @@ docker push $APP_DOCKER_BRANCH_TAG
 docker push $APP_DOCKER_COMMIT_TAG
 
 if [ $GIT_BRANCH = "master" ]; then
-    docker tag $APP_DOCKER_BRANCH_TAG $PUBLIC_TAG
+    docker tag $APP_DOCKER_BRANCH_TAG $PUBLIC_REGISTRY/$NAME:master
     docker push $PUBLIC_REGISTRY/$NAME:master
+
     # Also the versioned images
+    docker tag $APP_DOCKER_BRANCH_TAG $REGISTRY/$NAME:v$ORDERLY_VERSION
+    docker tag $APP_DOCKER_BRANCH_TAG $PUBLIC/$NAME:v$ORDERLY_VERSION
     docker push $REGISTRY/$NAME:$ORDERLY_VERSION
     docker push $PUBLIC_REGISTRY/$NAME:v$ORDERLY_VERSION
 fi
