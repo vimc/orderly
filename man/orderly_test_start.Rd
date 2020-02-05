@@ -23,7 +23,8 @@ orderly_data(
   envir = NULL,
   root = NULL,
   locate = TRUE,
-  instance = NULL
+  instance = NULL,
+  use_draft = NULL
 )
 }
 \arguments{
@@ -57,6 +58,14 @@ where instances are not given.  See the "orderly" vignette for
 further information.}
 
 \item{path}{Path to the report that is currently being run}
+
+\item{use_draft}{Should draft reports be used for dependencies?
+This should be used only in development.  Valid values are
+logical (\code{TRUE}, \code{FALSE}) or use the string
+\code{newer} to use draft reports where they are newer than
+archive reports.  For consistency, \code{always} and
+\code{never} are equivalent to \code{TRUE} and \code{FALSE},
+respectively.}
 }
 \value{
 The path to the report directory

@@ -190,25 +190,77 @@ orderly_find_name <- function(id, config, locate = FALSE, draft = TRUE,
   }
 }
 
+## This is only used in one place, and so we can be quite flexible in
+## how it is used.  It's a bit of a horror show, tbh, given how simple
+## what we want to achieve is.  This function is not an orderly API
+## function, and is used only in dependency resolution, so we can
+## update this later if needed.
+##
+## The draft = TRUE/FALSE bit can eventually be removed if we remove
+## the use of draft: true from within a dependency declaration.
 orderly_find_report <- function(id, name, config, locate = FALSE,
                                 draft = TRUE, must_work = FALSE) {
   config <- orderly_config_get(config, locate)
-  path <-
-    file.path((if (draft) path_draft else path_archive)(config$root), name)
-  if (id == "latest") {
-    id <- orderly_latest(name, config, FALSE,
-                         draft = draft, must_work = must_work)
-  }
-  path_report <- file.path(path, id)
-  if (!is.na(id) && file.exists(path_report)) {
-    return(path_report)
-  }
-  if (must_work) {
-    stop(sprintf("Did not find %s report %s:%s",
-                 if (draft) "draft" else "archived", name, id))
+
+  if (is.character(draft)) {
+    ## draft <- match_value(draft, c("always", "newer", "never"))
+    search_draft <- draft != "never"
+    search_archive <- draft != "always"
+    what <- switch(draft,
+                   always = "draft",
+                   never = "archive",
+                   newer = "draft or archive")
   } else {
-    NULL
+    search_draft <- draft
+    search_archive <- !draft
+    what <- if (draft) "draft" else "archive"
   }
+
+  base_archive <- file.path(path_archive(config$root), name)
+  base_draft <- file.path(path_draft(config$root), name)
+
+  if (id == "latest") {
+    path <- NULL
+    if (search_archive) {
+      found <- orderly_latest(name, config, draft = FALSE, must_work = FALSE)
+      if (!is.na(found)) {
+        path <- c(path, set_names(file.path(base_archive, found), found))
+      }
+    }
+
+    if (search_draft) {
+      found <- orderly_latest(name, config, draft = TRUE, must_work = FALSE)
+      if (!is.na(found)) {
+        path <- c(path, set_names(file.path(base_draft, found), found))
+      }
+    }
+
+    if (length(path) == 1L) {
+      return(path[[1L]])
+    } else if (length(path) > 1L) {
+      return(path[[latest_id(names(path))]])
+    }
+  } else {
+    if (search_archive) {
+      path <- file.path(base_archive, id)
+      if (file.exists(path)) {
+        return(path)
+      }
+    }
+
+    if (search_draft) {
+      path <- file.path(base_draft, id)
+      if (file.exists(path)) {
+        return(path)
+      }
+    }
+  }
+
+  if (must_work) {
+    stop(sprintf("Did not find %s report %s:%s", what, name, id))
+  }
+
+  NULL
 }
 
 latest_id <- function(ids) {

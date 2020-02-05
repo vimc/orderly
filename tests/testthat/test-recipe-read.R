@@ -187,6 +187,61 @@ test_that("dependencies must exist", {
 })
 
 
+test_that("dependencies draft, new interface", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+  id1 <- orderly_run("example", root = path, echo = FALSE)
+  id2 <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id1, root = path)
+
+  filename <- file.path(path, "src", "depend", "orderly.yml")
+  dat <- yaml_read(filename)
+  dat$depends$example$draft <- NULL
+  yaml_write(dat, filename)
+
+  f <- function(id) {
+    readRDS(path_orderly_run_rds(file.path(path, "draft", "depend", id)))
+  }
+
+  id3 <- orderly_run("depend", root = path, use_draft = TRUE, echo = FALSE)
+  id4 <- orderly_run("depend", root = path, use_draft = "always", echo = FALSE)
+  id5 <- orderly_run("depend", root = path, use_draft = "newer", echo = FALSE)
+  expect_equal(f(id3)$meta$depends$id, id2)
+  expect_equal(f(id4)$meta$depends$id, id2)
+  expect_equal(f(id5)$meta$depends$id, id2)
+
+  id6 <- orderly_run("depend", root = path, use_draft = FALSE, echo = FALSE)
+  id7 <- orderly_run("depend", root = path, use_draft = "never", echo = FALSE)
+  expect_equal(f(id6)$meta$depends$id, id1)
+  expect_equal(f(id7)$meta$depends$id, id1)
+})
+
+
+test_that("dependencies draft, new interface, throws sensible errors", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+
+  filename <- file.path(path, "src", "depend", "orderly.yml")
+  dat <- yaml_read(filename)
+  dat$depends$example$draft <- NULL
+  yaml_write(dat, filename)
+
+  expect_error(
+    orderly_run("depend", root = path, use_draft = TRUE, echo = FALSE),
+    "Did not find draft report example:latest")
+  expect_error(
+    orderly_run("depend", root = path, use_draft = "always", echo = FALSE),
+    "Did not find draft report example:latest")
+  expect_error(
+    orderly_run("depend", root = path, use_draft = "newer", echo = FALSE),
+    "Did not find draft or archive report example:latest")
+  expect_error(
+    orderly_run("depend", root = path, use_draft = FALSE, echo = FALSE),
+    "Did not find archive report example:latest")
+  expect_error(
+    orderly_run("depend", root = path, use_draft = "never", echo = FALSE),
+    "Did not find archive report example:latest")
+})
+
+
 test_that("data field is optional", {
   path <- prepare_orderly_example("nodata")
   report_path <- file.path(path, "src", "example")

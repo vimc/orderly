@@ -1,11 +1,17 @@
 ## The bulk of this is validating the yaml; that turns out to be quite
 ## unpleasant unfortunately.
-recipe_read <- function(path, config, validate = TRUE) {
+recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE) {
   assert_is(config, "orderly_config")
   filename <- file.path(path, "orderly.yml")
   assert_file_exists(path, name = "Report working directory")
   assert_file_exists(filename, name = "Orderly configuration")
   info <- yaml_read(filename)
+
+  if (is.logical(use_draft)) {
+    assert_scalar_logical(use_draft)
+  } else {
+    match_value(use_draft, c("always", "newer", "never"))
+  }
 
   required <- c("script", # filename
                 "artefacts",
@@ -39,7 +45,8 @@ recipe_read <- function(path, config, validate = TRUE) {
   info$global_resources <- recipe_read_check_global_resources(
     info$global_resources, filename, config)
   info$depends <-
-    recipe_read_check_depends(info$depends, filename, config, validate)
+    recipe_read_check_depends(info$depends, filename, config, use_draft,
+                              validate)
 
   assert_scalar_character(info$script, fieldname("script"))
 
@@ -285,7 +292,8 @@ recipe_read_check_sources <- function(sources, resources, filename, path) {
 }
 
 
-recipe_read_check_depends <- function(x, filename, config, validate) {
+recipe_read_check_depends <- function(x, filename, config, use_draft,
+                                      validate) {
   ## TODO: this is going to assume that the artefacts are all in place
   ## - that need not actually be the case here - so we need a flag on
   ## this function that indicates that we're actually going to try and
@@ -305,9 +313,8 @@ recipe_read_check_depends <- function(x, filename, config, validate) {
     el$name <- name
 
     assert_character(el$id, sprintf("%s:depends:%s:id", filename, name))
-    if (is.null(el$draft)) {
-      el$draft <- FALSE
-    } else {
+    if (!is.null(el$draft)) {
+      ## TODO: warning here now
       assert_scalar_logical(el$draft,
                             sprintf("%s:depends:%s:draft", filename, name))
     }
@@ -330,7 +337,8 @@ recipe_read_check_depends <- function(x, filename, config, validate) {
     ## we come to getting them in the database this is not necessarily
     ## correct!
     if (validate) {
-      el$path <- orderly_find_report(el$id, name, config, draft = el$draft,
+      draft <- el$draft %||% use_draft
+      el$path <- orderly_find_report(el$id, name, config, draft = draft,
                                      must_work = TRUE)
       filename_full <- file.path(el$path, el$filename)
 

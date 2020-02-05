@@ -120,9 +120,11 @@ orderly_test_check <- function(path = NULL) {
 ##' env$nmin
 ##' env$extract
 orderly_data <- function(name, parameters = NULL, envir = NULL,
-                         root = NULL, locate = TRUE, instance = NULL) {
+                         root = NULL, locate = TRUE, instance = NULL,
+                         use_draft = NULL) {
   config <- orderly_config_get(root, locate)
-  info <- recipe_read(file.path(path_src(config$root), name), config)
+  info <- recipe_read(file.path(path_src(config$root), name),
+                      config, use_draft = use_draft)
   envir <- orderly_environment(envir)
   recipe_data(config, info, parameters, envir, instance)$dest
 }
