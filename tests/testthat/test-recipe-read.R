@@ -242,6 +242,21 @@ test_that("dependencies draft, new interface, throws sensible errors", {
 })
 
 
+test_that("Using draft within a dependency is now a warning", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+  id1 <- orderly_run("example", root = path, echo = FALSE)
+
+  filename <- file.path(path, "src", "depend", "orderly.yml")
+  dat <- yaml_read(filename)
+  dat$depends$example$draft <- TRUE
+  yaml_write(dat, filename)
+
+  expect_warning(
+    id2 <- orderly_run("depend", root = path, echo = FALSE),
+    "Using 'draft:' within an ordery.yml is deprecated")
+})
+
+
 test_that("data field is optional", {
   path <- prepare_orderly_example("nodata")
   report_path <- file.path(path, "src", "example")

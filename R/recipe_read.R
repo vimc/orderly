@@ -337,8 +337,17 @@ recipe_read_check_depends <- function(x, filename, config, use_draft,
     ## we come to getting them in the database this is not necessarily
     ## correct!
     if (validate) {
-      draft <- el$draft %||% use_draft
-      el$path <- orderly_find_report(el$id, name, config, draft = draft,
+      if (!is.null(el$draft)) {
+        msg <- c("Using 'draft:' within an ordery.yml is deprecated and",
+                 "will be removed in a future version of orderly.  Please",
+                 "use the 'use_draft' argument to control draft usage.",
+                 "If you want to use a recent version of a report that you",
+                 'are developing simultaneously, use_draft = "newer"',
+                 "will probably do what you want.")
+        orderly_warning(flow_text(msg))
+        use_draft <- el$draft
+      }
+      el$path <- orderly_find_report(el$id, name, config, draft = use_draft,
                                      must_work = TRUE)
       filename_full <- file.path(el$path, el$filename)
 
