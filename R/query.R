@@ -195,9 +195,6 @@ orderly_find_name <- function(id, config, locate = FALSE, draft = TRUE,
 ## what we want to achieve is.  This function is not an orderly API
 ## function, and is used only in dependency resolution, so we can
 ## update this later if needed.
-##
-## The draft = TRUE/FALSE bit can eventually be removed if we remove
-## the use of draft: true from within a dependency declaration.
 orderly_find_report <- function(id, name, config, locate = FALSE,
                                 draft = TRUE, must_work = FALSE) {
   config <- orderly_config_get(config, locate)
