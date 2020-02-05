@@ -1,3 +1,7 @@
+# orderly 1.0.7
+
+* More flexible control of use of draft reports, using the argument `use_draft` to `orderly_run` and `orderly_test_start`.  This will replace the use of explicitly specifying `draft: true` in the depends section of `orderly.yml` (VIMC-3377).
+
 # orderly 1.0.6
 
 * Database configurations now support the concept of "instances" to allow switching between different versions of a database (e.g., production and staging) without manually altering the configuration or environment variables. Functions `orderly::orderly_run`, `orderly::orderly_db`, `orderly::orderly_test_start` and `orderly::orderly_data` all get an `instance` argument to support this (VIMC-3302).
