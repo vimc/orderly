@@ -24,7 +24,7 @@ orderly_data(
   root = NULL,
   locate = TRUE,
   instance = NULL,
-  use_draft = NULL
+  use_draft = FALSE
 )
 }
 \arguments{

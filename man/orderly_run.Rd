@@ -16,7 +16,7 @@ orderly_run(
   ref = NULL,
   message = NULL,
   instance = NULL,
-  use_draft = NULL
+  use_draft = FALSE
 )
 }
 \arguments{
