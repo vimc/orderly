@@ -2,12 +2,10 @@ data: ~
 depends:
   - example:
       id: latest
-      draft: true
       use:
         previous1.rds: data.rds
   - example:
       id: latest
-      draft: false
       use:
         previous2.rds: data.rds
 script: script.R

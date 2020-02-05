@@ -449,7 +449,14 @@ test_that("use multiple versions of an artefact", {
 
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id1, root = path)
   orderly_commit(id2, root = path)
+
+  p <- file.path(path, "src", "depend2", "orderly.yml")
+  dat <- yaml_read(p)
+  dat$depends[[1]]$example$id <- id1
+  dat$depends[[2]]$example$id <- id2
+  yaml_write(dat, p)
 
   id3 <- orderly_run("depend2", root = path, echo = FALSE)
 
@@ -457,8 +464,7 @@ test_that("use multiple versions of an artefact", {
                   c("previous1.rds", "previous2.rds"))
   expect_true(all(file.exists(p1)))
 
-  p2 <- file.path(path, c("draft", "archive"), "example", c(id1, id2),
-                  "data.rds")
+  p2 <- file.path(path, "archive", "example", c(id1, id2), "data.rds")
   expect_equal(hash_files(p1, FALSE),
                hash_files(p2, FALSE))
 })
