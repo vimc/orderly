@@ -182,6 +182,49 @@ test_that("no global folder", {
 })
 
 
+test_that("vault configuration validation when absent", {
+  expect_null(config_check_vault(NULL, NULL, "orderly.yml"))
+})
+
+
+test_that("vault configuration validation for typical use", {
+  vault <- list(addr = "https://vault.example.com")
+  expect_identical(config_check_vault(vault, NULL, "orderly.yml"), vault)
+
+  vault <- list(addr = "https://vault.example.com",
+                auth = list(method = "github"))
+  expect_identical(config_check_vault(vault, NULL, "orderly.yml"), vault)
+})
+
+
+test_that("vault configuration requires string for url", {
+  expect_error(config_check_vault(list(addr = TRUE), NULL, "orderly.yml"),
+               "'orderly.yml:vault:addr' must be character")
+  expect_error(
+    config_check_vault(list(addr = c("a", "b")), NULL, "orderly.yml"),
+    "'orderly.yml:vault:addr' must be a scalar")
+  expect_error(
+    config_check_vault(list(addr = NULL), NULL, "orderly.yml"),
+    "'orderly.yml:vault:addr' must be a scalar")
+})
+
+
+test_that("vault auth must be named", {
+  vault <- list(addr = "https://vault.example.com", auth = TRUE)
+  expect_error(config_check_vault(vault, NULL, "orderly.yml"),
+               "'orderly.yml:vault:auth' must be named")
+})
+
+
+test_that("previous configuration is transformed with warning", {
+  addr <- "https://vault.example.com"
+  expect_warning(
+    res <- config_check_vault(NULL, addr, "orderly.yml")  ,
+    "Use of 'vault_server' is deprecated")
+  expect_equal(res, list(addr = addr))
+})
+
+
 test_that("vault configuration", {
   path <- prepare_orderly_example("minimal")
   path_config <- file.path(path, "orderly_config.yml")
