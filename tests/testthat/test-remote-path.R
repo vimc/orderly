@@ -140,12 +140,6 @@ test_that("pull dependencies", {
 test_that("pull report with dependencies", {
   dat <- prepare_orderly_remote_example()
 
-  ## For some reason that I don't understand, we use draft: true for
-  ## the depend report here, so fix that:
-  p <- file.path(dat$path_remote, "src", "depend", "orderly.yml")
-  yml <- grep("^\\s+draft: true", readLines(p), invert = TRUE, value = TRUE)
-  writeLines(yml, p)
-
   id <- orderly_run("depend", root = dat$path_remote, echo = FALSE)
   orderly_commit(id, root = dat$path_remote)
 
