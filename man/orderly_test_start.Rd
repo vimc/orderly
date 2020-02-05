@@ -12,7 +12,8 @@ orderly_test_start(
   envir = parent.frame(),
   root = NULL,
   locate = TRUE,
-  instance = NULL
+  instance = NULL,
+  use_draft = FALSE
 )
 
 orderly_test_check(path = NULL)
@@ -57,8 +58,6 @@ databases where instances are listed in
 where instances are not given.  See the "orderly" vignette for
 further information.}
 
-\item{path}{Path to the report that is currently being run}
-
 \item{use_draft}{Should draft reports be used for dependencies?
 This should be used only in development.  Valid values are
 logical (\code{TRUE}, \code{FALSE}) or use the string
@@ -66,6 +65,8 @@ logical (\code{TRUE}, \code{FALSE}) or use the string
 archive reports.  For consistency, \code{always} and
 \code{never} are equivalent to \code{TRUE} and \code{FALSE},
 respectively.}
+
+\item{path}{Path to the report that is currently being run}
 }
 \value{
 The path to the report directory
