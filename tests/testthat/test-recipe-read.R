@@ -182,7 +182,8 @@ test_that("dependencies must exist", {
   dat$depends$example$use$previous.rds <- "unknown.file"
   yaml_write(dat, filename)
 
-  expect_error(orderly_run("depend", root = path, echo = FALSE),
+  expect_error(orderly_run("depend", root = path, echo = FALSE,
+                           use_draft = TRUE),
                "Did not find file unknown.file at")
 })
 

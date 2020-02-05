@@ -72,8 +72,7 @@ test_that("orderly_run_info errors when not running", {
 test_that("orderly_run_info is usable from test_start", {
   path <- prepare_orderly_example("depends", testing = TRUE)
   id1 <- orderly_run("example", root = path, echo = FALSE)
-  orderly_commit(id1, root = id1)
-  p <- orderly_test_start("depend", root = path)
+  p <- orderly_test_start("depend", root = path, use_draft = TRUE)
 
   expect_error(
     orderly_run_info(),
