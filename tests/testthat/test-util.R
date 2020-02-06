@@ -90,7 +90,7 @@ test_that("secrets", {
   cl$write("/secret/users/bob", list(password = "BOB"))
 
   config <- list(root = tempfile(),
-                 vault_server = srv$addr)
+                 vault = list(addr = srv$addr))
 
   x <- list(name = "alice",
             password = "VAULT:/secret/users/alice:password")
@@ -112,6 +112,23 @@ test_that("secrets", {
     expect_equal(resolve_secrets(unlist(x), config),
                  list(name = "alice", password = "ALICE"))
   })
+})
+
+test_that("secets and expanded vault definition", {
+  srv <- vaultr::vault_test_server()
+  cl <- srv$client()
+  cl$write("/secret/users/alice", list(password = "ALICE"))
+  cl$write("/secret/users/bob", list(password = "BOB"))
+
+  config <- list(root = tempfile(),
+                 vault = list(
+                   addr = srv$addr,
+                   login = "token",
+                   token = srv$token))
+  x <- list(name = "alice",
+            password = "VAULT:/secret/users/alice:password")
+  expect_equal(resolve_secrets(x, config),
+               list(name = "alice", password = "ALICE"))
 })
 
 test_that("resolve secret env", {

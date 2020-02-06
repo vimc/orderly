@@ -286,11 +286,7 @@ config_check_vault <- function(vault, vault_server, filename) {
     vault <- list(addr = vault_server)
   }
   if (!is.null(vault)) {
-    check_fields(vault, sprintf("%s:vault", filename), "addr", "auth")
-    assert_scalar_character(vault$addr, sprintf("%s:vault:addr", filename))
-    if (!is.null(vault$auth)) {
-      assert_named(vault$auth, name = sprintf("%s:vault:auth", filename))
-    }
+    assert_named(vault, TRUE, sprintf("%s:vault", filename))
   }
 
   vault

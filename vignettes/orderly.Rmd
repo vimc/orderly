@@ -556,7 +556,8 @@ retrieve them.
 To do this, you should include the address of your vault server in the `orderly_config.yml` as
 
 ```yaml
-vault_server: https://example.com:8200
+vault:
+  addr: https://example.com:8200
 ```
 
 Then, for values that you want to retrieve from the vault, set the value of the field to `VAULT:<path>:<field>`, where `<path>` is the name of a vault
