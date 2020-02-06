@@ -42,7 +42,7 @@ Suggests:
     processx,
     rmarkdown,
     testthat,
-    vaultr (>= 1.0.0)
+    vaultr (>= 1.0.3)
 RoxygenNote: 7.0.0
 VignetteBuilder: knitr
 Language: en-GB
