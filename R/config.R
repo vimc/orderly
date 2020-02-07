@@ -276,7 +276,8 @@ config_read_db <- function(name, info, filename) {
 config_check_vault <- function(vault, vault_server, filename) {
   if (!is.null(vault_server)) {
     if (!is.null(vault)) {
-      stop("Can't specify both 'vault' and 'vault_server'")
+      stop(sprintf("Can't specify both 'vault' and 'vault_server' in %s",
+                   filename))
     }
     msg <- c("Use of 'vault_server' is deprecated and will be removed in a",
              "future orderly version.  Please use the new 'vault' server",

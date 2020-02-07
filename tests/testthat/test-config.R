@@ -218,6 +218,14 @@ test_that("previous configuration is transformed with warning", {
 })
 
 
+test_that("Can't use both new and old vault configurations", {
+  expect_error(config_check_vault(list(login = "token"),
+                                  "https://vault.example.com",
+                                  "orderly.yml"),
+               "Can't specify both 'vault' and 'vault_server' in orderly.yml")
+})
+
+
 test_that("vault configuration", {
   path <- prepare_orderly_example("minimal")
   path_config <- file.path(path, "orderly_config.yml")
