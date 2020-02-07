@@ -198,21 +198,14 @@ test_that("vault configuration validation for typical use", {
 
 
 test_that("vault configuration requires string for url", {
-  expect_error(config_check_vault(list(addr = TRUE), NULL, "orderly.yml"),
-               "'orderly.yml:vault:addr' must be character")
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+  expect_error(config_check_vault(NULL, TRUE, "orderly.yml"),
+               "'orderly.yml:vault_server' must be character")
   expect_error(
-    config_check_vault(list(addr = c("a", "b")), NULL, "orderly.yml"),
-    "'orderly.yml:vault:addr' must be a scalar")
-  expect_error(
-    config_check_vault(list(addr = NULL), NULL, "orderly.yml"),
-    "'orderly.yml:vault:addr' must be a scalar")
-})
-
-
-test_that("vault auth must be named", {
-  vault <- list(addr = "https://vault.example.com", auth = TRUE)
-  expect_error(config_check_vault(vault, NULL, "orderly.yml"),
-               "'orderly.yml:vault:auth' must be named")
+    config_check_vault(NULL, c("a", "b"), "orderly.yml"),
+    "'orderly.yml:vault_server' must be a scalar")
+  expect_null(config_check_vault(NULL, NULL, "orderly.yml"))
 })
 
 
@@ -230,16 +223,11 @@ test_that("vault configuration", {
   path_config <- file.path(path, "orderly_config.yml")
   text <- readLines(path_config)
 
-  expect_null(orderly_config(root = path)$vault_server)
+  expect_null(orderly_config(root = path)$vault)
 
   url <- "https://vault.example.com"
-  writeLines(c(text, sprintf("vault_server: %s", url)), path_config)
-  expect_equal(orderly_config(root = path)$vault_server, url)
-
-  writeLines(c(text, sprintf("vault_server: %s", TRUE)), path_config)
-  expect_error(orderly_config(root = path),
-               "orderly_config.yml:vault_server' must be character",
-               fixed = TRUE)
+  writeLines(c(text, sprintf("vault:\n  addr: %s", url)), path_config)
+  expect_equal(orderly_config(root = path)$vault, list(addr = url))
 })
 
 
