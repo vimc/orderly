@@ -138,16 +138,16 @@ test_that("resolve secret env", {
   cl$write("/secret/users/bob", list(password = "BOB"))
 
   config <- list(root = tempfile(),
-                 vault_server = srv$addr)
+                 vault = list(addr = srv$addr,
+                              login = "token",
+                              token = srv$token))
 
   x <- list(user = "$ORDERLY_USER",
             password = "$ORDERLY_PASSWORD",
             other = "string")
 
   vars <- c("ORDERLY_PASSWORD" = "VAULT:/secret/users/alice:password",
-            "ORDERLY_USER" = "alice",
-            "VAULTR_AUTH_METHOD" = "token",
-            "VAULT_TOKEN" = srv$token)
+            "ORDERLY_USER" = "alice")
 
   res <- withr::with_envvar(vars, resolve_driver_config(x, config))
   expect_equal(res,
