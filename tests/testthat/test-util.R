@@ -154,6 +154,39 @@ test_that("resolve secret env", {
                list(user = "alice", password = "ALICE", other = "string"))
 })
 
+
+test_that("vault configuration honours environment variables", {
+  srv <- vaultr::vault_test_server()
+  cl <- srv$client()
+  cl$write("/secret/users/alice", list(password = "ALICE"))
+  cl$write("/secret/users/bob", list(password = "BOB"))
+
+  path <- prepare_orderly_example("minimal")
+  path_config <- file.path(path, "orderly_config.yml")
+  text <- readLines(path_config)
+
+  text <- c(text, c("vault:",
+                    "  addr: $ORDERLY_VAULT_ADDR",
+                    "  login: token",
+                    "  token: $ORDERLY_VAULT_TOKEN"))
+  writeLines(text, path_config)
+
+  x <- list(name = "alice",
+            password = "VAULT:/secret/users/alice:password")
+  config <- orderly_config(path)
+  ## Environment variable not resolved yet:
+  expect_equal(config$vault$addr, "$ORDERLY_VAULT_ADDR")
+  ## Sensible error if not set:
+  expect_error(resolve_secrets(x, config),
+               "Environment variable 'ORDERLY_VAULT_.+' is not set")
+  ## Resolve if set
+  env <- list(ORDERLY_VAULT_ADDR = srv$addr, ORDERLY_VAULT_TOKEN = srv$token)
+  yaml_write(env, file.path(path, "orderly_envir.yml"))
+  expect_equal(resolve_secrets(x, config),
+               list(name = "alice", password = "ALICE"))
+})
+
+
 test_that("which_max_time", {
   times <- as.list(Sys.time() + sort(rnorm(3, 0, 20)))
   expect_equal(which_max_time(times), 3)
