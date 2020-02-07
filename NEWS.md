@@ -1,3 +1,7 @@
+# orderly 1.0.7
+
+* Expand how the vault server is defined to allow additional arguments to be directly specified
+
 # orderly 1.0.6
 
 * Database configurations now support the concept of "instances" to allow switching between different versions of a database (e.g., production and staging) without manually altering the configuration or environment variables. Functions `orderly::orderly_run`, `orderly::orderly_db`, `orderly::orderly_test_start` and `orderly::orderly_data` all get an `instance` argument to support this (VIMC-3302).
