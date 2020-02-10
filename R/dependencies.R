@@ -39,9 +39,9 @@ get_dependencies_db <- function(name, id, upstream, con, list_all = FALSE) {
 
   # if we're going uptree
   if (upstream) {
-    return(unique(db_ret$id))
+    unique(db_ret$id)
   } else {
-    return(unique(db_ret$report_version))
+    unique(db_ret$report_version)
   }
 }
 
@@ -55,8 +55,8 @@ get_latest_by_name <- function(con, name) {
                    "AND", "date=(SELECT MAX(date)",
                    "FROM", "report_version",
                    sprintf("WHERE report='%s')", name))
-  db_ret <- DBI::dbGetQuery(con, sql_qry)
-  return(db_ret)
+
+  DBI::dbGetQuery(con, sql_qry)
 }
 
 get_latest_by_id <- function(con, id) {
@@ -74,9 +74,9 @@ id_to_name <- function(con, id) {
   db_ret <- DBI::dbGetQuery(con, paste(sql_qry, collapse = " "))
 
   if (nrow(db_ret) == 0) {
-    return(NULL)
+    NULL
   } else {
-    return(db_ret$report)
+    db_ret$report
   }
 }
 
@@ -89,7 +89,7 @@ id_to_name <- function(con, id) {
 is_latest_in_db <- function(con, id) {
   latest <- get_latest_by_name(con, id_to_name(con, id))
 
-  return(latest$id == id)
+  latest$id == id
 }
 
 ##' Logic for working out if a report is out of date; assume B depends on A
@@ -162,7 +162,8 @@ is_out_of_date <- function(con, child_id) {
     if (db_par$file_hash[i] != file_hash)
       return(TRUE)
   }
-  return(FALSE)
+
+  FALSE
 }
 
 ##' @title Recursively check that none of the parents share the same name as the
@@ -181,7 +182,8 @@ check_parents <- function(parent_vertex, name) {
       return(check_parents(parent_vertex$parent, name))
     }
   }
-  return(FALSE)
+
+  FALSE
 }
 
 ##' @title Recursively builds a tree for a given report
@@ -258,7 +260,7 @@ build_tree <- function(name, id, depth = 100, parent = NULL,
                tree = tree, con = con, upstream = upstream, list_all = list_all)
   }
 
-  return(tree)
+  tree
 }
 
 ##' @title Given a tree return a list of reports to be re-run (and the order
@@ -352,7 +354,7 @@ Vertex <- R6::R6Class("Vertex", list(
     self$children <- append(self$children, list(child))
   },
   format = function() {
-    return(sprintf("%s [%s]", self$name, self$id))
+    sprintf("%s [%s]", self$name, self$id)
   }
   )
 )
@@ -371,7 +373,7 @@ Tree <- R6::R6Class("Tree", list(
     child <- Vertex$new(parent, name, id, out_of_date)
     parent$add_child(child)
     self$vertices <- append(self$vertices, list(child))
-    return(child)
+    child
   },
   # this is stupidly hacky to get the formatting right
   format_helper = function(vertex = self$root, fvector = c(), str="") {
