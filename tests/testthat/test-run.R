@@ -826,3 +826,17 @@ test_that("run with different database instance", {
   expect_equal(f(id2), 20)
   expect_equal(f(id3), 10)
 })
+
+
+test_that("Require simple parameters", {
+  path <- prepare_orderly_example("parameters", testing = TRUE)
+
+  expect_error(
+    orderly_run("example", parameters = list(a = Sys.Date(), b = TRUE),
+                root = path, echo = FALSE),
+    "Invalid parameters: 'a' - must be character, numeric or logical")
+  expect_error(
+    orderly_run("example", parameters = list(a = NULL, b = 1:2),
+                root = path, echo = FALSE),
+    "Invalid parameters: 'a', 'b' - must be scalar")
+})
