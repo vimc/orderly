@@ -4,6 +4,7 @@
 ##' @param id the id of the report, if omitted, use the id of the latest report
 ##' @param upstream A boolean indicating if we want to move up or down the tree
 ##' @param con A connection to a database
+##' @noRd
 get_dependencies_db <- function(name, id, upstream, con, list_all = FALSE) {
   ## now construct the SQL query
   if (upstream) {
@@ -49,6 +50,7 @@ get_dependencies_db <- function(name, id, upstream, con, list_all = FALSE) {
 ##'
 ##' @param name the name of the report
 ##' @param con A connection to a database
+##' @noRd
 get_latest_by_name <- function(con, name) {
   sql_qry <- paste("SELECT", "id, report, date FROM report_version",
                    "WHERE", sprintf("report='%s'", name),
@@ -67,6 +69,7 @@ get_latest_by_id <- function(con, id) {
 ##'
 ##' @param id the id of the report
 ##' @param con A connection to a database
+##' @noRd
 id_to_name <- function(con, id) {
   sql_qry <- c("SELECT", "report_version.report",
                "FROM", "report_version",
@@ -86,6 +89,7 @@ id_to_name <- function(con, id) {
 ##' @param con A connection to a database
 ##'
 ##' @return A boolean TRUE if the report is the latest version
+##' @noRd
 is_latest_in_db <- function(con, id) {
   latest <- get_latest_by_name(con, id_to_name(con, id))
 
@@ -96,6 +100,7 @@ is_latest_in_db <- function(con, id) {
 ##' Then we find the lastest version of A
 ##' get the artefact hashes from A
 ##' match them against the depends hashes from B
+##' @noRd
 is_out_of_date <- function(con, child_id) {
   ## filename - the name of the artefact B used (not the use name)
   ## file_hash - the hash of the artefact B used
@@ -174,6 +179,7 @@ is_out_of_date <- function(con, child_id) {
 ##'
 ##' @return A boolean TRUE if there is a match (bad!) FALSE if the is no match
 ##' (good!)
+##' @noRd
 check_parents <- function(parent_vertex, name) {
   if (parent_vertex$name == name) {
     return(TRUE)
@@ -201,6 +207,7 @@ check_parents <- function(parent_vertex, name) {
 ##' @param upstream A boolean indicating if we want to move up or down the tree
 ##'
 ##' @return An R6 tree object
+##' @noRd
 build_tree <- function(name, id, depth = 100, parent = NULL,
                        tree = NULL, con, upstream = FALSE, list_all = FALSE) {
   ## this should never get triggered - it only exists the prevent an infinite
@@ -269,6 +276,7 @@ build_tree <- function(name, id, depth = 100, parent = NULL,
 ##' @tree A vertex object
 ##'
 ##' @return A list of report names
+##' @noRd
 out_ot_date_reports <- function(vertex, reports = c()) {
   if (vertex$out_of_date) {
     if (vertex$name %in% reports) {
