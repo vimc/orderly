@@ -100,8 +100,6 @@ test_that("different parameter types are stored correctly", {
 
 
 test_that("avoid unserialisable parameters", {
-  skip_on_cran_windows()
-  path <- prepare_orderly_example("parameters", testing = TRUE)
   t <- Sys.Date()
   expect_error(report_db_parameter_type(t), "Unsupported parameter type")
   expect_error(report_db_parameter_serialise(t), "Unsupported parameter type")
