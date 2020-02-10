@@ -30,7 +30,8 @@
 ##' @title Run a report
 ##'
 ##' @param name Name of the report to run (see
-##'   \code{\link{orderly_list}}).
+##'   \code{\link{orderly_list}}).  A leading \code{src/} will be
+##'   removed if provided, allowing easier use of autocomplete.
 ##'
 ##' @param parameters Parameters passed to the report. A named list of
 ##'   parameters declared in the \code{orderly.yml}.
@@ -47,9 +48,27 @@
 ##' @param message An optional character string containing a message
 ##'   explaining why the report was run
 ##'
+##' @param instance Select instance of the source database to be used,
+##'   where multiple instances are configured.  Use a single
+##'   \emph{unnamed} character string to indicate an instance to
+##'   match.  If given, then this name must be present in all
+##'   databases where instances are listed in
+##'   \code{orderly_config.yml}, and will be ignored by all database
+##'   where instances are not given.  See the "orderly" vignette for
+##'   further information.
+##'
 ##' @inheritParams orderly_list
+##'
 ##' @param echo Print the result of running the R code to the console
 ##' @param id_file Write the identifier into a file
+##'
+##' @param use_draft Should draft reports be used for dependencies?
+##'   This should be used only in development.  Valid values are
+##'   logical (\code{TRUE}, \code{FALSE}) or use the string
+##'   \code{newer} to use draft reports where they are newer than
+##'   archive reports.  For consistency, \code{always} and
+##'   \code{never} are equivalent to \code{TRUE} and \code{FALSE},
+##'   respectively.
 ##'
 ##' @seealso \code{\link{orderly_log}} for controlling display of log
 ##'   messages (not just R output)
@@ -86,24 +105,29 @@
 orderly_run <- function(name, parameters = NULL, envir = NULL,
                         root = NULL, locate = TRUE, echo = TRUE,
                         id_file = NULL, fetch = FALSE, ref = NULL,
-                        message = NULL) {
+                        message = NULL, instance = NULL, use_draft = FALSE) {
   envir <- orderly_environment(envir)
   config <- orderly_config_get(root, locate)
   config <- check_orderly_archive_version(config)
 
-  info <- recipe_prepare(config, name, id_file, ref, fetch, message)
+  if (grepl("^src/.+", name)) {
+    name <- sub("^src/", "", name)
+  }
+
+  info <- recipe_prepare(config, name, id_file, ref, fetch, message, use_draft)
 
   recipe_current_run_set(info)
   on.exit(recipe_current_run_clear())
 
-  info <- recipe_run(info, parameters, envir, config, echo = echo)
+  info <- recipe_run(info, parameters, envir, config, echo = echo,
+                     instance = instance)
 
   info$id
 }
 
 
 recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
-                           fetch = FALSE, message = NULL) {
+                           fetch = FALSE, message = NULL, use_draft = FALSE) {
   assert_is(config, "orderly_config")
   config <- orderly_config_get(config, FALSE)
 
@@ -116,7 +140,8 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
     on.exit(git_checkout_branch(prev, TRUE, config$root))
   }
 
-  info <- recipe_read(file.path(path_src(config$root), name), config)
+  info <- recipe_read(file.path(path_src(config$root), name),
+                      config, use_draft = use_draft)
 
   id <- new_report_id()
   orderly_log("id", id)
@@ -134,7 +159,8 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
 }
 
 
-recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
+recipe_run <- function(info, parameters, envir, config, echo = TRUE,
+                       instance = NULL) {
   assert_is(config, "orderly_config")
 
   owd <- setwd(info$workdir)
@@ -144,7 +170,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
   con_rds <- orderly_db("rds", config, FALSE)
   con_csv <- orderly_db("csv", config, FALSE)
 
-  prep <- orderly_prepare_data(config, info, parameters, envir)
+  prep <- orderly_prepare_data(config, info, parameters, envir, instance)
   resource_info <- info$resource_info
 
   t0 <- Sys.time()
@@ -216,6 +242,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE) {
                extra_fields = extra_fields,
                connection = !is.null(info$connection),
                packages = info$packages,
+               random_seed = prep$random_seed,
                file_info_inputs = info$inputs,
                file_info_artefacts = file_info_artefacts,
                global_resources = info$global_resources,
@@ -292,7 +319,7 @@ recipe_substitute <- function(info, parameters) {
   info
 }
 
-recipe_data <- function(config, info, parameters, dest) {
+recipe_data <- function(config, info, parameters, dest, instance) {
   assert_is(config, "orderly_config")
   if (!is.environment(dest)) {
     stop("Invalid input for 'dest'")
@@ -310,7 +337,7 @@ recipe_data <- function(config, info, parameters, dest) {
     return(ret)
   }
 
-  con <- orderly_db("source", config)
+  con <- orderly_db("source", config, instance = instance)
   on.exit(lapply(con, DBI::dbDisconnect))
 
   views <- info$views
@@ -485,8 +512,8 @@ orderly_environment <- function(envir) {
 }
 
 
-orderly_prepare_data <- function(config, info, parameters, envir) {
-  res <- recipe_data(config, info, parameters, envir)
+orderly_prepare_data <- function(config, info, parameters, envir, instance) {
+  res <- recipe_data(config, info, parameters, envir, instance)
 
   ## Compute the device stack size before starting work too
   n_dev <- length(grDevices::dev.list())
@@ -498,7 +525,7 @@ orderly_prepare_data <- function(config, info, parameters, envir) {
   }
 
   ret <- list(data = res$data, parameters = res$parameters,
-              n_dev = n_dev, n_sink = n_sink)
+              n_dev = n_dev, n_sink = n_sink, random_seed = random_seed())
 
   if (!is.null(info$connection)) {
     ## NOTE: this is a copy of exported connections so that we can

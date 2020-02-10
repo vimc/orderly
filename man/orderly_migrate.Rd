@@ -4,8 +4,14 @@
 \alias{orderly_migrate}
 \title{Migrate an orderly archive}
 \usage{
-orderly_migrate(root = NULL, locate = TRUE, to = NULL,
-  dry_run = FALSE, skip_failed = FALSE, clean = FALSE)
+orderly_migrate(
+  root = NULL,
+  locate = TRUE,
+  to = NULL,
+  dry_run = FALSE,
+  skip_failed = FALSE,
+  clean = FALSE
+)
 }
 \arguments{
 \item{root}{The path to an orderly root directory, or \code{NULL}

@@ -547,6 +547,11 @@ list_to_integer <- function(x, named = TRUE) {
 }
 
 
+list_to_logical <- function(x, named = TRUE) {
+  vlapply(x, identity, USE.NAMES = named)
+}
+
+
 source_to_function <- function(filename, name, parent) {
   e <- new.env(parent = parent)
   sys.source(filename, e)
@@ -706,4 +711,14 @@ pretty_bytes <- function(bytes) {
   unit <- c("", "k", "M", "G")
   exponent <- max(0, min(floor(log(bytes, 1000)), length(unit) - 1))
   sprintf("%s %sB", round(bytes / 1000^exponent, 2), unit[exponent + 1])
+}
+
+
+clean_path <- function(path) {
+  gsub("\\", "/", path, fixed = TRUE)
+}
+
+
+random_seed <- function(envir = globalenv()) {
+  envir$.Random.seed
 }

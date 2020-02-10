@@ -4,8 +4,12 @@
 \alias{orderly_rebuild}
 \title{Rebuild the report database}
 \usage{
-orderly_rebuild(root = NULL, locate = TRUE, verbose = TRUE,
-  if_schema_changed = FALSE)
+orderly_rebuild(
+  root = NULL,
+  locate = TRUE,
+  verbose = TRUE,
+  if_schema_changed = FALSE
+)
 }
 \arguments{
 \item{root}{The path to an orderly root directory, or \code{NULL}

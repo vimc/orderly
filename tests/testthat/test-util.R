@@ -90,7 +90,7 @@ test_that("secrets", {
   cl$write("/secret/users/bob", list(password = "BOB"))
 
   config <- list(root = tempfile(),
-                 vault_server = srv$addr)
+                 vault = list(addr = srv$addr))
 
   x <- list(name = "alice",
             password = "VAULT:/secret/users/alice:password")
@@ -114,6 +114,23 @@ test_that("secrets", {
   })
 })
 
+test_that("secets and expanded vault definition", {
+  srv <- vaultr::vault_test_server()
+  cl <- srv$client()
+  cl$write("/secret/users/alice", list(password = "ALICE"))
+  cl$write("/secret/users/bob", list(password = "BOB"))
+
+  config <- list(root = tempfile(),
+                 vault = list(
+                   addr = srv$addr,
+                   login = "token",
+                   token = srv$token))
+  x <- list(name = "alice",
+            password = "VAULT:/secret/users/alice:password")
+  expect_equal(resolve_secrets(x, config),
+               list(name = "alice", password = "ALICE"))
+})
+
 test_that("resolve secret env", {
   srv <- vaultr::vault_test_server()
   cl <- srv$client()
@@ -121,21 +138,54 @@ test_that("resolve secret env", {
   cl$write("/secret/users/bob", list(password = "BOB"))
 
   config <- list(root = tempfile(),
-                 vault_server = srv$addr)
+                 vault = list(addr = srv$addr,
+                              login = "token",
+                              token = srv$token))
 
   x <- list(user = "$ORDERLY_USER",
             password = "$ORDERLY_PASSWORD",
             other = "string")
 
   vars <- c("ORDERLY_PASSWORD" = "VAULT:/secret/users/alice:password",
-            "ORDERLY_USER" = "alice",
-            "VAULTR_AUTH_METHOD" = "token",
-            "VAULT_TOKEN" = srv$token)
+            "ORDERLY_USER" = "alice")
 
   res <- withr::with_envvar(vars, resolve_driver_config(x, config))
   expect_equal(res,
                list(user = "alice", password = "ALICE", other = "string"))
 })
+
+
+test_that("vault configuration honours environment variables", {
+  srv <- vaultr::vault_test_server()
+  cl <- srv$client()
+  cl$write("/secret/users/alice", list(password = "ALICE"))
+  cl$write("/secret/users/bob", list(password = "BOB"))
+
+  path <- prepare_orderly_example("minimal")
+  path_config <- file.path(path, "orderly_config.yml")
+  text <- readLines(path_config)
+
+  text <- c(text, c("vault:",
+                    "  addr: $ORDERLY_VAULT_ADDR",
+                    "  login: token",
+                    "  token: $ORDERLY_VAULT_TOKEN"))
+  writeLines(text, path_config)
+
+  x <- list(name = "alice",
+            password = "VAULT:/secret/users/alice:password")
+  config <- orderly_config(path)
+  ## Environment variable not resolved yet:
+  expect_equal(config$vault$addr, "$ORDERLY_VAULT_ADDR")
+  ## Sensible error if not set:
+  expect_error(resolve_secrets(x, config),
+               "Environment variable 'ORDERLY_VAULT_.+' is not set")
+  ## Resolve if set
+  env <- list(ORDERLY_VAULT_ADDR = srv$addr, ORDERLY_VAULT_TOKEN = srv$token)
+  yaml_write(env, file.path(path, "orderly_envir.yml"))
+  expect_equal(resolve_secrets(x, config),
+               list(name = "alice", password = "ALICE"))
+})
+
 
 test_that("which_max_time", {
   times <- as.list(Sys.time() + sort(rnorm(3, 0, 20)))
@@ -201,6 +251,10 @@ test_that("platform detection", {
 })
 
 test_that("canonical case: single file", {
+  ## There are issues with either mocking or system calls for
+  ## canonical case checking on solaris, but as it is case-sensitive
+  ## the tests are not important.
+  skip_on_solaris()
   root <- tempfile()
   dir.create(root)
   path <- "a"
@@ -237,6 +291,7 @@ test_that("canonical case: single file", {
 
 
 test_that("canonical case: relative path", {
+  skip_on_solaris() # See above
   root <- tempfile()
   dir.create(root)
   path <- file.path("a", "b", "c")
@@ -274,6 +329,7 @@ test_that("canonical case: relative path", {
 
 
 test_that("canonical case: absolute path", {
+  skip_on_solaris() # See above
   path <- file.path(tempfile(), "a", "b", "c")
   dir.create(dirname(path), FALSE, TRUE)
   file.create(path)
@@ -310,6 +366,7 @@ test_that("canonical case: absolute path", {
 
 
 test_that("canonical case: path splitting", {
+  skip_on_solaris() # See above
   expect_equal(file_split_base("a/b/c"),
                list(path = c("a", "b", "c"), base = ".", absolute = FALSE))
   expect_equal(file_split_base("/a/b/c"),
@@ -324,6 +381,7 @@ test_that("canonical case: path splitting", {
 
 
 test_that("canonical case: on missing file", {
+  skip_on_solaris() # See above
   expect_equal(file_canonical_case("test-util.R"), "test-util.R")
   expect_identical(file_canonical_case("another file"), NA_character_)
 })
@@ -552,6 +610,7 @@ test_that("protect", {
 
 
 test_that("backup db", {
+  skip_on_cran_windows()
   list_tables <- function(path) {
     with_sqlite(path, function(con) DBI::dbListTables(con))
   }
@@ -574,19 +633,20 @@ test_that("backup db", {
 
 
 test_that("pretty_bytes", {
+  skip_on_cran_windows()
   expect_equal(pretty_bytes(0), "0 B")
   expect_equal(pretty_bytes(1), "1 B")
-  expect_equal(pretty_bytes(12), "12 B")
-  expect_equal(pretty_bytes(123), "123 B")
-  expect_equal(pretty_bytes(1234), "1.23 kB")
-  expect_equal(pretty_bytes(12345), "12.35 kB")
-  expect_equal(pretty_bytes(123456), "123.46 kB")
-  expect_equal(pretty_bytes(1234567), "1.23 MB")
-  expect_equal(pretty_bytes(12345678), "12.35 MB")
-  expect_equal(pretty_bytes(123456789), "123.46 MB")
-  expect_equal(pretty_bytes(1234567890), "1.23 GB")
-  expect_equal(pretty_bytes(12345678901), "12.35 GB")
-  expect_equal(pretty_bytes(123456789012), "123.46 GB")
+  expect_equal(pretty_bytes(11), "11 B")
+  expect_equal(pretty_bytes(111), "111 B")
+  expect_equal(pretty_bytes(1111), "1.11 kB")
+  expect_equal(pretty_bytes(11111), "11.11 kB")
+  expect_equal(pretty_bytes(111111), "111.11 kB")
+  expect_equal(pretty_bytes(1111111), "1.11 MB")
+  expect_equal(pretty_bytes(11111111), "11.11 MB")
+  expect_equal(pretty_bytes(111111111), "111.11 MB")
+  expect_equal(pretty_bytes(1111111111), "1.11 GB")
+  expect_equal(pretty_bytes(11111111111), "11.11 GB")
+  expect_equal(pretty_bytes(111111111111), "111.11 GB")
 })
 
 
@@ -611,4 +671,21 @@ test_that("orderly_env excludes sensitive data", {
   expect_false(any(names(env1) %in% names(v)))
   expect_true(all(names(env2) %in% names(v)))
   expect_equal(v[names(env2)], as.list(env2))
+})
+
+
+test_that("clean_path", {
+  expect_equal(clean_path("c:/My Documents/Projects/whatever"),
+               "c:/My Documents/Projects/whatever")
+  expect_equal(clean_path("c:\\My Documents/Projects\\whatever"),
+               "c:/My Documents/Projects/whatever")
+})
+
+
+test_that("random_seed", {
+  e1 <- new.env(parent = emptyenv())
+  e2 <- new.env(parent = e1)
+  e1$.Random.seed <- pi
+  expect_equal(random_seed(e1), pi)
+  expect_null(random_seed(e2))
 })

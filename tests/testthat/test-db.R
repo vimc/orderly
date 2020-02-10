@@ -30,6 +30,7 @@ test_that("custom fields", {
 })
 
 test_that("rebuild empty database", {
+  skip_on_cran_windows()
   path <- tempfile()
   orderly_init(path)
   file_copy("example_config.yml", file.path(path, "orderly_config.yml"),
@@ -42,6 +43,7 @@ test_that("rebuild empty database", {
 })
 
 test_that("rebuild nonempty database", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   id <- orderly_run("example", root = path, echo = FALSE)
   orderly_commit(id, root = path)
@@ -64,6 +66,7 @@ test_that("no transient db", {
 
 
 test_that("db includes parameters", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("demo")
   id <- orderly_run("other", parameters = list(nmin = 0.1), root = path,
                     echo = FALSE)
@@ -80,6 +83,7 @@ test_that("db includes parameters", {
 
 
 test_that("different parameter types are stored correctly", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("parameters", testing = TRUE)
   id <- orderly_run("example", parameters = list(a = 1, b = TRUE, c = "one"),
                     root = path, echo = FALSE)
@@ -96,6 +100,7 @@ test_that("different parameter types are stored correctly", {
 
 
 test_that("avoid unserialisable parameters", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("parameters", testing = TRUE)
   t <- Sys.Date()
   id <- orderly_run("example", parameters = list(a = t, b = TRUE, c = "one"),
@@ -131,6 +136,7 @@ test_that("dialects", {
 
 
 test_that("sources are listed in db", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("demo")
   id <- orderly_run("other", root = path, parameters = list(nmin = 0),
                     echo = FALSE)
@@ -155,6 +161,7 @@ test_that("sources are listed in db", {
 
 
 test_that("backup", {
+  skip_on_cran_windows()
   path <- create_orderly_demo()
   expect_message(
     orderly_backup(path),
@@ -173,6 +180,7 @@ test_that("backup", {
 
 
 test_that("db includes custom fields", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("demo")
   id <- orderly_run("minimal", root = path, echo = FALSE)
   orderly_commit(id, root = path)
@@ -189,6 +197,7 @@ test_that("db includes custom fields", {
 })
 
 test_that("db includes file information", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("demo")
   id <- orderly_run("multifile-artefact", root = path, echo = FALSE)
   p <- orderly_commit(id, root = path)
@@ -236,4 +245,126 @@ test_that("db includes file information", {
                data_frame(hash = c(h1, h2,
                                    artefact_hash),
                           size = file_size(file.path(p, filenames))))
+})
+
+
+test_that("connect to database instances", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "orderly_config.yml")
+  writeLines(c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    args:",
+    "      dbname: source.sqlite",
+    "    instances:",
+    "      staging:",
+    "        dbname: staging.sqlite",
+    "      production:",
+    "        dbname: production.sqlite"),
+    p)
+
+  f <- function(x) {
+    basename(x$source@dbname)
+  }
+  expect_equal(
+    f(orderly_db("source", root = path)),
+    "staging.sqlite")
+  expect_equal(
+    f(orderly_db("source", root = path, instance = "staging")),
+    "staging.sqlite")
+  expect_equal(
+    f(orderly_db("source", root = path, instance = "production")),
+    "production.sqlite")
+})
+
+
+test_that("db instance select", {
+  config_db <- list(
+    x = list(
+      driver = c("RSQLite", "SQLite"),
+      args = list(name = "a"),
+      instances = list(
+        a = list(name = "a"),
+        b = list(name = "b"))),
+    y = list(
+      driver = c("RSQLite", "SQLite"),
+      args = list(name = "y")))
+
+  ## The happy paths:
+  expect_identical(db_instance_select(NULL, config_db), config_db)
+
+  expect_equal(db_instance_select("a", config_db), config_db)
+  expect_equal(db_instance_select("b", config_db),
+               modifyList(config_db, list(x = list(args = list(name = "b")))))
+
+  expect_equal(db_instance_select(c(x = "a"), config_db), config_db)
+  expect_equal(db_instance_select(c(x = "b"), config_db),
+               modifyList(config_db, list(x = list(args = list(name = "b")))))
+
+  expect_error(db_instance_select("c", config_db),
+               "Invalid instance 'c' for database 'x'")
+  expect_error(db_instance_select(c(x = "c"), config_db),
+               "Invalid instance: 'c' for 'x'")
+  expect_error(db_instance_select(c(z = "a"), config_db),
+               "Invalid database name 'z' in provided instance")
+})
+
+
+test_that("db instance select with two instanced databases", {
+  config_db <- list(
+    x = list(
+      driver = c("RSQLite", "SQLite"),
+      args = list(name = "b"),
+      instances = list(
+        b = list(name = "b"),
+        a = list(name = "a"))),
+    y = list(
+      driver = c("RSQLite", "SQLite"),
+      args = list(name = "c"),
+      instances = list(
+        c = list(name = "c"),
+        a = list(name = "a"))))
+
+  ## The happy paths:
+  expect_identical(db_instance_select(NULL, config_db), config_db)
+
+  expect_equal(
+    db_instance_select("a", config_db),
+    modifyList(config_db, list(x = list(args = list(name = "a")),
+                               y = list(args = list(name = "a")))))
+  expect_equal(
+    db_instance_select(c(x = "a", y = "a"), config_db),
+    modifyList(config_db, list(x = list(args = list(name = "a")),
+                               y = list(args = list(name = "a")))))
+  expect_equal(
+    db_instance_select(c(x = "b", y = "c"), config_db),
+    modifyList(config_db, list(x = list(args = list(name = "b")),
+                               y = list(args = list(name = "c")))))
+  expect_equal(
+    db_instance_select(c(x = "a"), config_db),
+    modifyList(config_db, list(x = list(args = list(name = "a")))))
+
+  ## Some error paths:
+  expect_error(db_instance_select("f", config_db),
+               "Invalid instance 'f' for databases 'x', 'y'")
+  expect_error(db_instance_select(c(x = "f", y = "g"), config_db),
+               "Invalid instances: 'f' for 'x', 'g' for 'y'")
+  expect_error(db_instance_select(c(z = "a"), config_db),
+               "Invalid database name 'z' in provided instance")
+})
+
+
+test_that("db instance select rejects instance when no dbs support it", {
+  config_db <- list(
+    x = list(
+      driver = c("RSQLite", "SQLite"),
+      args = list(name = "a")),
+    y = list(
+      driver = c("RSQLite", "SQLite"),
+      args = list(name = "b")))
+
+  expect_identical(db_instance_select(NULL, config_db), config_db)
+  expect_error(db_instance_select("a", config_db),
+               "Can't specify 'instance' with no databases supporting it")
 })

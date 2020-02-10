@@ -182,21 +182,60 @@ test_that("no global folder", {
 })
 
 
+test_that("vault configuration validation when absent", {
+  expect_null(config_check_vault(NULL, NULL, "orderly.yml"))
+})
+
+
+test_that("vault configuration validation for typical use", {
+  vault <- list(addr = "https://vault.example.com")
+  expect_identical(config_check_vault(vault, NULL, "orderly.yml"), vault)
+
+  vault <- list(addr = "https://vault.example.com",
+                auth = list(method = "github"))
+  expect_identical(config_check_vault(vault, NULL, "orderly.yml"), vault)
+})
+
+
+test_that("vault configuration requires string for url", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+  expect_error(config_check_vault(NULL, TRUE, "orderly.yml"),
+               "'orderly.yml:vault_server' must be character")
+  expect_error(
+    config_check_vault(NULL, c("a", "b"), "orderly.yml"),
+    "'orderly.yml:vault_server' must be a scalar")
+  expect_null(config_check_vault(NULL, NULL, "orderly.yml"))
+})
+
+
+test_that("previous configuration is transformed with warning", {
+  addr <- "https://vault.example.com"
+  expect_warning(
+    res <- config_check_vault(NULL, addr, "orderly.yml")  ,
+    "Use of 'vault_server' is deprecated")
+  expect_equal(res, list(addr = addr))
+})
+
+
+test_that("Can't use both new and old vault configurations", {
+  expect_error(config_check_vault(list(login = "token"),
+                                  "https://vault.example.com",
+                                  "orderly.yml"),
+               "Can't specify both 'vault' and 'vault_server' in orderly.yml")
+})
+
+
 test_that("vault configuration", {
   path <- prepare_orderly_example("minimal")
   path_config <- file.path(path, "orderly_config.yml")
   text <- readLines(path_config)
 
-  expect_null(orderly_config(root = path)$vault_server)
+  expect_null(orderly_config(root = path)$vault)
 
   url <- "https://vault.example.com"
-  writeLines(c(text, sprintf("vault_server: %s", url)), path_config)
-  expect_equal(orderly_config(root = path)$vault_server, url)
-
-  writeLines(c(text, sprintf("vault_server: %s", TRUE)), path_config)
-  expect_error(orderly_config(root = path),
-               "orderly_config.yml:vault_server' must be character",
-               fixed = TRUE)
+  writeLines(c(text, sprintf("vault:\n  addr: %s", url)), path_config)
+  expect_equal(orderly_config(root = path)$vault, list(addr = url))
 })
 
 
@@ -277,4 +316,95 @@ test_that("warn when using url in remote definition", {
   withr::with_options(
     list(orderly.nowarnings = TRUE),
     expect_warning(orderly_config(path), NA))
+})
+
+
+test_that("multiple database configurations", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "orderly_config.yml")
+  writeLines(c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    instances:",
+    "      staging:",
+    "        dbname: staging.sqlite",
+    "      production:",
+    "        dbname: production.sqlite",
+    "    default_instance: production"),
+    p)
+  cfg <- orderly_config(path)
+  expect_equal(cfg$database$source$args, list(dbname = "production.sqlite"))
+  expect_equal(cfg$database$source$instances,
+               list(staging = list(dbname = "staging.sqlite"),
+                    production = list(dbname = "production.sqlite")))
+})
+
+
+test_that("instances not supported for destination db", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "orderly_config.yml")
+  writeLines(c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    args:",
+    "        dbname: staging.sqlite",
+    "destination:",
+    "    driver: RSQLite::SQLite",
+    "    instances:",
+    "      staging:",
+    "        dbname: dest-staging.sqlite",
+    "      production:",
+    "        dbname: dest-production.sqlite"),
+    p)
+  expect_error(
+    orderly_config(path),
+    "Unknown fields in .*orderly_config.yml:destination: instances")
+})
+
+
+test_that("default_instance not allowed without instances", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "orderly_config.yml")
+  writeLines(c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    args:",
+    "      dbname: destination.sqlite",
+    "    default_instance: production"),
+    p)
+  expect_error(
+    orderly_config(path),
+    "Can't specify 'default_instance' with no defined instances")
+})
+
+
+test_that("default instance from an environmental variable", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "orderly_config.yml")
+  writeLines(c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    instances:",
+    "      staging:",
+    "        dbname: staging.sqlite",
+    "      production:",
+    "        dbname: production.sqlite",
+    "    default_instance: $ORDERLY_TEST_DEFAULT_INSTANCE"),
+    p)
+  cfg <- orderly_config(path)
+  expect_equal(cfg$database$source$args, list(dbname = "staging.sqlite"))
+
+  cfg <- withr::with_envvar(
+    c("ORDERLY_TEST_DEFAULT_INSTANCE" = "production"),
+    orderly_config(path))
+  expect_equal(cfg$database$source$args, list(dbname = "production.sqlite"))
+
+  writeLines("ORDERLY_TEST_DEFAULT_INSTANCE: production",
+             file.path(path, "orderly_envir.yml"))
+  cfg <- orderly_config(path)
+  expect_equal(cfg$database$source$args, list(dbname = "production.sqlite"))
 })

@@ -4,13 +4,25 @@
 \alias{orderly_run}
 \title{Run a report}
 \usage{
-orderly_run(name, parameters = NULL, envir = NULL, root = NULL,
-  locate = TRUE, echo = TRUE, id_file = NULL, fetch = FALSE,
-  ref = NULL, message = NULL)
+orderly_run(
+  name,
+  parameters = NULL,
+  envir = NULL,
+  root = NULL,
+  locate = TRUE,
+  echo = TRUE,
+  id_file = NULL,
+  fetch = FALSE,
+  ref = NULL,
+  message = NULL,
+  instance = NULL,
+  use_draft = FALSE
+)
 }
 \arguments{
 \item{name}{Name of the report to run (see
-\code{\link{orderly_list}}).}
+\code{\link{orderly_list}}).  A leading \code{src/} will be
+removed if provided, allowing easier use of autocomplete.}
 
 \item{parameters}{Parameters passed to the report. A named list of
 parameters declared in the \code{orderly.yml}.}
@@ -39,6 +51,23 @@ checking out the reference \code{ref}.}
 
 \item{message}{An optional character string containing a message
 explaining why the report was run}
+
+\item{instance}{Select instance of the source database to be used,
+where multiple instances are configured.  Use a single
+\emph{unnamed} character string to indicate an instance to
+match.  If given, then this name must be present in all
+databases where instances are listed in
+\code{orderly_config.yml}, and will be ignored by all database
+where instances are not given.  See the "orderly" vignette for
+further information.}
+
+\item{use_draft}{Should draft reports be used for dependencies?
+This should be used only in development.  Valid values are
+logical (\code{TRUE}, \code{FALSE}) or use the string
+\code{newer} to use draft reports where they are newer than
+archive reports.  For consistency, \code{always} and
+\code{never} are equivalent to \code{TRUE} and \code{FALSE},
+respectively.}
 }
 \value{
 The id of the newly created report

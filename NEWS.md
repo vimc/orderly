@@ -1,4 +1,25 @@
-# orderly 1.0.2
+# orderly 1.0.8
+
+* Expand how the vault server is defined to allow additional arguments to be directly specified (VIMC-3372)
+
+# orderly 1.0.7
+
+* More flexible control of use of draft reports, using the argument `use_draft` to `orderly_run` and `orderly_test_start`.  This will replace the use of explicitly specifying `draft: true` in the depends section of `orderly.yml` (VIMC-3377).
+
+# orderly 1.0.6
+
+* Database configurations now support the concept of "instances" to allow switching between different versions of a database (e.g., production and staging) without manually altering the configuration or environment variables. Functions `orderly::orderly_run`, `orderly::orderly_db`, `orderly::orderly_test_start` and `orderly::orderly_data` all get an `instance` argument to support this (VIMC-3302).
+
+# orderly 1.0.5
+
+* The metadata now includes the state of `.Random.seed`, if present (VIMC-3375)
+
+# orderly 1.0.3
+
+* `orderly::orderly_test_start` prints instructions that are pasteable on windows -- previously they may have contained backslashes (VIMC-3251).
+* `orderly::orderly_run` now strips a leading `src/` if provided, allowing easier tab-completion of report names (VIMC-3226).
+
+# orderly 1.0.2 (CRAN)
 
 * `orderly::orderly_test_check` is no longer case sensitive with paths, preventing issues when used from directories that do not have canonical casing (VIMC-3205)
 

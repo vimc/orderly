@@ -4,7 +4,7 @@
 \alias{orderly_db}
 \title{Connect to orderly databases}
 \usage{
-orderly_db(type, root = NULL, locate = TRUE, validate = TRUE)
+orderly_db(type, root = NULL, locate = TRUE, validate = TRUE, instance = NULL)
 }
 \arguments{
 \item{type}{The type of connection to make (\code{source},
@@ -22,6 +22,15 @@ parents until it finds an \code{orderly_config.yml} file.}
 \item{validate}{Logical, indicating if the database schema should
 be validated on open (currently only applicable with \code{type
 = "destination"}).  This is primarily intended for internal use.}
+
+\item{instance}{Used only by \code{type = "source"}, and used to
+select the instance, where multiple instances are configured.
+Use a single \emph{unnamed} character string to indicate an
+instance to match.  If given, then this name must be present in
+all databases where instances are listed in
+\code{orderly_config.yml}, and will be ignored by all database
+where instances are not given.  See the "orderly" vignette for
+further information.}
 }
 \value{
 A database connection, or list of connections in the case

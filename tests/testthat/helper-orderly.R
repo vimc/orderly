@@ -17,6 +17,11 @@ skip_on_windows <- function() {
 }
 
 
+skip_on_solaris <- function() {
+  testthat::skip_on_os("solaris")
+}
+
+
 ## Via wikimedia:
 MAGIC_PNG <- as.raw(c(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a))
 
@@ -57,6 +62,7 @@ unpack_reference <- function(version, path = tempfile()) {
 
 
 prepare_orderly_remote_example <- function(path = tempfile()) {
+  skip_on_cran_windows()
   path_remote <- file.path(path, "remote")
   path_local <- file.path(path, "local")
 
@@ -69,11 +75,6 @@ prepare_orderly_remote_example <- function(path = tempfile()) {
   remote_path <- orderly_remote_path(path_remote)
 
   path_local <- prepare_orderly_example("depends", testing = TRUE)
-
-  ## Patch the report to use non-draft dependencies:
-  p <- file.path(path_local, "src", "depend", "orderly.yml")
-  d <- sub("draft: true", "draft: false", readLines(p))
-  writeLines(d, p)
 
   r <- list(remote = list(
               default = list(
@@ -131,6 +132,14 @@ new_counter <- function() {
     e$x
   }
 }
+
+
+skip_on_cran_windows <- function() {
+  if (!identical(Sys.getenv("NOT_CRAN"), "true") && is_windows()) {
+    testthat::skip("Test is slow on windows and running on CRAN")
+  }
+}
+
 
 if (Sys.getenv("NOT_CRAN") != "true") {
   options(orderly.nogit = TRUE)

@@ -292,16 +292,12 @@ depends:
       id: 20190425-163691-b8451bbf
       use:
         data.rds: huge-data-set.rds
-      draft: false
 ```
 
 This will copy the file the `huge-data-set.rds` from the report
 `big-data-report` with `id` `20190425-163691-b8451bbf` and rename it
 `data.rds`. This file can then be used by the report as if it were in
-the source directory. The field `draft` tells `orderly` to only use
-completed reports in the archive as opposed to drafts. Setting this to
-true allows uncommitted reports in `draft` to be used. This can be
-useful when developing a chain of related reports.
+the source directory.
 
 If we want a report to always use the latest version of a report `big-data-report` we can set the `id` field to `latest`, _e.g._:
 
@@ -311,7 +307,6 @@ depends:
       id: latest
       use:
         data.rds: huge-data-set.rds
-      draft: false
 ```
 
 This will find the most recent version of the report `big-data-report`
@@ -327,7 +322,6 @@ depends:
       use:
         data.rds: huge-data-set.rds
         pop.csv: population_data.csv
-      draft: false
 ```
 
 To use artefacts from multiple reports we add multiple entries to the
@@ -340,12 +334,10 @@ depends:
       use:
         data.rds: huge-data-set.rds
         pop.csv: population_data.csv
-      draft: false
   - report_two:
       id: latest
       use:
         data_b.rds: filename.rds
-      draft: false
 ```
 
 We can also use the same artefact from _different versions_ of the same
@@ -357,12 +349,10 @@ is:
 depends:
   - big-data-report:
       id: 20190425-163691-b8451bbf
-      draft: false
       use:
         data_latest.rds: huge-data-set.rds
   - big-data-report:
       id: 20181225-172991-34c91ef1
-      draft: false
       use:
         data_old: huge-data-set.rds
 ```
@@ -556,7 +546,8 @@ retrieve them.
 To do this, you should include the address of your vault server in the `orderly_config.yml` as
 
 ```yaml
-vault_server: https://example.com:8200
+vault:
+  addr: https://example.com:8200
 ```
 
 Then, for values that you want to retrieve from the vault, set the value of the field to `VAULT:<path>:<field>`, where `<path>` is the name of a vault
@@ -570,6 +561,137 @@ would look up the field `password` at the path
 `/secret/users/database_user`.  This can be stored in
 `orderly_config.yml`, in the contents of an environment variable or
 in `orderly_envir.yml` (currently this only uses the vault [version 1 key-value storage](https://www.vaultproject.io/docs/secrets/kv/kv-v1.html))
+
+If you need to control how the vault server is accessed, then you can pass additional arguments within an `args` block:
+
+```yaml
+vault:
+  addr: https://example.com:8200
+  login: userpass
+  username: alice
+  password: secret
+  mount: userpass
+```
+
+This is equivalent to connecting to the vault, using `vaultr` as
+
+```r
+vaultr::vault_client(addr = "https://example.com:8200", login = "userpass",
+                     username = "alice", password = "secret",
+                     mount = "userpass")
+```
+
+Environment variables here will be respected so you could write:
+
+```yaml
+vault:
+  addr: https://example.com:8200
+  login: userpass
+  username: $VAULT_USER
+  password: $VAULT_PASSWORD
+```
+
+and the username and password will be found from environment variables (the actual secret resolution uses `vaultr::vault_resolve_secrets` - see the documentation in vaultr for further details).
+
+### Advanced database configuration
+
+_In general, you can ignore this section if you only use one global database._
+
+The above approach can be used to switch databases by using different environmental variables, but that can become tiresome.  If you have multiple database "instances" corresponding to different realisations of the same logical database (e.g., production and staging), then you can configure and switch between these directly from `orderly` commands.  At [VIMC](http://vaccineimpact.org) we have several copies of our main database: one called `production`, which is the canonical copy, and then several `staging` copies that we use for experimentation.
+
+To configure this situation, list commmon arguments within the `args` block as before, then add logical databases as named entries in an `instances` field:
+
+```
+database:
+  source:
+    driver: RPostgres::Postgres
+    args:
+      port: 5432
+      user: user
+      dbname: mydb
+    instances:
+      production:
+        host: production.example.org
+        password: $PASSWORD_PRODUCTION
+      staging:
+        host: staging.example.org
+        password: $PASSWORD_STAGING
+    default_instance: $DEFAULT_INSTANCE
+```
+
+Here - staging and production have different hostnames (`production.example.org` and `staging.example.org`) and different passwords (retrieved using environment variables) and the default instance is set with another environnent variable (`$DEFAULT_INSTANCE`, which must be one of `production` or `staging`).  To switch between databases, you can set that variable, or pass the `instance` argument to `orderly::orderly_run` and friends, as:
+
+```r
+orderly::orderly_run(name, instance = "production")
+```
+
+or
+
+```r
+orderly::orderly_run(name, instance = "staging")
+```
+
+If there is more than one database configured, then the interpretation of `instance` is a little more nuanced.  For example, suppose we have this (abridged) database configuration:
+
+```
+database:
+  source:
+    driver: RPostgres::Postgres
+    args:
+      port: 5432
+    instances:
+      production:
+        host: production.example.org
+      staging:
+        host: staging.example.org
+    default_instance: staging
+  extra:
+    driver: RPostgres::Postgres
+    args:
+      port: 5432
+      host: extra.example.org
+```
+
+Then we can pass in a string like `production` in as the instance, e.g.,
+
+```
+orderly::orderly_run(name, instance = "production")
+```
+
+as the `source` database will select the `production` instance and as there are no instances configured for the `extra` database we will ignore the argument when connecting to `extra`.
+
+However, if *both* databases had two instances, such as:
+
+```
+database:
+  source:
+    driver: RPostgres::Postgres
+    args:
+      port: 5432
+    instances:
+      production:
+        host: production.example.org
+      staging:
+        host: staging.example.org
+    default_instance: staging
+  extra:
+    driver: RPostgres::Postgres
+    args:
+      port: 15432
+    instances:
+      production:
+        host: production.example.org
+      staging:
+        host: staging.example.org
+    default_instance: staging
+```
+
+Then it is possible to select *different* instances for each database, such as:
+
+```
+orderly::orderly_run(name,
+                      instance = c(source = "production", extra = "staging"))
+```
 
 ## Debugging a report
 

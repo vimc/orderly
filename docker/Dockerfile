@@ -1,4 +1,4 @@
-FROM rocker/r-ver:3.5.3
+FROM rocker/r-ver:3.6.2
 
 RUN apt-get update && apt-get -y install \
   git \
@@ -30,15 +30,17 @@ RUN install2.r \
 RUN Rscript -e 'remove.packages("BH")'
 
 # Install Pandoc
-ENV PANDOC_VERSION "1.19.2.1"
+ENV PANDOC_VERSION "2.7.3"
 RUN wget https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-1-amd64.deb \
   && dpkg --install pandoc-${PANDOC_VERSION}-1-amd64.deb \
   && rm pandoc-${PANDOC_VERSION}-1-amd64.deb
 
 ARG GIT_ID='UNKNOWN'
 ARG GIT_BRANCH='UNKNOWN'
+ARG ORDERLY_VERSION='UNKNOWN'
 ENV ORDERLY_GIT_HASH $GIT_ID
 ENV ORDERLY_GIT_BRANCH $GIT_BRANCH
+ENV ORDERLY_VERSION $ORDERLY_VERSION
 
 COPY . /orderly
 RUN R CMD INSTALL /orderly && \

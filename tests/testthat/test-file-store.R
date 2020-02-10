@@ -1,6 +1,7 @@
 context("file store")
 
 test_that("basic (rds)", {
+  skip_on_cran_windows()
   st <- file_store_rds(tempfile())
   expect_is(st, "file_store")
 
@@ -21,6 +22,7 @@ test_that("basic (rds)", {
 
 
 test_that("basic (csv)", {
+  skip_on_cran_windows()
   st <- file_store_csv(tempfile())
   expect_is(st, "file_store")
 
@@ -65,6 +67,7 @@ test_that("get missing hash", {
 })
 
 test_that("mget", {
+  skip_on_cran_windows()
   path <- tempfile()
   st <- file_store_rds(path)
 

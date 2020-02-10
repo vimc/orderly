@@ -26,6 +26,7 @@ test_that("get remote", {
 
 
 test_that("pull report", {
+  skip_on_cran_windows()
   path1 <- prepare_orderly_example("demo")
   id <- orderly_run("multifile-artefact", root = path1, echo = FALSE)
   orderly_commit(id, root = path1)
@@ -57,6 +58,7 @@ test_that("pull report: error not found", {
 
 
 test_that("pull report: already done", {
+  skip_on_cran_windows()
   path1 <- prepare_orderly_example("minimal")
   path2 <- prepare_orderly_example("minimal")
 
@@ -137,12 +139,6 @@ test_that("pull dependencies", {
 
 test_that("pull report with dependencies", {
   dat <- prepare_orderly_remote_example()
-
-  ## For some reason that I don't understand, we use draft: true for
-  ## the depend report here, so fix that:
-  p <- file.path(dat$path_remote, "src", "depend", "orderly.yml")
-  yml <- grep("^\\s+draft: true", readLines(p), invert = TRUE, value = TRUE)
-  writeLines(yml, p)
 
   id <- orderly_run("depend", root = dat$path_remote, echo = FALSE)
   orderly_commit(id, root = dat$path_remote)

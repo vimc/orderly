@@ -7,7 +7,8 @@ test_that("minimal", {
 
   config <- orderly_config(path)
   info <- recipe_read(file.path(path, "src/example"), config)
-  data <- recipe_data(config, info, NULL, new.env(parent = .GlobalEnv))
+  data <- recipe_data(config, info, NULL, new.env(parent = .GlobalEnv),
+                      instance = NULL)
   expect_is(data$dest$dat, "data.frame")
 
   expect_error(
@@ -100,6 +101,7 @@ test_that("close too many devices", {
 })
 
 test_that("sink imbalance", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   config <- orderly_config(path)
   path_script <- file.path(path, "src/example/script.R")
@@ -185,6 +187,7 @@ test_that("connection", {
 
 
 test_that("connection is saved to db", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
 
   id1 <- orderly_run("example", root = path, echo = FALSE)
@@ -232,6 +235,7 @@ test_that("no data", {
 })
 
 test_that("use artefact", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("depends", testing = TRUE)
 
   path_example <- file.path(path, "src", "example")
@@ -242,9 +246,9 @@ test_that("use artefact", {
 
   data <- orderly_data("depend",
                        envir = new.env(parent = .GlobalEnv),
-                       root = path)
+                       root = path, use_draft = TRUE)
   expect_identical(ls(data), character(0))
-  id2 <- orderly_run("depend", root = path, echo = FALSE)
+  id2 <- orderly_run("depend", root = path, echo = FALSE, use_draft = TRUE)
   path_previous <- file.path(path_draft(path), "depend", id2, "previous.rds")
   expect_true(file.exists(path_previous))
   expect_equal(hash_files(path_previous, FALSE),
@@ -256,7 +260,7 @@ test_that("use artefact", {
 
   ## Then rebuild the original:
   id3 <- orderly_run("example", root = path, echo = FALSE)
-  id4 <- orderly_run("depend", root = path, echo = FALSE)
+  id4 <- orderly_run("depend", root = path, echo = FALSE, use_draft = TRUE)
   path_orig2 <- file.path(path_draft(path), "example", id3, "data.rds")
   path_previous2 <- file.path(path_draft(path), "depend", id4, "previous.rds")
 
@@ -276,15 +280,17 @@ test_that("use artefact", {
 })
 
 test_that("Can't commit report using nonexistant id", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("depends", testing = TRUE)
   id1 <- orderly_run("example", root = path, echo = FALSE)
-  id2 <- orderly_run("depend", root = path, echo = FALSE)
+  id2 <- orderly_run("depend", root = path, echo = FALSE, use_draft = TRUE)
   unlink(file.path(path, "draft", "example", id1), recursive = TRUE)
   expect_error(orderly_commit(id2, root = path),
                "Report uses nonexistant id")
 })
 
 test_that("resources", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("resources", testing = TRUE)
   id <- orderly_run("use_resource", root = path, echo = FALSE)
   p <- file.path(path, "draft", "use_resource", id)
@@ -304,6 +310,7 @@ test_that("resources", {
 
 
 test_that("markdown", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("demo")
 
   id <- orderly_run("html", root = path, echo = FALSE)
@@ -358,6 +365,7 @@ test_that("orderly_test_check requires test mode", {
 
 
 test_that("run with message", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("changelog", testing = TRUE)
   test_message <- "[label1] test"
   id <- orderly_run("example", root = path, echo = FALSE,
@@ -387,10 +395,11 @@ test_that("no unexpected artefact", {
 
 
 test_that("renamed dependencies are expected", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("depends", testing = TRUE)
   orderly_run("example", root = path, echo = FALSE)
   messages <- capture_messages(
-    orderly_run("depend", root = path, echo = FALSE))
+    orderly_run("depend", root = path, echo = FALSE, use_draft = TRUE))
   expect_false(any(grep("unexpected", messages)))
 })
 
@@ -435,11 +444,19 @@ test_that("multiple non-existent packages", {
 })
 
 test_that("use multiple versions of an artefact", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("depends", testing = TRUE)
 
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id1, root = path)
   orderly_commit(id2, root = path)
+
+  p <- file.path(path, "src", "depend2", "orderly.yml")
+  dat <- yaml_read(p)
+  dat$depends[[1]]$example$id <- id1
+  dat$depends[[2]]$example$id <- id2
+  yaml_write(dat, p)
 
   id3 <- orderly_run("depend2", root = path, echo = FALSE)
 
@@ -447,8 +464,7 @@ test_that("use multiple versions of an artefact", {
                   c("previous1.rds", "previous2.rds"))
   expect_true(all(file.exists(p1)))
 
-  p2 <- file.path(path, c("draft", "archive"), "example", c(id1, id2),
-                  "data.rds")
+  p2 <- file.path(path, "archive", "example", c(id1, id2), "data.rds")
   expect_equal(hash_files(p1, FALSE),
                hash_files(p2, FALSE))
 })
@@ -575,6 +591,7 @@ test_that("can't commit report twice", {
 
 
 test_that("missing parameters throws an error", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("demo")
   on.exit(unlink(path, recursive = TRUE))
 
@@ -660,6 +677,7 @@ test_that("delete multiple resources", {
 })
 
 test_that("multiple resources", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("resources", testing = TRUE)
   id <- orderly_run("multiple_resources", root = path, echo = FALSE)
   p <- file.path(path, "draft", "multiple_resources", id)
@@ -696,6 +714,7 @@ test_that("producing a directory is an error", {
 
 
 test_that("can run report with a view", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("demo")
   id <- orderly_run("view", root = path, echo = FALSE)
   orderly_commit(id, root = path)
@@ -707,6 +726,7 @@ test_that("can run report with a view", {
 
 
 test_that("can run a report from orderly with no database", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("db0", testing = TRUE)
   id <- orderly_run("example", root = path, echo = FALSE)
   expect_true(file.exists(
@@ -717,6 +737,7 @@ test_that("can run a report from orderly with no database", {
 
 
 test_that("can run a report from orderly with one (named) database", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("db1", testing = TRUE)
   id <- orderly_run("example", root = path, echo = FALSE)
   expect_true(file.exists(
@@ -727,6 +748,7 @@ test_that("can run a report from orderly with one (named) database", {
 
 
 test_that("can run a report from orderly with two databases", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("db2", testing = TRUE)
   id <- orderly_run("example", root = path, echo = FALSE)
   expect_true(file.exists(
@@ -737,6 +759,7 @@ test_that("can run a report from orderly with two databases", {
 
 
 test_that("Can use connections with two databases", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("db2", testing = TRUE)
   id <- orderly_run("connection", root = path, echo = FALSE)
   expect_true(file.exists(
@@ -757,6 +780,49 @@ test_that("prevent duplicate filenames", {
   file.create(file.path(path, "src", "depend", "previous.rds"))
 
   expect_error(
-    orderly_run("depend", root = path, echo = FALSE),
+    orderly_run("depend", root = path, echo = FALSE, use_draft = TRUE),
     "Orderly configuration implies duplicate files:\\s+- previous.rds:")
+})
+
+
+test_that("allow src/ in report name during run", {
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("src/example", root = path, echo = FALSE)
+  expect_true(file.exists(file.path(path, "draft", "example", id)))
+})
+
+
+test_that("run with different database instance", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+
+  p <- file.path(path, "orderly_config.yml")
+  writeLines(c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    instances:",
+    "      default:",
+    "        dbname: source.sqlite",
+    "      alternative:",
+    "        dbname: alternative.sqlite"),
+    p)
+
+  file.copy(file.path(path, "source.sqlite"),
+            file.path(path, "alternative.sqlite"))
+
+  con <- orderly_db("source", root = path, instance = "alternative")
+  DBI::dbExecute(con$source, "DELETE from thing where id > 10")
+
+  id1 <- orderly_run("example", root = path, echo = FALSE)
+  id2 <- orderly_run("example", root = path, echo = FALSE,
+                     instance = "default")
+  id3 <- orderly_run("example", root = path, echo = FALSE,
+                     instance = "alternative")
+
+  f <- function(id) {
+    nrow(readRDS(file.path(path, "draft", "example", id, "data.rds")))
+  }
+  expect_equal(f(id1), 20)
+  expect_equal(f(id2), 20)
+  expect_equal(f(id3), 10)
 })

@@ -1,6 +1,7 @@
 context("demo")
 
 test_that("orderly_demo", {
+  skip_on_cran_windows()
   path <- create_orderly_demo()
   expect_true(file.exists(path))
 

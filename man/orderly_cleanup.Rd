@@ -4,8 +4,14 @@
 \alias{orderly_cleanup}
 \title{Orderly cleanup}
 \usage{
-orderly_cleanup(name = NULL, root = NULL, locate = TRUE,
-  draft = TRUE, data = TRUE, failed_only = FALSE)
+orderly_cleanup(
+  name = NULL,
+  root = NULL,
+  locate = TRUE,
+  draft = TRUE,
+  data = TRUE,
+  failed_only = FALSE
+)
 }
 \arguments{
 \item{name}{Optional name; in this case only clean up drafts with this name}

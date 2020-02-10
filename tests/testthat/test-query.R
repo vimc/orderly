@@ -19,6 +19,7 @@ test_that("non-empty", {
 })
 
 test_that("query through lifecycle", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   expect_equal(orderly_list(root = path), "example")
 
@@ -67,6 +68,7 @@ test_that("query through lifecycle", {
 })
 
 test_that("latest_ids", {
+  skip_on_cran_windows()
   expect_equal(latest_id(character(0)), NA_character_)
 
   t <- Sys.time()
@@ -105,6 +107,7 @@ test_that("latest_ids", {
 })
 
 test_that("latest", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
 
   expect_equal(orderly_latest("example", root = path, must_work = FALSE),
@@ -157,6 +160,7 @@ test_that("Behaviour with rogue files", {
 
 
 test_that("orderly_find_report", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("example", root = path, echo = FALSE)
@@ -177,5 +181,5 @@ test_that("orderly_find_report", {
   expect_error(
     orderly_find_report(new_report_id(), "example", config = path,
                         must_work = TRUE, draft = FALSE),
-    "Did not find archived report example:")
+    "Did not find archive report example:")
 })

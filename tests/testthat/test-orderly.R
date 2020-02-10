@@ -54,6 +54,8 @@ test_that("init - no doc", {
 test_that("orderly_run_info reports on artefacts", {
   path <- prepare_orderly_example("depends", testing = TRUE)
   id1 <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id1, root = path)
+
   id2 <- orderly_run("depend", root = path, echo = FALSE)
 
   d <- readRDS(file.path(path, "draft", "depend", id2, "output.rds"))
@@ -70,7 +72,7 @@ test_that("orderly_run_info errors when not running", {
 test_that("orderly_run_info is usable from test_start", {
   path <- prepare_orderly_example("depends", testing = TRUE)
   id1 <- orderly_run("example", root = path, echo = FALSE)
-  p <- orderly_test_start("depend", root = path)
+  p <- orderly_test_start("depend", root = path, use_draft = TRUE)
 
   expect_error(
     orderly_run_info(),
@@ -83,12 +85,13 @@ test_that("orderly_run_info is usable from test_start", {
 
 
 test_that("orderly_run_info: is_latest detects latest version", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("depends", testing = TRUE)
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("example", root = path, echo = FALSE)
 
   f <- function() {
-    p <- orderly_test_start("depend", root = path)
+    p <- orderly_test_start("depend", root = path, use_draft = TRUE)
     orderly_run_info(p)
   }
 
@@ -134,12 +137,13 @@ test_that("can't depend on non artefacts", {
   yaml_write(d, path_yml)
 
   expect_error(
-    orderly_run("depend", root = path, echo = FALSE),
+    orderly_run("depend", root = path, echo = FALSE, use_draft = TRUE),
     "Dependency file not an artefact of example/.*:\n- 'script.R'")
 })
 
 
 test_that("dependency dir can be used", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("demo")
   id <- orderly_run("use_resource_dir", root = path, echo = FALSE)
   p <- orderly_commit(id, root = path)
@@ -156,6 +160,7 @@ test_that("dependency dir can be used", {
 
 
 test_that("commit out of order", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
 
   id1 <- orderly_run("example", root = path, echo = FALSE)
@@ -199,4 +204,15 @@ test_that("default parameter values are used", {
                     root = path, echo = FALSE)
   d <- readRDS(path_orderly_run_rds(file.path(path, "draft", "example", id)))
   expect_equal(d$meta$parameters, list(a = 1, b = 2, c = 3))
+})
+
+
+test_that("store random seed", {
+  skip_on_cran_windows()
+  path <- prepare_orderly_example("minimal")
+  set.seed(1)
+  rs <- .Random.seed
+  id <- orderly_run("example", root = path, echo = FALSE)
+  d <- readRDS(path_orderly_run_rds(file.path(path, "draft", "example", id)))
+  expect_true(identical(d$meta$random_seed, rs))
 })

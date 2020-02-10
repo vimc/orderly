@@ -4,8 +4,7 @@
 \alias{orderly_new}
 \title{Create new report}
 \usage{
-orderly_new(name, root = NULL, locate = TRUE, quiet = FALSE,
-  template = NULL)
+orderly_new(name, root = NULL, locate = TRUE, quiet = FALSE, template = NULL)
 }
 \arguments{
 \item{name}{Name of the new report (will be a directory name).}

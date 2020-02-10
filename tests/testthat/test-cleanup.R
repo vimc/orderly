@@ -7,6 +7,7 @@ test_that("cleanup nothing", {
 })
 
 test_that("cleanup draft", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   id <- orderly_run("example", root = path, echo = FALSE)
   expect_equal(nrow(orderly_list_drafts(root = path)), 1)
@@ -17,6 +18,7 @@ test_that("cleanup draft", {
 })
 
 test_that("cleanup keeps draft data", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   id <- orderly_run("example", root = path, echo = FALSE)
   rds <- orderly_db("rds", root = path)
@@ -26,6 +28,7 @@ test_that("cleanup keeps draft data", {
 })
 
 test_that("cleanup with archive", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("example", root = path, echo = FALSE)
@@ -42,6 +45,7 @@ test_that("cleanup with archive", {
 })
 
 test_that("cleanup failed", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("example", root = path, echo = FALSE)
@@ -61,6 +65,7 @@ test_that("cleanup failed", {
 })
 
 test_that("cleanup by name", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("demo")
   id1 <- orderly_run("minimal", root = path, echo = FALSE)
   id2 <- orderly_run("other", list(nmin = 0), root = path, echo = FALSE)

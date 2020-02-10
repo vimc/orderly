@@ -168,6 +168,7 @@ test_that("parse messages", {
 
 
 test_that("append changelog", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("changelog", testing = TRUE)
 
   tmp <- tempfile()
@@ -219,6 +220,7 @@ test_that("append changelog", {
 
 
 test_that("label change requires rebuild", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("changelog", testing = TRUE)
 
   tmp <- tempfile()
@@ -273,6 +275,7 @@ test_that("reports can't use changelogs if not enabled", {
 
 
 test_that("public changelog", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("changelog", testing = TRUE)
 
   name <- "example"
@@ -314,6 +317,7 @@ test_that("public changelog", {
 
 
 test_that("public changelog with multiple entries", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("changelog", testing = TRUE)
 
   name <- "example"
@@ -355,6 +359,7 @@ test_that("public changelog with multiple entries", {
 
 
 test_that("public version has no changelog", {
+  skip_on_cran_windows()
   path <- prepare_orderly_example("changelog", testing = TRUE)
 
   name <- "example"
