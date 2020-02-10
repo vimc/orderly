@@ -246,9 +246,9 @@ test_that("use artefact", {
 
   data <- orderly_data("depend",
                        envir = new.env(parent = .GlobalEnv),
-                       root = path)
+                       root = path, use_draft = TRUE)
   expect_identical(ls(data), character(0))
-  id2 <- orderly_run("depend", root = path, echo = FALSE)
+  id2 <- orderly_run("depend", root = path, echo = FALSE, use_draft = TRUE)
   path_previous <- file.path(path_draft(path), "depend", id2, "previous.rds")
   expect_true(file.exists(path_previous))
   expect_equal(hash_files(path_previous, FALSE),
@@ -260,7 +260,7 @@ test_that("use artefact", {
 
   ## Then rebuild the original:
   id3 <- orderly_run("example", root = path, echo = FALSE)
-  id4 <- orderly_run("depend", root = path, echo = FALSE)
+  id4 <- orderly_run("depend", root = path, echo = FALSE, use_draft = TRUE)
   path_orig2 <- file.path(path_draft(path), "example", id3, "data.rds")
   path_previous2 <- file.path(path_draft(path), "depend", id4, "previous.rds")
 
@@ -283,7 +283,7 @@ test_that("Can't commit report using nonexistant id", {
   skip_on_cran_windows()
   path <- prepare_orderly_example("depends", testing = TRUE)
   id1 <- orderly_run("example", root = path, echo = FALSE)
-  id2 <- orderly_run("depend", root = path, echo = FALSE)
+  id2 <- orderly_run("depend", root = path, echo = FALSE, use_draft = TRUE)
   unlink(file.path(path, "draft", "example", id1), recursive = TRUE)
   expect_error(orderly_commit(id2, root = path),
                "Report uses nonexistant id")
@@ -399,7 +399,7 @@ test_that("renamed dependencies are expected", {
   path <- prepare_orderly_example("depends", testing = TRUE)
   orderly_run("example", root = path, echo = FALSE)
   messages <- capture_messages(
-    orderly_run("depend", root = path, echo = FALSE))
+    orderly_run("depend", root = path, echo = FALSE, use_draft = TRUE))
   expect_false(any(grep("unexpected", messages)))
 })
 
@@ -449,7 +449,14 @@ test_that("use multiple versions of an artefact", {
 
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id1, root = path)
   orderly_commit(id2, root = path)
+
+  p <- file.path(path, "src", "depend2", "orderly.yml")
+  dat <- yaml_read(p)
+  dat$depends[[1]]$example$id <- id1
+  dat$depends[[2]]$example$id <- id2
+  yaml_write(dat, p)
 
   id3 <- orderly_run("depend2", root = path, echo = FALSE)
 
@@ -457,8 +464,7 @@ test_that("use multiple versions of an artefact", {
                   c("previous1.rds", "previous2.rds"))
   expect_true(all(file.exists(p1)))
 
-  p2 <- file.path(path, c("draft", "archive"), "example", c(id1, id2),
-                  "data.rds")
+  p2 <- file.path(path, "archive", "example", c(id1, id2), "data.rds")
   expect_equal(hash_files(p1, FALSE),
                hash_files(p2, FALSE))
 })
@@ -774,7 +780,7 @@ test_that("prevent duplicate filenames", {
   file.create(file.path(path, "src", "depend", "previous.rds"))
 
   expect_error(
-    orderly_run("depend", root = path, echo = FALSE),
+    orderly_run("depend", root = path, echo = FALSE, use_draft = TRUE),
     "Orderly configuration implies duplicate files:\\s+- previous.rds:")
 })
 

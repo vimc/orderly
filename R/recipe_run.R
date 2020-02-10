@@ -62,6 +62,14 @@
 ##' @param echo Print the result of running the R code to the console
 ##' @param id_file Write the identifier into a file
 ##'
+##' @param use_draft Should draft reports be used for dependencies?
+##'   This should be used only in development.  Valid values are
+##'   logical (\code{TRUE}, \code{FALSE}) or use the string
+##'   \code{newer} to use draft reports where they are newer than
+##'   archive reports.  For consistency, \code{always} and
+##'   \code{never} are equivalent to \code{TRUE} and \code{FALSE},
+##'   respectively.
+##'
 ##' @seealso \code{\link{orderly_log}} for controlling display of log
 ##'   messages (not just R output)
 ##'
@@ -97,7 +105,7 @@
 orderly_run <- function(name, parameters = NULL, envir = NULL,
                         root = NULL, locate = TRUE, echo = TRUE,
                         id_file = NULL, fetch = FALSE, ref = NULL,
-                        message = NULL, instance = NULL) {
+                        message = NULL, instance = NULL, use_draft = FALSE) {
   envir <- orderly_environment(envir)
   config <- orderly_config_get(root, locate)
   config <- check_orderly_archive_version(config)
@@ -106,7 +114,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
     name <- sub("^src/", "", name)
   }
 
-  info <- recipe_prepare(config, name, id_file, ref, fetch, message)
+  info <- recipe_prepare(config, name, id_file, ref, fetch, message, use_draft)
 
   recipe_current_run_set(info)
   on.exit(recipe_current_run_clear())
@@ -119,7 +127,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
 
 
 recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
-                           fetch = FALSE, message = NULL) {
+                           fetch = FALSE, message = NULL, use_draft = FALSE) {
   assert_is(config, "orderly_config")
   config <- orderly_config_get(config, FALSE)
 
@@ -132,7 +140,8 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
     on.exit(git_checkout_branch(prev, TRUE, config$root))
   }
 
-  info <- recipe_read(file.path(path_src(config$root), name), config)
+  info <- recipe_read(file.path(path_src(config$root), name),
+                      config, use_draft = use_draft)
 
   id <- new_report_id()
   orderly_log("id", id)

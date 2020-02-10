@@ -292,16 +292,12 @@ depends:
       id: 20190425-163691-b8451bbf
       use:
         data.rds: huge-data-set.rds
-      draft: false
 ```
 
 This will copy the file the `huge-data-set.rds` from the report
 `big-data-report` with `id` `20190425-163691-b8451bbf` and rename it
 `data.rds`. This file can then be used by the report as if it were in
-the source directory. The field `draft` tells `orderly` to only use
-completed reports in the archive as opposed to drafts. Setting this to
-true allows uncommitted reports in `draft` to be used. This can be
-useful when developing a chain of related reports.
+the source directory.
 
 If we want a report to always use the latest version of a report `big-data-report` we can set the `id` field to `latest`, _e.g._:
 
@@ -311,7 +307,6 @@ depends:
       id: latest
       use:
         data.rds: huge-data-set.rds
-      draft: false
 ```
 
 This will find the most recent version of the report `big-data-report`
@@ -327,7 +322,6 @@ depends:
       use:
         data.rds: huge-data-set.rds
         pop.csv: population_data.csv
-      draft: false
 ```
 
 To use artefacts from multiple reports we add multiple entries to the
@@ -340,12 +334,10 @@ depends:
       use:
         data.rds: huge-data-set.rds
         pop.csv: population_data.csv
-      draft: false
   - report_two:
       id: latest
       use:
         data_b.rds: filename.rds
-      draft: false
 ```
 
 We can also use the same artefact from _different versions_ of the same
@@ -357,12 +349,10 @@ is:
 depends:
   - big-data-report:
       id: 20190425-163691-b8451bbf
-      draft: false
       use:
         data_latest.rds: huge-data-set.rds
   - big-data-report:
       id: 20181225-172991-34c91ef1
-      draft: false
       use:
         data_old: huge-data-set.rds
 ```
