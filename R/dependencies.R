@@ -278,10 +278,8 @@ out_ot_date_reports <- function(vertex, reports = c()) {
   }
 
   if (length(vertex$children) > 0) {
-    for (i in 1:length(vertex$children)) {
-      child <- vertex$children[[i]]
-
-      reports <- out_ot_date_reports(child, reports)
+    for (vert in vertex$children) {
+      reports <- out_ot_date_reports(vert, reports)
     }
   }
   reports
@@ -392,15 +390,13 @@ Tree <- R6::R6Class("Tree", list(
       str <- paste(str, console_colour(sprintf("%s|___%s", spacing, vertex$format())), "\n", collapse = "")
     }
 
-    if (length(vertex$children) > 0) {
-      for (i in 1:length(vertex$children)) {
-        child <- vertex$children[[i]]
-
-        if (i != length(vertex$children)) {
-          str <- self$format_helper(child, c(fvector, TRUE), str)
-        } else {
-          str <- self$format_helper(child, c(fvector, FALSE), str)
-        }
+    number_children <- length(vertex$children)
+    if (number_children > 0) {
+      i <- 1
+      for (child in vertex$children) {
+        is_last <- (i != number_children)
+        i <- i + 1
+        str <- self$format_helper(child, c(fvector, is_last), str)
       }
     }
     str
