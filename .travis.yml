@@ -11,6 +11,8 @@ matrix:
 
 r_packages:
   - covr
+r_github_packages:
+  - vimc/vaultr
 before_script:
   - Rscript -e 'vaultr::vault_test_server_install()'
   - cp -r reference tests/testthat

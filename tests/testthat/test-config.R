@@ -182,21 +182,60 @@ test_that("no global folder", {
 })
 
 
+test_that("vault configuration validation when absent", {
+  expect_null(config_check_vault(NULL, NULL, "orderly.yml"))
+})
+
+
+test_that("vault configuration validation for typical use", {
+  vault <- list(addr = "https://vault.example.com")
+  expect_identical(config_check_vault(vault, NULL, "orderly.yml"), vault)
+
+  vault <- list(addr = "https://vault.example.com",
+                auth = list(method = "github"))
+  expect_identical(config_check_vault(vault, NULL, "orderly.yml"), vault)
+})
+
+
+test_that("vault configuration requires string for url", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+  expect_error(config_check_vault(NULL, TRUE, "orderly.yml"),
+               "'orderly.yml:vault_server' must be character")
+  expect_error(
+    config_check_vault(NULL, c("a", "b"), "orderly.yml"),
+    "'orderly.yml:vault_server' must be a scalar")
+  expect_null(config_check_vault(NULL, NULL, "orderly.yml"))
+})
+
+
+test_that("previous configuration is transformed with warning", {
+  addr <- "https://vault.example.com"
+  expect_warning(
+    res <- config_check_vault(NULL, addr, "orderly.yml")  ,
+    "Use of 'vault_server' is deprecated")
+  expect_equal(res, list(addr = addr))
+})
+
+
+test_that("Can't use both new and old vault configurations", {
+  expect_error(config_check_vault(list(login = "token"),
+                                  "https://vault.example.com",
+                                  "orderly.yml"),
+               "Can't specify both 'vault' and 'vault_server' in orderly.yml")
+})
+
+
 test_that("vault configuration", {
   path <- prepare_orderly_example("minimal")
   path_config <- file.path(path, "orderly_config.yml")
   text <- readLines(path_config)
 
-  expect_null(orderly_config(root = path)$vault_server)
+  expect_null(orderly_config(root = path)$vault)
 
   url <- "https://vault.example.com"
-  writeLines(c(text, sprintf("vault_server: %s", url)), path_config)
-  expect_equal(orderly_config(root = path)$vault_server, url)
-
-  writeLines(c(text, sprintf("vault_server: %s", TRUE)), path_config)
-  expect_error(orderly_config(root = path),
-               "orderly_config.yml:vault_server' must be character",
-               fixed = TRUE)
+  writeLines(c(text, sprintf("vault:\n  addr: %s", url)), path_config)
+  expect_equal(orderly_config(root = path)$vault, list(addr = url))
 })
 
 

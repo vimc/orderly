@@ -546,7 +546,8 @@ retrieve them.
 To do this, you should include the address of your vault server in the `orderly_config.yml` as
 
 ```yaml
-vault_server: https://example.com:8200
+vault:
+  addr: https://example.com:8200
 ```
 
 Then, for values that you want to retrieve from the vault, set the value of the field to `VAULT:<path>:<field>`, where `<path>` is the name of a vault
@@ -560,6 +561,37 @@ would look up the field `password` at the path
 `/secret/users/database_user`.  This can be stored in
 `orderly_config.yml`, in the contents of an environment variable or
 in `orderly_envir.yml` (currently this only uses the vault [version 1 key-value storage](https://www.vaultproject.io/docs/secrets/kv/kv-v1.html))
+
+If you need to control how the vault server is accessed, then you can pass additional arguments within an `args` block:
+
+```yaml
+vault:
+  addr: https://example.com:8200
+  login: userpass
+  username: alice
+  password: secret
+  mount: userpass
+```
+
+This is equivalent to connecting to the vault, using `vaultr` as
+
+```r
+vaultr::vault_client(addr = "https://example.com:8200", login = "userpass",
+                     username = "alice", password = "secret",
+                     mount = "userpass")
+```
+
+Environment variables here will be respected so you could write:
+
+```yaml
+vault:
+  addr: https://example.com:8200
+  login: userpass
+  username: $VAULT_USER
+  password: $VAULT_PASSWORD
+```
+
+and the username and password will be found from environment variables (the actual secret resolution uses `vaultr::vault_resolve_secrets` - see the documentation in vaultr for further details).
 
 ### Advanced database configuration
 

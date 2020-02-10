@@ -12,7 +12,7 @@ orderly_config_read_yaml <- function(filename, root) {
   info <- yaml_read(filename)
   check_fields(info, filename, character(),
                c("destination", "fields", "minimum_orderly_version",
-                 "remote", "vault_server", "global_resources",
+                 "remote", "vault", "vault_server", "global_resources",
                  "changelog", "source", "database"))
 
   ## There's heaps of really boring validation to do here that I am
@@ -52,11 +52,7 @@ orderly_config_read_yaml <- function(filename, root) {
       v, utils::packageVersion("orderly")))
   }
 
-  if (!is.null(info$vault_server)) {
-    assert_scalar_character(info$vault_server,
-                            sprintf("%s:vault_server", filename))
-  }
-
+  info$vault <- config_check_vault(info$vault, info$vault_server, filename)
   info$remote <- config_check_remote(info$remote, filename)
 
   info$root <- normalizePath(root, mustWork = TRUE)
@@ -274,4 +270,25 @@ config_read_db <- function(name, info, filename) {
   }
 
   list(driver = driver, args = args, instances = instances)
+}
+
+
+config_check_vault <- function(vault, vault_server, filename) {
+  if (!is.null(vault_server)) {
+    if (!is.null(vault)) {
+      stop(sprintf("Can't specify both 'vault' and 'vault_server' in %s",
+                   filename))
+    }
+    msg <- c("Use of 'vault_server' is deprecated and will be removed in a",
+             "future orderly version.  Please use the new 'vault' server",
+             "field, which offers more flexibility")
+    orderly_warning(flow_text(msg))
+    assert_scalar_character(vault_server, sprintf("%s:vault_server", filename))
+    vault <- list(addr = vault_server)
+  }
+  if (!is.null(vault)) {
+    assert_named(vault, TRUE, sprintf("%s:vault", filename))
+  }
+
+  vault
 }
