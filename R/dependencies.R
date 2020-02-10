@@ -2,12 +2,13 @@
 ##'
 ##' @param name the name of the report
 ##' @param id the id of the report, if omitted, use the id of the latest report
-##' @param upstream A boolean indicating if we want to move up or down the tree
+##' @param direction A string indicating if we want to move up or down the tree
+##'        permitted values are upstream, downstream
 ##' @param con A connection to a database
 ##' @noRd
-get_dependencies_db <- function(name, id, upstream, con, list_all = FALSE) {
+get_dependencies_db <- function(name, id, direction, con, list_all = FALSE) {
   ## now construct the SQL query
-  if (upstream) {
+  if (direction == "upstream") {
     filt_qry <- sprintf("depends.report_version='%s'", id)
   } else {
     filt_qry <- sprintf("report_version.id='%s'", id)
@@ -39,7 +40,7 @@ get_dependencies_db <- function(name, id, upstream, con, list_all = FALSE) {
   }
 
   # if we're going uptree
-  if (upstream) {
+  if (direction == "upstream") {
     unique(db_ret$id)
   } else {
     unique(db_ret$report_version)
@@ -204,12 +205,14 @@ check_parents <- function(parent_vertex, name) {
 ##' @param con A connection to a database
 ##' @param root
 ##' @param locate
-##' @param upstream A boolean indicating if we want to move up or down the tree
+##' @param direction A string indicating if we want to move up or down the tree
+##'        permitted values are upstream, downstream
 ##'
 ##' @return An R6 tree object
 ##' @noRd
 build_tree <- function(name, id, depth = 100, parent = NULL,
-                       tree = NULL, con, upstream = FALSE, list_all = FALSE) {
+                       tree = NULL, con, direction = "downstream",
+                       list_all = FALSE) {
   ## this should never get triggered - it only exists the prevent an infinite
   ## recursion
   if (depth < 0) {
@@ -244,7 +247,7 @@ build_tree <- function(name, id, depth = 100, parent = NULL,
     }
   }
 
-  if (upstream) {
+  if (direction == "upstream") {
     ## when going upstream the concept of out-of-date doesn't make sense?
     ood <- is_out_of_date(con, id)
   } else {
@@ -260,11 +263,12 @@ build_tree <- function(name, id, depth = 100, parent = NULL,
   }
 
   dep_ids <- get_dependencies_db(name = name, id = id, con = con,
-                                 upstream = upstream, list_all = list_all)
+                                 direction = direction, list_all = list_all)
   for (dep_id in dep_ids) {
     dep_name <- id_to_name(id = dep_id, con = con)
     build_tree(name = dep_name, id = dep_id, depth = depth - 1, parent = v,
-               tree = tree, con = con, upstream = upstream, list_all = list_all)
+               tree = tree, con = con, direction = direction,
+               list_all = list_all)
   }
 
   tree
@@ -300,42 +304,53 @@ out_ot_date_reports <- function(vertex, reports = c()) {
 ##' @param con A connection to a database
 ##' @param root
 ##' @param locate
-##' @param upstream A boolean indicating if we want to move up or down the tree
+##' @param direction A string indicating if we want to move up or down the tree
+##'        permitted values are upstream, downstream
 ##' @param propagate A boolean indicating if we want to propogate out of date
 ##'                  through the tree
 ##'
 ##' @export
 orderly_build_dep_tree <- function(name, id = "latest", root = NULL,
-                                   locate = TRUE, upstream = FALSE, con = NULL,
-                                   propagate = FALSE, max_depth = 100,
-                                   list_all = FALSE) {
+                                   locate = TRUE, direction = "downstream",
+                                   con = NULL, propagate = FALSE,
+                                   max_depth = 100, list_all = FALSE) {
+  assert_scalar_character(direction)
+  direction <- match_value(direction, c("upstream", "downstream"))
+
+  assert_scalar_character(name)
+  assert_scalar_character(id)
+  assert_scalar_logical(locate)
+  assert_scalar_logical(propagate)
+  assert_scalar_logical(list_all)
+  assert_scalar_numeric(max_depth)
+
   if (is.null(con)) {
     con <- orderly_db("destination", orderly_config_get(root, locate))
     on.exit(DBI::dbDisconnect(con))
   }
 
   dep_tree <- build_tree(name = name, id = id, depth = max_depth, con = con,
-                         upstream = upstream, list_all = list_all)
+                         direction = direction, list_all = list_all)
 
   # propagate out-of-date
   if (propagate) {
-    propagate(dep_tree$root, upstream)
+    propagate(dep_tree$root, direction)
   }
 
   dep_tree
 }
 
-propagate <- function(vertex, upstream) {
+propagate <- function(vertex, direction) {
   for (child in vertex$children) {
-    if (!upstream) {
+    if (direction == "downstream") {
       if (vertex$out_of_date) {
         child$out_of_date = TRUE
       }
     }
 
-    propagate(child, upstream)
+    propagate(child, direction)
 
-    if (upstream) {
+    if (direction == "upstream") {
       if (child$out_of_date) {
         vertex$out_of_date = TRUE
       }

@@ -13,8 +13,8 @@ test_that("basic tree example", {
   tree <- orderly_build_dep_tree("other", root = path, list_all = TRUE)
 
   root <- tree$root
-  readble_root <- root$format()
-  expect_match(readble_root,
+  readable_root <- root$format()
+  expect_match(readable_root,
                "other \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
   expect_true(length(root$children) == 1)
 
@@ -80,11 +80,12 @@ test_that("has dependencies upstream", {
   run_orderly_demo(path)
 
   ## top report so has no dependencies upstream
-  tree <- orderly_build_dep_tree("other", root = path, upstream = TRUE)
+  tree <- orderly_build_dep_tree("other", root = path, direction = "upstream")
   root <- tree$root
   expect_true(length(root$children) == 0)
 
-  tree <- orderly_build_dep_tree("use_dependency_2", root = path, upstream = TRUE)
+  tree <- orderly_build_dep_tree("use_dependency_2", root = path,
+                                 direction = "upstream")
   root <- tree$root
   expect_true(length(root$children) == 1)
   child_1 <- root$children[[1]]
@@ -153,7 +154,7 @@ test_that("propagate", {
   expect_true(dep_2$out_of_date)
 
   tree <- orderly_build_dep_tree("use_dependency_2", root = path,
-                                 propagate = TRUE, upstream = TRUE)
+                                 propagate = TRUE, direction = "upstream")
   ## none of these reports should be out of date since we are going up the tree
   root <- tree$root
   expect_true(root$out_of_date)
