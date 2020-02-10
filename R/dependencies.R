@@ -31,8 +31,8 @@ get_dependencies_db <- function(name, id, upstream, con, list_all = FALSE) {
     return(NULL)
   }
 
-  db_ret$is_latest <- sapply(db_ret$report_version,
-                               is_latest_in_db, con = con)
+  db_ret$is_latest <- vapply(db_ret$report_version,
+                             is_latest_in_db, logical(1), con = con)
   if (!list_all) {
     db_ret <- db_ret[which(db_ret$is_latest), ]
   }
