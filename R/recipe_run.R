@@ -34,7 +34,8 @@
 ##'   removed if provided, allowing easier use of autocomplete.
 ##'
 ##' @param parameters Parameters passed to the report. A named list of
-##'   parameters declared in the \code{orderly.yml}.
+##'   parameters declared in the \code{orderly.yml}.  Each parameter
+##'   must be a scalar character, numeric, integer or logical.
 ##'
 ##' @param envir The parent of the environment that will be used to
 ##'   evaluate the report script; by default a new environment will be
