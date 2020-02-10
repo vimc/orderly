@@ -9,12 +9,12 @@
 get_dependencies_db <- function(name, id, direction, con, list_all = FALSE) {
   ## now construct the SQL query
   if (direction == "upstream") {
-    filt_qry <- sprintf("depends.report_version='%s'", id)
+    filter_query <- sprintf("depends.report_version='%s'", id)
   } else {
-    filt_qry <- sprintf("report_version.id='%s'", id)
+    filter_query <- sprintf("report_version.id='%s'", id)
   }
 
-  sql_qry <- paste(c("SELECT",
+  sql_query <- paste(c("SELECT",
                "depends.report_version, ",
                "report_version.report, report_version.id, ",
                "file_artefact.filename, ", "file_artefact.file_hash",
@@ -25,25 +25,25 @@ get_dependencies_db <- function(name, id, direction, con, list_all = FALSE) {
                "file_artefact.artefact=report_version_artefact.id",
                "INNER JOIN", "report_version", "ON",
                "report_version_artefact.report_version=report_version.id)",
-               "WHERE", filt_qry), collapse = " ")
+               "WHERE", filter_query), collapse = " ")
 
-  db_ret <- DBI::dbGetQuery(con, sql_qry)
+  query_return <- DBI::dbGetQuery(con, sql_query)
 
-  if (nrow(db_ret) == 0) {
+  if (nrow(query_return) == 0) {
     return(NULL)
   }
 
-  db_ret$is_latest <- vapply(db_ret$report_version,
+  query_return$is_latest <- vapply(query_return$report_version,
                              is_latest_in_db, logical(1), con = con)
   if (!list_all) {
-    db_ret <- db_ret[which(db_ret$is_latest), ]
+    query_return <- query_return[which(query_return$is_latest), ]
   }
 
   # if we're going uptree
   if (direction == "upstream") {
-    unique(db_ret$id)
+    unique(query_return$id)
   } else {
-    unique(db_ret$report_version)
+    unique(query_return$report_version)
   }
 }
 
@@ -53,13 +53,13 @@ get_dependencies_db <- function(name, id, direction, con, list_all = FALSE) {
 ##' @param con A connection to a database
 ##' @noRd
 get_latest_by_name <- function(con, name) {
-  sql_qry <- paste("SELECT", "id, report, date FROM report_version",
+  sql_query <- paste("SELECT", "id, report, date FROM report_version",
                    "WHERE", sprintf("report='%s'", name),
                    "AND", "date=(SELECT MAX(date)",
                    "FROM", "report_version",
                    sprintf("WHERE report='%s')", name))
 
-  DBI::dbGetQuery(con, sql_qry)
+  DBI::dbGetQuery(con, sql_query)
 }
 
 get_latest_by_id <- function(con, id) {
@@ -72,15 +72,15 @@ get_latest_by_id <- function(con, id) {
 ##' @param con A connection to a database
 ##' @noRd
 id_to_name <- function(con, id) {
-  sql_qry <- c("SELECT", "report_version.report",
+  sql_query <- c("SELECT", "report_version.report",
                "FROM", "report_version",
                "WHERE", sprintf("report_version.id='%s'", id))
-  db_ret <- DBI::dbGetQuery(con, paste(sql_qry, collapse = " "))
+  query_return <- DBI::dbGetQuery(con, paste(sql_query, collapse = " "))
 
-  if (nrow(db_ret) == 0) {
+  if (nrow(query_return) == 0) {
     NULL
   } else {
-    db_ret$report
+    query_return$report
   }
 }
 
@@ -109,8 +109,8 @@ is_out_of_date <- function(con, child_id) {
   ## is_pinned - was this report pinned to a speicif version?
   ## is_latest - if the report was pinned was it to the lastest version
   ## !NOTE! It is unclear what we do when both is_pinned and is_latest are true
-  chd_qry <- sprintf("depends.report_version='%s'", child_id)
-  sql_chd_qry <-
+  child_query <- sprintf("depends.report_version='%s'", child_id)
+  sql_child_query <-
     paste(c("SELECT", "filename,",
                       "file_hash,",
                       "is_pinned,",
@@ -123,25 +123,25 @@ is_out_of_date <- function(con, child_id) {
                           "depends.use = file_artefact.id",
             "INNER JOIN", "report_version_artefact", "ON",
                           "report_version_artefact.id = file_artefact.artefact)",
-            "WHERE", chd_qry), collapse = " ")
+            "WHERE", child_query), collapse = " ")
 
-  db_chd <- DBI::dbGetQuery(con, sql_chd_qry)
+  child_query_return <- DBI::dbGetQuery(con, sql_child_query)
 
   ## this reports uses no artefacts - so can never be out of date
-  if (nrow(db_chd) == 0) {
+  if (nrow(child_query_return) == 0) {
     return(FALSE)
   }
 
   ## we iterate over rows of the data frame and make sure the artefact match
-  for (i in 1:nrow(db_chd)) {
-    filename <- db_chd$filename[i]
-    file_hash <- db_chd$file_hash[i]
-    report_id <- db_chd$report_version[i]
+  for (i in 1:nrow(child_query_return)) {
+    filename <- child_query_return$filename[i]
+    file_hash <- child_query_return$file_hash[i]
+    report_id <- child_query_return$report_version[i]
     ## we need to find the id latest version of the report with id = report_id
-    if (!db_chd$is_pinned[i]) { ## if not pinned...
+    if (!child_query_return$is_pinned[i]) { ## if not pinned...
       latest_id <- get_latest_by_id(con, report_id) ## ..use latest
     } else { ## if pinned to..
-      if (!db_chd$is_latest[i]) { ## ..not latest..
+      if (!child_query_return$is_latest[i]) { ## ..not latest..
         latest_id <- report_id ## ..use the pinned id
       } else { ## pinned to latest
         latest_id <- report_id
@@ -152,8 +152,8 @@ is_out_of_date <- function(con, child_id) {
     ## we return a dataframe with columns:
     ## filename - the filename of the artefact
     ## file_hash - the hash of the artefact
-    par_qry <- sprintf("report_version.id='%s'", latest_id)
-    sql_par_qry <-
+    parent_query <- sprintf("report_version.id='%s'", latest_id)
+    sql_parent_query <-
       paste(c("SELECT", "file_artefact.filename,",
                         "file_artefact.file_hash",
              "FROM", "(report_version",
@@ -161,11 +161,11 @@ is_out_of_date <- function(con, child_id) {
                            "report_version.id = report_version_artefact.report_version",
              "INNER JOIN", "file_artefact", "ON",
                            "file_artefact.artefact = report_version_artefact.id)",
-             "WHERE", par_qry), collapse = " ")
+             "WHERE", parent_query), collapse = " ")
 
-    db_par <- DBI::dbGetQuery(con, sql_par_qry)
-    i <- which(db_par$filename == filename)
-    if (db_par$file_hash[i] != file_hash)
+    parent_query_return <- DBI::dbGetQuery(con, sql_parent_query)
+    i <- which(parent_query_return$filename == filename)
+    if (parent_query_return$file_hash[i] != file_hash)
       return(TRUE)
   }
 
@@ -220,16 +220,15 @@ build_tree <- function(name, id, depth = 100, parent = NULL,
   }
 
   if (!is.null(parent)) {
-    circ <- check_parents(parent, name)
-    if (circ) {
+    if (check_parents(parent, name)) {
       tree$message <- "There appears to be a circular dependency."
       return(tree)
     }
   }
 
   # make sure a report with this name exists
-  db_reports <- DBI::dbGetQuery(con, "SELECT name FROM report")
-  if (!(name %in% db_reports$name)) {
+  reports_database <- DBI::dbGetQuery(con, "SELECT name FROM report")
+  if (!(name %in% reports_database$name)) {
     stop("This report does not exist")
   }
 
@@ -237,8 +236,8 @@ build_tree <- function(name, id, depth = 100, parent = NULL,
   if (id == "latest") {
     id <- get_latest_by_name(con, name)$id
   } else {
-    db_id <- id_to_name(con, id)
-    if (is.null(db_id)) {
+    id_database <- id_to_name(con, id)
+    if (is.null(id_database)) {
       stop(sprintf("No report with id %s in the database", id))
     } else {
       if (name != id_to_name(con, id)) {
@@ -249,25 +248,26 @@ build_tree <- function(name, id, depth = 100, parent = NULL,
 
   if (direction == "upstream") {
     ## when going upstream the concept of out-of-date doesn't make sense?
-    ood <- is_out_of_date(con, id)
+    out_of_date <- is_out_of_date(con, id)
   } else {
-    ood <- is_out_of_date(con, id)
+    out_of_date <- is_out_of_date(con, id)
   }
 
   ## if this is no tree, create a tree...
   if (is.null(tree)) {
-    v <- Vertex$new(NULL, name, id, ood)
+    v <- Vertex$new(NULL, name, id, out_of_date)
     tree <- Tree$new(v)
   } else { ## ...otherwise add a vertex
-    v <- tree$add_child(parent, name, id, ood)
+    v <- tree$add_child(parent, name, id, out_of_date)
   }
 
-  dep_ids <- get_dependencies_db(name = name, id = id, con = con,
-                                 direction = direction, list_all = list_all)
-  for (dep_id in dep_ids) {
-    dep_name <- id_to_name(id = dep_id, con = con)
-    build_tree(name = dep_name, id = dep_id, depth = depth - 1, parent = v,
-               tree = tree, con = con, direction = direction,
+  dependency_ids <- get_dependencies_db(name = name, id = id, con = con,
+                                        direction = direction,
+                                        list_all = list_all)
+  for (dep_id in dependency_ids) {
+    dependency_name <- id_to_name(id = dep_id, con = con)
+    build_tree(name = dependency_name, id = dep_id, depth = depth - 1,
+               parent = v, tree = tree, con = con, direction = direction,
                list_all = list_all)
   }
 
@@ -294,6 +294,7 @@ out_ot_date_reports <- function(vertex, reports = c()) {
       reports <- out_ot_date_reports(vert, reports)
     }
   }
+
   reports
 }
 
