@@ -1,6 +1,10 @@
+# orderly 1.0.8
+
+* Expand how the vault server is defined to allow additional arguments to be directly specified (VIMC-3372)
+
 # orderly 1.0.7
 
-* Expand how the vault server is defined to allow additional arguments to be directly specified
+* More flexible control of use of draft reports, using the argument `use_draft` to `orderly_run` and `orderly_test_start`.  This will replace the use of explicitly specifying `draft: true` in the depends section of `orderly.yml` (VIMC-3377).
 
 # orderly 1.0.6
 

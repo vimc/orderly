@@ -54,6 +54,8 @@ test_that("init - no doc", {
 test_that("orderly_run_info reports on artefacts", {
   path <- prepare_orderly_example("depends", testing = TRUE)
   id1 <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id1, root = path)
+
   id2 <- orderly_run("depend", root = path, echo = FALSE)
 
   d <- readRDS(file.path(path, "draft", "depend", id2, "output.rds"))
@@ -70,7 +72,7 @@ test_that("orderly_run_info errors when not running", {
 test_that("orderly_run_info is usable from test_start", {
   path <- prepare_orderly_example("depends", testing = TRUE)
   id1 <- orderly_run("example", root = path, echo = FALSE)
-  p <- orderly_test_start("depend", root = path)
+  p <- orderly_test_start("depend", root = path, use_draft = TRUE)
 
   expect_error(
     orderly_run_info(),
@@ -89,7 +91,7 @@ test_that("orderly_run_info: is_latest detects latest version", {
   id2 <- orderly_run("example", root = path, echo = FALSE)
 
   f <- function() {
-    p <- orderly_test_start("depend", root = path)
+    p <- orderly_test_start("depend", root = path, use_draft = TRUE)
     orderly_run_info(p)
   }
 
@@ -135,7 +137,7 @@ test_that("can't depend on non artefacts", {
   yaml_write(d, path_yml)
 
   expect_error(
-    orderly_run("depend", root = path, echo = FALSE),
+    orderly_run("depend", root = path, echo = FALSE, use_draft = TRUE),
     "Dependency file not an artefact of example/.*:\n- 'script.R'")
 })
 

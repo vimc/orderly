@@ -233,7 +233,7 @@ config_read_db <- function(name, info, filename) {
       }
       base <- dat$args %||% set_names(list(), character())
       assert_named(base, TRUE, paste0(label, ":args"))
-      instances <- lapply(dat$instances, modifyList, x = base)
+      instances <- lapply(dat$instances, utils::modifyList, x = base)
     } else {
       assert_named(dat$args, TRUE, paste0(label, ":args"))
     }

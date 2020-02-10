@@ -76,11 +76,6 @@ prepare_orderly_remote_example <- function(path = tempfile()) {
 
   path_local <- prepare_orderly_example("depends", testing = TRUE)
 
-  ## Patch the report to use non-draft dependencies:
-  p <- file.path(path_local, "src", "depend", "orderly.yml")
-  d <- sub("draft: true", "draft: false", readLines(p))
-  writeLines(d, p)
-
   r <- list(remote = list(
               default = list(
                 driver = "orderly::orderly_remote_path",

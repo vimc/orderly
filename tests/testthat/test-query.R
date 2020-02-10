@@ -181,5 +181,5 @@ test_that("orderly_find_report", {
   expect_error(
     orderly_find_report(new_report_id(), "example", config = path,
                         must_work = TRUE, draft = FALSE),
-    "Did not find archived report example:")
+    "Did not find archive report example:")
 })
