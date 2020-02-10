@@ -392,11 +392,11 @@ Tree <- R6::R6Class("Tree", list(
 
     number_children <- length(vertex$children)
     if (number_children > 0) {
-      i <- 1
+      i <- 1 ## we need to keep track of when we are at the end of the vector
       for (child in vertex$children) {
         is_last <- (i != number_children)
-        i <- i + 1
         str <- self$format_helper(child, c(fvector, is_last), str)
+        i <- i + 1
       }
     }
     str
