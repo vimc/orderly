@@ -386,7 +386,12 @@ Tree <- R6::R6Class("Tree", list(
     if (length(fvector) == 0) {
       str <- paste(str, console_colour(sprintf("%s", vertex$format())), "\n", collapse = "")
     } else {
-      spacing <- paste(ifelse(head(fvector, -1), "| ", "  "), collapse = "")
+      spacing <- paste(vapply(head(fvector, -1),
+                              function(x) { if (x) {"| "} else {"  "}},
+                              character(1)),
+                       collapse = "")
+
+
       str <- paste(str, console_colour(sprintf("%s|___%s", spacing, vertex$format())), "\n", collapse = "")
     }
 
