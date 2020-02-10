@@ -35,7 +35,6 @@ Imports:
     yaml,
     zip (>= 2.0.0)
 Suggests:
-    crayon,
     httr,
     jsonlite,
     knitr,
