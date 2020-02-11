@@ -52,7 +52,7 @@ orderly_config_read_yaml <- function(filename, root) {
       v, utils::packageVersion("orderly")))
   }
 
-  info$vault <- config_check_vault(info$vault, info$vault_server, filename)
+  info[['vault']] <- config_check_vault(info[['vault']], info[['vault_server']], filename)
   info$remote <- config_check_remote(info$remote, filename)
 
   info$root <- normalizePath(root, mustWork = TRUE)

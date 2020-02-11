@@ -1,3 +1,7 @@
+# orderly 1.0.10
+
+* Fix regression running reports - vault autocompletes to vault_server
+
 # orderly 1.0.9
 
 * Enforce parameter types before model run, rather than on commit, and with better messages (VIMC-3411)
