@@ -34,7 +34,8 @@
 ##'   removed if provided, allowing easier use of autocomplete.
 ##'
 ##' @param parameters Parameters passed to the report. A named list of
-##'   parameters declared in the \code{orderly.yml}.
+##'   parameters declared in the \code{orderly.yml}.  Each parameter
+##'   must be a scalar character, numeric, integer or logical.
 ##'
 ##' @param envir The parent of the environment that will be used to
 ##'   evaluate the report script; by default a new environment will be
@@ -303,6 +304,23 @@ recipe_parameters <- function(info, parameters) {
   if (length(use_default) > 0L) {
     parameters[use_default] <-
       lapply(info$parameters[use_default], "[[", "default")
+  }
+
+  ## This somewhat duplicates the checks in db2.R but designed to give
+  ## more sensible errors back to the user.
+  nonscalar <- lengths(parameters) != 1
+  if (any(nonscalar)) {
+    stop(sprintf(
+      "Invalid parameters: %s - must be scalar",
+      pasteq(names(nonscalar[nonscalar]))))
+  }
+
+  err <- !vlapply(parameters, function(x)
+    is.character(x) || is.numeric(x) || is.logical(x))
+  if (any(err)) {
+    stop(sprintf(
+      "Invalid parameters: %s - must be character, numeric or logical",
+      pasteq(names(err[err]))))
   }
 
   parameters
