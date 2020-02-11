@@ -194,6 +194,7 @@ test_that("circular dependency", {
 
   tree <- orderly_build_dep_tree("other", id = first_other, root = path)
   circ_tree <- tree$format()[1]
+
   expect_match(circ_tree,
                "There appears to be a circular dependency.")
 })
