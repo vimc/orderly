@@ -217,6 +217,22 @@ test_that("previous configuration is transformed with warning", {
   expect_equal(res, list(addr = addr))
 })
 
+test_that("vault_server (not vault) in configuration yaml", {
+
+  # 1.0.10 - this fails if config.R:55 uses $vault instead of [['vault']]
+
+  path <- prepare_orderly_example("minimal")
+  path_config <- file.path(path, "orderly_config.yml")
+  text <- readLines(path_config)
+
+  expect_null(orderly_config(root = path)$vault)
+
+  url <- "https://vault.example.com"
+  writeLines(c(text, sprintf("vault_server: %s", url)), path_config)
+  expect_warning(res <- orderly_config(root = path)$vault,
+                 "Use of 'vault_server' is deprecated")
+  expect_equal(res, list(addr = url))
+})
 
 test_that("Can't use both new and old vault configurations", {
   expect_error(config_check_vault(list(login = "token"),
