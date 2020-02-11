@@ -1,4 +1,4 @@
-context("dep_tree")
+context("dependency")
 
 test_that("basic tree example", {
   path <- prepare_orderly_example("demo")
