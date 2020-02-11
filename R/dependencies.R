@@ -322,18 +322,16 @@ orderly_build_dep_tree <- function(name, id = "latest", root = NULL,
 
 propagate <- function(vertex, direction) {
   for (child in vertex$children) {
-    if (direction == "downstream") {
-      if (vertex$out_of_date) {
-        child$out_of_date = TRUE
-      }
+
+    if ((direction == "downstream") && (vertex$out_of_date)) {
+      child$out_of_date = TRUE
     }
 
     propagate(child, direction)
 
-    if (direction == "upstream") {
-      if (child$out_of_date) {
-        vertex$out_of_date = TRUE
-      }
+    if ((direction == "upstream") && (child$out_of_date)) {
+      vertex$out_of_date = TRUE
     }
+
   }
 }
