@@ -14,18 +14,9 @@ get_dependencies_db <- function(name, id, direction, con, list_all = FALSE) {
     filter_query <- sprintf("report_version.id='%s'", id)
   }
 
-  sql_query <- paste(c("SELECT",
-               "depends.report_version, ",
-               "report_version.report, report_version.id, ",
-               "file_artefact.filename, ", "file_artefact.file_hash",
-               "FROM", "(depends",
-               "INNER JOIN", "file_artefact", "ON",
-               "depends.use=file_artefact.id",
-               "INNER JOIN", "report_version_artefact", "ON",
-               "file_artefact.artefact=report_version_artefact.id",
-               "INNER JOIN", "report_version", "ON",
-               "report_version_artefact.report_version=report_version.id)",
-               "WHERE", filter_query), collapse = " ")
+  sql_query_file <- read_lines(orderly_file("database/dependency_info.sql"))
+
+  sql_query <- paste(c(sql_query_file, "WHERE", filter_query), collapse = " ")
 
   query_return <- DBI::dbGetQuery(con, sql_query)
 
@@ -53,11 +44,12 @@ get_dependencies_db <- function(name, id, direction, con, list_all = FALSE) {
 ##' @param con A connection to a database
 ##' @noRd
 get_latest_by_name <- function(con, name) {
-  sql_query <- paste("SELECT", "id, report, date FROM report_version",
-                   "WHERE", sprintf("report='%s'", name),
-                   "AND", "date=(SELECT MAX(date)",
-                   "FROM", "report_version",
-                   sprintf("WHERE report='%s')", name))
+  sql_query <- paste("SELECT", "id, report, date", 
+                     "FROM report_version",
+                     "WHERE", sprintf("report='%s'", name),
+                     "AND", "date=(SELECT MAX(date)",
+                     "FROM", "report_version",
+                     sprintf("WHERE report='%s')", name))
 
   DBI::dbGetQuery(con, sql_query)
 }
@@ -73,8 +65,8 @@ get_latest_by_id <- function(con, id) {
 ##' @noRd
 id_to_name <- function(con, id) {
   sql_query <- c("SELECT", "report_version.report",
-               "FROM", "report_version",
-               "WHERE", sprintf("report_version.id='%s'", id))
+                 "FROM", "report_version",
+                 "WHERE", sprintf("report_version.id='%s'", id))
   query_return <- DBI::dbGetQuery(con, paste(sql_query, collapse = " "))
 
   if (nrow(query_return) == 0) {
@@ -110,20 +102,11 @@ is_out_of_date <- function(con, child_id) {
   ## is_latest - if the report was pinned was it to the lastest version
   ## !NOTE! It is unclear what we do when both is_pinned and is_latest are true
   child_query <- sprintf("depends.report_version='%s'", child_id)
-  sql_child_query <-
-    paste(c("SELECT", "filename,",
-                      "file_hash,",
-                      "is_pinned,",
-                      "is_latest,",
-                      "report_version_artefact.report_version",
-            "FROM", "(depends",
-            "INNER JOIN", "report_version", "ON",
-                          "depends.report_version=report_version.id",
-            "INNER JOIN", "file_artefact", "ON",
-                          "depends.use = file_artefact.id",
-            "INNER JOIN", "report_version_artefact", "ON",
-                          "report_version_artefact.id = file_artefact.artefact)",
-            "WHERE", child_query), collapse = " ")
+
+  sql_child_file <- read_lines(orderly_file("database/child_info.sql"))
+
+  sql_child_query <- paste(c(sql_child_file, "WHERE", child_query),
+                           collapse = " ")
 
   child_query_return <- DBI::dbGetQuery(con, sql_child_query)
 
@@ -153,15 +136,11 @@ is_out_of_date <- function(con, child_id) {
     ## filename - the filename of the artefact
     ## file_hash - the hash of the artefact
     parent_query <- sprintf("report_version.id='%s'", latest_id)
-    sql_parent_query <-
-      paste(c("SELECT", "file_artefact.filename,",
-                        "file_artefact.file_hash",
-             "FROM", "(report_version",
-             "INNER JOIN", "report_version_artefact", "ON",
-                           "report_version.id = report_version_artefact.report_version",
-             "INNER JOIN", "file_artefact", "ON",
-                           "file_artefact.artefact = report_version_artefact.id)",
-             "WHERE", parent_query), collapse = " ")
+
+    sql_parent_file <- read_lines(orderly_file("database/parent_info.sql"))
+
+    sql_parent_query <- paste(c(sql_parent_file, "WHERE", parent_query),
+                             collapse = " ")
 
     parent_query_return <- DBI::dbGetQuery(con, sql_parent_query)
     i <- which(parent_query_return$filename == filename)
