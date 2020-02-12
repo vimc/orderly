@@ -10,7 +10,7 @@ test_that("basic tree example", {
   writeLines(demo, file.path(path, "demo.yml"))
   run_orderly_demo(path)
 
-  tree <- orderly_build_dep_tree("other", root = path, list_all = TRUE)
+  tree <- orderly_build_dep_tree("other", root = path, show_all = TRUE)
 
   root <- tree$root
   readable_root <- root$format()
@@ -30,7 +30,7 @@ test_that("basic tree example", {
                "use_dependency_2 \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
   expect_true(length(child_2$children) == 0)
 
-  bad_reports <- out_ot_date_reports(tree$root)
+  bad_reports <- out_of_date_reports(tree$root)
   expect_equal(length(bad_reports), 0)
 })
 
@@ -227,6 +227,6 @@ test_that("List out of date", {
   tree <- orderly_build_dep_tree("other", root = path, id = first_other,
                                  propagate = TRUE)
 
-  bad_reports <- out_ot_date_reports(tree$root)
+  bad_reports <- out_of_date_reports(tree$root)
   expect_equal(bad_reports, c("use_dependency", "use_dependency_2"))
 })

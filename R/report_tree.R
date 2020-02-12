@@ -40,7 +40,7 @@ Tree <- R6::R6Class("Tree",
         str <- paste(str, console_colour(sprintf("%s", vertex$format())), "\n", collapse = "")
       } else {
         spacing <- paste(vapply(head(fvector, -1),
-                                function(x) { if (x) {"| "} else {"  "}},
+                                function(x) { if (x) {"| "} else {"  "} },
                                 character(1)),
                          collapse = "")
 
