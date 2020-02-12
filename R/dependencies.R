@@ -288,8 +288,7 @@ build_tree <- function(name, id, depth = 100, parent = NULL,
 ##' @tree A vertex object
 ##'
 ##' @return A list of report names
-##' @noRd
-out_of_date_reports <- function(vertex, reports = c()) {
+orderly_out_of_date_reports <- function(vertex, reports = c()) {
   if (vertex$out_of_date) {              ## if the report is out of date..
     if (!(vertex$name %in% reports)) {   ## ..and we haven't already listed it..
       reports <- c(reports, vertex$name) ## ..add it to the list
@@ -298,7 +297,7 @@ out_of_date_reports <- function(vertex, reports = c()) {
 
   if (length(vertex$children) > 0) {
     for (vert in vertex$children) {
-      reports <- out_of_date_reports(vert, reports)
+      reports <- orderly_out_of_date_reports(vert, reports)
     }
   }
 
