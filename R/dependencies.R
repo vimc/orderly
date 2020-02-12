@@ -292,8 +292,8 @@ out_ot_date_reports <- function(vertex, reports = c()) {
 ##' @export
 orderly_build_dep_tree <- function(name, id = "latest", root = NULL,
                                    locate = TRUE, direction = "downstream",
-                                   con = NULL, propagate = FALSE,
-                                   max_depth = 100, list_all = FALSE) {
+                                   propagate = FALSE, max_depth = 100,
+                                   list_all = FALSE) {
   assert_scalar_character(direction)
   direction <- match_value(direction, c("upstream", "downstream"))
 
@@ -304,10 +304,8 @@ orderly_build_dep_tree <- function(name, id = "latest", root = NULL,
   assert_scalar_logical(list_all)
   assert_scalar_numeric(max_depth)
 
-  if (is.null(con)) {
-    con <- orderly_db("destination", orderly_config_get(root, locate))
-    on.exit(DBI::dbDisconnect(con))
-  }
+  con <- orderly_db("destination", orderly_config_get(root, locate))
+  on.exit(DBI::dbDisconnect(con))
 
   dep_tree <- build_tree(name = name, id = id, depth = max_depth, con = con,
                          direction = direction, list_all = list_all)
