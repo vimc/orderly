@@ -30,7 +30,7 @@ test_that("basic tree example", {
                "use_dependency_2 \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
   expect_true(length(child_2$children) == 0)
 
-  bad_reports <- orderly_out_of_date_reports(tree$root)
+  bad_reports <- orderly_out_of_date_reports(tree)
   expect_equal(length(bad_reports), 0)
 })
 
@@ -110,7 +110,7 @@ test_that("out of date dependencies", {
   tree <- orderly_build_dep_tree("other", id = first_other, root = path)
 
   root <- tree$root
-  ## this report SHOULD NOT be out of date - there is a newer version of this 
+  ## this report SHOULD NOT be out of date - there is a newer version of this
   ## report, but none of ancestor reports have changed
   expect_false(root$out_of_date)
 
@@ -227,6 +227,6 @@ test_that("List out of date", {
   tree <- orderly_build_dep_tree("other", root = path, id = first_other,
                                  propagate = TRUE)
 
-  bad_reports <- orderly_out_of_date_reports(tree$root)
+  bad_reports <- orderly_out_of_date_reports(tree)
   expect_equal(bad_reports, c("use_dependency", "use_dependency_2"))
 })

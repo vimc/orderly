@@ -50,7 +50,7 @@ get_dependencies_db <- function(name, id, direction, con, show_all = FALSE) {
 ##'
 ##' @noRd
 get_latest_by_name <- function(con, name) {
-  sql_query <- paste("SELECT", "id, report, date", 
+  sql_query <- paste("SELECT", "id, report, date",
                      "FROM report_version",
                      "WHERE", sprintf("report='%s'", name),
                      "AND", "date=(SELECT MAX(date)",
@@ -153,7 +153,7 @@ is_out_of_date <- function(con, child_id) {
         latest_id <- report_id                ## then use the pinned id
       } else {                 ## pinned to a report that was the lastest
         latest_id <- report_id ## when the report was run
-      }                                        
+      }
     }
 
     ## we return a dataframe with columns:
@@ -210,8 +210,6 @@ check_parents <- function(parent_vertex, name) {
 ##' @param tree [internal] - The tree object that is built up and returned at
 ##'             the end
 ##' @param con A connection to a database
-##' @param root
-##' @param locate
 ##' @param direction A string indicating if we want to move up or down the tree
 ##'        permitted values are upstream, downstream
 ##'
@@ -282,24 +280,41 @@ build_tree <- function(name, id, depth = 100, parent = NULL,
   tree
 }
 
-##' @title Given a tree return a list of reports to be re-run (and the order
-##' that they should be re-run)
+##' @title Given a vertex correpsonding to a report return a list of reports to
+##' be re-run by the out of date flag (and the order that they should be re-run)
 ##'
-##' @tree A vertex object
+##' @param vertex The vertex to be checked
+##' @param reports A vector of report names to be re-run, this is a built up
+##'                recursively as we go down the tree.
 ##'
 ##' @return A list of report names
-orderly_out_of_date_reports <- function(vertex, reports = c()) {
-  if (vertex$out_of_date) {              ## if the report is out of date..
-    if (!(vertex$name %in% reports)) {   ## ..and we haven't already listed it..
-      reports <- c(reports, vertex$name) ## ..add it to the list
+##' @noRd
+out_of_date_reports <- function(vertex, reports = c()) {
+  if (vertex$out_of_date) {
+    if (vertex$name %in% reports) {
+      ## we always add reports to the end to get the re-run order right
+      reports <- setdiff(reports, vertex$name)
     }
+    reports <- c(reports, vertex$name) ## add it to the list
   }
 
   if (length(vertex$children) > 0) {
     for (vert in vertex$children) {
-      reports <- orderly_out_of_date_reports(vert, reports)
+      reports <- out_of_date_reports(vert, reports)
     }
   }
+  reports
+}
+
+##' @title Given a tree return a list of reports to be re-run (and the order
+##' that they should be re-run)
+##'
+##' @param tree A dpendency tree object from orderly_build_dep_tree.
+##'
+##' @return a list of report names to be re-run. First report to rerun first
+##' @export
+orderly_out_of_date_reports <- function(tree) {
+  reports <- out_of_date_reports(tree$root)
 
   reports
 }
@@ -308,9 +323,6 @@ orderly_out_of_date_reports <- function(vertex, reports = c()) {
 ##'
 ##' @param name the name of the report
 ##' @param id the id of the report, if omitted, use the id of the latest report
-##' @param con A connection to a database
-##' @param root
-##' @param locate
 ##' @param direction A string indicating if we want to move up or down the tree
 ##'        permitted values are upstream, downstream
 ##' @param propagate A boolean indicating if we want to propogate out of date
@@ -319,7 +331,10 @@ orderly_out_of_date_reports <- function(vertex, reports = c()) {
 ##'                  useful to truncate a very large tree. (default = 100)
 ##' @param show_all A boolean, should we show all reports in the tree, not just
 ##'                 the latest.
+##' @inheritParams orderly_list
 ##'
+##' @return An orderly Tree object with the root corresponding to the given
+##'         report.
 ##' @export
 orderly_build_dep_tree <- function(name, id = "latest", root = NULL,
                                    locate = TRUE, direction = "downstream",
