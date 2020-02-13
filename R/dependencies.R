@@ -314,6 +314,12 @@ out_of_date_reports <- function(vertex, reports = c()) {
 ##' @return a list of report names to be re-run. First report to rerun first
 ##' @export
 orderly_out_of_date_reports <- function(tree) {
+  types <- class(tree)
+  if (!("Tree" %in% types)) {
+    name <- deparse(substitute(tree))
+    stop(sprintf("'%s' must be a Tree object", name), call. = FALSE)
+  }
+
   reports <- out_of_date_reports(tree$root)
 
   reports
