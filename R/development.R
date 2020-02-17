@@ -31,6 +31,12 @@
 ##'
 ##' @title Develop an orderly report
 ##'
+##' @param name Name of the report to develop (see
+##'   \code{\link{orderly_list}}).  A leading \code{src/} will be
+##'   removed if provided, allowing easier use of autocomplete.
+##'   Alternatively, the default of \code{NULL} is useful if you have
+##'   already set the working directory to be the source directory.
+##'
 ##' @inheritParams orderly_run
 ##'
 ##' @return A character vector with the full path to the directory,
@@ -38,7 +44,7 @@
 ##'
 ##' @export
 ##' @author Rich
-orderly_develop_start <- function(name, parameters = NULL,
+orderly_develop_start <- function(name = NULL, parameters = NULL,
                                   envir = parent.frame(),
                                   root = NULL, locate = TRUE, instance = NULL,
                                   use_draft = FALSE) {
@@ -62,7 +68,7 @@ orderly_develop_start <- function(name, parameters = NULL,
 
 ##' @export
 ##' @rdname orderly_develop_start
-orderly_develop_status <- function(name, root = NULL, locate = TRUE) {
+orderly_develop_status <- function(name = NULL, root = NULL, locate = TRUE) {
   loc <- orderly_develop_location(name, root, locate)
   orderly_status(loc$path)
 }
@@ -70,7 +76,7 @@ orderly_develop_status <- function(name, root = NULL, locate = TRUE) {
 
 ##' @export
 ##' @rdname orderly_develop_start
-orderly_develop_clean <- function(name, root = NULL, locate = TRUE) {
+orderly_develop_clean <- function(name = NULL, root = NULL, locate = TRUE) {
   loc <- orderly_develop_location(name, root, locate)
   status <- orderly_status(loc$path)
   drop <- status$filename[status$derived & status$present]
@@ -102,9 +108,10 @@ orderly_develop_location <- function(name, root, locate) {
     name <- sub("^src/", "", name)
   }
 
-  list(config = config,
-       name = name,
-       path = file.path(path_src(config$root), name))
+  path <- file.path(path_src(config$root), name)
+  inplace <- same_path(path, getwd())
+
+  list(config = config, name = name, path = path, inplace = inplace)
 }
 
 

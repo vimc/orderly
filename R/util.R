@@ -725,3 +725,8 @@ clean_path <- function(path) {
 random_seed <- function(envir = globalenv()) {
   envir$.Random.seed
 }
+
+
+same_path <- function(a, b) {
+  normalizePath(a, "/", TRUE) == normalizePath(b, "/", TRUE)
+}

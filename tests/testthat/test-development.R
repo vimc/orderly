@@ -47,26 +47,37 @@ test_that("orderly_develop_location", {
 
   cfg <- orderly_config(path)
   name <- "minimal"
-  cmp <- list(config = cfg,
-              name = name,
-              path = file.path(path_src(cfg$root), name))
+  cmp1 <- list(config = cfg,
+               name = name,
+               path = file.path(path_src(cfg$root), name),
+               inplace = FALSE)
+  cmp2 <- list(config = cfg,
+               name = name,
+               path = file.path(path_src(cfg$root), name),
+               inplace = TRUE)
 
   id <- orderly_run(name, root = path, echo = FALSE)
   p <- orderly_commit(id, root = path)
 
-  expect_equal(orderly_develop_location(name, path), cmp)
-  expect_equal(orderly_develop_location("src/minimal", path), cmp)
+  expect_equal(orderly_develop_location(name, path), cmp1)
+  expect_equal(orderly_develop_location("src/minimal", path), cmp1)
 
   expect_equal(
-    withr::with_dir(path, orderly_develop_location(name, NULL, TRUE)),
-    cmp)
+    withr::with_dir(cmp1$path, orderly_develop_location(name, path)),
+    cmp2)
+  expect_equal(
+    withr::with_dir(cmp1$path, orderly_develop_location("src/minimal", path)),
+    cmp2)
+  expect_equal(
+    withr::with_dir(cmp1$path, orderly_develop_location(name, NULL, TRUE)),
+    cmp2)
 
   expect_equal(
-    withr::with_dir(cmp$path, orderly_develop_location(NULL, NULL, TRUE)),
-    cmp)
+    withr::with_dir(cmp1$path, orderly_develop_location(NULL, NULL, TRUE)),
+    cmp2)
   expect_equal(
-    withr::with_dir(cmp$path, orderly_develop_location(NULL, path, FALSE)),
-    cmp)
+    withr::with_dir(cmp1$path, orderly_develop_location(NULL, path, FALSE)),
+    cmp2)
 
   expect_error(orderly_develop_location(NULL, path, FALSE),
                "Did not find orderly.yml within working directory")
