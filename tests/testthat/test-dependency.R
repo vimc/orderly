@@ -263,20 +263,6 @@ test_that("List out of date upstream", {
                                  direction = "downstream",
                                  propagate = TRUE)
 
-  # print(tree)
-
-  # print(orderly_build_dep_tree("other", root = path,
-  #                              direction = "downstream", id = "previous",
-  #                              propagate = TRUE))
-
-  # print(orderly_build_dep_tree("use_dependency", root = path,
-  #                              direction = "downstream",
-  #                              propagate = TRUE))
-
-  # print(orderly_build_dep_tree("use_dependency_2", root = path,
-  #                              direction = "downstream",
-  #                              propagate = TRUE))
-
   bad_reports <- orderly_out_of_date_reports(tree)
   expect_equal(bad_reports, c("use_dependency", "use_dependency_2"))
 })
