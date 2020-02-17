@@ -25,6 +25,7 @@ Vertex <- R6::R6Class("Vertex",
 Tree <- R6::R6Class("Tree",
   private = list(
     message = NULL,
+    direction = NULL,
     vertices = NULL,
     ## recursive tree printer, the output is of the form
     ## report A [20190416-114345-c44facf2]
@@ -40,7 +41,9 @@ Tree <- R6::R6Class("Tree",
     ## * prefix is a offset string to get the indentation correct - it will be
     ##   of the form "│       │   " (i.e. some combination of "│   " and "    ")
     ## * tree_string is final printed string (with line breaks and colouring)
-    format_helper = function(vertex = self$root, prefix = "", tree_string = "") {
+    format_helper = function(vertex = self$root,
+                             prefix = "",
+                             tree_string = "") {
       ## if the tree has a warning message, append it to the front in the red
       if (!is.null(private$message)) {
         tree_string <- paste(tree_string, crayon::red(private$message), "\n",
@@ -85,10 +88,11 @@ Tree <- R6::R6Class("Tree",
   ),
   public = list(
     root = NULL,
-    initialize = function(root) {
+    initialize = function(root, direction) {
       private$vertices <- append(private$vertices, list(root))
       self$root <- root
       private$message <- NULL
+      private$direction <- direction
     },
     add_child = function(parent, name, id, out_of_date) {
       child <- Vertex$new(parent, name, id, out_of_date)
@@ -100,6 +104,9 @@ Tree <- R6::R6Class("Tree",
       old_message <- private$message
       private$message <- new_message
       old_message
+    },
+    get_direction = function() {
+      private$direction
     },
     format = function() {
       private$format_helper()

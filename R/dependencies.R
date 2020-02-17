@@ -38,6 +38,28 @@ get_dependencies_db <- function(name, id, direction, con, show_all = FALSE) {
   }
 }
 
+##' @title All reports with a given name with most recent towards to top
+##'
+##' @param name the name of the report
+##' @param con A connection to a database
+##'
+##' @return a dataframe with columns:
+##'         id - the report id
+##'         report - the name of the report (matches the argument name)
+##'         date - the date the report was run
+##'
+##' @noRd
+get_ids_by_name <- function(con, name) {
+  sql_query <- paste("SELECT", "id, report, date",
+                     "FROM report_version",
+                     "WHERE", sprintf("report='%s'", name))
+
+  query_return <- DBI::dbGetQuery(con, sql_query)
+  query_return <- query_return[rev(order(query_return$date)),]
+
+  query_return
+}
+
 ##' @title Get the id of the latest version of a report
 ##'
 ##' @param name the name of the report
@@ -50,14 +72,30 @@ get_dependencies_db <- function(name, id, direction, con, show_all = FALSE) {
 ##'
 ##' @noRd
 get_latest_by_name <- function(con, name) {
-  sql_query <- paste("SELECT", "id, report, date",
-                     "FROM report_version",
-                     "WHERE", sprintf("report='%s'", name),
-                     "AND", "date=(SELECT MAX(date)",
-                     "FROM", "report_version",
-                     sprintf("WHERE report='%s')", name))
+  reports <- get_ids_by_name(con, name)
 
-  DBI::dbGetQuery(con, sql_query)
+  reports[1,]
+}
+
+##' @title Get the id of the second most recent version of a report
+##'
+##' @param name the name of the report
+##' @param con A connection to a database
+##'
+##' @return a one line dataframe with columns:
+##'         id - the report id
+##'         report - the name of the report (matches the argument name)
+##'         date - the date the report was run
+##'
+##' @noRd
+get_previous_by_name <- function(con, name) {
+  reports <- get_ids_by_name(con, name)
+
+  if (nrow(reports) < 2) {
+    stop(sprintf("There is only one version of %s", name))
+  }
+
+  reports[2,]
 }
 
 ##' @title Get the id of the latest version of a report
@@ -240,6 +278,8 @@ build_tree <- function(name, id, depth = 100, parent = NULL,
   # do we need to find the latest version of the report?
   if (id == "latest") {
     id <- get_latest_by_name(con, name)$id
+  } else if (id == "previous") {
+    id <- get_previous_by_name(con, name)$id
   } else {
     id_database <- id_to_name(con, id)
     if (is.null(id_database)) {
@@ -251,17 +291,20 @@ build_tree <- function(name, id, depth = 100, parent = NULL,
     }
   }
 
-  if (direction == "upstream") {
-    ## when going upstream the concept of out-of-date doesn't make sense?
-    out_of_date <- is_out_of_date(con, id)
-  } else {
-    out_of_date <- is_out_of_date(con, id)
-  }
+  ## A remark on `out-of-date-ness`
+  ## We only flag a report as out-of-date when it depends on artefacts from
+  ## another report and the artefacts it used differ from the artefacts in the
+  ## latest version of the other reprot.
+  ## In particular the following reports will never be flagged as out-of-date
+  ## * A report that uses no artefacts
+  ## * A report that only uses deterministic artefacts (i.e. artefacts that
+  ##   never change from version to version).
+  out_of_date <- is_out_of_date(con, id)
 
   ## if this is no tree, create a tree...
   if (is.null(tree)) {
     v <- Vertex$new(NULL, name, id, out_of_date)
-    tree <- Tree$new(v)
+    tree <- Tree$new(v, direction)
   } else { ## ...otherwise add a vertex
     v <- tree$add_child(parent, name, id, out_of_date)
   }
@@ -344,7 +387,7 @@ orderly_out_of_date_reports <- function(tree) {
 ##' @export
 orderly_build_dep_tree <- function(name, id = "latest", root = NULL,
                                    locate = TRUE, direction = "downstream",
-                                   propagate = FALSE, max_depth = 100,
+                                   propagate = TRUE, max_depth = 100,
                                    show_all = FALSE) {
   assert_scalar_character(direction)
   direction <- match_value(direction, c("upstream", "downstream"))

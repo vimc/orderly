@@ -21,12 +21,15 @@ test_that("Vertex", {
 
 test_that("Tree", {
   root <- Vertex$new(NULL, "root_node", "0", TRUE)
-  tree <- Tree$new(root)
+  tree <- Tree$new(root, "upstream")
 
   message_init <- tree$set_message("message_1")
   expect_null(message_init)
   new_message <- tree$set_message("message_2")
   expect_match(new_message, "message_1")
+
+  direction <- tree$get_direction()
+  expect_match(direction, "upstream")
 
   tree$add_child(root, "leaf_node", "1", FALSE)
 
