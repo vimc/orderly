@@ -43,7 +43,25 @@
 ##'   invisibly.
 ##'
 ##' @export
-##' @author Rich
+##' @examples
+##' path <- orderly::orderly_example("demo")
+##'
+##' # This report uses a depenency - it requires that the file
+##' # incoming.csv exists.  This file is created from the report 'other'
+##' orderly::orderly_develop_status("use_dependency", root = path)
+##'
+##' # Copy the required dependencies over, in this case from a draft report
+##' orderly::orderly_run("other", list(nmin = 0), root = path, echo = FALSE)
+##' orderly::orderly_develop_start("use_dependency", root = path,
+##'                                use_draft = TRUE)
+##'
+##' # Files have been copied across into the source directory
+##' orderly::orderly_develop_status("use_dependency", root = path)
+##'
+##' # The report can then be developed as needed, interactively.  After
+##' # we're happy things can be cleaned up with
+##' orderly::orderly_develop_clean("use_dependency", root = path)
+##'
 orderly_develop_start <- function(name = NULL, parameters = NULL,
                                   envir = parent.frame(),
                                   root = NULL, locate = TRUE, instance = NULL,
