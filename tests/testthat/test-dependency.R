@@ -259,12 +259,12 @@ test_that("List out of date upstream", {
 
   first_other <- head(dir(file.path(path, "archive", "other")), n=1)
 
-  tree <- orderly_build_dep_tree("other", root = path, id = "previous",
-                                 direction = "downstream",
+  tree <- orderly_build_dep_tree("use_dependency_2", root = path,
+                                 direction = "upstream",
                                  propagate = TRUE)
 
   bad_reports <- orderly_out_of_date_reports(tree)
-  expect_equal(bad_reports, c("use_dependency", "use_dependency_2"))
+  expect_equal(bad_reports, c("use_dependency_2","use_dependency"))
 })
 
 test_that("R6 errorMessages", {
