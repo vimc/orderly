@@ -220,6 +220,33 @@ test_that("infinite recursion", {
                "The tree is very large or degenerate.")
 })
 
+test_that("multiple dependencies", {
+  path <- prepare_orderly_example("demo")
+
+  demo <- c("- name: other", "  parameters:", "    nmin: 0",
+            "- name: use_dependency",
+            "- name: use_dependency_2",
+            "- name: use_dependency",
+            "- name: use_dependency_2")
+  writeLines(demo, file.path(path, "demo.yml"))
+  run_orderly_demo(path)
+
+  tree <- orderly_build_dep_tree("other", root = path,
+                                 propagate = FALSE, show_all = TRUE)
+
+  tree_print <- tree$format()
+
+  ## make sure we print out the correct indentation
+  expect_match(tree_print,
+               "other \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
+  expect_match(tree_print,
+               "\\+--.*use_dependency")
+  expect_match(tree_print,
+               "\\|   \\+--.*use_dependency_2")
+  expect_match(tree_print,
+               "    \\+--.*use_dependency_2")
+})
+
 test_that("List out of date upstream", {
   path <- prepare_orderly_example("demo")
 
@@ -252,4 +279,24 @@ test_that("List out of date upstream", {
 
   bad_reports <- orderly_out_of_date_reports(tree)
   expect_equal(bad_reports, c("use_dependency", "use_dependency_2"))
+})
+
+test_that("R6 errorMessages", {
+  tree <- "Not an R6 object"
+    expect_error(orderly_out_of_date_reports(tree),
+                 "'tree' must be a Tree object")
+})
+
+test_that("Only one report - previous", {
+  path <- prepare_orderly_example("demo")
+
+  demo <- c("- name: other", "  parameters:", "    nmin: 0",
+            "- name: use_dependency",
+            "- name: use_dependency_2")
+  writeLines(demo, file.path(path, "demo.yml"))
+  run_orderly_demo(path)
+
+  expect_error(orderly_build_dep_tree("other", root = path, id = "previous",
+                                      direction = "downstream"),
+               "There is only one version of other")
 })

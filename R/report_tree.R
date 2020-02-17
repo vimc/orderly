@@ -66,14 +66,14 @@ Tree <- R6::R6Class("Tree",
           console_colour <-
                         if (child$out_of_date) {crayon::red} else {crayon::blue}
 
-          ## the start of the line = prefix + either └── or ├──
+          ## the start of the line = prefix + either +-- or +--
           line_prefix <- sprintf("%s%s--", prefix,
                                            if (is_last) {"+"} else {"+"})
 
           tree_string <- sprintf("%s%s", tree_string,
                                          console_colour(line_prefix))
 
-          ## increase indentation with either "│   " or "    " (4 characters!)
+          ## increase indentation with either "|   " or "    " (4 characters!)
           prefix <- sprintf("%s%s   ", prefix,  if (is_last) {" "} else {"|"})
 
           tree_string <- private$format_helper(child, prefix, tree_string)
