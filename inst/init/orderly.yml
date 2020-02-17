@@ -20,12 +20,7 @@
 #       another: from_file.sql
 #
 # If you are writing a report that uses only artefacts from other
-# reports, the data field can be empty, as:
-#
-#     data: ~
-#
-# but it must still exist.
-data: ~
+# reports, you can omit this field.
 
 # You must have a script that does something with the data.  This
 # will be a single string and the filename must exist when orderly is
