@@ -68,7 +68,7 @@ Tree <- R6::R6Class("Tree",
 
           ## the start of the line = prefix + either └── or ├──
           line_prefix <- sprintf("%s%s--", prefix,
-                                           if (is_last) {"+`"} else {"+"})
+                                           if (is_last) {"+"} else {"+"})
 
           tree_string <- sprintf("%s%s", tree_string,
                                          console_colour(line_prefix))
