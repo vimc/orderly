@@ -92,3 +92,14 @@ test_that("orderly_develop_location", {
     "Unexpected working directory - expected src/<name>",
     fixed = TRUE)
 })
+
+
+test_that("orderly_develop_status with extra files", {
+  path <- prepare_orderly_example("demo")
+  p <- file.path(path, "src", "minimal")
+  file.create(file.path(p, "extra"))
+  status <- orderly_develop_status("minimal", root = path)
+  expect_equal(as.list(status[4, ]),
+               list(filename = "extra", type = "unknown", present = TRUE,
+                    derived = FALSE))
+})
