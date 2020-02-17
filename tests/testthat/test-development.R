@@ -40,3 +40,44 @@ test_that("status can detect dependencies", {
   cmp$present[[5]] <- TRUE
   expect_equal(orderly_status(p), cmp)
 })
+
+
+test_that("orderly_develop_location", {
+  path <- prepare_orderly_example("demo")
+
+  cfg <- orderly_config(path)
+  name <- "minimal"
+  cmp <- list(config = cfg,
+              name = name,
+              path = file.path(path_src(cfg$root), name))
+
+  id <- orderly_run(name, root = path, echo = FALSE)
+  p <- orderly_commit(id, root = path)
+
+  expect_equal(orderly_develop_location(name, path), cmp)
+  expect_equal(orderly_develop_location("src/minimal", path), cmp)
+
+  expect_equal(
+    withr::with_dir(path, orderly_develop_location(name, NULL, TRUE)),
+    cmp)
+
+  expect_equal(
+    withr::with_dir(cmp$path, orderly_develop_location(NULL, NULL, TRUE)),
+    cmp)
+  expect_equal(
+    withr::with_dir(cmp$path, orderly_develop_location(NULL, path, FALSE)),
+    cmp)
+
+  expect_error(orderly_develop_location(NULL, path, FALSE),
+               "Did not find orderly.yml within working directory")
+
+  tmp <- orderly_file("examples/minimal/src/example")
+  expect_error(
+    withr::with_dir(tmp, orderly_develop_location(NULL, path, FALSE)),
+    "Working directory is not within the orderly root")
+
+  expect_error(
+    withr::with_dir(p, orderly_develop_location(NULL, path, FALSE)),
+    "Unexpected working directory - expected src/<name>",
+    fixed = TRUE)
+})

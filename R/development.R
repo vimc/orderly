@@ -42,7 +42,7 @@ orderly_develop_start <- function(name, parameters = NULL,
                                   envir = parent.frame(),
                                   root = NULL, locate = TRUE, instance = NULL,
                                   use_draft = FALSE) {
-  loc <- orderly_develop_location(name, root)
+  loc <- orderly_develop_location(name, root, locate)
   envir <- orderly_environment(envir)
 
   orderly_log("name", loc$name)
@@ -62,16 +62,16 @@ orderly_develop_start <- function(name, parameters = NULL,
 
 ##' @export
 ##' @rdname orderly_develop_start
-orderly_develop_status <- function(name, root = NULL) {
-  loc <- orderly_develop_location(name, root)
+orderly_develop_status <- function(name, root = NULL, locate = TRUE) {
+  loc <- orderly_develop_location(name, root, locate)
   orderly_status(loc$path)
 }
 
 
 ##' @export
 ##' @rdname orderly_develop_start
-orderly_develop_clean <- function(name, root = NULL) {
-  loc <- orderly_develop_location(name, root)
+orderly_develop_clean <- function(name, root = NULL, locate = TRUE) {
+  loc <- orderly_develop_location(name, root, locate)
   status <- orderly_status(loc$path)
   drop <- status$filename[status$derived & status$present]
   if (length(drop) > 0L) {
@@ -82,10 +82,23 @@ orderly_develop_clean <- function(name, root = NULL) {
 }
 
 
-orderly_develop_location <- function(name, root) {
+orderly_develop_location <- function(name, root, locate) {
   config <- orderly_config_get(root, locate)
   config <- check_orderly_archive_version(config)
-  if (grepl("^src/.+", name)) {
+
+  if (is.null(name)) {
+    if (!file.exists("orderly.yml")) {
+      stop("Did not find orderly.yml within working directory")
+    }
+    if (!fs::path_has_parent(getwd(), config$root)) {
+      stop("Working directory is not within the orderly root")
+    }
+    rel <- fs::path_split(fs::path_rel(getwd(), config$root))[[1]]
+    if (length(rel) != 2 || rel[[1L]] != "src") {
+      stop("Unexpected working directory - expected src/<name>")
+    }
+    name <- rel[[2L]]
+  } else if (grepl("^src/.+", name)) {
     name <- sub("^src/", "", name)
   }
 
