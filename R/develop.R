@@ -160,13 +160,6 @@ orderly_status <- function(path) {
   status$present <- file.exists(file.path(path, status$filename))
   ## TODO: better name?
   status$derived <- status$type %in% c("global", "dependency", "artefact")
-  ## status$origin <- NA_character_
-  ## This is going to be fairly hard to get right.  Better might be to
-  ## check if it is *consistent*?
-  ## if (any(status$type == "dependency" & status$present)) {
-  ##   con <- orderly_db("destination", config)
-  ##   browser()
-  ## }
 
   class(status) <- c("orderly_status", "data.frame")
   status
