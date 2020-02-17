@@ -1,18 +1,117 @@
-orderly_status <- function(path = NULL) {
-  path <- path %||% getwd()
+##' The functions \code{orderly_develop_start},
+##' \code{orderly_develop_status} and \code{orderly_develop_clean}
+##' provide a workflow for developing a report in much the same way as
+##' one might write code outside of orderly.
+##' \code{orderly_develop_start} will copy all files required (global
+##' resources and dependencies) into the report source directory, as
+##' well as collect all data and parameters - at this point the
+##' directory can be developed in directly.
+##' \code{orderly_develop_status} provides information about the
+##' status of files in the directory, while
+##' \code{orderly_develop_clean} deletes all copied files.
+##'
+##' These functions are designed to work within a report's \code{src}
+##' directory.  For example, for a report \code{analysis} they will
+##' alter or report on the directory \code{src/analysis}.  It is
+##' intended that \code{orderly_develop_start} can be run repeatedly;
+##' doing this will \emph{refresh} the contents of the directory if
+##' upstream files have been updated.
+##'
+##' Some degree of care should be used while using these functions.
+##'
+##' Because \code{orderly_develop_start} copies files into your source
+##' tree you should be careful to add these files to your
+##' \code{.gitignore} files so that they are not included if using
+##' git.  Rerunning \code{orderly_develop_start} will copy a fresh
+##' copy dependencies into your tree, overwriting files that are there
+##' without warning.
+##'
+##' The \code{orderly_develop_clean} function will delete dependencies
+##' without warning.
+##'
+##' @title Develop an orderly report
+##'
+##' @inheritParams orderly_run
+##'
+##' @return A character vector with the full path to the directory,
+##'   invisibly.
+##'
+##' @export
+##' @author Rich
+orderly_develop_start <- function(name, parameters = NULL,
+                                  envir = parent.frame(),
+                                  root = NULL, locate = TRUE, instance = NULL,
+                                  use_draft = FALSE) {
+  loc <- orderly_develop_location(name, root)
+  envir <- orderly_environment(envir)
+
+  orderly_log("name", loc$name)
+
+  info <- recipe_read(loc$path, loc$config, use_draft = use_draft)
+
+  info$workdir <- loc$path
+  withr::with_dir(info$workdir, {
+    info <- recipe_copy_global(info, loc$config)
+    info <- recipe_copy_depends(info)
+    orderly_prepare_data(loc$config, info, parameters, envir, instance)
+  })
+
+  invisible(loc$path)
+}
+
+
+##' @export
+##' @rdname orderly_develop_start
+orderly_develop_status <- function(name, root = NULL) {
+  loc <- orderly_develop_location(name, root)
+  orderly_status(loc$path)
+}
+
+
+##' @export
+##' @rdname orderly_develop_start
+orderly_develop_clean <- function(name, root = NULL) {
+  loc <- orderly_develop_location(name, root)
+  status <- orderly_status(loc$path)
+  drop <- status$filename[status$derived & status$present]
+  if (length(drop) > 0L) {
+    orderly_log("remove", drop)
+    file.remove(file.path(loc$path, drop))
+  }
+  invisible(NULL)
+}
+
+
+orderly_develop_location <- function(name, root) {
+  config <- orderly_config_get(root, locate)
+  config <- check_orderly_archive_version(config)
+  if (grepl("^src/.+", name)) {
+    name <- sub("^src/", "", name)
+  }
+
+  list(config = config,
+       name = name,
+       path = file.path(path_src(config$root), name))
+}
+
+
+## This might be more general, but for now assume not
+orderly_status <- function(path) {
   assert_is_directory(path, FALSE)
   assert_file_exists(file.path(path, "orderly.yml"))
   ## TODO: this needs making more robust
   config <- orderly_config_get(file.path(path, "..", ".."), FALSE)
   info <- recipe_read(path, config, FALSE)
 
-  ## There are the file that orderly cares about (TODO, does source get here?)
+  ## There are the file that orderly cares about
   internal <- list(orderly = "orderly.yml",
                    script = info$script,
                    source = info$sources,
                    resource = info$resources,
+                   global = names(info$global_resources),
                    dependency = info$depends$as,
-                   artefact = unlist(info$artefacts[, "filenames"]))
+                   artefact = unlist(info$artefacts[, "filenames"],
+                                     FALSE, FALSE))
   status <- data_frame(
     filename = unlist(internal, FALSE, FALSE),
     type = rep(names(internal), lengths(internal)))
@@ -21,6 +120,8 @@ orderly_status <- function(path = NULL) {
     status <- rbind(status, data_frame(filename = extra, type = "unknown"))
   }
   status$present <- file.exists(file.path(path, status$filename))
+  ## TODO: better name?
+  status$derived <- status$type %in% c("global", "dependency", "artefact")
   ## status$origin <- NA_character_
   ## This is going to be fairly hard to get right.  Better might be to
   ## check if it is *consistent*?

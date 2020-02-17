@@ -128,7 +128,8 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
 
 
 recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
-                           fetch = FALSE, message = NULL, use_draft = FALSE) {
+                           fetch = FALSE, message = NULL, use_draft = FALSE,
+                           copy_files = TRUE) {
   assert_is(config, "orderly_config")
   config <- orderly_config_get(config, FALSE)
 
@@ -141,8 +142,8 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
     on.exit(git_checkout_branch(prev, TRUE, config$root))
   }
 
-  info <- recipe_read(file.path(path_src(config$root), name),
-                      config, use_draft = use_draft)
+  info <- recipe_read(file.path(path_src(config$root), name), config,
+                      use_draft = use_draft)
 
   id <- new_report_id()
   orderly_log("id", id)
@@ -152,8 +153,10 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
   }
 
   info$id <- id
-  info$workdir <- file.path(path_draft(config$root), info$name, id)
-  info <- recipe_prepare_workdir(info, message, config)
+  if (copy_files) {
+    info$workdir <- file.path(path_draft(config$root), info$name, id)
+    info <- recipe_prepare_workdir(info, message, config)
+  }
   info$git <- git_info(info$path)
 
   info
