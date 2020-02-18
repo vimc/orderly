@@ -43,6 +43,6 @@ Suggests:
     rmarkdown,
     testthat,
     vaultr (>= 1.0.3)
-RoxygenNote: 7.0.0
+RoxygenNote: 7.0.1
 VignetteBuilder: knitr
 Language: en-GB

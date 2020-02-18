@@ -1,3 +1,107 @@
+##' orderly allows a report to rely on the artefacts of one or more other
+##' orderly reports. This allows users to develop a network of interconnected
+##' reports where the output from report becomes the source of data for another.
+##' There are two natural questions that can develop around this workflow
+#'
+##' 1. We have updated a report and now need to re-run everything that depends
+##'    on it.
+##' 2. We have a report that we want to re-run to ensure uses the latest
+##'    information. Which other reports feed into this report?
+##'
+##' This function allows this information to be shown in an easily readable
+##' format. Allowing users to see the dependency tree and which reports need
+##' to be re-run.
+##'
+##' Remarks
+##' The tree is built using data from the local report database (see
+##' \code{\link{orderly_rebuild}}). This means that it will not pick up
+##' changes from an report that has not be run. _i.e._ If a users changes a
+##' report to use artefacts different
+##'
+##'
+##'
+##' @title Print the dependency tree for a given report using orderly log
+##'
+##' @param name the name of the report
+##' @param id the id of the report, if omitted, use the id of the latest report
+##' @param direction A string indicating if we want to move up or down the tree
+##'        permitted values are upstream, downstream
+##' @param propagate A boolean indicating if we want to propogate out of date
+##'                  through the tree
+##' @param max_depth A numeric, how far back should the tree go, this can be
+##'                  useful to truncate a very large tree. (default = 100)
+##' @param show_all A boolean, should we show all reports in the tree, not just
+##'                 the latest.
+##' @inheritParams orderly_list
+##'
+##' @return An orderly Tree object with the root corresponding to the given
+##'         report.
+##' @export
+##' @examples
+##' path <- orderly::orderly_example("demo")
+##'
+##' # To run most reports, provide the report name (and the path if
+##' # not running in the working directory, as is the case here):
+##' orderly::orderly_run("other", root = path)
+##' orderly::orderly_run("use_dependency", root = path)
+##' orderly::orderly_run("use_dependency_2", root = path)
+##'
+##' orderly::orderly_dependency_tree("other", root = path)
+##' orderly::orderly_dependency_tree("use_dependency_2", root = path,
+##'                                  direction = "upstream")
+orderly_dependency_tree <- function(name, id = "latest", root = NULL,
+                                   locate = TRUE, direction = "downstream",
+                                   propagate = TRUE, max_depth = 100,
+                                   show_all = FALSE) {
+  assert_scalar_character(direction)
+  direction <- match_value(direction, c("upstream", "downstream"))
+
+  assert_scalar_character(name)
+  assert_scalar_character(id)
+  assert_scalar_logical(locate)
+  assert_scalar_logical(propagate)
+  assert_scalar_logical(show_all)
+  assert_scalar_numeric(max_depth)
+
+  con <- orderly_db("destination", orderly_config_get(root, locate))
+  on.exit(DBI::dbDisconnect(con))
+
+  # make sure a report with this name exists
+  reports_database <- DBI::dbGetQuery(con, "SELECT name FROM report")
+  if (!(name %in% reports_database$name)) {
+    stop("This report does not exist")
+  }
+
+  dep_tree <- build_tree(name = name, id = id, depth = max_depth, con = con,
+                         direction = direction, show_all = show_all)
+
+  # propagate out-of-date
+  if (propagate) {
+    propagate(dep_tree$root, direction)
+  }
+
+  dep_tree
+}
+
+##' @title Given a tree return a list of reports to be re-run (and the order
+##' that they should be re-run)
+##'
+##' @param tree A dpendency tree object from orderly_dependency_tree
+##'
+##' @return a list of report names to be re-run. First report to rerun first
+##' @export
+orderly_out_of_date_reports <- function(tree) {
+  types <- class(tree)
+  if (!("Tree" %in% types)) {
+    name <- deparse(substitute(tree))
+    stop(sprintf("'%s' must be a Tree object", name), call. = FALSE)
+  }
+
+  reports <- out_of_date_reports(tree$root)
+
+  reports
+}
+
 ##' @title Get the dependencies for a given report from the database
 ##'
 ##' @param name the name of the report
@@ -74,7 +178,7 @@ get_ids_by_name <- function(con, name) {
 get_latest_by_name <- function(con, name) {
   reports <- get_ids_by_name(con, name)
 
-  reports[1,]
+  (reports$id)[1]
 }
 
 ##' @title Get the id of the second most recent version of a report
@@ -95,7 +199,7 @@ get_previous_by_name <- function(con, name) {
     stop(sprintf("There is only one version of %s", name))
   }
 
-  reports[2,]
+  (reports$id)[2]
 }
 
 ##' @title Get the id of the latest version of a report
@@ -107,7 +211,7 @@ get_previous_by_name <- function(con, name) {
 ##'
 ##' @noRd
 get_latest_by_id <- function(con, id) {
-  get_latest_by_name(con, id_to_name(con, id))$id
+  get_latest_by_name(con, id_to_name(con, id))
 }
 
 ##' @title Get the name of a report for a given id
@@ -143,7 +247,7 @@ id_to_name <- function(con, id) {
 is_latest_in_db <- function(con, id) {
   latest <- get_latest_by_name(con, id_to_name(con, id))
 
-  latest$id == id
+  latest == id
 }
 
 ##' Logic for working out if a report is out of date; assume B depends on A
@@ -269,25 +373,17 @@ build_tree <- function(name, id, depth = 100, parent = NULL,
     }
   }
 
-  # make sure a report with this name exists
-  reports_database <- DBI::dbGetQuery(con, "SELECT name FROM report")
-  if (!(name %in% reports_database$name)) {
-    stop("This report does not exist")
-  }
-
   # do we need to find the latest version of the report?
   if (id == "latest") {
-    id <- get_latest_by_name(con, name)$id
+    id <- get_latest_by_name(con, name)
   } else if (id == "previous") {
-    id <- get_previous_by_name(con, name)$id
+    id <- get_previous_by_name(con, name)
   } else {
     id_database <- id_to_name(con, id)
     if (is.null(id_database)) {
       stop(sprintf("No report with id %s in the database", id))
-    } else {
-      if (name != id_to_name(con, id)) {
+    } else if (name != id_to_name(con, id)) {
         stop(sprintf("id %s does not match report name %s", id, name))
-      }
     }
   }
 
@@ -347,70 +443,6 @@ out_of_date_reports <- function(vertex, reports = c()) {
     }
   }
   reports
-}
-
-##' @title Given a tree return a list of reports to be re-run (and the order
-##' that they should be re-run)
-##'
-##' @param tree A dpendency tree object from orderly_build_dep_tree.
-##'
-##' @return a list of report names to be re-run. First report to rerun first
-##' @export
-orderly_out_of_date_reports <- function(tree) {
-  types <- class(tree)
-  if (!("Tree" %in% types)) {
-    name <- deparse(substitute(tree))
-    stop(sprintf("'%s' must be a Tree object", name), call. = FALSE)
-  }
-
-  reports <- out_of_date_reports(tree$root)
-
-  reports
-}
-
-##' @title Print the dependency tree for a given report using orderly log
-##'
-##' @param name the name of the report
-##' @param id the id of the report, if omitted, use the id of the latest report
-##' @param direction A string indicating if we want to move up or down the tree
-##'        permitted values are upstream, downstream
-##' @param propagate A boolean indicating if we want to propogate out of date
-##'                  through the tree
-##' @param max_depth A numeric, how far back should the tree go, this can be
-##'                  useful to truncate a very large tree. (default = 100)
-##' @param show_all A boolean, should we show all reports in the tree, not just
-##'                 the latest.
-##' @inheritParams orderly_list
-##'
-##' @return An orderly Tree object with the root corresponding to the given
-##'         report.
-##' @export
-orderly_build_dep_tree <- function(name, id = "latest", root = NULL,
-                                   locate = TRUE, direction = "downstream",
-                                   propagate = TRUE, max_depth = 100,
-                                   show_all = FALSE) {
-  assert_scalar_character(direction)
-  direction <- match_value(direction, c("upstream", "downstream"))
-
-  assert_scalar_character(name)
-  assert_scalar_character(id)
-  assert_scalar_logical(locate)
-  assert_scalar_logical(propagate)
-  assert_scalar_logical(show_all)
-  assert_scalar_numeric(max_depth)
-
-  con <- orderly_db("destination", orderly_config_get(root, locate))
-  on.exit(DBI::dbDisconnect(con))
-
-  dep_tree <- build_tree(name = name, id = id, depth = max_depth, con = con,
-                         direction = direction, show_all = show_all)
-
-  # propagate out-of-date
-  if (propagate) {
-    propagate(dep_tree$root, direction)
-  }
-
-  dep_tree
 }
 
 propagate <- function(vertex, direction) {
