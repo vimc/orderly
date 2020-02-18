@@ -302,7 +302,13 @@ load_remote <- function(name, config) {
   hash <- hash_object(remote)
   if (is.null(cache$remotes[[hash]])) {
     driver <- getExportedValue(remote$driver[[1L]], remote$driver[[2L]])
-    args <- resolve_secrets(remote$args, config)
+    base <- "orderly_config.yml:remote"
+    remote <- resolve_secrets(
+      resolve_env(remote, name = sprintf("%s:%s", base, name)),
+      config)
+    args <- resolve_secrets(
+      resolve_env(remote$args, name = sprintf("%s:%s:args", base, name)),
+      config)
     cache$remotes[[hash]] <- do.call(driver, args)
   }
   cache$remotes[[hash]]

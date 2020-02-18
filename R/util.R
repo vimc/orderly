@@ -243,11 +243,12 @@ append_text <- function(filename, txt) {
   writeLines(c(orig, txt), filename)
 }
 
-Sys_getenv <- function(x, error = TRUE, default = NULL) {
+Sys_getenv <- function(x, error = TRUE, default = NULL, name = NULL) {
   v <- Sys.getenv(x, NA_character_)
   if (is.na(v)) {
     if (error) {
-      stop(sprintf("Environment variable '%s' is not set", x))
+      stop(sprintf("Environment variable '%s' is not set\n\t(used in %s)",
+                   x, name))
     } else {
       v <- default
     }
@@ -318,19 +319,24 @@ indent <- function(x, n) {
   paste0(strrep(" ", n), strsplit(x, "\n", fixed = TRUE)[[1]])
 }
 
-resolve_driver_config <- function(args, config) {
-  resolve_secrets(resolve_env(args), config)
+resolve_driver_config <- function(args, config, name = NULL) {
+  resolve_secrets(resolve_env(args, name = name), config)
 }
 
-resolve_env <- function(x, error = TRUE, default = NULL) {
-  f <- function(x) {
+resolve_env <- function(x, error = TRUE, default = NULL, name = NULL) {
+  f <- function(nm, x) {
     if (length(x) == 1L && is.character(x) && grepl("^\\$[0-9A-Z_]+$", x)) {
-      Sys_getenv(substr(x, 2, nchar(x)), error = error, default = NULL)
+      Sys_getenv(substr(x, 2, nchar(x)), error = error, default = NULL,
+                 name = join_name(name, nm))
     } else {
       x
     }
   }
-  lapply(x, f)
+  join_name <- function(a, b) {
+    if (is.null(a)) b else sprintf("%s:%s", a, b)
+  }
+  assert_named(x)
+  Map(f, names(x), x)
 }
 
 is_windows <- function() {

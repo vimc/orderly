@@ -3,7 +3,9 @@ resolve_secrets <- function(x, config) {
     return(x)
   }
   loadNamespace("vaultr")
-  withr::with_envvar(
-    orderly_envir_read(config$root),
-    vaultr::vault_resolve_secrets(x, vault_args = resolve_env(config[['vault']])))
+  name <- "orderly_config.yml:vault"
+  withr::with_envvar(orderly_envir_read(config$root), {
+    vault_args <- resolve_env(config[["vault"]], name = name)
+    vaultr::vault_resolve_secrets(x, vault_args = vault_args)
+  })
 }
