@@ -248,7 +248,7 @@ Sys_getenv <- function(x, used_in, error = TRUE, default = NULL) {
   if (is.na(v)) {
     if (error) {
       stop(sprintf("Environment variable '%s' is not set\n\t(used in %s)",
-                   x, used_in))
+                   x, used_in), call. = FALSE)
     } else {
       v <- default
     }
