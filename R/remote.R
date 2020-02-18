@@ -60,17 +60,25 @@ orderly_pull_dependencies <- function(name, root = NULL, locate = TRUE,
   path <- file.path(path_src(config$root), name)
   depends <- recipe_read(path, config, FALSE)$depends
 
+  ## TODO: We can't pull draft dependencies, but we're deprecating
+  ## adding them to the yml; they don't exist in the depends
+  ## data.frame at the moment sometimes.
+  if ("draft" %in% names(depends)) {
+    depends <- depends[!depends$draft, ]
+  }
+
+  ## Filter for unique dependencies
+  if (NROW(depends) > 1L) {
+    depends <- unique(depends[c("id", "name", "draft")])
+  }
+
   msg <- sprintf("%s has %d %s", name, NROW(depends),
                  ngettext(NROW(depends), "dependency", "dependencies"))
   orderly_log("depends", msg)
 
-  if (!is.null(depends)) {
-    for (i in seq_len(nrow(depends))) {
-      if (!isTRUE(depends$draft[[i]])) {
-        orderly_pull_archive(depends$name[[i]], depends$id[[i]], config,
-                             FALSE, remote)
-      }
-    }
+  for (i in seq_len(NROW(depends))) {
+    orderly_pull_archive(depends$name[[i]], depends$id[[i]], config,
+                         FALSE, remote)
   }
 }
 
