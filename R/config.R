@@ -241,7 +241,8 @@ config_read_db <- function(name, info, filename) {
         stop(flow_text(msg), call. = FALSE)
       }
       dat["default_instance"] <-
-        resolve_env(dat["default_instance"], error = FALSE, default = NULL)
+        resolve_env(dat["default_instance"], "default_instance",
+                    error = FALSE, default = NULL)
       if (!is.null(dat$default_instance)) {
         match_value(dat$default_instance, names(instances),
                     paste0(label, ":default_instance"))

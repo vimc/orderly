@@ -46,15 +46,12 @@ test_that("resolve_env", {
   set.seed(1)
   v <- paste(sample(c(LETTERS, 0:9, "_"), 20, replace = TRUE), collapse = "")
   vv <- paste0("$", v)
-  expect_identical(resolve_env(c(x = v)), list(x = v))
+  expect_identical(resolve_env(c(x = v), "loc"), list(x = v))
   expect_error(
-    resolve_env(c(x = vv)),
-    sprintf("Environment variable '%s' is not set.*used in x", v))
-  expect_error(
-    resolve_env(c(x = vv), name = "foo"),
-    sprintf("Environment variable '%s' is not set.*used in foo:x", v))
+    resolve_env(c(x = vv), "loc"),
+    sprintf("Environment variable '%s' is not set.*used in loc:x", v))
   expect_identical(
-    withr::with_envvar(setNames("value", v), resolve_env(c(x = vv))),
+    withr::with_envvar(setNames("value", v), resolve_env(c(x = vv), "loc")),
     list(x = "value"))
 })
 
@@ -67,8 +64,9 @@ test_that("resolve_env skips non-scalars", {
 
   env <- setNames("value", v)
   expect_identical(
-    withr::with_envvar(env,
-                       resolve_env(list(a = vv, b = list(a = 1, b = 2)))),
+    withr::with_envvar(
+      env,
+      resolve_env(list(a = vv, b = list(a = 1, b = 2)), "loc")),
     list(a = "value", b = list(a = 1, b = 2)))
 })
 
@@ -408,12 +406,16 @@ test_that("abbreviate", {
 test_that("Sys_getenv", {
   withr::with_envvar(
     c("SOME_VAR" = NA_character_), {
-      expect_error(Sys_getenv("SOME_VAR", name = "loc"),
-                   "Environment variable 'SOME_VAR' is not set")
-      expect_null(Sys_getenv("SOME_VAR", FALSE))
-      expect_identical(Sys_getenv("SOME_VAR", FALSE, NA_character_),
+      expect_error(
+        Sys_getenv("SOME_VAR", "loc"),
+        "Environment variable 'SOME_VAR' is not set.*used in loc")
+      expect_null(Sys_getenv("SOME_VAR", "loc", FALSE))
+      expect_identical(Sys_getenv("SOME_VAR", "loc", FALSE, NA_character_),
                        NA_character_)
     })
+  withr::with_envvar(
+    c("SOME_VAR" = "x"),
+    expect_identical(Sys_getenv("SOME_VAR", "loc"), "x"))
 })
 
 
