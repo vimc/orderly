@@ -1,6 +1,6 @@
 # orderly 1.0.11
 
-* More informative informative error messages when orderly fails to resolve an environment variable, particularly when loading vault configuration (VIMC-3386)
+* More informative informative error messages when orderly fails to resolve an environment variable, particularly when loading remote configuration (VIMC-3386)
 
 # orderly 1.0.10
 
