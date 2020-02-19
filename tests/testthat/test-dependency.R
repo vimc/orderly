@@ -281,3 +281,52 @@ test_that("Only one report - previous", {
                                       direction = "downstream"),
                "There is only one version of other")
 })
+
+test_that("Pinned reports",{
+  ## There is logic in orderly_dependency_tree for different behaviour when a
+  ## report uses an artefact from a pinned version of a report. We also
+  ## distinguish between pinned to the latest and pinned to anything else.
+
+  ## To test this we need to update the yaml to point to specfic versions
+
+  ## Run the first report twice
+  path <- prepare_orderly_example("demo")
+  id_1 <- orderly_run("other", root=path, parameters=list(nmin=0), echo = FALSE)
+  orderly_commit(id_1, root=path)
+  id_2 <- orderly_run("other", root=path, parameters=list(nmin=0), echo = FALSE)
+  orderly_commit(id_2, root=path)
+
+  ## Update the second report to depend on the out of date version of the first
+  ## report
+  path_example <- file.path(path, "src", "use_dependency")
+  yml <- file.path(path_example, "orderly.yml")
+  txt <- yaml_read(yml)
+  txt$depends$other$id <- id_1
+  yaml_write(txt, file.path(path_example, "orderly.yml"))
+
+  ## Run the second report twice
+  id_3 <- orderly_run("use_dependency", root=path, echo = FALSE)
+  orderly_commit(id_3, root=path)
+  id_4 <- orderly_run("use_dependency", root=path, echo = FALSE)
+  orderly_commit(id_4, root=path)
+
+  ## Update the third report to depend on the latest version of the second
+  ## report
+  path_example <- file.path(path, "src", "use_dependency_2")
+  yml <- file.path(path_example, "orderly.yml")
+  txt <- yaml_read(yml)
+  txt$depends$use_dependency$id <- id_4
+  yaml_write(txt, file.path(path_example, "orderly.yml"))
+
+  ## Run the third report
+  id_5 <- orderly_run("use_dependency_2", root=path, echo = FALSE)
+  orderly_commit(id_5, root=path)
+
+  tree <- orderly_dependency_tree("other", root = path, id = id_1, direction = "downstream")
+  tree_print <- tree$format()
+  ## We don't represent the pinned status of a report in the tree so the only
+  ## thing we can reallly chack is the version id
+  expect_match(tree_print, id_1)
+  expect_match(tree_print, id_4)
+  expect_match(tree_print, id_5)
+})
