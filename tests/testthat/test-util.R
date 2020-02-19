@@ -60,7 +60,7 @@ test_that("resolve_env skips non-scalars", {
   set.seed(1)
   v <- paste(sample(c(LETTERS, 0:9, "_"), 20, replace = TRUE), collapse = "")
   vv <- paste0("$", v)
-  expect_identical(resolve_env(c(x = v)), list(x = v))
+  expect_identical(resolve_env(c(x = v), "loc"), list(x = v))
 
   env <- setNames("value", v)
   expect_identical(
