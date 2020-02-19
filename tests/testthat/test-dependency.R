@@ -322,7 +322,8 @@ test_that("Pinned reports",{
   id_5 <- orderly_run("use_dependency_2", root=path, echo = FALSE)
   orderly_commit(id_5, root=path)
 
-  tree <- orderly_dependency_tree("other", root = path, id = id_1, direction = "downstream")
+  tree <- orderly_dependency_tree("other", root = path, id = id_1,
+                                  direction = "downstream")
   tree_print <- tree$format()
   ## We don't represent the pinned status of a report in the tree so the only
   ## thing we can reallly chack is the version id
