@@ -62,20 +62,22 @@ format. Allowing users to see the dependency tree and which reports need
 to be re-run.
 
 Remarks
-The tree is built using data from the local report database (see 
-\code{\link{orderly_rebuild}}). This means that it will not pick up 
-changes from an report that has not be run. _i.e._ If a users changes a 
+The tree is built using data from the local report database (see
+\code{\link{orderly_rebuild}}). This means that it will not pick up
+changes from an report that has not be run. _i.e._ If a users changes a
 report to use artefacts different
 }
 \examples{
 path <- orderly::orderly_example("demo")
 
-# To run most reports, provide the report name (and the path if
-# not running in the working directory, as is the case here):
-orderly::orderly_run("other", root = path)
-orderly::orderly_run("use_dependency", root = path)
-orderly::orderly_run("use_dependency_2", root = path)
+id <- orderly::orderly_run("other", root = path, parameters=list(nmin=0))
+orderly::orderly_commit(id, root = path)
+id <- orderly::orderly_run("use_dependency", root = path)
+orderly::orderly_commit(id, root = path)
+id <- orderly::orderly_run("use_dependency_2", root = path)
+orderly::orderly_commit(id, root = path)
 
-tree <- orderly::orderly_dependency_tree("other", root = path)
-print(tree)
+orderly::orderly_dependency_tree("other", root = path)
+orderly::orderly_dependency_tree("use_dependency_2", root = path,
+                                 direction = "upstream")
 }

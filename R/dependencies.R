@@ -1,24 +1,24 @@
 ##' orderly allows a report to rely on the artefacts of one or more other
 ##' orderly reports. This allows users to develop a network of interconnected
 ##' reports where the output from report becomes the source of data for another.
-##' There are two natural questions that can develop around this workflow
+##' There are two natural questions that can develop around this workflow:
 #'
 ##' 1. We have updated a report and now need to re-run everything that depends
 ##'    on it.
 ##' 2. We have a report that we want to re-run to ensure uses the latest
-##'    information. Which other reports feed into this report?
+##'    information. Which other reports are used (directly or indirectly) by
+##'    this report?
 ##'
-##' This function allows this information to be shown in an easily readable
-##' format. Allowing users to see the dependency tree and which reports need
-##' to be re-run.
+##' This function display this information in an easily readable format.
+##' Allowing users to see the dependency tree and which reports are out of date 
+##' and need to be re-run.
 ##'
-##' Remarks
+##' Remark
 ##' The tree is built using data from the local report database (see
-##' \code{\link{orderly_rebuild}}). This means that it will not pick up
-##' changes from an report that has not be run. _i.e._ If a users changes a
-##' report to use artefacts different
-##'
-##'
+##' \code{\link{orderly_commit}}). This means that it will not find changes from
+##' a report that has not be run and commited. _i.e._ if a user changes a
+##' report to use or create different artefacts this will not be picked up by
+##' the function until the reports are re-run and commited to the archive.
 ##'
 ##' @title Print the dependency tree for a given report using orderly log
 ##'
@@ -40,15 +40,16 @@
 ##' @examples
 ##' path <- orderly::orderly_example("demo")
 ##'
-##' # To run most reports, provide the report name (and the path if
-##' # not running in the working directory, as is the case here):
-##' orderly::orderly_run("other", root = path)
-##' orderly::orderly_run("use_dependency", root = path)
-##' orderly::orderly_run("use_dependency_2", root = path)
-##'
+##' id <- orderly::orderly_run("other", root = path, parameters=list(nmin=0))
+##' orderly::orderly_commit(id, root = path)
+##' id <- orderly::orderly_run("use_dependency", root = path)
+##' orderly::orderly_commit(id, root = path)
+##' id <- orderly::orderly_run("use_dependency_2", root = path)
+##' orderly::orderly_commit(id, root = path)
 ##' orderly::orderly_dependency_tree("other", root = path)
 ##' orderly::orderly_dependency_tree("use_dependency_2", root = path,
 ##'                                  direction = "upstream")
+##'
 orderly_dependency_tree <- function(name, id = "latest", root = NULL,
                                    locate = TRUE, direction = "downstream",
                                    propagate = TRUE, max_depth = 100,
