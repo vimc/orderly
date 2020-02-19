@@ -125,8 +125,6 @@ config_check_remote <- function(dat, filename) {
     }
     assert_scalar_character(remote$driver, field_name("driver"))
     assert_named(remote$args, name = field_name("args"))
-    remote <- resolve_env(remote, error = FALSE)
-    remote$args <- resolve_env(remote$args, error = FALSE, default = NULL)
 
     ## optionals:
     if (!is.null(remote$url)) {
@@ -135,9 +133,6 @@ config_check_remote <- function(dat, filename) {
                "is deprecated and will be dropped in a future version of",
                "orderly.  Please remove it from your orderly_config.yml")
       orderly_warning(flow_text(msg))
-    }
-    if (!is.null(remote$slack_url)) {
-      assert_scalar_character(remote$slack_url, field_name("slack_url"))
     }
     if (is.null(remote$primary)) {
       remote$primary <- FALSE
@@ -246,7 +241,8 @@ config_read_db <- function(name, info, filename) {
         stop(flow_text(msg), call. = FALSE)
       }
       dat["default_instance"] <-
-        resolve_env(dat["default_instance"], error = FALSE, default = NULL)
+        resolve_env(dat["default_instance"], "default_instance",
+                    error = FALSE, default = NULL)
       if (!is.null(dat$default_instance)) {
         match_value(dat$default_instance, names(instances),
                     paste0(label, ":default_instance"))

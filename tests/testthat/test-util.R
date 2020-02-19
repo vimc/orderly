@@ -46,11 +46,13 @@ test_that("resolve_env", {
   set.seed(1)
   v <- paste(sample(c(LETTERS, 0:9, "_"), 20, replace = TRUE), collapse = "")
   vv <- paste0("$", v)
-  expect_identical(resolve_env(v), list(v))
-  expect_error(resolve_env(vv),
-               sprintf("Environment variable '%s' is not set", v))
-  expect_identical(withr::with_envvar(setNames("value", v), resolve_env(vv)),
-                   list("value"))
+  expect_identical(resolve_env(c(x = v), "loc"), list(x = v))
+  expect_error(
+    resolve_env(c(x = vv), "loc"),
+    sprintf("Environment variable '%s' is not set.*used in loc:x", v))
+  expect_identical(
+    withr::with_envvar(setNames("value", v), resolve_env(c(x = vv), "loc")),
+    list(x = "value"))
 })
 
 
@@ -58,12 +60,13 @@ test_that("resolve_env skips non-scalars", {
   set.seed(1)
   v <- paste(sample(c(LETTERS, 0:9, "_"), 20, replace = TRUE), collapse = "")
   vv <- paste0("$", v)
-  expect_identical(resolve_env(v), list(v))
+  expect_identical(resolve_env(c(x = v), "loc"), list(x = v))
 
   env <- setNames("value", v)
   expect_identical(
-    withr::with_envvar(env,
-                       resolve_env(list(a = vv, b = list(a = 1, b = 2)))),
+    withr::with_envvar(
+      env,
+      resolve_env(list(a = vv, b = list(a = 1, b = 2)), "loc")),
     list(a = "value", b = list(a = 1, b = 2)))
 })
 
@@ -177,8 +180,10 @@ test_that("vault configuration honours environment variables", {
   ## Environment variable not resolved yet:
   expect_equal(config$vault$addr, "$ORDERLY_VAULT_ADDR")
   ## Sensible error if not set:
-  expect_error(resolve_secrets(x, config),
-               "Environment variable 'ORDERLY_VAULT_.+' is not set")
+  expect_error(
+    resolve_secrets(x, config),
+    paste0("Environment variable 'ORDERLY_VAULT_ADDR' is not set.*",
+           "used in orderly_config.yml:vault:addr"))
   ## Resolve if set
   env <- list(ORDERLY_VAULT_ADDR = srv$addr, ORDERLY_VAULT_TOKEN = srv$token)
   yaml_write(env, file.path(path, "orderly_envir.yml"))
@@ -401,12 +406,16 @@ test_that("abbreviate", {
 test_that("Sys_getenv", {
   withr::with_envvar(
     c("SOME_VAR" = NA_character_), {
-      expect_error(Sys_getenv("SOME_VAR"),
-                   "Environment variable 'SOME_VAR' is not set")
-      expect_null(Sys_getenv("SOME_VAR", FALSE))
-      expect_identical(Sys_getenv("SOME_VAR", FALSE, NA_character_),
+      expect_error(
+        Sys_getenv("SOME_VAR", "loc"),
+        "Environment variable 'SOME_VAR' is not set.*used in loc")
+      expect_null(Sys_getenv("SOME_VAR", "loc", FALSE))
+      expect_identical(Sys_getenv("SOME_VAR", "loc", FALSE, NA_character_),
                        NA_character_)
     })
+  withr::with_envvar(
+    c("SOME_VAR" = "x"),
+    expect_identical(Sys_getenv("SOME_VAR", "loc"), "x"))
 })
 
 

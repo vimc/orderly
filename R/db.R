@@ -72,13 +72,16 @@ orderly_db <- function(type, root = NULL, locate = TRUE, validate = TRUE,
   } else if (type == "csv") {
     con <- file_store_csv(path_csv(config$root))
   } else if (type == "destination") {
-    con <- orderly_db_dbi_connect(config$destination, config)
+    con <- orderly_db_dbi_connect(config$destination, config,
+                                  "orderly_config.yml:destination")
     withCallingHandlers(
       report_db_init(con, config, validate = validate),
       error = function(e) DBI::dbDisconnect(con))
   } else if (type == "source") {
     config_db <- db_instance_select(instance, config$database)
-    con <- lapply(config_db, orderly_db_dbi_connect, config)
+    name <- sprintf("orderly_config.yml:database:%s", names(config_db))
+    con <- Map(orderly_db_dbi_connect, config_db, name = name,
+               MoreArgs = list(config = config))
   } else {
     stop(sprintf("Invalid db type '%s'", type))
   }
@@ -86,18 +89,17 @@ orderly_db <- function(type, root = NULL, locate = TRUE, validate = TRUE,
 }
 
 
-orderly_db_dbi_connect <- function(x, config) {
-  dat <- orderly_db_args(x, config)
+orderly_db_dbi_connect <- function(x, config, name) {
+  dat <- orderly_db_args(x, config, name)
   do.call(DBI::dbConnect, c(list(dat$driver()), dat$args))
 }
 
 
-orderly_db_args <- function(x, config) {
+orderly_db_args <- function(x, config, name) {
   driver <- getExportedValue(x$driver[[1L]], x$driver[[2L]])
-
   args <- withr::with_envvar(
     orderly_envir_read(config$root),
-    args <- resolve_driver_config(x$args, config))
+    args <- resolve_driver_config(x$args, config, name))
 
   if (x$driver[[2]] == "SQLite") {
     dbname <- args$dbname

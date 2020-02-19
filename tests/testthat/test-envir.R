@@ -12,7 +12,7 @@ test_that("set env", {
 
   config <- orderly_config(path)
 
-  expect_error(orderly_db_args(config$database$source, config),
+  expect_error(orderly_db_args(config$database$source, config, "loc"),
                "Environment variable 'MY_USER' is not set")
 
   writeLines(c("MY_USER: foo"), path_orderly_envir_yml(path))

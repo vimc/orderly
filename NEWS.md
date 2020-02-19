@@ -1,3 +1,7 @@
+# orderly 1.0.11
+
+* More informative error messages when orderly fails to resolve an environment variable, particularly when loading remote configuration (VIMC-3386)
+
 # orderly 1.0.10
 
 * Fix regression running reports - vault autocompletes to vault_server

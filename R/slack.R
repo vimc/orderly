@@ -1,14 +1,14 @@
 ## Send slack messages!
+
 slack_post_success <- function(dat, config) {
   if (!is.null(config$remote_identity)) {
     remote <- config$remote[[config$remote_identity]]
-
-    slack_url <- resolve_secrets(remote$slack_url, config)[[1L]]
-
     driver <- get_remote(config$remote_identity, config)
     report_url <- driver$url_report(dat$meta$name, dat$meta$id)
+    slack_url <- remote$slack_url
 
     if (!is.null(slack_url)) {
+      assert_scalar_character(slack_url, "slack_url")
       data <- slack_data(dat, remote$name, report_url, remote$primary)
       do_slack_post_success(slack_url, data)
     }
