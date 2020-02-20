@@ -85,7 +85,7 @@ test_that("has dependencies upstream", {
   expect_true(length(root$children) == 0)
 
   tree <- orderly_dependency_tree("depend3", root = path,
-                                 direction = "upstream")
+                                  direction = "upstream")
   root <- tree$root
   expect_true(length(root$children) == 1)
   child_1 <- root$children[[1]]
@@ -155,7 +155,7 @@ test_that("propagate", {
 
   ##
   tree <- orderly_dependency_tree("depend3", root = path,
-                                 propagate = FALSE, direction = "upstream")
+                                  propagate = FALSE, direction = "upstream")
   ## SHOULD NOT be out of date since we did not propagate out of dateness
   root <- tree$root
   expect_false(root$out_of_date)
@@ -173,7 +173,7 @@ test_that("propagate", {
 
 test_that("circular dependency", {
   ## A circular dependency is difficult to create
-  ## we need two reports A,B s.t A -> B
+  ## we need two reports A, B s.t. A -> B
   ## run A; then modify A so that B -> A then run B
   path <- prepare_orderly_example("depends", testing = TRUE)
   ## run report other
@@ -229,7 +229,7 @@ test_that("multiple dependencies", {
   run_orderly_demo(path)
 
   tree <- orderly_dependency_tree("example", root = path,
-                                 propagate = FALSE, show_all = TRUE)
+                                  propagate = FALSE, show_all = TRUE)
 
   tree_print <- tree$format()
 
@@ -287,10 +287,10 @@ test_that("Pinned reports",{
 
   ## Run the first report twice
   path <- prepare_orderly_example("depends", testing = TRUE)
-  id_1 <- orderly_run("example", root=path, echo = FALSE)
-  orderly_commit(id_1, root=path)
-  id_2 <- orderly_run("example", root=path, echo = FALSE)
-  orderly_commit(id_2, root=path)
+  id_1 <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id_1, root = path)
+  id_2 <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id_2, root = path)
 
   ## Update the second report to depend2 on the out of date version of the first
   ## report
@@ -301,10 +301,10 @@ test_that("Pinned reports",{
   yaml_write(txt, file.path(path_example, "orderly.yml"))
 
   ## Run the second report twice
-  id_3 <- orderly_run("depend2", root=path, echo = FALSE)
-  orderly_commit(id_3, root=path)
-  id_4 <- orderly_run("depend2", root=path, echo = FALSE)
-  orderly_commit(id_4, root=path)
+  id_3 <- orderly_run("depend2", root = path, echo = FALSE)
+  orderly_commit(id_3, root = path)
+  id_4 <- orderly_run("depend2", root = path, echo = FALSE)
+  orderly_commit(id_4, root = path)
 
   ## Update the third report to depend2 on the latest version of the second
   ## report
@@ -316,8 +316,8 @@ test_that("Pinned reports",{
   yaml_write(txt, file.path(path_example, "orderly.yml"))
 
   ## Run the third report
-  id_5 <- orderly_run("depend3", root=path, echo = FALSE)
-  orderly_commit(id_5, root=path)
+  id_5 <- orderly_run("depend3", root = path, echo = FALSE)
+  orderly_commit(id_5, root = path)
 
   tree <- orderly_dependency_tree("example", root = path, id = id_1,
                                   direction = "downstream")
