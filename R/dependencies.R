@@ -51,9 +51,9 @@
 ##'                                  direction = "upstream")
 ##'
 orderly_dependency_tree <- function(name, id = "latest", root = NULL,
-                                   locate = TRUE, direction = "downstream",
-                                   propagate = TRUE, max_depth = 100,
-                                   show_all = FALSE) {
+                                    locate = TRUE, direction = "downstream",
+                                    propagate = TRUE, max_depth = 100,
+                                    show_all = FALSE) {
   assert_scalar_character(direction)
   direction <- match_value(direction, c("upstream", "downstream"))
 
@@ -446,6 +446,14 @@ out_of_date_reports <- function(vertex, reports = c()) {
   reports
 }
 
+##' @title Propagate out-of-date statuses down the tree. _i.e._ If a report is
+##'        out-of-date make everything that depends on it out-of-date too
+##'
+##' @param vertex The R6 vertex to be checked
+##' @param direction Upstream or downstream produce slightly different behaviour
+##'
+##' @return Nothing Updates the R6 vertex and child vertices
+##' @noRd
 propagate <- function(vertex, direction) {
   for (child in vertex$children) {
 
