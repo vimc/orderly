@@ -141,10 +141,10 @@ orderly_status <- function(path) {
   config <- orderly_config_get(file.path(path, "..", ".."), FALSE)
   info <- recipe_read(path, config, FALSE)
 
-  ## There are the file that orderly cares about
   internal <- list(orderly = "orderly.yml",
                    script = info$script,
                    source = info$sources,
+                   changelog = info$changelog,
                    resource = info$resources,
                    global = names(info$global_resources),
                    dependency = info$depends$as,

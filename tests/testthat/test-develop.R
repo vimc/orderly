@@ -138,3 +138,23 @@ test_that("orderly_develop_status with extra files", {
                list(filename = "extra", type = "unknown", present = TRUE,
                     derived = FALSE))
 })
+
+
+test_that("orderly_develop_status with changelog", {
+  path <- prepare_orderly_example("changelog", testing = TRUE)
+
+  tmp <- tempfile()
+  path_example <- file.path(path, "src", "example")
+  path_cl <- path_changelog_txt(path_example)
+
+  writeLines(c("[label1]", "value1"), path_cl)
+  status <- orderly_develop_status("example", root = path)
+
+  cmp <- data_frame(
+    filename = c("orderly.yml", "script.R", "changelog.txt", "mygraph.png"),
+    type = c("orderly", "script", "changelog", "artefact"),
+    present = c(TRUE, TRUE, TRUE, FALSE),
+    derived = c(FALSE, FALSE, FALSE, TRUE))
+  class(cmp) <- c("orderly_status", "data.frame")
+  expect_equal(status, cmp)
+})
