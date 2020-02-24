@@ -266,6 +266,9 @@ db_instance_select <- function(instance, config_db) {
                    paste(msg, collapse = ", ")),
            call. = FALSE)
     }
+    for (i in setdiff(names(which(has_instance)), names(instance))) {
+      instance[[i]] <- names(config_db[[i]]$instances)[[1]]
+    }
   }
 
   for (i in names(instance)) {
