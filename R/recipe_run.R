@@ -244,6 +244,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
                connection = !is.null(info$connection),
                packages = info$packages,
                random_seed = prep$random_seed,
+               instance = prep$instance,
                file_info_inputs = info$inputs,
                file_info_artefacts = file_info_artefacts,
                global_resources = info$global_resources,
@@ -357,6 +358,7 @@ recipe_data <- function(config, info, parameters, dest, instance) {
 
   con <- orderly_db("source", config, instance = instance)
   on.exit(lapply(con, DBI::dbDisconnect))
+  ret$instance <- lapply(con, attr, "instance", exact = TRUE)
 
   views <- info$views
   for (v in names(views)) {
@@ -543,6 +545,7 @@ orderly_prepare_data <- function(config, info, parameters, envir, instance) {
   }
 
   ret <- list(data = res$data, parameters = res$parameters,
+              instance = res$instance,
               n_dev = n_dev, n_sink = n_sink, random_seed = random_seed())
 
   if (!is.null(info$connection)) {

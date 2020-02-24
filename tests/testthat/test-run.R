@@ -825,6 +825,14 @@ test_that("run with different database instance", {
   expect_equal(f(id1), 20)
   expect_equal(f(id2), 20)
   expect_equal(f(id3), 10)
+
+  g <- function(id) {
+    d <- readRDS(file.path(path, "draft", "example", id, "orderly_run.rds"))
+    d$meta$instance
+  }
+  expect_equal(g(id1), list(source = "default"))
+  expect_equal(g(id2), list(source = "default"))
+  expect_equal(g(id3), list(source = "alternative"))
 })
 
 

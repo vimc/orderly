@@ -91,7 +91,9 @@ orderly_db <- function(type, root = NULL, locate = TRUE, validate = TRUE,
 
 orderly_db_dbi_connect <- function(x, config, name) {
   dat <- orderly_db_args(x, config, name)
-  do.call(DBI::dbConnect, c(list(dat$driver()), dat$args))
+  con <- do.call(DBI::dbConnect, c(list(dat$driver()), dat$args))
+  attr(con, "instance") <- x[["instance"]]
+  con
 }
 
 
@@ -219,15 +221,18 @@ orderly_backup <- function(config = NULL, locate = TRUE) {
 
 
 db_instance_select <- function(instance, config_db) {
-  if (is.null(instance)) {
+  instances <- lapply(config_db, function(x) names(x$instances))
+  has_instance <- lengths(instances) > 0L
+  if (!any(has_instance)) {
+    if (!is.null(instance)) {
+      stop("Can't specify 'instance' with no databases supporting it")
+    }
     return(config_db)
   }
 
-  instances <- lapply(config_db, function(x) names(x$instances))
-  has_instance <- lengths(instances) > 0L
-
-  if (!any(lengths(instances) > 0)) {
-    stop("Can't specify 'instance' with no databases supporting it")
+  if (is.null(instance)) {
+    instance <- vcapply(config_db[has_instance], function(x)
+      names(x$instances)[[1]])
   }
 
   assert_character(instance)
@@ -265,6 +270,7 @@ db_instance_select <- function(instance, config_db) {
 
   for (i in names(instance)) {
     config_db[[i]]$args <- config_db[[i]]$instances[[instance[[i]]]]
+    config_db[[i]]$instance <- instance[[i]]
   }
 
   config_db
