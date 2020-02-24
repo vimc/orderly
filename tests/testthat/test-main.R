@@ -7,6 +7,7 @@ test_that("run", {
   res <- cli_args_process(args)
   expect_equal(res$command, "run")
   expect_equal(res$options$name, "example")
+  expect_null(res$options$instance)
   expect_null(res$options$parameters)
   expect_null(res$options$ref)
   expect_false(res$options$no_commit)
@@ -40,6 +41,49 @@ test_that("run: id-file", {
   expect_true(file.exists(id_file))
   id <- readLines(id_file)
   expect_equal(id, orderly_list_archive(path)$id)
+})
+
+
+test_that("run: use instance", {
+  skip_on_cran_windows()
+  path <- prepare_orderly_example("depends", testing = TRUE)
+
+  p <- file.path(path, "orderly_config.yml")
+  writeLines(c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    instances:",
+    "      default:",
+    "        dbname: source.sqlite",
+    "      alternative:",
+    "        dbname: alternative.sqlite"),
+    p)
+
+  file.copy(file.path(path, "source.sqlite"),
+            file.path(path, "alternative.sqlite"))
+
+  con <- orderly_db("source", root = path, instance = "alternative")
+  DBI::dbExecute(con$source, "DELETE from thing where id > 10")
+
+  args <- c("--root", path, "run", "--instance", "alternative", "example")
+  res <- cli_args_process(args)
+
+  expect_equal(res$command, "run")
+  expect_equal(res$options$name, "example")
+  expect_equal(res$options$instance, "alternative")
+  expect_null(res$options$parameters)
+  expect_false(res$options$no_commit)
+  expect_false(res$options$print_log)
+  expect_identical(res$target, main_do_run)
+
+  capture.output(res$target(res))
+
+  id <- orderly_list_archive(path)$id
+  expect_equal(length(id), 1)
+  expect_equal(
+    nrow(readRDS(file.path(path, "archive", "example", id, "data.rds"))),
+    10)
 })
 
 

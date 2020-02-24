@@ -102,13 +102,14 @@ usage_run <- "Usage:
   orderly run [options] <name> [<parameter>...]
 
 Options:
-  --no-commit     Do not commit the report
-  --print-log     Print the log (rather than storing it)
-  --id-file=FILE  File to write the id into
-  --ref=REF       Git reference (branch or sha) to use
-  --fetch         Fetch git before updating reference
-  --pull          Pull git before running report
-  --message=TEXT  A message explaining why the report was run
+  --instance=NAME  Database instance to use (if instances are configured)
+  --no-commit      Do not commit the report
+  --print-log      Print the log (rather than storing it)
+  --id-file=FILE   File to write the id into
+  --ref=REF        Git reference (branch or sha) to use
+  --fetch          Fetch git before updating reference
+  --pull           Pull git before running report
+  --message=TEXT   A message explaining why the report was run
 
 Parameters, if given, must be passed through in key=value pairs"
 
@@ -125,6 +126,7 @@ main_do_run <- function(x) {
   config <- orderly_config_get(x$options$root, TRUE)
   name <- x$options$name
   commit <- !x$options$no_commit
+  instance <- x$options$instance
   parameters <- x$options$parameters
   id_file <- x$options$id_file
   parameters <- x$options$parameters
@@ -144,6 +146,7 @@ main_do_run <- function(x) {
       }
     }
     id <- orderly_run(name, parameters, root = config, id_file = id_file,
+                      instance = instance,
                       ref = ref, fetch = fetch, message = message)
     if (commit) {
       orderly_commit(id, name, config)
