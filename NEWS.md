@@ -1,3 +1,7 @@
+# orderly 1.0.13
+
+* The orderly CLI runner gets a `pull` sub command for pulling dependencies from remote orderly servers (VIMC-3466)
+
 # orderly 1.0.12
 
 * The orderly CLI runner gets an `--instance` argument (VIMC-3460)
