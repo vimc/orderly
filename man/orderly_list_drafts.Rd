@@ -5,7 +5,7 @@
 \alias{orderly_list_archive}
 \title{List draft and archived reports}
 \usage{
-orderly_list_drafts(root = NULL, locate = TRUE)
+orderly_list_drafts(root = NULL, locate = TRUE, include_failed = FALSE)
 
 orderly_list_archive(root = NULL, locate = TRUE)
 }
@@ -18,6 +18,11 @@ directory if \code{locate} is \code{TRUE}.}
 searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
+
+\item{include_failed}{Logical, indicating if failed drafts should
+be listed (only has an effect for \code{orderly_list_drafts} as
+no failed run should make it into the archive).  A failed report
+is one that lacks an \code{orderly_run.rds} file.}
 }
 \value{
 A \code{data.frame} with columns \code{name} and

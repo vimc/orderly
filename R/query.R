@@ -46,6 +46,11 @@ orderly_list <- function(root = NULL, locate = TRUE) {
 ##'
 ##' @inheritParams orderly_list
 ##'
+##' @param include_failed Logical, indicating if failed drafts should
+##'   be listed (only has an effect for \code{orderly_list_drafts} as
+##'   no failed run should make it into the archive).  A failed report
+##'   is one that lacks an \code{orderly_run.rds} file.
+##'
 ##' @seealso \code{\link{orderly_list}}, which lists the names of
 ##'   source reports that can be run, and \code{\link{orderly_latest}}
 ##'   which returns the id of the most recent report.
@@ -81,8 +86,9 @@ orderly_list <- function(root = NULL, locate = TRUE) {
 ##'
 ##' # And the second report is in the archive:
 ##' orderly::orderly_list_archive(path)
-orderly_list_drafts <- function(root = NULL, locate = TRUE) {
-  orderly_list2(TRUE, root, locate)
+orderly_list_drafts <- function(root = NULL, locate = TRUE,
+                                include_failed = FALSE) {
+  orderly_list2(TRUE, root, locate, include_failed)
 }
 
 ##' @export
@@ -158,11 +164,13 @@ orderly_latest <- function(name = NULL, root = NULL, locate = TRUE,
 }
 
 
-orderly_list2 <- function(draft, root = NULL, locate = TRUE) {
+orderly_list2 <- function(draft, root = NULL, locate = TRUE,
+                          include_failed = FALSE) {
   config <- orderly_config_get(root, locate)
   path <- if (draft) path_draft else path_archive
   check <- list_dirs(path(config$root))
-  res <- lapply(check, orderly_list_dir, check_run_rds = draft)
+  check_run_rds <- draft && !include_failed
+  res <- lapply(check, orderly_list_dir, check_run_rds = check_run_rds)
   data.frame(name = rep(basename(check), lengths(res)),
              id = as.character(unlist(res)),
              stringsAsFactors = FALSE)
