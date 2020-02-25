@@ -259,6 +259,16 @@ test_that("pull archive", {
 })
 
 
+test_that("pull --dependencies and --id are incompatible", {
+  args <- c("pull", "example", "--id", "myid", "--dependencies")
+  res <- cli_args_process(args)
+  expect_error(
+    res$target(res),
+    "Do not provide --id with --dependencies",
+    fixed = TRUE)
+})
+
+
 test_that("list", {
   skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
