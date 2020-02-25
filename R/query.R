@@ -141,7 +141,7 @@ orderly_latest <- function(name = NULL, root = NULL, locate = TRUE,
   } else {
     path <-
       file.path((if (draft) path_draft else path_archive)(config$root), name)
-    ids <- orderly_list_dir(path)
+    ids <- orderly_list_dir(path, check_run_rds = draft)
   }
 
   if (length(ids) == 0L) {
@@ -162,7 +162,7 @@ orderly_list2 <- function(draft, root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
   path <- if (draft) path_draft else path_archive
   check <- list_dirs(path(config$root))
-  res <- lapply(check, orderly_list_dir)
+  res <- lapply(check, orderly_list_dir, check_run_rds = draft)
   data.frame(name = rep(basename(check), lengths(res)),
              id = as.character(unlist(res)),
              stringsAsFactors = FALSE)
@@ -286,7 +286,7 @@ latest_id <- function(ids) {
 }
 
 
-orderly_list_dir <- function(path) {
+orderly_list_dir <- function(path, check_run_rds = FALSE) {
   files <- dir(path)
   err <- !grepl(VERSION_ID_RE, files)
   if (any(err)) {
@@ -294,5 +294,11 @@ orderly_list_dir <- function(path) {
                  path, paste(squote(files[err]), collapse = ", ")),
          call. = FALSE)
   }
+
+  if (check_run_rds && length(files) > 0L) {
+    keep <- file.exists(path_orderly_run_rds(file.path(path, files)))
+    files <- files[keep]
+  }
+
   files
 }
