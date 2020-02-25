@@ -215,6 +215,50 @@ test_that("latest", {
 })
 
 
+test_that("pull dependencies", {
+  skip_on_cran_windows()
+
+  dat <- prepare_orderly_remote_example()
+
+  args <- c("--root", dat$path_local, "pull", "--dependencies", "depend",
+            "--remote", "default")
+  res <- cli_args_process(args)
+
+  expect_equal(res$command, "pull")
+  expect_equal(res$options$name, "depend")
+  expect_true(res$options$dependencies)
+  expect_equal(res$options$remote, "default")
+  expect_null(res$options$id)
+  expect_identical(res$target, main_do_pull)
+
+  res$target(res)
+  expect_equal(orderly_list_archive(dat$config),
+               data_frame(name = "example", id = dat$id2))
+})
+
+
+test_that("pull archive", {
+  skip_on_cran_windows()
+
+  dat <- prepare_orderly_remote_example()
+
+  args <- c("--root", dat$path_local, "pull", "example",
+            "--remote", "default", "--id", dat$id1)
+  res <- cli_args_process(args)
+
+  expect_equal(res$command, "pull")
+  expect_equal(res$options$name, "example")
+  expect_false(res$options$dependencies)
+  expect_equal(res$options$remote, "default")
+  expect_equal(res$options$id, dat$id1)
+  expect_identical(res$target, main_do_pull)
+
+  res$target(res)
+  expect_equal(orderly_list_archive(dat$config),
+               data_frame(name = "example", id = dat$id1))
+})
+
+
 test_that("list", {
   skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")

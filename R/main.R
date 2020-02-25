@@ -43,6 +43,7 @@ Commands:
   commit       Commit a report
   list         List reports
   latest       Find the most recent report
+  pull         Pull reports from remote servers
   cleanup      Remove drafts and dangling data
   rebuild      Rebuild the database
   migrate      Migrate the archive"
@@ -266,6 +267,34 @@ main_do_latest <- function(x) {
 }
 
 
+usage_pull <- "Usage:
+  orderly pull [options] <name>...
+Options:
+  --dependencies  Pull *dependencies* of the report, not the report itself
+  --id=ID         The id to use when pulling a single report (default: latest)
+  --remote=NAME   Name of the remote to pull from"
+
+
+main_do_pull <- function(x) {
+  root <- x$options$root
+  name <- x$options$name
+  id <- x$options$id
+  remote <- x$options$remote
+  dependencies <- x$options$dependencies
+
+  if (dependencies) {
+    if (!is.null(id)) {
+      stop("Do not provide --id with --dependencies", call. = FALSE)
+    }
+    orderly_pull_dependencies(name, remote = remote,
+                              root = root, locate = TRUE)
+  } else {
+    orderly_pull_archive(name, id, remote = remote,
+                         root = root, locate = TRUE)
+  }
+}
+
+
 ## 8. migrate
 usage_migrate <- "Usage:
   orderly migrate [options]
@@ -316,6 +345,9 @@ cli_commands <- function() {
        latest = list(name = "find most recent report",
                      usage = usage_latest,
                      target = main_do_latest),
+       pull = list(name = "pull reports from remote servers",
+                   usage = usage_pull,
+                   target = main_do_pull),
        cleanup = list(name = "remove drafts and dangling data",
                       usage = usage_cleanup,
                       target = main_do_cleanup),
