@@ -1,3 +1,7 @@
+# orderly 1.0.14
+
+* Functionality for creating dependency graphs for reports using orderly::orderly_graph (VIMC-2174)
+
 # orderly 1.0.13
 
 * The orderly CLI runner gets a `pull` sub command for pulling dependencies from remote orderly servers (VIMC-3466)
