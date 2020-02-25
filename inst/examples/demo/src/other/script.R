@@ -1,3 +1,5 @@
+extract$number <- extract$number + rnorm(1)
+
 write.csv(extract, "summary.csv", row.names = TRUE)
 
 png("graph.png")

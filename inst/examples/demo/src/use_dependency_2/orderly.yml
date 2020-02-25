@@ -1,0 +1,13 @@
+requester: Joe Bloggs
+author: Joe Bloggs
+data: ~
+depends:
+  use_dependency:
+    id: latest
+    use:
+      graph.png: graph.png
+script: script.R
+artefacts:
+  - data:
+      description: some data
+      filenames: third.rds

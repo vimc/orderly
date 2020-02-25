@@ -80,7 +80,7 @@ test_that("pull report: already done", {
 test_that("remote_report_names", {
   dat <- prepare_orderly_remote_example()
   expect_equal(remote_report_names(dat$config),
-               c("depend", "depend2", "example"))
+               c("depend", "depend2", "depend3", "example"))
 })
 
 
