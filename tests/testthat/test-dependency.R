@@ -84,8 +84,7 @@ test_that("has dependencies upstream", {
   root <- tree$root
   expect_true(length(root$children) == 0)
 
-  tree <- orderly_graph("depend3", root = path,
-                                  direction = "upstream")
+  tree <- orderly_graph("depend3", root = path, direction = "upstream")
   root <- tree$root
   expect_true(length(root$children) == 1)
   child_1 <- root$children[[1]]
@@ -137,7 +136,7 @@ test_that("propagate", {
   run_orderly_demo(path)
 
   tree <- orderly_graph("example", id = "previous", root = path,
-                                  propagate = FALSE)
+                        propagate = FALSE)
 
   root <- tree$root
   ## SHOULD NOT be out of date, although there is a more recent version of this
@@ -154,8 +153,8 @@ test_that("propagate", {
   expect_false(dep_2$out_of_date)
 
   ##
-  tree <- orderly_graph("depend3", root = path,
-                                  propagate = FALSE, direction = "upstream")
+  tree <- orderly_graph("depend3", root = path, propagate = FALSE,
+                        direction = "upstream")
   ## SHOULD NOT be out of date since we did not propagate out of dateness
   root <- tree$root
   expect_false(root$out_of_date)
@@ -250,12 +249,30 @@ test_that("List out of date upstream", {
   writeLines(demo, file.path(path, "demo.yml"))
   run_orderly_demo(path)
 
-  tree <- orderly_graph("depend3", root = path,
-                                  direction = "upstream",
-                                  propagate = TRUE)
+  tree <- orderly_graph("depend3", root = path, direction = "upstream",
+                        propagate = TRUE)
 
   bad_reports <- orderly_graph_out_of_date(tree)
   expect_equal(bad_reports, c("depend3","depend2"))
+})
+
+test_that("List out of date with duplicates", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+
+  demo <- c("- name: example",
+            "- name: depend2",
+            "- name: depend3",
+            "- name: depend2",
+            "- name: depend3",
+            "- name: example")
+  writeLines(demo, file.path(path, "demo.yml"))
+  run_orderly_demo(path)
+
+  tree <- orderly_graph("example", id = "previous", show_all = TRUE,
+                        root = path, propagate = TRUE)
+
+  bad_reports <- orderly_graph_out_of_date(tree)
+  expect_equal(bad_reports, c("depend2","depend3"))
 })
 
 test_that("R6 errorMessages", {
@@ -274,7 +291,7 @@ test_that("Only one report - previous", {
   run_orderly_demo(path)
 
   expect_error(orderly_graph("example", root = path, id = "previous",
-                                       direction = "downstream"),
+                             direction = "downstream"),
                "There is only one version of example")
 })
 
@@ -320,7 +337,7 @@ test_that("Pinned reports",{
   orderly_commit(id_5, root = path)
 
   tree <- orderly_graph("example", root = path, id = id_1,
-                                  direction = "downstream")
+                        direction = "downstream")
   tree_print <- tree$format()
   ## We don't represent the pinned status of a report in the tree so the only
   ## thing we can reallly chack is the version id
