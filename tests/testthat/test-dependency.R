@@ -10,7 +10,7 @@ test_that("basic tree example", {
   writeLines(demo, file.path(path, "demo.yml"))
   run_orderly_demo(path)
 
-  tree <- orderly_dependency_tree("example", root = path, show_all = TRUE)
+  tree <- orderly_graph("example", root = path, show_all = TRUE)
 
   root <- tree$root
   readable_root <- root$format()
@@ -30,7 +30,7 @@ test_that("basic tree example", {
                "depend3 \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
   expect_true(length(child_2$children) == 0)
 
-  bad_reports <- orderly_out_of_date_reports(tree)
+  bad_reports <- orderly_graph_out_of_date(tree)
   expect_equal(length(bad_reports), 0)
 })
 
@@ -42,7 +42,7 @@ test_that("no dependendent reports", {
   writeLines(demo, file.path(path, "demo.yml"))
   run_orderly_demo(path)
 
-  tree <- orderly_dependency_tree("example", root = path)
+  tree <- orderly_graph("example", root = path)
 
   root <- tree$root
   readble_root <- root$format()
@@ -60,13 +60,13 @@ test_that("nonexistant reports ", {
   run_orderly_demo(path)
   other_id <- dir(file.path(path, "archive", "example"))
 
-  expect_error(orderly_dependency_tree("bad_report", root = path),
+  expect_error(orderly_graph("bad_report", root = path),
                "This report does not exist")
 
-  expect_error(orderly_dependency_tree("example", id = "bad_id", root = path),
+  expect_error(orderly_graph("example", id = "bad_id", root = path),
                "No report with id bad_id in the database")
 
-  expect_error(orderly_dependency_tree("depend2", id = other_id, root = path),
+  expect_error(orderly_graph("depend2", id = other_id, root = path),
                sprintf("id %s does not match report name depend2", other_id))
 })
 
@@ -80,11 +80,11 @@ test_that("has dependencies upstream", {
   run_orderly_demo(path)
 
   ## top report so has no dependencies upstream
-  tree <- orderly_dependency_tree("example", root = path, direction="upstream")
+  tree <- orderly_graph("example", root = path, direction="upstream")
   root <- tree$root
   expect_true(length(root$children) == 0)
 
-  tree <- orderly_dependency_tree("depend3", root = path,
+  tree <- orderly_graph("depend3", root = path,
                                   direction = "upstream")
   root <- tree$root
   expect_true(length(root$children) == 1)
@@ -106,7 +106,7 @@ test_that("out of date dependencies", {
   writeLines(demo, file.path(path, "demo.yml"))
   run_orderly_demo(path)
 
-  tree <- orderly_dependency_tree("example", id = "previous", root = path)
+  tree <- orderly_graph("example", id = "previous", root = path)
 
   root <- tree$root
   ## this report SHOULD NOT be out of date - there is a newer version of this
@@ -136,7 +136,7 @@ test_that("propagate", {
   writeLines(demo, file.path(path, "demo.yml"))
   run_orderly_demo(path)
 
-  tree <- orderly_dependency_tree("example", id = "previous", root = path,
+  tree <- orderly_graph("example", id = "previous", root = path,
                                   propagate = FALSE)
 
   root <- tree$root
@@ -154,7 +154,7 @@ test_that("propagate", {
   expect_false(dep_2$out_of_date)
 
   ##
-  tree <- orderly_dependency_tree("depend3", root = path,
+  tree <- orderly_graph("depend3", root = path,
                                   propagate = FALSE, direction = "upstream")
   ## SHOULD NOT be out of date since we did not propagate out of dateness
   root <- tree$root
@@ -196,7 +196,7 @@ test_that("circular dependency", {
   writeLines(demo, file.path(path, "demo.yml"))
   run_orderly_demo(path)
 
-  tree <- orderly_dependency_tree("example", id = "previous", root = path)
+  tree <- orderly_graph("example", id = "previous", root = path)
   circ_tree <- tree$format()[1]
 
   expect_match(circ_tree,
@@ -213,7 +213,7 @@ test_that("infinite recursion", {
   writeLines(demo, file.path(path, "demo.yml"))
   run_orderly_demo(path)
 
-  expect_error(orderly_dependency_tree("example", max_depth = 1, root = path),
+  expect_error(orderly_graph("example", max_depth = 1, root = path),
                "The tree is very large or degenerate.")
 })
 
@@ -228,7 +228,7 @@ test_that("multiple dependencies", {
   writeLines(demo, file.path(path, "demo.yml"))
   run_orderly_demo(path)
 
-  tree <- orderly_dependency_tree("example", root = path,
+  tree <- orderly_graph("example", root = path,
                                   propagate = FALSE, show_all = TRUE)
 
   tree_print <- tree$format()
@@ -250,18 +250,18 @@ test_that("List out of date upstream", {
   writeLines(demo, file.path(path, "demo.yml"))
   run_orderly_demo(path)
 
-  tree <- orderly_dependency_tree("depend3", root = path,
+  tree <- orderly_graph("depend3", root = path,
                                   direction = "upstream",
                                   propagate = TRUE)
 
-  bad_reports <- orderly_out_of_date_reports(tree)
+  bad_reports <- orderly_graph_out_of_date(tree)
   expect_equal(bad_reports, c("depend3","depend2"))
 })
 
 test_that("R6 errorMessages", {
   tree <- "Not an R6 object"
-    expect_error(orderly_out_of_date_reports(tree),
-                 "'tree' must be a Tree object")
+    expect_error(orderly_graph_out_of_date(tree),
+                 "'tree' must be a Tree")
 })
 
 test_that("Only one report - previous", {
@@ -273,13 +273,13 @@ test_that("Only one report - previous", {
   writeLines(demo, file.path(path, "demo.yml"))
   run_orderly_demo(path)
 
-  expect_error(orderly_dependency_tree("example", root = path, id = "previous",
+  expect_error(orderly_graph("example", root = path, id = "previous",
                                        direction = "downstream"),
                "There is only one version of example")
 })
 
 test_that("Pinned reports",{
-  ## There is logic in orderly_dependency_tree for different behaviour when a
+  ## There is logic in orderly_graph for different behaviour when a
   ## report uses an artefact from a pinned version of a report. We also
   ## distinguish between pinned to the latest and pinned to anything else.
 
@@ -319,7 +319,7 @@ test_that("Pinned reports",{
   id_5 <- orderly_run("depend3", root = path, echo = FALSE)
   orderly_commit(id_5, root = path)
 
-  tree <- orderly_dependency_tree("example", root = path, id = id_1,
+  tree <- orderly_graph("example", root = path, id = id_1,
                                   direction = "downstream")
   tree_print <- tree$format()
   ## We don't represent the pinned status of a report in the tree so the only

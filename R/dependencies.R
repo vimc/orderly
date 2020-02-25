@@ -13,7 +13,7 @@
 ##' Allowing users to see the dependency tree and which reports are out of date 
 ##' and need to be re-run.
 ##'
-##' Remark
+##' @section Remark:
 ##' The tree is built using data from the local report database (see
 ##' \code{\link{orderly_commit}}). This means that it will not find changes from
 ##' a report that has not be run and commited. _i.e._ if a user changes a
@@ -46,14 +46,13 @@
 ##' orderly::orderly_commit(id, root = path)
 ##' id <- orderly::orderly_run("use_dependency_2", root = path)
 ##' orderly::orderly_commit(id, root = path)
-##' orderly::orderly_dependency_tree("other", root = path)
-##' orderly::orderly_dependency_tree("use_dependency_2", root = path,
+##' orderly::orderly_graph("other", root = path)
+##' orderly::orderly_graph("use_dependency_2", root = path,
 ##'                                  direction = "upstream")
 ##'
-orderly_dependency_tree <- function(name, id = "latest", root = NULL,
-                                    locate = TRUE, direction = "downstream",
-                                    propagate = TRUE, max_depth = 100,
-                                    show_all = FALSE) {
+orderly_graph <- function(name, id = "latest", root = NULL, locate = TRUE,
+                          direction = "downstream", propagate = TRUE,
+                          max_depth = 100, show_all = FALSE) {
   assert_scalar_character(direction)
   direction <- match_value(direction, c("upstream", "downstream"))
 
@@ -87,16 +86,13 @@ orderly_dependency_tree <- function(name, id = "latest", root = NULL,
 ##' @title Given a tree return a list of reports to be re-run (and the order
 ##' that they should be re-run)
 ##'
-##' @param tree A dpendency tree object from orderly_dependency_tree
+##' @param tree A dpendency tree object from orderly_graph_out_of_date
 ##'
 ##' @return a list of report names to be re-run. First report to rerun first
 ##' @export
-orderly_out_of_date_reports <- function(tree) {
+orderly_graph_out_of_date <- function(tree) {
   types <- class(tree)
-  if (!("Tree" %in% types)) {
-    name <- deparse(substitute(tree))
-    stop(sprintf("'%s' must be a Tree object", name), call. = FALSE)
-  }
+  assert_is(tree, "Tree")
 
   reports <- out_of_date_reports(tree$root)
 
@@ -129,8 +125,8 @@ get_dependencies_db <- function(name, id, direction, con, show_all = FALSE) {
     return(NULL)
   }
 
-  query_return$is_latest <- vapply(query_return$report_version,
-                             is_latest_in_db, logical(1), con = con)
+  query_return$is_latest <- vlapply(query_return$report_version,
+                                    is_latest_in_db, con = con)
   if (!show_all) {
     query_return <- query_return[which(query_return$is_latest), ]
   }
@@ -179,7 +175,7 @@ get_ids_by_name <- function(con, name) {
 get_latest_by_name <- function(con, name) {
   reports <- get_ids_by_name(con, name)
 
-  (reports$id)[1]
+  reports$id[1]
 }
 
 ##' @title Get the id of the second most recent version of a report
@@ -200,7 +196,7 @@ get_previous_by_name <- function(con, name) {
     stop(sprintf("There is only one version of %s", name))
   }
 
-  (reports$id)[2]
+  reports$id[2]
 }
 
 ##' @title Get the id of the latest version of a report
