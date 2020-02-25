@@ -285,16 +285,18 @@ test_that("db instance select", {
       driver = c("RSQLite", "SQLite"),
       args = list(name = "y")))
 
+  config_db_a <- modifyList(config_db, list(x = list(instance = "a")))
+  config_db_b <- modifyList(config_db, list(x = list(args = list(name = "b"),
+                                                     instance = "b")))
+
   ## The happy paths:
-  expect_identical(db_instance_select(NULL, config_db), config_db)
+  expect_identical(db_instance_select(NULL, config_db), config_db_a)
 
-  expect_equal(db_instance_select("a", config_db), config_db)
-  expect_equal(db_instance_select("b", config_db),
-               modifyList(config_db, list(x = list(args = list(name = "b")))))
+  expect_equal(db_instance_select("a", config_db), config_db_a)
+  expect_equal(db_instance_select("b", config_db), config_db_b)
 
-  expect_equal(db_instance_select(c(x = "a"), config_db), config_db)
-  expect_equal(db_instance_select(c(x = "b"), config_db),
-               modifyList(config_db, list(x = list(args = list(name = "b")))))
+  expect_equal(db_instance_select(c(x = "a"), config_db), config_db_a)
+  expect_equal(db_instance_select(c(x = "b"), config_db), config_db_b)
 
   expect_error(db_instance_select("c", config_db),
                "Invalid instance 'c' for database 'x'")
@@ -320,24 +322,28 @@ test_that("db instance select with two instanced databases", {
         c = list(name = "c"),
         a = list(name = "a"))))
 
-  ## The happy paths:
-  expect_identical(db_instance_select(NULL, config_db), config_db)
+  config_db_aa <- modifyList(config_db,
+                             list(x = list(args = list(name = "a"),
+                                           instance = "a"),
+                                  y = list(args = list(name = "a"),
+                                           instance = "a")))
+  config_db_bc <- modifyList(config_db, list(x = list(instance = "b"),
+                                             y = list(instance = "c")))
+  config_db_ac <- modifyList(config_db,
+                             list(x = list(args = list(name = "a"),
+                                           instance = "a"),
+                                  y = list(args = list(name = "c"),
+                                           instance = "c")))
 
-  expect_equal(
-    db_instance_select("a", config_db),
-    modifyList(config_db, list(x = list(args = list(name = "a")),
-                               y = list(args = list(name = "a")))))
-  expect_equal(
-    db_instance_select(c(x = "a", y = "a"), config_db),
-    modifyList(config_db, list(x = list(args = list(name = "a")),
-                               y = list(args = list(name = "a")))))
-  expect_equal(
-    db_instance_select(c(x = "b", y = "c"), config_db),
-    modifyList(config_db, list(x = list(args = list(name = "b")),
-                               y = list(args = list(name = "c")))))
-  expect_equal(
-    db_instance_select(c(x = "a"), config_db),
-    modifyList(config_db, list(x = list(args = list(name = "a")))))
+  ## The happy paths:
+  expect_identical(db_instance_select(NULL, config_db), config_db_bc)
+
+  expect_equal(db_instance_select("a", config_db), config_db_aa)
+  expect_equal(db_instance_select(c(x = "a", y = "a"), config_db),
+               config_db_aa)
+  expect_equal(db_instance_select(c(x = "b", y = "c"), config_db),
+               config_db_bc)
+  expect_equal(db_instance_select(c(x = "a"), config_db), config_db_ac)
 
   ## Some error paths:
   expect_error(db_instance_select("f", config_db),

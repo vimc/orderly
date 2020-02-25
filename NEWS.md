@@ -1,3 +1,8 @@
+# orderly 1.0.12
+
+* The orderly CLI runner gets an `--instance` argument (VIMC-3460)
+* The instance information is saved into the `orderly_run.rds`.  This is not yet reflected in the database and might be tweaked before being added.
+
 # orderly 1.0.11
 
 * More informative error messages when orderly fails to resolve an environment variable, particularly when loading remote configuration (VIMC-3386)
