@@ -23,8 +23,8 @@
 ##' tree you should be careful to add these files to your
 ##' \code{.gitignore} files so that they are not included if using
 ##' git.  Rerunning \code{orderly_develop_start} will copy a fresh
-##' copy dependencies into your tree, overwriting files that are there
-##' without warning.
+##' copy of dependencies into your tree, overwriting files that are
+##' there without warning.
 ##'
 ##' The \code{orderly_develop_clean} function will delete dependencies
 ##' without warning.
@@ -46,7 +46,7 @@
 ##' @examples
 ##' path <- orderly::orderly_example("demo")
 ##'
-##' # This report uses a depenency - it requires that the file
+##' # This report uses a dependency - it requires that the file
 ##' # incoming.csv exists.  This file is created from the report 'other'
 ##' orderly::orderly_develop_status("use_dependency", root = path)
 ##'
