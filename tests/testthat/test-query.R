@@ -159,6 +159,25 @@ test_that("Behaviour with rogue files", {
 })
 
 
+test_that("orderly_latest does not find failed drafts", {
+  testthat::skip_on_cran()
+  path <- prepare_orderly_example("minimal")
+  id1 <- orderly_run("example", root = path, echo = FALSE)
+  id2 <- orderly_run("example", root = path, echo = FALSE)
+  file.remove(file.path(path, "draft", "example", id2, "orderly_run.rds"))
+
+  expect_setequal(
+    orderly_list_dir(file.path(path, "draft", "example")),
+    c(id1, id2))
+  expect_setequal(
+    orderly_list_dir(file.path(path, "draft", "example"), TRUE),
+    id1)
+
+  expect_equal(orderly_latest("example", draft = TRUE, root = path), id1)
+  expect_equal(orderly_list_drafts("example", root = path)$id, id1)
+})
+
+
 test_that("orderly_find_report", {
   skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")

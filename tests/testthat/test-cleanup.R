@@ -55,11 +55,11 @@ test_that("cleanup failed", {
   id3 <- tryCatch(orderly_run("example", root = path, echo = FALSE),
                   error = function(e) NULL)
   expect_null(id3)
-  d <- orderly_list_drafts("example", root = path)
+  d <- orderly_list_drafts("example", root = path, include_failed = TRUE)
   expect_equal(nrow(d), 3)
 
   orderly_cleanup(root = path, failed_only = TRUE)
-  d <- orderly_list_drafts("example", root = path)
+  d <- orderly_list_drafts("example", root = path, include_failed = TRUE)
   expect_equal(nrow(d), 2)
   expect_true(all(c(id1, id2) %in% d$id))
 })

@@ -1,3 +1,7 @@
+# orderly 1.0.15
+
+* Depending on draft reports, including with `use_draft = "newer"`, no longer pulls in failed drafts (VIMC-3467, reported by @sangeetabhatia03)
+
 # orderly 1.0.14
 
 * Functionality for creating dependency graphs for reports using orderly::orderly_graph (VIMC-2174)

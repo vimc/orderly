@@ -231,7 +231,9 @@ test_that("cleanup", {
   expect_message(runner$cleanup(), "clean.+draft/example")
   expect_silent(runner$cleanup())
 
-  expect_equal(nrow(orderly_list2(TRUE, root = path)), 0L)
+  expect_equal(
+    nrow(orderly_list2(TRUE, root = path, include_failed = TRUE)),
+    0L)
   expect_equal(orderly_list2(FALSE, root = path)$id, id)
 })
 

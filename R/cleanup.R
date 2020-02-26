@@ -50,7 +50,8 @@ orderly_cleanup <- function(name = NULL, root = NULL, locate = TRUE,
 
 orderly_cleanup_drafts <- function(config, name = NULL, failed_only = FALSE) {
   assert_is(config, "orderly_config")
-  d <- orderly_list_drafts(config, FALSE)
+
+  d <- orderly_list_drafts(config, FALSE, include_failed = TRUE)
   if (!is.null(name)) {
     assert_character(name)
     d <- d[d$name %in% name, , drop = FALSE]

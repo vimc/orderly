@@ -217,6 +217,30 @@ test_that("dependencies draft, new interface", {
 })
 
 
+test_that("use_draft = newer ignores fails drafts", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+  id1 <- orderly_run("example", root = path, echo = FALSE)
+  id2 <- orderly_run("example", root = path, echo = FALSE)
+  id3 <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id1, root = path)
+  unlink(file.path(path, "draft", "example", id3, "orderly_run.rds"))
+
+  filename <- file.path(path, "src", "depend", "orderly.yml")
+  dat <- yaml_read(filename)
+  dat$depends$example$draft <- NULL
+  yaml_write(dat, filename)
+
+  config <- orderly_config(path)
+  info <- recipe_read(file.path(path, "src", "depend"), config,
+                      use_draft = "newer")
+  expect_equal(basename(info$depends$path), id2)
+  unlink(file.path(path, "draft", "example", id2, "orderly_run.rds"))
+  info <- recipe_read(file.path(path, "src", "depend"), config,
+                      use_draft = "newer")
+  expect_equal(basename(info$depends$path), id1)
+})
+
+
 test_that("dependencies draft, new interface, throws sensible errors", {
   path <- prepare_orderly_example("depends", testing = TRUE)
 
