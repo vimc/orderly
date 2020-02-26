@@ -184,7 +184,7 @@ test_that("dependencies must exist", {
 
   expect_error(orderly_run("depend", root = path, echo = FALSE,
                            use_draft = TRUE),
-               "Did not find file unknown.file at")
+               "Did not find file 'unknown.file' at")
 })
 
 
@@ -557,4 +557,20 @@ test_that("validate parameters", {
   expect_error(
     recipe_read(path_example, config),
     "Unknown fields in .*orderly.yml:parameters:a: something")
+})
+
+
+test_that("Can resolve dependencies remotely", {
+  dat <- prepare_orderly_remote_example()
+  config <- orderly_config(dat$path_local)
+  info <- recipe_read(file.path(path_src(config$root), "depend"), config,
+                      FALSE)
+  expect_equal(nrow(orderly_list_archive(dat$path_local)), 0)
+  expect_error(
+    resolve_dependencies(info$depends, config, remote = NULL),
+    "Did not find archive report example:latest")
+  res <- resolve_dependencies(info$depends, config, remote = "default")
+  expect_equal(nrow(orderly_list_archive(dat$path_local)), 1)
+  cmp <- resolve_dependencies(info$depends, config, remote = NULL)
+  expect_equal(res, cmp)
 })
