@@ -123,8 +123,8 @@ resolve_dependencies_remote <- function(id, name, config, remote) {
     id <- versions[[length(versions)]]
     is_latest <- TRUE
   } else if (!(id %in% versions)) {
-    stop(sprintf("Did not find report %s:%s on remote %s",
-                 name, id, remote$name))
+    stop(sprintf("Did not find report '%s:%s' on remote '%s'",
+                 name, id, remote$name), call. = FALSE)
   } else {
     is_latest <- id == versions[[length(versions)]]
   }
