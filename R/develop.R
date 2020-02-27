@@ -158,7 +158,6 @@ orderly_status <- function(path) {
     status <- rbind(status, data_frame(filename = extra, type = "unknown"))
   }
   status$present <- file.exists(file.path(path, status$filename))
-  ## TODO: better name?
   status$derived <- status$type %in% c("global", "dependency", "artefact")
 
   class(status) <- c("orderly_status", "data.frame")
