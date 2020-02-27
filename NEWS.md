@@ -1,3 +1,7 @@
+# orderly 1.1.1
+
+* Dependencies can be resolved as if they were to be run on a remote (including appropriate selection of "latest" dependencies).  This is to support future decentralised workflows (VIMC-3473)
+
 # orderly 1.1.0
 
 * New report development mode, via `orderly_develop_start`, `orderly_develop_status` and `orderly_develop_clean`.  These largely supersede `orderly_test_start`, though the latter remains for now (VIMC-3404)
