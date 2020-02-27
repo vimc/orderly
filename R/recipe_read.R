@@ -49,8 +49,11 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE) {
   info$global_resources <- recipe_read_check_global_resources(
     info$global_resources, filename, config)
   info$depends <-
-    recipe_read_check_depends(info$depends, filename, config, use_draft,
-                              validate)
+    recipe_read_check_depends(info$depends, filename, config)
+  if (validate) {
+    info$depends <-
+      resolve_dependencies(info$depends, config, use_draft, NULL)
+  }
 
   assert_scalar_character(info$script, fieldname("script"))
 

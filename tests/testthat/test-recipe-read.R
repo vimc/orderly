@@ -567,17 +567,17 @@ test_that("Can resolve dependencies remotely", {
                       FALSE)
   expect_equal(nrow(orderly_list_archive(dat$path_local)), 0)
   expect_error(
-    resolve_dependencies(info$depends, config, remote = NULL),
+    resolve_dependencies(info$depends, config, FALSE, NULL),
     "Did not find archive report example:latest")
 
   expect_error(
     resolve_dependencies(info$depends, config, TRUE, "default"),
     "Can't use 'use_draft' with remote")
-  expect_null(resolve_dependencies(NULL, config))
+  expect_null(resolve_dependencies(NULL, config, FALSE, NULL))
 
-  res <- resolve_dependencies(info$depends, config, remote = "default")
+  res <- resolve_dependencies(info$depends, config, FALSE, "default")
   expect_equal(nrow(orderly_list_archive(dat$path_local)), 1)
-  cmp <- resolve_dependencies(info$depends, config, remote = NULL)
+  cmp <- resolve_dependencies(info$depends, config, FALSE, NULL)
   expect_equal(res, cmp)
 })
 

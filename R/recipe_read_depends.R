@@ -1,5 +1,4 @@
-recipe_read_check_depends <- function(x, filename, config, use_draft,
-                                      validate) {
+recipe_read_check_depends <- function(x, filename, config) {
   ## TODO: this is going to assume that the artefacts are all in place
   ## - that need not actually be the case here - so we need a flag on
   ## this function that indicates that we're actually going to try and
@@ -58,19 +57,11 @@ recipe_read_check_depends <- function(x, filename, config, use_draft,
     as_data_frame(el)
   }
 
-  depends <- rbind_df(lapply(seq_along(x), check_depends1))
-
-  remote <- NULL
-  if (validate) {
-    depends <- resolve_dependencies(depends, config, use_draft, remote)
-  }
-
-  depends
+  rbind_df(lapply(seq_along(x), check_depends1))
 }
 
 
-resolve_dependencies <- function(depends, config,
-                                 use_draft = FALSE, remote = NULL) {
+resolve_dependencies <- function(depends, config, use_draft, remote) {
   assert_is(config, "orderly_config")
   if (is.null(depends)) {
     return(NULL)
