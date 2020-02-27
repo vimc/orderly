@@ -1,5 +1,5 @@
 # This is an example orderly configuration file - edit it to suit your
-# needs.  The fields "data", "script" and "artefacts" are the only
+# needs.  The fields "script" and "artefacts" are the only
 # ones required (plus whatever your project lists in the root
 # configuration) so they are listed first here.  After that optional
 # fields are listed.  The order does not matter so reorder to suit
@@ -20,12 +20,7 @@
 #       another: from_file.sql
 #
 # If you are writing a report that uses only artefacts from other
-# reports, the data field can be empty, as:
-#
-#     data: ~
-#
-# but it must still exist.
-data: ~
+# reports, you can omit this field.
 
 # You must have a script that does something with the data.  This
 # will be a single string and the filename must exist when orderly is

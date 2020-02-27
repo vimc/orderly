@@ -32,6 +32,16 @@ unlink(file.path(path, "src", "README.md"))
 dir_tree <- function(path) {
   withr::with_dir(path, fs::dir_tree("."))
 }
+
+owd <- getwd()
+knitr::knit_hooks$set(with_path = function(before, options, envir) {
+  if (before) {
+    setwd(options$with_path_value)
+  } else {
+    setwd(owd)
+  }
+  invisible()
+})
 ```
 
 ## Introduction
@@ -693,9 +703,104 @@ orderly::orderly_run(name,
                       instance = c(source = "production", extra = "staging"))
 ```
 
-## Debugging a report
+## Developing a report
 
-As a report becomes more complex, the function
-`orderly::orderly_test_start` will become useful; this function
-creates the isolated environment that `orderly` uses to run a report,
-but then leaves you to interactively work with your report.
+Because orderly works in a directory that is not the same as the source directory (e.g., `draft/myreport/YYYYMMDD-HHMMSS-abcdefgh`), because global resources and dependencies etc are copied in just as it is used, and because `orderly` takes control of things like parameters and `source()`-ing files, it may not seem straightforward to develop a report as you would ordinarily.
+
+In order to make this easier, orderly has a set of functions to help develop a report within the source directory.  These functions are:
+
+* `orderly::orderly_develop_start` which copies files *into* your source copy
+* `orderly::orderly_develop_status` which reports on the status of your source
+* `orderly::orderly_develop_clean` which cleans up files that orderly copied
+
+This section illustrates the idea, creating a new report that will depend on an artefact from a previous report.  Here is the state of our orderly tree from before:
+
+```{r, include = FALSE}
+path_new <- file.path(path, "src", "new")
+local({
+  yml <- c(
+    "script: script.R",
+    "",
+    "artefacts:",
+    "  - staticgraph:",
+    "      description: Mean of the values",
+    "      filenames: mean.txt",
+    "",
+    "depends:",
+    "  example:",
+    "    id: latest",
+    "    use:",
+    "      data.csv: mydata.csv")
+  code <- c(
+    'data <- read.csv("data.csv")',
+    'writeLines(as.character(mean(data$y)), "mean.txt")')
+
+  writeLines(yml, file.path(path_new, "orderly.yml"))
+  writeLines(code, file.path(path_new, "script.R"))
+})
+```
+
+``` {r comment = NA, echo = FALSE}
+dir_tree(path)
+```
+
+The new task has an `orderly.yml` containing
+
+``` {r results = "asis", echo = FALSE}
+yaml_output(readLines(file.path(path_new, "orderly.yml")))
+```
+
+In order to run this report, we need the file `data.csv` (which contains the output `mydata.csv` from the latest version of the `example` report) to exist.  If we wanted to interactively develop the `script.R` we'd have to run `orderly::orderly_run` repeatedly, which will be annoying - and impractical if the report is slow to run.  So we can run instead:
+
+```{r}
+orderly::orderly_develop_start("new", root = path)
+```
+
+which copies in the required artefact and we can then change the directory (using something like `setwd("src/new")`) and start working on the report directly.
+
+You can see the status of the directory by running
+
+```{r}
+orderly::orderly_develop_status("new", root = path)
+```
+
+(the output of this object is likely to change in future versions), which shows that `data.csv` is present, and that it is _derived_ - by which means that orderly knows that it should not persist in the source tree.  Files marked as `derived` as `TRUE` are liable for deletion by `orderly::orderly_develop_clean`.  The output also shows that `mean.txt` is not present.
+
+If you have changed directly into the path under development (via `setwd(file.path(path, "src/new"))`) the you can omit the arguments and simply call
+
+```{r, with_path = TRUE, with_path_value = path_new}
+orderly::orderly_develop_status()
+```
+
+You can then run your script as if it was a normal R script:
+
+```{r, with_path = TRUE, with_path_value = path_new}
+source("script.R", echo = TRUE)
+```
+
+(the above code assuming that we are within `src/new` with the report)
+
+After which the `data.csv` is present
+
+```{r, with_path = TRUE, with_path_value = path_new}
+orderly::orderly_develop_status()
+```
+
+If a newer version of the upstream dependency has become available, you can update the file by running `orderly::orderly_develop_start()` again
+
+```{r, with_path = TRUE, with_path_value = path_new}
+id <- orderly::orderly_run("example", root = path)
+orderly::orderly_commit(id, root = path)
+orderly::orderly_develop_start()
+```
+
+(note that this has updated `data.csv` to use this new id `r id`).
+
+Finally, you can delete the files that orderly has copied into the source tree:
+
+```{r, with_path = TRUE, with_path_value = path_new, collapse = TRUE}
+orderly::orderly_develop_clean()
+orderly::orderly_develop_status()
+```
+
+(this function also accepts `name` and `root` as above, required if not working in the source directory)

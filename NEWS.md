@@ -1,3 +1,7 @@
+# orderly 1.1.0
+
+* New report development mode, via `orderly_develop_start`, `orderly_develop_status` and `orderly_develop_clean`.  These largely supersede `orderly_test_start`, though the latter remains for now (VIMC-3404)
+
 # orderly 1.0.15
 
 * Depending on draft reports, including with `use_draft = "newer"`, no longer pulls in failed drafts (VIMC-3467, reported by @sangeetabhatia03)

@@ -4,3 +4,6 @@ artefacts:
   - staticgraph:
       description: A graph of things
       filenames: mygraph.png
+  - data:
+      description: Data that went into the plot
+      filenames: mydata.csv

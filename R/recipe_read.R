@@ -36,6 +36,10 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE) {
     info[config$fields$name[i]] <- NA_character_
   }
 
+  if (file.exists(file.path(path, "changelog.txt"))) {
+    info$changelog <- "changelog.txt"
+  }
+
   fieldname <- function(name) {
     sprintf("%s:%s", filename, name)
   }
