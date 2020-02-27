@@ -61,6 +61,7 @@
 ##' @inheritParams orderly_list
 ##'
 ##' @param echo Print the result of running the R code to the console
+##'
 ##' @param id_file Write the identifier into a file
 ##'
 ##' @param use_draft Should draft reports be used for dependencies?
@@ -70,6 +71,16 @@
 ##'   archive reports.  For consistency, \code{always} and
 ##'   \code{never} are equivalent to \code{TRUE} and \code{FALSE},
 ##'   respectively.
+##'
+##' @param remote Remote to use to resolve dependencies.  Use this in
+##'   order to run a report with the same dependencies are as
+##'   available on a remote server, particularly when using \code{id =
+##'   "latest"}.  Note that this is not the same as running
+##'   \code{\link{orderly_pull_dependencies}}, then \code{orderly_run}
+##'   with \code{remote = NULL}, as the pull/run approach will use the
+##'   latest report in \emph{your} archive but the \code{remote =
+##'   "remote"} approach will use the latest approach in the
+##'   \emph{remote} archive (which might be less recent).
 ##'
 ##' @seealso \code{\link{orderly_log}} for controlling display of log
 ##'   messages (not just R output)
@@ -106,7 +117,8 @@
 orderly_run <- function(name, parameters = NULL, envir = NULL,
                         root = NULL, locate = TRUE, echo = TRUE,
                         id_file = NULL, fetch = FALSE, ref = NULL,
-                        message = NULL, instance = NULL, use_draft = FALSE) {
+                        message = NULL, instance = NULL, use_draft = FALSE,
+                        remote = NULL) {
   envir <- orderly_environment(envir)
   config <- orderly_config_get(root, locate)
   config <- check_orderly_archive_version(config)
@@ -115,7 +127,8 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
     name <- sub("^src/", "", name)
   }
 
-  info <- recipe_prepare(config, name, id_file, ref, fetch, message, use_draft)
+  info <- recipe_prepare(config, name, id_file, ref, fetch, message,
+                         use_draft, remote)
 
   recipe_current_run_set(info)
   on.exit(recipe_current_run_clear())
@@ -128,7 +141,8 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
 
 
 recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
-                           fetch = FALSE, message = NULL, use_draft = FALSE,
+                           fetch = FALSE, message = NULL,
+                           use_draft = FALSE, remote = NULL,
                            copy_files = TRUE) {
   assert_is(config, "orderly_config")
   config <- orderly_config_get(config, FALSE)
@@ -142,8 +156,8 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
     on.exit(git_checkout_branch(prev, TRUE, config$root))
   }
 
-  info <- recipe_read(file.path(path_src(config$root), name), config,
-                      use_draft = use_draft)
+  info <- recipe_read(file.path(path_src(config$root), name),
+                      config, use_draft = use_draft, remote = remote)
 
   id <- new_report_id()
   orderly_log("id", id)

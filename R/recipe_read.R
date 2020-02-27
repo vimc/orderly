@@ -1,6 +1,7 @@
 ## The bulk of this is validating the yaml; that turns out to be quite
 ## unpleasant unfortunately.
-recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE) {
+recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
+                        remote = NULL) {
   assert_is(config, "orderly_config")
   filename <- file.path(path, "orderly.yml")
   assert_file_exists(path, name = "Report working directory")
@@ -52,7 +53,7 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE) {
     recipe_read_check_depends(info$depends, filename, config)
   if (validate) {
     info$depends <-
-      resolve_dependencies(info$depends, config, use_draft, NULL)
+      resolve_dependencies(info$depends, config, use_draft, remote)
   }
 
   assert_scalar_character(info$script, fieldname("script"))
