@@ -1,5 +1,5 @@
 # This is an example orderly configuration file - edit it to suit your
-# needs.  The fields "data", "script" and "artefacts" are the only
+# needs.  The fields "script" and "artefacts" are the only
 # ones required (plus whatever your project lists in the root
 # configuration) so they are listed first here.  After that optional
 # fields are listed.  The order does not matter so reorder to suit
