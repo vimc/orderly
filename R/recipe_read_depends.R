@@ -111,13 +111,13 @@ resolve_dependencies_remote <- function(id, name, config, remote) {
   versions <- remote$list_versions(name)
   latest_version <- versions[length(versions)]
   if (id == "latest" && length(versions) > 0L) {
-    id <- versions[[length(versions)]]
+    id <- latest_version
     is_latest <- TRUE
   } else if (!(id %in% versions)) {
     stop(sprintf("Did not find report '%s:%s' on remote '%s'",
                  name, id, remote$name), call. = FALSE)
   } else {
-    is_latest <- id == versions[[length(versions)]]
+    is_latest <- id == latest_version
   }
   orderly_pull_archive(name, id, config, FALSE, remote)
   path <- orderly_find_report(id, name, config, draft = FALSE,
