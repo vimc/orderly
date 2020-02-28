@@ -65,13 +65,14 @@
 orderly_develop_start <- function(name = NULL, parameters = NULL,
                                   envir = parent.frame(),
                                   root = NULL, locate = TRUE, instance = NULL,
-                                  use_draft = FALSE) {
+                                  use_draft = FALSE, remote = NULL) {
   loc <- orderly_develop_location(name, root, locate)
   envir <- orderly_environment(envir)
 
   orderly_log("name", loc$name)
 
-  info <- recipe_read(loc$path, loc$config, use_draft = use_draft)
+  info <- recipe_read(loc$path, loc$config, use_draft = use_draft,
+                      remote = remote)
 
   info$workdir <- loc$path
   withr::with_dir(info$workdir, {
