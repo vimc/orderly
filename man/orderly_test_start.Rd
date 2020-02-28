@@ -69,7 +69,7 @@ archive reports.  For consistency, \code{always} and
 respectively.}
 
 \item{remote}{Remote to use to resolve dependencies.  Use this in
-order to run a report with the same dependencies are as
+order to run a report with the same dependencies as are
 available on a remote server, particularly when using \code{id =
 "latest"}.  Note that this is not the same as running
 \code{\link{orderly_pull_dependencies}}, then \code{orderly_run}
