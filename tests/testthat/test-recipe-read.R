@@ -184,7 +184,7 @@ test_that("dependencies must exist", {
 
   expect_error(orderly_run("depend", root = path, echo = FALSE,
                            use_draft = TRUE),
-               "Did not find file unknown.file at")
+               "Did not find file 'unknown.file' at")
 })
 
 
@@ -557,4 +557,53 @@ test_that("validate parameters", {
   expect_error(
     recipe_read(path_example, config),
     "Unknown fields in .*orderly.yml:parameters:a: something")
+})
+
+
+test_that("Can resolve dependencies remotely", {
+  dat <- prepare_orderly_remote_example()
+  config <- orderly_config(dat$path_local)
+  info <- recipe_read(file.path(path_src(config$root), "depend"), config,
+                      FALSE)
+  expect_equal(nrow(orderly_list_archive(dat$path_local)), 0)
+  expect_error(
+    resolve_dependencies(info$depends, config, FALSE, NULL),
+    "Did not find archive report example:latest")
+
+  expect_error(
+    resolve_dependencies(info$depends, config, TRUE, "default"),
+    "Can't use 'use_draft' with remote")
+  expect_null(resolve_dependencies(NULL, config, FALSE, NULL))
+
+  res <- resolve_dependencies(info$depends, config, FALSE, "default")
+  expect_equal(nrow(orderly_list_archive(dat$path_local)), 1)
+  cmp <- resolve_dependencies(info$depends, config, FALSE, NULL)
+  expect_equal(res, cmp)
+})
+
+
+test_that("resolve_dependencies_remote", {
+  dat <- prepare_orderly_remote_example()
+  config <- orderly_config(dat$path_local)
+  remote <- get_remote("default", config)
+
+  p <- file.path(dat$path_local, "archive", "example")
+
+  expect_equal(
+    resolve_dependencies_remote("latest", "example", config, remote),
+    list(path = file.path(p, dat$id2), is_latest = TRUE))
+  expect_true(file.exists(file.path(p, dat$id2)))
+
+  ## With explicit id:
+  expect_equal(
+    resolve_dependencies_remote(dat$id2, "example", config, remote),
+    list(path = file.path(p, dat$id2), is_latest = TRUE))
+  expect_equal(
+    resolve_dependencies_remote(dat$id1, "example", config, remote),
+    list(path = file.path(p, dat$id1), is_latest = FALSE))
+
+  ## And an error
+  expect_error(
+    resolve_dependencies_remote(new_report_id(), "example", config, remote),
+    "Did not find report 'example:.+' on remote 'default'")
 })

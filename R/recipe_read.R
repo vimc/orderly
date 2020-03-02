@@ -1,6 +1,7 @@
 ## The bulk of this is validating the yaml; that turns out to be quite
 ## unpleasant unfortunately.
-recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE) {
+recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
+                        remote = NULL) {
   assert_is(config, "orderly_config")
   filename <- file.path(path, "orderly.yml")
   assert_file_exists(path, name = "Report working directory")
@@ -49,8 +50,11 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE) {
   info$global_resources <- recipe_read_check_global_resources(
     info$global_resources, filename, config)
   info$depends <-
-    recipe_read_check_depends(info$depends, filename, config, use_draft,
-                              validate)
+    recipe_read_check_depends(info$depends, filename, config)
+  if (validate) {
+    info$depends <-
+      resolve_dependencies(info$depends, config, use_draft, remote)
+  }
 
   assert_scalar_character(info$script, fieldname("script"))
 
@@ -293,114 +297,6 @@ recipe_read_check_sources <- function(sources, resources, filename, path) {
                  paste(sprintf("\n  - %s", err), collapse = "")),
          call. = FALSE)
   }
-}
-
-
-recipe_read_check_depends <- function(x, filename, config, use_draft,
-                                      validate) {
-  ## TODO: this is going to assume that the artefacts are all in place
-  ## - that need not actually be the case here - so we need a flag on
-  ## this function that indicates that we're actually going to try and
-  ## run things!
-  if (is.null(x)) {
-    return(NULL)
-  }
-  if (is.null(names(x))) {
-    x <- ordered_map_to_list(x)
-  }
-
-  check_use1 <- function(i) {
-    name <- names(x)[[i]]
-    el <- x[[i]]
-    v <- c("id", "use")
-    check_fields(el, sprintf("%s:depends:%s", filename, name), v, "draft")
-    el$name <- name
-
-    assert_character(el$id, sprintf("%s:depends:%s:id", filename, name))
-    if (!is.null(el$draft)) {
-      ## TODO: warning here now
-      assert_scalar_logical(el$draft,
-                            sprintf("%s:depends:%s:draft", filename, name))
-    }
-
-    assert_named(el$use, TRUE, sprintf("%s:depends:%s:use", filename, name))
-    err <- !vlapply(el$use, function(x) is.character(x) && length(x) == 1)
-    if (any(err)) {
-      stop(sprintf("%s:depends:%s:use must all be scalar character",
-                   filename, name))
-    }
-
-    el$filename <- vcapply(el$use, identity, USE.NAMES = FALSE)
-    el$as <- names(el$use)
-    el$use <- NULL
-
-    ## TODO: this is a giant hack that is required until VIMC-506 is
-    ## fixed; we need to be able to load the "processed" version of
-    ## the orderly yaml for import into the database but we _don't_
-    ## want to look up anything about the reports because by the time
-    ## we come to getting them in the database this is not necessarily
-    ## correct!
-    if (validate) {
-      if (!is.null(el$draft)) {
-        msg <- c("Using 'draft:' within an ordery.yml is deprecated and",
-                 "will be removed in a future version of orderly.  Please",
-                 "use the 'use_draft' argument to control draft usage.",
-                 "If you want to use a recent version of a report that you",
-                 'are developing simultaneously, use_draft = "newer"',
-                 "will probably do what you want.")
-        orderly_warning(flow_text(msg))
-        use_draft <- el$draft
-      }
-      el$path <- orderly_find_report(el$id, name, config, draft = use_draft,
-                                     must_work = TRUE)
-      filename_full <- file.path(el$path, el$filename)
-
-      ## TODO: VIMC-889
-      msg <- !file.exists(filename_full)
-      if (any(msg)) {
-        stop(sprintf("Did not find file %s at %s",
-                     el$filename[msg],
-                     el$path))
-      }
-      el$hash <- hash_files(filename_full, FALSE)
-
-      ## VIMC-2017: check that a file is actually an artefact
-      meta <- readRDS(path_orderly_run_rds(el$path))
-      i <- match(el$filename, meta$meta$file_info_artefacts$filename)
-      ok <- !is.na(i)
-      if (any(!ok)) {
-        stop(sprintf(
-          "Dependency %s not an artefact of %s/%s:\n%s",
-          ngettext(sum(!ok), "file", "files"),
-          el$name, basename(el$path),
-          paste(sprintf("- '%s'", el$filename[!ok]), collapse = "\n")),
-          call. = FALSE)
-      }
-
-      el$hash <- meta$meta$file_info_artefacts$file_hash[i]
-      err <- el$hash != hash_files(filename_full, FALSE)
-      if (any(err)) {
-        stop(sprintf(
-          paste("Validation of dependency %s (%s/%s) failed:",
-                "artefact has been modified"),
-          paste(squote(el$filename[err]), collapse = ", "), el$name, el$id),
-          call. = FALSE)
-      }
-
-      el$time <- meta$time
-
-      ## Is this considered to be the "latest" copy of a dependency?
-      el$is_latest <- el$id == "latest" ||
-        basename(el$path) == latest_id(dir(dirname(el$path)))
-      el$is_pinned <- el$id != "latest"
-    }
-
-    ## Bit of a faff here to get the format into something that will
-    ## serialise and interrogate nicely.
-    as.data.frame(el, stringsAsFactors = FALSE)
-  }
-
-  rbind_df(lapply(seq_along(x), check_use1))
 }
 
 

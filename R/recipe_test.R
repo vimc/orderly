@@ -49,10 +49,11 @@
 ##' orderly::orderly_test_check(p)
 orderly_test_start <- function(name, parameters = NULL, envir = parent.frame(),
                                root = NULL, locate = TRUE, instance = NULL,
-                               use_draft = FALSE) {
+                               use_draft = FALSE, remote = NULL) {
   config <- orderly_config_get(root, locate)
   info <- recipe_prepare(config, name, id_file = NULL, ref = NULL,
-                         fetch = FALSE, message = NULL, use_draft = use_draft)
+                         fetch = FALSE, message = NULL, use_draft = use_draft,
+                         remote = remote)
   prep <- withr::with_dir(
     info$workdir,
     orderly_prepare_data(config, info, parameters, envir, instance))

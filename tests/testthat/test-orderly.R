@@ -216,3 +216,31 @@ test_that("store random seed", {
   d <- readRDS(path_orderly_run_rds(file.path(path, "draft", "example", id)))
   expect_true(identical(d$meta$random_seed, rs))
 })
+
+
+test_that("run with dependencies from remote", {
+  dat <- prepare_orderly_remote_example()
+
+  id1 <- orderly_run("depend", root = dat$path_local, remote = "default",
+                     echo = FALSE)
+  p1 <- file.path(dat$path_local, "draft", "depend", id1)
+  d1 <- readRDS(path_orderly_run_rds(p1))$meta
+  expect_equal(d1$depends$id, dat$id2)
+  expect_true(d1$depends$is_latest)
+
+  id_example3 <- orderly_run("example", root = dat$path_local, echo = FALSE)
+  orderly_commit(id_example3, root = dat$path_local)
+
+  id2 <- orderly_run("depend", root = dat$path_local, remote = "default",
+                     echo = FALSE)
+  p2 <- file.path(dat$path_local, "draft", "depend", id2)
+  d2 <- readRDS(path_orderly_run_rds(p2))$meta
+  expect_equal(d2$depends$id, dat$id2)
+  expect_true(d2$depends$is_latest)
+
+  id3 <- orderly_run("depend", root = dat$path_local, echo = FALSE)
+  p3 <- file.path(dat$path_local, "draft", "depend", id3)
+  d3 <- readRDS(path_orderly_run_rds(p3))$meta
+  expect_equal(d3$depends$id, id_example3)
+  expect_true(d3$depends$is_latest)
+})

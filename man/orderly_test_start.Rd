@@ -13,7 +13,8 @@ orderly_test_start(
   root = NULL,
   locate = TRUE,
   instance = NULL,
-  use_draft = FALSE
+  use_draft = FALSE,
+  remote = NULL
 )
 
 orderly_test_check(path = NULL)
@@ -66,6 +67,16 @@ logical (\code{TRUE}, \code{FALSE}) or use the string
 archive reports.  For consistency, \code{always} and
 \code{never} are equivalent to \code{TRUE} and \code{FALSE},
 respectively.}
+
+\item{remote}{Remote to use to resolve dependencies.  Use this in
+order to run a report with the same dependencies as are
+available on a remote server, particularly when using \code{id =
+"latest"}.  Note that this is not the same as running
+\code{\link{orderly_pull_dependencies}}, then \code{orderly_run}
+with \code{remote = NULL}, as the pull/run approach will use the
+latest report in \emph{your} archive but the \code{remote =
+"remote"} approach will use the latest approach in the
+\emph{remote} archive (which might be less recent).}
 
 \item{path}{Path to the report that is currently being run}
 }
