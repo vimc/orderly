@@ -2,6 +2,8 @@
 % Please edit documentation in R/helpers.R
 \name{orderly_use_resource}
 \alias{orderly_use_resource}
+\alias{orderly_use_source}
+\alias{orderly_use_package}
 \title{Add a resource to orderly.yml}
 \usage{
 orderly_use_resource(
@@ -13,11 +15,32 @@ orderly_use_resource(
   edit = TRUE,
   prompt = TRUE
 )
+
+orderly_use_source(
+  sources,
+  name = NULL,
+  root = NULL,
+  locate = FALSE,
+  show = TRUE,
+  edit = TRUE,
+  prompt = TRUE
+)
+
+orderly_use_package(
+  packages,
+  name = NULL,
+  root = NULL,
+  locate = FALSE,
+  show = TRUE,
+  edit = TRUE,
+  prompt = TRUE
+)
 }
 \arguments{
-\item{resources}{Character vector of resources to add.  These must
-be filenames relative to the report directory, must exist, and
-must not already be present in the orderly.yml}
+\item{resources, sources}{Character vector of resources or sources
+to add.  These must be filenames relative to the report
+directory, must exist, and must not already be present in the
+orderly.yml}
 
 \item{name}{Name of the report to modify.  Like
 \code{\link{orderly_develop_start}} this can be \code{NULL} if
