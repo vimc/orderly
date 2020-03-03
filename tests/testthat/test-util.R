@@ -700,6 +700,7 @@ test_that("random_seed", {
 })
 
 
+## TODO: add tests of some of the comment processing
 test_that("yaml_block_info - simple test", {
   yml <- c("a:", "  - 1", "  - 2", "b:", "    3", "c: 4")
   expect_equal(yaml_load(yml), list(a = 1:2, b = 3, c = 4))
@@ -722,4 +723,44 @@ test_that("yaml parse failure", {
   text <- c("a: 1", "a: 2")
   expect_error(yaml_load(text))
   expect_error(yaml_block_info("a", text), "Failed to process yaml")
+})
+
+
+test_that("insert into files", {
+  text <- c("a", "b", "c")
+  value <- c("x", "y")
+  path <- tempfile()
+  writeLines(text, path)
+
+  expect_message(
+    str <- capture.output(
+      res <- insert_into_file(text, 2, value, path,
+                              show = TRUE, edit = FALSE, prompt = FALSE)),
+    "Changes to '.+'")
+  expect_equal(res, filediff(text, 2, value))
+  expect_equal(str, c("2 | b", "3 | x", "4 | y", "5 | c"))
+  expect_equal(readLines(path), res$text) # unchanged
+
+  str <- capture.output(
+    res <- insert_into_file(text, 2, value, path,
+                            show = FALSE, edit = TRUE, prompt = FALSE))
+  expect_equal(str, character(0))
+  expect_equal(res, filediff(text, 2, value))
+  expect_equal(readLines(path), res$result)
+})
+
+
+test_that("prompting prevents write", {
+  skip_if_not_installed("mockery")
+  text <- c("a", "b", "c")
+  value <- c("x", "y")
+  path <- tempfile()
+  writeLines(text, path)
+  mockery::stub(insert_into_file, "prompt_ask_yes_no", FALSE)
+  expect_message(
+    res <- insert_into_file(text, 2, value, path,
+                            show = FALSE, edit = TRUE, prompt = TRUE),
+    "Not modifying file")
+  expect_equal(res, filediff(text, 2, value))
+  expect_equal(readLines(path), res$text) # unchanged
 })

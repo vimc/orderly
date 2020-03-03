@@ -766,3 +766,51 @@ yaml_block_info <- function(name, text) {
   list(name = name, exists = TRUE, block = TRUE,
        start = start, end = end, indent = indent)
 }
+
+
+insert_into_file <- function(text, where, value, path, show, edit, prompt) {
+  x <- filediff(text, where, value)
+
+  if (show) {
+    message(sprintf("Changes to '%s'", path))
+    cat(format_filediff(x))
+  }
+
+  if (edit && prompt && !prompt_ask_yes_no("Write changes to file? ")) {
+    edit <- FALSE
+    message("Not modifying file")
+  }
+
+  if (edit) {
+    message(sprintf("Writing to '%s'", path))
+    writeLines(x$result, path)
+  }
+
+  invisible(x)
+}
+
+
+filediff <- function(text, where, value) {
+  i <- seq_len(where)
+  ret <- list(text = text,
+              where = where,
+              value = value,
+              result = c(text[i], value, text[-i]),
+              changed = seq_along(value) + where)
+  class(ret) <- "filediff"
+  ret
+}
+
+
+format_filediff <- function(x, ..., context = 2L) {
+  i <- seq_along(x$result)
+  focus <- range(x$changed)
+  i <- i[i > focus[[1L]] - context & i < focus[[2L]] + context]
+  line <- format(i)
+  text <- x$result[i]
+  changed <- i %in% x$changed
+  grey <- crayon::make_style("grey")
+  line[changed] <- crayon::bold(grey(line[changed]))
+  text[changed] <- crayon::bold(text[changed])
+  paste(sprintf("%s | %s\n", line, text), collapse = "")
+}
