@@ -732,6 +732,9 @@ same_path <- function(a, b) {
 }
 
 
+## NOTE: this will not cope for things like a block string that runs
+## mutiple line in any child element.  So we cannot use this to edit
+## sections where that is possible.
 yaml_block_info <- function(name, text) {
   ## TODO: Explicitly check for a null section - that could be
   ## replaced in a 3rd option.

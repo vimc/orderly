@@ -105,3 +105,16 @@ test_that("Add source (minimal test)", {
                                   show = FALSE, prompt = FALSE),
                "Source already declared: 'new.R'")
 })
+
+
+test_that("Add packages (minimal test)", {
+  path <- prepare_orderly_example("minimal")
+  res <- orderly_use_package("knitr", root = path, name = "example",
+                             show = FALSE, prompt = FALSE)
+  config <- orderly_config(path)
+  info <- recipe_read(file.path(path, "src", "example"), config)
+  expect_equal(info$packages, "knitr")
+  expect_error(orderly_use_package("knitr", root = path, name = "example",
+                                   show = FALSE, prompt = FALSE),
+               "Package already declared: 'knitr'")
+})
