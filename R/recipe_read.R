@@ -162,6 +162,23 @@ recipe_read_check_artefacts <- function(x, filename, path) {
     stop("At least one artefact required")
   }
 
+  if (is.character(x)) {
+    msg <- c("Your artefacts are misformatted.  You must provide a 'type'",
+             "and a description for each, and each logical artefact may",
+             "contain multiple files.  For example, you might use",
+             "",
+             "artefacts:",
+             "  - data:",
+             "      description: These are data for x, y, z",
+             "      filenames:",
+             sprintf("        - %s", x),
+             "",
+             sprintf("other alternatives to 'data' are %s",
+                     paste(squote(setdiff(valid_formats(), "data")),
+                           collapse = ", ")))
+    stop(paste(msg, collapse = "\n"), call. = FALSE)
+  }
+
   ## There are two valid options here:
   ##
   ## artefacts:
