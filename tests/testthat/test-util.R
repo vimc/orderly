@@ -698,3 +698,28 @@ test_that("random_seed", {
   expect_equal(random_seed(e1), pi)
   expect_null(random_seed(e2))
 })
+
+
+test_that("yaml_block_info - simple test", {
+  yml <- c("a:", "  - 1", "  - 2", "b:", "    3", "c: 4")
+  expect_equal(yaml_load(yml), list(a = 1:2, b = 3, c = 4))
+
+  expect_equal(yaml_block_info("a", yml),
+               list(name = "a", exists = TRUE, block = TRUE,
+                    start = 1L, end = 3L, indent = "  "))
+  expect_equal(yaml_block_info("b", yml),
+               list(name = "b", exists = TRUE, block = TRUE,
+                    start = 4L, end = 5L, indent = "    "))
+  expect_equal(yaml_block_info("c", yml),
+               list(name = "c", exists = TRUE, block = FALSE,
+                    start = 6L, end = 6L))
+  expect_equal(yaml_block_info("d", yml),
+               list(name = "d", exists = FALSE, block = FALSE))
+})
+
+
+test_that("yaml parse failure", {
+  text <- c("a: 1", "a: 2")
+  expect_error(yaml_load(text))
+  expect_error(yaml_block_info("a", text), "Failed to process yaml")
+})

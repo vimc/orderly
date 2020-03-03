@@ -730,3 +730,39 @@ random_seed <- function(envir = globalenv()) {
 same_path <- function(a, b) {
   normalizePath(a, "/", TRUE) == normalizePath(b, "/", TRUE)
 }
+
+
+yaml_block_info <- function(name, text) {
+  ## TODO: Explicitly check for a null section - that could be
+  ## replaced in a 3rd option.
+  ##
+  ## TODO: Better behaviour for the key: value pair where value could
+  ## have been a list.
+  re <- sprintf("^%s\\s*:", name)
+  start <- grep(re, text)
+  if (length(start) == 0L) {
+    return(list(name = name, exists = FALSE, block = FALSE))
+  }
+
+  re <- sprintf("^%s\\s*:\\s*(#.*)?", name)
+  if (length(start) > 1L) {
+    stop("Failed to process yaml")
+  }
+
+  if (!grepl(paste0(re, "\\s*(#.*)?$"), text[[start]])) {
+    return(list(name = name, exists = TRUE, block = FALSE,
+                start = start, end = start))
+  }
+
+  ## Find end of the block - that will be the next zero-indented line
+  ## or the EOF:
+  end <- grep("^[^#[:space:]]", text)
+  end <- c(end[end > start], length(text) + 1L)[[1L]] - 1L
+
+  tmp <- text[start:end][-1L]
+  tmp <- tmp[!grepl("^\\s*(#.*)?$", tmp)][[1L]]
+  indent <- sub("[^[:space:]].*$", "", tmp)
+
+  list(name = name, exists = TRUE, block = TRUE,
+       start = start, end = end, indent = indent)
+}
