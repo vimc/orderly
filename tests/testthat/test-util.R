@@ -738,7 +738,7 @@ test_that("insert into files", {
                               show = TRUE, edit = FALSE, prompt = FALSE)),
     "Changes to '.+'")
   expect_equal(res, filediff(text, 2, value))
-  expect_equal(str, c("2 | b", "3 | x", "4 | y", "5 | c"))
+  expect_equal(str, c("  2 | b", "+ 3 | x", "+ 4 | y", "  5 | c"))
   expect_equal(readLines(path), res$text) # unchanged
 
   str <- capture.output(
