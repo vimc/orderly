@@ -50,7 +50,7 @@
 ##'
 ##' # (of course, we'd still need to modify the script to use it).
 orderly_use_resource <- function(resources, name = NULL, root = NULL,
-                                 locate = FALSE, show = TRUE, edit = TRUE,
+                                 locate = TRUE, show = TRUE, edit = TRUE,
                                  prompt = TRUE) {
   loc <- orderly_develop_location(name, root, locate)
   assert_character(resources, name = "Resource")
@@ -63,7 +63,7 @@ orderly_use_resource <- function(resources, name = NULL, root = NULL,
 ##' @export
 ##' @rdname orderly_use
 orderly_use_source <- function(sources, name = NULL, root = NULL,
-                               locate = FALSE, show = TRUE, edit = TRUE,
+                               locate = TRUE, show = TRUE, edit = TRUE,
                                prompt = TRUE) {
   loc <- orderly_develop_location(name, root, locate)
   assert_character(sources, name = "Source")
@@ -78,7 +78,7 @@ orderly_use_source <- function(sources, name = NULL, root = NULL,
 ##' @export
 ##' @rdname orderly_use
 orderly_use_package <- function(packages, name = NULL, root= NULL,
-                                locate = FALSE, show = TRUE, edit = TRUE,
+                                locate = TRUE, show = TRUE, edit = TRUE,
                                 prompt = TRUE) {
   loc <- orderly_develop_location(name, root, locate)
   orderly_use_edit_array(packages, "Package", "packages",

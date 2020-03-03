@@ -10,7 +10,7 @@ orderly_use_resource(
   resources,
   name = NULL,
   root = NULL,
-  locate = FALSE,
+  locate = TRUE,
   show = TRUE,
   edit = TRUE,
   prompt = TRUE
@@ -20,7 +20,7 @@ orderly_use_source(
   sources,
   name = NULL,
   root = NULL,
-  locate = FALSE,
+  locate = TRUE,
   show = TRUE,
   edit = TRUE,
   prompt = TRUE
@@ -30,7 +30,7 @@ orderly_use_package(
   packages,
   name = NULL,
   root = NULL,
-  locate = FALSE,
+  locate = TRUE,
   show = TRUE,
   edit = TRUE,
   prompt = TRUE
