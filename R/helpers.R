@@ -28,6 +28,25 @@
 ##'   purposes and the format is subject to change.
 ##'
 ##' @export
+##' @examples
+##' path <- orderly::orderly_example("minimal")
+##'
+##' # Suppose we wanted to use the mtcars data within our report.
+##' # First, the file must exist:
+##' write.csv(mtcars, file.path(path, "src", "example", "mtcars.csv"),
+##'           row.names = FALSE)
+##'
+##' # Preview expected changes
+##' orderly::orderly_use_resource("mtcars.csv", "example", path, edit = FALSE)
+##'
+##' # Modify the orderly.yml file within src/example:
+##' orderly::orderly_use_resource("mtcars.csv", "example", path, prompt = FALSE)
+##'
+##' # The result is a file that now has a 'resources' section
+##' # containing our new file
+##' writeLines(readLines(file.path(path, "src", "example", "orderly.yml")))
+##'
+##' # (of course, we'd still need to modify the script to use it).
 orderly_use_resource <- function(resources, name = NULL, root = NULL,
                                  locate = FALSE, show = TRUE, edit = TRUE,
                                  prompt = TRUE) {
