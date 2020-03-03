@@ -89,3 +89,19 @@ test_that("require added resources to be unique", {
                          show = FALSE, prompt = FALSE),
     "Resource duplicated: 'a.txt'")
 })
+
+
+## This uses the same codepath as above, so I've just done a very
+## rough job of testing here.
+test_that("Add source (minimal test)", {
+  path <- prepare_orderly_example("minimal")
+  file.create(file.path(path, "src", "example", "new.R"))
+  res <- orderly_use_source("new.R", root = path, name = "example",
+                            show = FALSE, prompt = FALSE)
+  config <- orderly_config(path)
+  info <- recipe_read(file.path(path, "src", "example"), config)
+  expect_equal(info$sources, "new.R")
+  expect_error(orderly_use_source("new.R", root = path, name = "example",
+                                  show = FALSE, prompt = FALSE),
+               "Source already declared: 'new.R'")
+})
