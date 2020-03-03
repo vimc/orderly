@@ -764,3 +764,27 @@ test_that("prompting prevents write", {
   expect_equal(res, filediff(text, 2, value))
   expect_equal(readLines(path), res$text) # unchanged
 })
+
+
+test_that("format filediff", {
+  text <- c("a", "b", "c")
+  value <- c("x", "y")
+  where <- 2L
+  fd <- filediff(text, where, value)
+
+  str1 <- format_filediff(fd, colour = FALSE)
+  expect_equal(str1, "  2 | b\n+ 3 | x\n+ 4 | y\n  5 | c\n")
+  expect_false(crayon::has_style(str1))
+
+  str2 <- withr::with_options(
+    list(crayon.enabled = TRUE),
+    format_filediff(fd, colour = TRUE))
+  expect_true(crayon::has_style(str2))
+
+  withr::with_options(
+    list(crayon.enabled = FALSE),
+    expect_equal(format_filediff(fd), str1))
+  withr::with_options(
+    list(crayon.enabled = TRUE),
+    expect_equal(format_filediff(fd), str2))
+})

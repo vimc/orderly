@@ -802,7 +802,8 @@ filediff <- function(text, where, value) {
 }
 
 
-format_filediff <- function(x, ..., context = 2L) {
+format_filediff <- function(x, ..., context = 2L, colour = NULL) {
+  colour <- colour %||% crayon::has_color()
   i <- seq_along(x$result)
   focus <- range(x$changed)
   i <- i[i > focus[[1L]] - context & i < focus[[2L]] + context]
@@ -810,7 +811,12 @@ format_filediff <- function(x, ..., context = 2L) {
   text <- x$result[i]
   changed <- i %in% x$changed
   grey <- crayon::make_style("grey")
-  line[changed] <- crayon::bold(grey(line[changed]))
-  text[changed] <- crayon::bold(text[changed])
+  if (colour) {
+    line[changed] <- crayon::bold(grey(line[changed]))
+    text[changed] <- crayon::bold(text[changed])
+  } else {
+    line[changed] <- paste0("+ ", line[changed])
+    line[!changed] <- paste0("  ", line[!changed])
+  }
   paste(sprintf("%s | %s\n", line, text), collapse = "")
 }
