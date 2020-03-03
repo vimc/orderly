@@ -46,6 +46,11 @@ orderly_use_resource <- function(resources, name = NULL, root = NULL,
     stop("Resource already declared: ", paste(squote(err), collapse = ", "))
   }
 
+  err <- unique(resources[duplicated(resources)])
+  if (length(err) > 0L) {
+    stop("Resource duplicated: ", paste(squote(err), collapse = ", "))
+  }
+
   path_yml <- file.path("src", name, "orderly.yml")
   yml <- readLines(file.path(root, path_yml))
 
