@@ -8,12 +8,11 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-ORDERLY_SCHEMA_VERSION <- "0.0.9"
+ORDERLY_SCHEMA_VERSION <- "0.1.0"
 
 ## These will be used in a few places and even though they're not
 ## super likely to change it would be good
 ORDERLY_SCHEMA_TABLE <- "orderly_schema"
-ORDERLY_MAIN_TABLE <- "report_version"
 ORDERLY_TABLE_LIST <- "orderly_schema_tables"
 
 report_db_schema_read <- function(fields = NULL, dialect = "sqlite") {
@@ -27,14 +26,6 @@ report_db_schema_read <- function(fields = NULL, dialect = "sqlite") {
   }
 
   d <- set_names(lapply(names(d), preprepare), names(d))
-
-  ## Delete with VIMC-2929
-  if (!is.null(fields)) {
-    f <- set_names(Map(function(t, n) list(type = t, nullable = n),
-                       rep("character", nrow(fields)), !fields$required),
-                   fields$name)
-    d[[ORDERLY_MAIN_TABLE]]$columns <- c(d[[ORDERLY_MAIN_TABLE]]$columns, f)
-  }
 
   prepare_table <- function(x) {
     prepare_col <- function(nm) {
@@ -266,10 +257,6 @@ report_data_import <- function(con, name, id, config) {
     git_sha = dat_rds$git$sha %||% NA_character_,
     git_branch = dat_rds$git$branch %||% NA_character_,
     git_clean = git_clean)
-  ## TODO: Delete with VIMC-2929
-  if (!is.null(dat_rds$meta$extra_fields)) {
-    report_version <- cbind(report_version, dat_rds$meta$extra_fields)
-  }
   DBI::dbWriteTable(con, "report_version", report_version, append = TRUE)
 
   if (!is.null(dat_rds$meta$extra_fields)) {
