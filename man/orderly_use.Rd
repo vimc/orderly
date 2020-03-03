@@ -65,6 +65,9 @@ changes to screen}
 \item{prompt}{Logical, indicating if we should prompt before
 editing the orderly.yml file.  Only has an effect if \code{edit}
 is \code{TRUE}.}
+
+\item{packages}{Character vector of package names to add.  These
+must not already exist in the orderly.yml}
 }
 \value{
 Invisibly, this function returns information about the

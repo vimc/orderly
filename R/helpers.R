@@ -72,6 +72,9 @@ orderly_use_source <- function(sources, name = NULL, root = NULL,
                          loc, show, edit, prompt)
 }
 
+##' @param packages Character vector of package names to add.  These
+##'   must not already exist in the orderly.yml
+##'
 ##' @export
 ##' @rdname orderly_use
 orderly_use_package <- function(packages, name = NULL, root= NULL,
