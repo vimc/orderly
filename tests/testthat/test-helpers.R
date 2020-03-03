@@ -32,6 +32,23 @@ test_that("can add resource to an orderly with resources", {
 })
 
 
+test_that("can add resource non-block resources", {
+  path <- prepare_orderly_example("minimal")
+  file.create(file.path(path, "src", "example", c("a.txt", "b.txt")))
+  p <- file.path(path, "src", "example", "orderly.yml")
+  text <- readLines(p)
+  dat <- yaml_block_info("data", text)
+  writeLines(filediff(text, dat$end, "resources: a.txt")$result, p)
+
+  res <- orderly_use_resource("b.txt", root = path, name = "example",
+                              show = FALSE, prompt = FALSE)
+
+  expect_equal(res$result[seq_len(3) + dat$end],
+               c("resources:", "  - a.txt", "  - b.txt"))
+  expect_equal(yaml_read(p)$resources, c("a.txt", "b.txt"))
+})
+
+
 test_that("require added resources to exist", {
   path <- prepare_orderly_example("minimal")
   expect_error(

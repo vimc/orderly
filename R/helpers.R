@@ -82,7 +82,6 @@ orderly_use_resource <- function(resources, name = NULL, root = NULL,
 
 
 insert_into_file <- function(text, where, value, path, show, edit, prompt) {
-  stopifnot(identical(readLines(path), text))
   x <- filediff(text, where, value)
 
   if (show) {
