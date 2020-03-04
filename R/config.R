@@ -13,7 +13,7 @@ orderly_config_read_yaml <- function(filename, root) {
   check_fields(info, filename, character(),
                c("destination", "fields", "minimum_orderly_version",
                  "remote", "vault", "vault_server", "global_resources",
-                 "changelog", "source", "database"))
+                 "changelog", "tags", "source", "database"))
 
   ## There's heaps of really boring validation to do here that I am
   ## going to skip.  The drama that we will have is that there are
@@ -43,6 +43,10 @@ orderly_config_read_yaml <- function(filename, root) {
 
   if (!is.null(info$changelog)) {
     info$changelog <- config_check_changelog(info$changelog, filename)
+  }
+
+  if (!is.null(info$tags)) {
+    assert_character(info$tags, sprintf("%s:tags", filename))
   }
 
   v <- info$minimum_orderly_version

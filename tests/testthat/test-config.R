@@ -425,3 +425,22 @@ test_that("default instance from an environmental variable", {
   cfg <- orderly_config(path)
   expect_equal(cfg$database$source$args, list(dbname = "production.sqlite"))
 })
+
+
+test_that("tags can be included in the configuration", {
+  path <- prepare_orderly_example("minimal")
+  expect_null(orderly_config(path)$tags)
+  p <- file.path(path, "orderly_config.yml")
+  append_lines(c("tags:", "  - tag1", "  - tag2"), p)
+  expect_equal(orderly_config(path)$tags, c("tag1", "tag2"))
+})
+
+
+test_that("tags are validated", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "orderly_config.yml")
+  append_lines(c("tags:", "  - 1", "  - 2"), p)
+  expect_error(
+    orderly_config(path),
+    "orderly_config.yml:tags' must be character")
+})
