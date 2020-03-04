@@ -21,5 +21,9 @@ changelog:
   public:
     public: true
 
+tags:
+  - dataset
+  - plot
+
 global_resources:
   global

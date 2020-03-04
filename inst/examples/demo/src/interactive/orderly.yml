@@ -12,3 +12,5 @@ artefacts:
 author: Dr Fun
 requester: ACME
 comment: This is a comment about the interactive report
+tags:
+  - plot
