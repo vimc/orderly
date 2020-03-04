@@ -734,20 +734,20 @@ test_that("insert into files", {
   writeLines(text, path)
 
   res <- evaluate_promise(
-    insert_into_file(text, 2, value, path,
+    insert_into_file(text, where, value, path,
                      show = TRUE, edit = FALSE, prompt = FALSE))
   expect_match(res$messages, "Changes to '.+'")
-  expect_equal(res$result, filediff(text, 2, value))
+  expect_equal(res$result, filediff(text, where, value))
   expect_equal(res$output,
                "  2 | b\n  3 | c\n+ 4 | x\n+ 5 | y\n  6 | d\n  7 | e")
 
   expect_equal(readLines(path), res$result$text) # unchanged
 
   res <- evaluate_promise(
-    insert_into_file(text, 2, value, path,
+    insert_into_file(text, where, value, path,
                      show = FALSE, edit = TRUE, prompt = FALSE))
   expect_equal(res$output, "")
-  expect_equal(res$result, filediff(text, 2, value))
+  expect_equal(res$result, filediff(text, where, value))
   expect_equal(readLines(path), res$result$result)
 })
 
