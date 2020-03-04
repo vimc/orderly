@@ -72,7 +72,7 @@ orderly_develop_start <- function(name = NULL, parameters = NULL,
   orderly_log("name", loc$name)
 
   info <- recipe_read(loc$path, loc$config, use_draft = use_draft,
-                      remote = remote)
+                      remote = remote, develop = TRUE)
 
   info$workdir <- loc$path
   withr::with_dir(info$workdir, {
@@ -140,7 +140,7 @@ orderly_status <- function(path) {
   assert_file_exists(file.path(path, "orderly.yml"))
   ## TODO: this needs making more robust
   config <- orderly_config_get(file.path(path, "..", ".."), FALSE)
-  info <- recipe_read(path, config, FALSE)
+  info <- recipe_read(path, config, FALSE, develop = TRUE)
 
   internal <- list(orderly = "orderly.yml",
                    script = info$script,
