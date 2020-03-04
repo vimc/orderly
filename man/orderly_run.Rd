@@ -99,8 +99,9 @@ interpreted as a git reference.  This can be a commit, tag, or a
 branch name (including remote).  The working directory must be
 clean according to \code{git status} and this \emph{will} require
 some careful use of \code{.gitignore} to exclude \code{draft},
-\code{archive}, \code{data} and \code{orderly.sqlite}.  The git
-tree will revert back to the original branch at completion (or
+\code{archive}, \code{data} and \code{orderly.sqlite} (see
+\code{\link{orderly_use_gitignore}} to help automate this).  The
+git tree will revert back to the original branch at completion (or
 failure to complete) the report.
 
 Parameters are passed to the report as a named list, for example

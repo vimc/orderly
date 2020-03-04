@@ -433,6 +433,22 @@ multiple reports must be included in each report directory separately.
 The functionality to include global source code may be added in future
 versions.
 
+## Using version control
+
+`orderly` is designed to work well with [git](https://git-scm.com/) (or any other version control system).  The general principle is that `src/` and any configuration files should be added to git, while most of the generated files (`data`, `draft`, `archive`, and any SQLite databases such as `orderly.sqlite`) should be excluded, which can be done by creating a `.gitignore` file.
+
+This process can be automated by running
+
+```{r}
+orderly::orderly_use_gitignore(root = path, prompt = FALSE)
+```
+
+(the default, `prompt = TRUE` will request user confirmation before writing the `.gitignore` file).
+
+You should arrange to back up the entire orderly directory through some other means.
+
+If your generated files are particularly small you might leave them in git, but in our experience this will result in a git repository that is unpleasant to use.
+
 ## Using SQL databases
 
 One of the original aims of `orderly` was to provide a set of tools for use of SQL databases within reproducible reporting.  Because the SQL database is an external global resource it is difficult to work with any concept of "versioning" from R (there is no git history, no way of easily rolling back to previous versions etc).  If using a central SQL server, there is configuration that should be kept *out* of any analysis, particularly things like passwords.  Configuration problems multiply when using both "production" and "staging" systems as we would like to be able to switch between different configurations.
@@ -546,9 +562,10 @@ This will be read every time that `orderly_config.yml` is read (in
 contrast with `.Renviron` which is read-only at the start of a
 session).  This will likely be more pleasant to work with.
 
-The advantage of using environment variables is that you can add
-the `orderly_envir.yml` file to your `.gitignore` and avoid
-committing system-dependent data to the central repository.
+The advantage of using environment variables is that you can add the
+`orderly_envir.yml` file to your `.gitignore` and avoid committing
+system-dependent data to the central repository (see
+`orderly::orderly_use_gitignore`) to help automate this.
 
 To avoid leaving passwords in plain text, you can use [`vault`](https://www.vaultproject.io) (along with the R client [`vaultr`](https://cran.r-project.org/package=vaultr)) to
 retrieve them.
