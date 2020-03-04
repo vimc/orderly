@@ -23,7 +23,7 @@ migrate <- function(data, path, config) {
   }
 
   data$meta$artefacts <-
-    recipe_read_check_artefacts(dat_yml$artefacts, filename, path)
+    recipe_read_check_artefacts(dat_yml$artefacts, filename, path, FALSE)
 
   if (!is.null(dat_yml$sources)) {
     data$meta$hash_sources <- data$meta$hash_resources[dat_yml$sources]
