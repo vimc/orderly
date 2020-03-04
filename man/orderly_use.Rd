@@ -4,6 +4,7 @@
 \alias{orderly_use_resource}
 \alias{orderly_use_source}
 \alias{orderly_use_package}
+\alias{orderly_use_gitignore}
 \title{Add a resource to orderly.yml}
 \usage{
 orderly_use_resource(
@@ -29,6 +30,14 @@ orderly_use_source(
 orderly_use_package(
   packages,
   name = NULL,
+  root = NULL,
+  locate = TRUE,
+  show = TRUE,
+  edit = TRUE,
+  prompt = TRUE
+)
+
+orderly_use_gitignore(
   root = NULL,
   locate = TRUE,
   show = TRUE,
@@ -76,6 +85,13 @@ Invisibly, this function returns information about the
 }
 \description{
 Add one or more resources to an \code{orderly.yml} file.
+}
+\details{
+The \code{orderly_use_gitignore} configures a basic
+\code{.gitignore} file at the root of your orderly project that
+will prevent files from being added to git.  This is only really
+useful if you are using (or will use) git, but it is harmless at
+worst.
 }
 \examples{
 path <- orderly::orderly_example("minimal")
