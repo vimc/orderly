@@ -730,3 +730,96 @@ random_seed <- function(envir = globalenv()) {
 same_path <- function(a, b) {
   normalizePath(a, "/", TRUE) == normalizePath(b, "/", TRUE)
 }
+
+
+## NOTE: this will not cope for things like a block string that runs
+## mutiple line in any child element.  So we cannot use this to edit
+## sections where that is possible.
+yaml_block_info <- function(name, text) {
+  ## TODO: Explicitly check for a null section - that could be
+  ## replaced in a 3rd option.
+  ##
+  ## TODO: Better behaviour for the key: value pair where value could
+  ## have been a list.
+  re <- sprintf("^%s\\s*:", name)
+  start <- grep(re, text)
+  if (length(start) == 0L) {
+    return(list(name = name, exists = FALSE, block = FALSE))
+  }
+
+  re <- sprintf("^%s\\s*:", name)
+  if (length(start) > 1L) {
+    stop("Failed to process yaml")
+  }
+
+  ## Find end of the block - that will be the next zero-indented line
+  ## or the EOF:
+  end <- grep("^[^#[:space:]]", text)
+  end <- c(end[end > start], length(text) + 1L)[[1L]] - 1L
+
+  if (start == end) {
+    return(list(name = name, exists = TRUE, block = FALSE,
+                start = start, end = start))
+  }
+
+  tmp <- text[start:end][-1L]
+  tmp <- tmp[!grepl("^\\s*(#.*)?$", tmp)][[1L]]
+  indent <- sub("[^[:space:]].*$", "", tmp)
+
+  list(name = name, exists = TRUE, block = TRUE,
+       start = start, end = end, indent = indent)
+}
+
+
+insert_into_file <- function(text, where, value, path, show, edit, prompt) {
+  x <- filediff(text, where, value)
+
+  if (show) {
+    message(sprintf("Changes to '%s'", path))
+    cat(format_filediff(x))
+  }
+
+  if (edit && prompt && !prompt_ask_yes_no("Write changes to file? ")) {
+    edit <- FALSE
+    message("Not modifying file")
+  }
+
+  if (edit) {
+    message(sprintf("Writing to '%s'", path))
+    writeLines(x$result, path)
+  }
+
+  invisible(x)
+}
+
+
+filediff <- function(text, where, value) {
+  i <- seq_len(where)
+  ret <- list(text = text,
+              where = where,
+              value = value,
+              result = c(text[i], value, text[-i]),
+              changed = seq_along(value) + where)
+  class(ret) <- "filediff"
+  ret
+}
+
+
+format_filediff <- function(x, ..., context = 2L, colour = NULL) {
+  colour <- colour %||% crayon::has_color()
+  i <- seq_along(x$result)
+  focus <- range(x$changed)
+  i <- i[i > focus[[1L]] - context & i < focus[[2L]] + context]
+  line <- format(i)
+  text <- x$result[i]
+  changed <- i %in% x$changed
+  grey <- crayon::make_style("grey")
+  if (colour) {
+    line[changed] <- crayon::bold(grey(line[changed]))
+    text[changed] <- crayon::bold(text[changed])
+  } else {
+    line[changed] <- paste0("+ ", line[changed])
+    line[!changed] <- paste0("  ", line[!changed])
+  }
+  paste(sprintf("%s | %s\n", line, text), collapse = "")
+}

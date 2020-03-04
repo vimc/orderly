@@ -27,6 +27,7 @@ Imports:
     DBI,
     R6,
     RSQLite,
+    crayon,
     digest,
     docopt,
     fs (>= 1.2.7),

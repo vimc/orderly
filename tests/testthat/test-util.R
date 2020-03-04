@@ -698,3 +698,93 @@ test_that("random_seed", {
   expect_equal(random_seed(e1), pi)
   expect_null(random_seed(e2))
 })
+
+
+## TODO: add tests of some of the comment processing
+test_that("yaml_block_info - simple test", {
+  yml <- c("a:", "  - 1", "  - 2", "b:", "    3", "c: 4")
+  expect_equal(yaml_load(yml), list(a = 1:2, b = 3, c = 4))
+
+  expect_equal(yaml_block_info("a", yml),
+               list(name = "a", exists = TRUE, block = TRUE,
+                    start = 1L, end = 3L, indent = "  "))
+  expect_equal(yaml_block_info("b", yml),
+               list(name = "b", exists = TRUE, block = TRUE,
+                    start = 4L, end = 5L, indent = "    "))
+  expect_equal(yaml_block_info("c", yml),
+               list(name = "c", exists = TRUE, block = FALSE,
+                    start = 6L, end = 6L))
+  expect_equal(yaml_block_info("d", yml),
+               list(name = "d", exists = FALSE, block = FALSE))
+})
+
+
+test_that("yaml parse failure", {
+  text <- c("a: 1", "a: 2")
+  expect_error(yaml_load(text))
+  expect_error(yaml_block_info("a", text), "Failed to process yaml")
+})
+
+
+test_that("insert into files", {
+  text <- c("a", "b", "c")
+  value <- c("x", "y")
+  path <- tempfile()
+  writeLines(text, path)
+
+  res <- evaluate_promise(
+    insert_into_file(text, 2, value, path,
+                     show = TRUE, edit = FALSE, prompt = FALSE))
+  expect_match(res$messages, "Changes to '.+'")
+  expect_equal(res$result, filediff(text, 2, value))
+  expect_equal(res$output, c("  2 | b\n+ 3 | x\n+ 4 | y\n  5 | c"))
+
+  expect_equal(readLines(path), res$result$text) # unchanged
+
+  res <- evaluate_promise(
+    insert_into_file(text, 2, value, path,
+                     show = FALSE, edit = TRUE, prompt = FALSE))
+  expect_equal(res$output, "")
+  expect_equal(res$result, filediff(text, 2, value))
+  expect_equal(readLines(path), res$result$result)
+})
+
+
+test_that("prompting prevents write", {
+  skip_if_not_installed("mockery")
+  text <- c("a", "b", "c")
+  value <- c("x", "y")
+  path <- tempfile()
+  writeLines(text, path)
+  mockery::stub(insert_into_file, "prompt_ask_yes_no", FALSE)
+  expect_message(
+    res <- insert_into_file(text, 2, value, path,
+                            show = FALSE, edit = TRUE, prompt = TRUE),
+    "Not modifying file")
+  expect_equal(res, filediff(text, 2, value))
+  expect_equal(readLines(path), res$text) # unchanged
+})
+
+
+test_that("format filediff", {
+  text <- c("a", "b", "c")
+  value <- c("x", "y")
+  where <- 2L
+  fd <- filediff(text, where, value)
+
+  str1 <- format_filediff(fd, colour = FALSE)
+  expect_equal(str1, "  2 | b\n+ 3 | x\n+ 4 | y\n  5 | c\n")
+  expect_false(crayon::has_style(str1))
+
+  str2 <- withr::with_options(
+    list(crayon.enabled = TRUE),
+    format_filediff(fd, colour = TRUE))
+  expect_true(crayon::has_style(str2))
+
+  withr::with_options(
+    list(crayon.enabled = FALSE),
+    expect_equal(format_filediff(fd), str1))
+  withr::with_options(
+    list(crayon.enabled = TRUE),
+    expect_equal(format_filediff(fd), str2))
+})

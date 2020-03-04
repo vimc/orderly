@@ -1,6 +1,7 @@
 # orderly 1.1.2
 
 * Improved error message with misformatted artefacts (VIMC-3511, reported by @jeffeaton)
+* The first of `usethis` inspired functions `orderly::orderly_use_resource()`, `orderly::orderly_use_source()` and `orderly::orderly_use_package()`which can add a resource, source or packages into the orderly.yml (VIMC-3503)
 
 # orderly 1.1.1
 

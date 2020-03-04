@@ -15,6 +15,7 @@ RUN install2.r \
   R6 \
   RPostgres \
   RSQLite \
+  crayon \
   digest \
   docopt \
   fs \
