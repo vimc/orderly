@@ -1,3 +1,7 @@
+# orderly 1.1.2
+
+* Improved error message with misformatted artefacts (VIMC-3511, reported by @jeffeaton)
+
 # orderly 1.1.1
 
 * Dependencies can be resolved as if they were to be run on a remote (including appropriate selection of "latest" dependencies).  This is to support future decentralised workflows (VIMC-3473)

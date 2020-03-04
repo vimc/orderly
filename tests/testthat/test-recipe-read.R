@@ -607,3 +607,29 @@ test_that("resolve_dependencies_remote", {
     resolve_dependencies_remote(new_report_id(), "example", config, remote),
     "Did not find report 'example:.+' on remote 'default'")
 })
+
+
+test_that("friendly error message if artefacts are incorrectly given", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "src", "example", "orderly.yml")
+  dat <- yaml_read(p)
+  dat$artefacts <- "mygraph.png"
+  yaml_write(dat, p)
+
+  config <- orderly_config(path)
+  err <- expect_error(
+    recipe_read(dirname(p), config),
+    "Your artefacts are misformatted.  You must provide")
+
+  ## check that the suggested fix is good:
+  fix <- strsplit(err$message, "\n")[[1]][4:9]
+  txt <- c(readLines(p)[1:4], fix)
+  writeLines(txt, p)
+  res <- recipe_read(dirname(p), config)$artefacts
+  expect_equal(res[, "filenames"],
+               list(filenames = "mygraph.png"))
+  expect_equal(res[, "description"],
+               list(description = "These are data for x, y, z"))
+  expect_equal(res[, "format"],
+               list(format = "data"))
+})
