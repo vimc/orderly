@@ -546,9 +546,10 @@ This will be read every time that `orderly_config.yml` is read (in
 contrast with `.Renviron` which is read-only at the start of a
 session).  This will likely be more pleasant to work with.
 
-The advantage of using environment variables is that you can add
-the `orderly_envir.yml` file to your `.gitignore` and avoid
-committing system-dependent data to the central repository.
+The advantage of using environment variables is that you can add the
+`orderly_envir.yml` file to your `.gitignore` and avoid committing
+system-dependent data to the central repository (see
+`orderly::orderly_use_gitignore`) to help automate this.
 
 To avoid leaving passwords in plain text, you can use [`vault`](https://www.vaultproject.io) (along with the R client [`vaultr`](https://cran.r-project.org/package=vaultr)) to
 retrieve them.
