@@ -651,7 +651,8 @@ test_that("Read partial orderly.yml", {
 test_that("Read completely empty orderly.yml", {
   path <- prepare_orderly_example("minimal")
   p <- orderly_new("partial", root = path, quiet = TRUE)
-  file.create(file.path(p, "orderly.yml"))
+  file.create(file.path(p, "orderly.yml")) # truncates file
+  config <- orderly_config(path)
   expect_message(
     recipe_read(p, config, develop = TRUE),
     "Fields missing from .*: script, artefacts")
