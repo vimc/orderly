@@ -1,3 +1,7 @@
+# orderly 1.1.5
+
+* Introduce the concept of "tags"; these are immutable and exist at the level of a report version.  Currently there is nothing that can be done with tags, but these will become useful in conjuction with [OrderlyWeb](https://github.com/vimc/orderly-web) (VIMC-3514)
+
 # orderly 1.1.4
 
 * Automatic creation of `.gitignore` files with `orderly::orderly_use_gitignore` (VIMC-3513, reported by @jeffeaton)
