@@ -732,21 +732,21 @@ test_that("insert into files", {
   path <- tempfile()
   writeLines(text, path)
 
-  expect_message(
-    str <- capture.output(
-      res <- insert_into_file(text, 2, value, path,
-                              show = TRUE, edit = FALSE, prompt = FALSE)),
-    "Changes to '.+'")
-  expect_equal(res, filediff(text, 2, value))
-  expect_equal(str, c("  2 | b", "+ 3 | x", "+ 4 | y", "  5 | c"))
-  expect_equal(readLines(path), res$text) # unchanged
+  res <- evaluate_promise(
+    insert_into_file(text, 2, value, path,
+                     show = TRUE, edit = FALSE, prompt = FALSE))
+  expect_match(res$messages, "Changes to '.+'")
+  expect_equal(res$result, filediff(text, 2, value))
+  expect_equal(res$output, c("  2 | b\n+ 3 | x\n+ 4 | y\n  5 | c"))
 
-  str <- capture.output(
-    res <- insert_into_file(text, 2, value, path,
-                            show = FALSE, edit = TRUE, prompt = FALSE))
-  expect_equal(str, character(0))
-  expect_equal(res, filediff(text, 2, value))
-  expect_equal(readLines(path), res$result)
+  expect_equal(readLines(path), res$result$text) # unchanged
+
+  res <- evaluate_promise(
+    insert_into_file(text, 2, value, path,
+                     show = FALSE, edit = TRUE, prompt = FALSE))
+  expect_equal(res$output, "")
+  expect_equal(res$result, filediff(text, 2, value))
+  expect_equal(readLines(path), res$result$result)
 })
 
 
