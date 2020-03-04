@@ -141,3 +141,47 @@ test_that("Add resource to incomplete orderly.yml", {
   expect_equal(tail(res$result, 2),
                c("packages:", "  - knitr"))
 })
+
+
+test_that("Create gitignore", {
+  path <- prepare_orderly_example("minimal")
+  res <- orderly_use_gitignore(path, prompt = FALSE, show = FALSE)
+
+  contents <- readLines(file.path(path, ".gitignore"))
+  expect_equal(
+    contents,
+    readLines(orderly_file("init/gitignore")))
+  expect_equal(contents, res$value)
+  expect_true(res$create)
+  expect_is(res, "filediff")
+
+  ## And again:
+  expect_message(
+    res <- orderly_use_gitignore(path, prompt = FALSE, show = FALSE),
+    "No changes to make to '.*/\\.gitignore'")
+  expect_equal(res$changed, integer(0))
+  expect_false(res$create)
+})
+
+
+test_that("update existing gitignore", {
+  path <- prepare_orderly_example("minimal")
+  writeLines(c("data", "*.sqlite", "something"),
+             file.path(path, ".gitignore"))
+  res <- orderly_use_gitignore(path, prompt = FALSE, show = FALSE)
+
+  ## All the "interesting" lines in the gitignore
+  cmp <- readLines(orderly_file("init/gitignore"))
+  cmp <- cmp[grepl("^[^#[:space:]]", cmp)]
+
+  ## Check what we updated:
+  expect_true(all(cmp %in% res$result))
+  expect_setequal(res$value, setdiff(cmp, c("data", "*.sqlite")))
+
+  ## And again:
+  expect_message(
+    res <- orderly_use_gitignore(path, prompt = FALSE, show = FALSE),
+    "No changes to make to '.*/\\.gitignore'")
+  expect_equal(res$changed, integer(0))
+  expect_false(res$create)
+})

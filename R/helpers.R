@@ -1,5 +1,11 @@
 ##' Add one or more resources to an \code{orderly.yml} file.
 ##'
+##' The \code{orderly_use_gitignore} configures a basic
+##' \code{.gitignore} file at the root of your orderly project that
+##' will prevent files from being added to git.  This is only really
+##' useful if you are using (or will use) git, but it is harmless at
+##' worst.
+##'
 ##' @title Add a resource to orderly.yml
 ##'
 ##' @param resources,sources Character vector of resources or sources
@@ -83,6 +89,46 @@ orderly_use_package <- function(packages, name = NULL, root= NULL,
   loc <- orderly_develop_location(name, root, locate)
   orderly_use_edit_array(packages, "Package", "packages",
                          loc, show, edit, prompt)
+}
+
+
+##' @export
+##' @rdname orderly_use
+orderly_use_gitignore <- function(root = NULL, locate = TRUE,
+                                  show = TRUE, edit = TRUE, prompt = TRUE) {
+  config <- orderly_config_get(root, locate)
+  root <- config$root
+
+  ## Do we check that the project here already has git?  We can do
+  ## that with runner_has_git(), which looks for both the git
+  ## executable and the .git directory in the root.  But of course the
+  ## .git directory could be above this point.
+  included <- readLines(orderly_file("init/gitignore"))
+  dest <- file.path(root, ".gitignore")
+
+  ## There are two options for adding the lines here: we could look
+  ## to see what is _already_ included and filter on that, or we can
+  ## ask git what it is going to ignore and add.  We can use
+  ##
+  ## git check-ignore --non-matching --no-index --verbose
+  ##
+  ## to test that, which could be nicer than using a basic match
+  ##
+  ## But for now, let's do the simplest thing (which has the advantage
+  ## of not requiring any system calls)
+  if (file.exists(dest)) {
+    prev <- readLines(dest)
+    to_add <- setdiff(included[grepl("^[^#[:space:]]", included)], prev)
+    where <- length(prev)
+  } else {
+    prev <- NULL
+    where <- NA
+    to_add <- included
+  }
+
+  withr::with_dir(
+    config$root,
+    insert_into_file(prev, where, to_add, dest, show, edit, prompt))
 }
 
 
