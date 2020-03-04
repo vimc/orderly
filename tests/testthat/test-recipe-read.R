@@ -657,3 +657,30 @@ test_that("Read completely empty orderly.yml", {
     recipe_read(p, config, develop = TRUE),
     "Fields missing from .*: script, artefacts")
 })
+
+
+test_that("Validate report tag", {
+  root <- prepare_orderly_example("minimal")
+  append_lines(c("tags:", "  - tag1", "  - tag2"),
+               file.path(root, "orderly_config.yml"))
+  config <- orderly_config(root)
+  path <- file.path(root, "src", "example")
+  path_config <- file.path(path, "orderly.yml")
+  txt <- readLines(path_config)
+
+  expect_null(recipe_read(path, config)$tags)
+
+  writeLines(c(txt, "tags: tag1"), path_config)
+  expect_equal(recipe_read(path, config)$tags, "tag1")
+
+  writeLines(c(txt, "tags:", "- tag1", "- tag2"), path_config)
+  expect_equal(recipe_read(path, config)$tags, c("tag1", "tag2"))
+
+  writeLines(c(txt, "tags:", "- tag1", "- tag2", "- tag3"), path_config)
+  expect_error(recipe_read(path, config),
+               "Unknown tag: 'tag3'")
+
+  writeLines(c(txt, "tags:", "- tag1", "- tag2", "- tag1"), path_config)
+  expect_error(recipe_read(path, config),
+               "Duplicated tag: 'tag1'")
+})
