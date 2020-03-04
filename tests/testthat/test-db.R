@@ -390,3 +390,20 @@ test_that("Create and verify tags on startup", {
                data_frame(id = c("tag1", "tag2", "tag3")))
   DBI::dbDisconnect(con)
 })
+
+
+test_that("Add tags to db", {
+  root <- prepare_orderly_example("minimal")
+  append_lines(c("tags:", "  - tag1", "  - tag2"),
+               file.path(root, "orderly_config.yml"))
+  append_lines(c("tags:", "  - tag1"),
+               file.path(root, "src", "example", "orderly.yml"))
+  id <- orderly_run("example", root = root, echo = FALSE)
+  p <- orderly_commit(id, root = root)
+
+  con <- orderly_db("destination", root)
+  on.exit(DBI::dbDisconnect(con))
+  expect_equal(
+    DBI::dbReadTable(con, "report_version_tag"),
+    data_frame(id = 1, report_version = id, tag = "tag1"))
+})

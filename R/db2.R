@@ -393,6 +393,13 @@ report_data_import <- function(con, name, id, config) {
     }
   }
 
+  tags <- dat_rds$meta$tags
+  if (!is.null(tags)) {
+    report_version_tag <- data_frame(report_version = id, tag = tags)
+    DBI::dbWriteTable(con, "report_version_tag", report_version_tag,
+                      append = TRUE)
+  }
+
   if (!is.null(dat_rds$meta$parameters)) {
     p <- dat_rds$meta$parameters
     parameters <- data_frame(
