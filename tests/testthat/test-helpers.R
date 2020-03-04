@@ -131,3 +131,13 @@ test_that("Add packages to malformed packages section", {
   expect_equal(tail(res$result, 2),
                c("packages:", "  - knitr"))
 })
+
+
+test_that("Add resource to incomplete orderly.yml", {
+  path <- prepare_orderly_example("minimal")
+  p <- orderly_new("partial", root = path, quiet = TRUE)
+  res <- orderly_use_package("knitr", name = "partial", root = path,
+                             show = FALSE, prompt = FALSE)
+  expect_equal(tail(res$result, 2),
+               c("packages:", "  - knitr"))
+})

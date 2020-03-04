@@ -5,9 +5,11 @@
 ##' \code{orderly_develop_start} will copy all files required (global
 ##' resources and dependencies) into the report source directory, as
 ##' well as collect all data and parameters - at this point the
-##' directory can be developed in directly.
-##' \code{orderly_develop_status} provides information about the
-##' status of files in the directory, while
+##' directory can be developed in directly.  It will also load all
+##' declared packages, and source all code files listed in the
+##' \code{packages:} and \code{sources:} sections of your
+##' \code{orderly.yml}.  \code{orderly_develop_status} provides
+##' information about the status of files in the directory, while
 ##' \code{orderly_develop_clean} deletes all copied files.
 ##'
 ##' These functions are designed to work within a report's \code{src}
@@ -25,6 +27,18 @@
 ##' git.  Rerunning \code{orderly_develop_start} will copy a fresh
 ##' copy of dependencies into your tree, overwriting files that are
 ##' there without warning.
+##'
+##' Repeately running \code{orderly_develop_start} is "safe", in that
+##' it will re-run through the setup steps, but beware that sourcing
+##' functions is additive and never subtractive.  If you delete (or
+##' rename) a function within a source file, it will not be removed
+##' from your global environment.  When in doubt, restart your R
+##' session.
+##'
+##' Note that these functions are much more permissive as to the state
+##' of your \code{orderly.yml} than \code{\link{orderly_run}} - in
+##' particular, they will run, with a message, even if you have not
+##' yet defined a \code{script:} or any \code{artefacts:}.
 ##'
 ##' The \code{orderly_develop_clean} function will delete dependencies
 ##' without warning.
@@ -72,7 +86,7 @@ orderly_develop_start <- function(name = NULL, parameters = NULL,
   orderly_log("name", loc$name)
 
   info <- recipe_read(loc$path, loc$config, use_draft = use_draft,
-                      remote = remote)
+                      remote = remote, develop = TRUE)
 
   info$workdir <- loc$path
   withr::with_dir(info$workdir, {
@@ -140,7 +154,7 @@ orderly_status <- function(path) {
   assert_file_exists(file.path(path, "orderly.yml"))
   ## TODO: this needs making more robust
   config <- orderly_config_get(file.path(path, "..", ".."), FALSE)
-  info <- recipe_read(path, config, FALSE)
+  info <- recipe_read(path, config, FALSE, develop = TRUE)
 
   internal <- list(orderly = "orderly.yml",
                    script = info$script,

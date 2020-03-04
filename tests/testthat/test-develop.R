@@ -158,3 +158,26 @@ test_that("orderly_develop_status with changelog", {
   class(cmp) <- c("orderly_status", "data.frame")
   expect_equal(status, cmp)
 })
+
+
+test_that("Can read malformed orderly.yml in develop start", {
+  path <- prepare_orderly_example("minimal")
+  p <- orderly_new("partial", root = path, quiet = TRUE)
+  expect_message(
+    res <- orderly_develop_start("partial", root = path),
+    "[ warning    ]  At least one artefact required",
+    fixed = TRUE)
+  expect_true(is_directory(res))
+
+  cmp <- data_frame(
+    filename = "orderly.yml",
+    type = "orderly",
+    present = TRUE,
+    derived = FALSE)
+  class(cmp) <- c("orderly_status", class(cmp))
+  expect_equal(orderly_develop_status("partial", root = path), cmp)
+
+  expect_error(
+    orderly_develop_clean("partial", root = path),
+    NA) # (no error)
+})

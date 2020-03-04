@@ -1,7 +1,14 @@
 ## The bulk of this is validating the yaml; that turns out to be quite
 ## unpleasant unfortunately.
+##
+## The 'validate' argument controls reading dependency information -
+## if FALSE the dependencies are not resolved.
+##
+## The 'develop' argument allows some fields to be initially blank -
+## principly 'artefacts' and 'script', which is useful for
+## orderly_develop_start etc.
 recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
-                        remote = NULL) {
+                        remote = NULL, develop = FALSE) {
   assert_is(config, "orderly_config")
   filename <- file.path(path, "orderly.yml")
   assert_file_exists(path, name = "Report working directory")
@@ -29,7 +36,10 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
                 "depends",
                 "global_resources",
                 config$fields$name[!config$fields$required])
-  check_fields(info, filename, required, optional)
+
+  recipe_read_skip_on_develop(
+    develop,
+    check_fields(info, filename, required, optional))
 
   ## Fill any any missing optional fields:
   i <- !(config$fields$name %in% names(info))
@@ -45,7 +55,8 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
     sprintf("%s:%s", filename, name)
   }
 
-  info$artefacts <- recipe_read_check_artefacts(info$artefacts, filename, path)
+  info$artefacts <- recipe_read_check_artefacts(info$artefacts, filename, path,
+                                                develop)
   info$resources <- recipe_read_check_resources(info$resources, filename, path)
   info$global_resources <- recipe_read_check_global_resources(
     info$global_resources, filename, config)
@@ -56,7 +67,10 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
       resolve_dependencies(info$depends, config, use_draft, remote)
   }
 
-  assert_scalar_character(info$script, fieldname("script"))
+  recipe_read_skip_on_develop(develop, {
+    assert_scalar_character(info$script, sprintf("%s:script", filename))
+    assert_file_exists(info$script, workdir = path, name = "Script file")
+  })
 
   info$parameters <- recipe_read_check_parameters(info$parameters, filename)
   if (!is.null(info$packages)) {
@@ -103,9 +117,6 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
   info <- recipe_read_query("data", info, filename, config)
   info <- recipe_read_query("views", info, filename, config)
 
-  assert_scalar_character(info$script, fieldname("script"))
-  assert_file_exists(info$script, workdir = path, name = "Script file")
-
   for (i in seq_len(nrow(config$fields))) {
     el <- config$fields[i, ]
     x <- info[[el$name]]
@@ -147,7 +158,7 @@ string_or_filename <- function(x, path, name) {
   list(query = query, query_file = file)
 }
 
-recipe_read_check_artefacts <- function(x, filename, path) {
+recipe_read_check_artefacts <- function(x, filename, path, develop) {
   check_artefact <- function(i) {
     format <- names(x)[[i]]
     el <- x[[i]]
@@ -158,9 +169,12 @@ recipe_read_check_artefacts <- function(x, filename, path) {
     }
     c(el[v], list(format = format))
   }
-  if (length(x) == 0L) {
-    stop("At least one artefact required")
-  }
+
+  recipe_read_skip_on_develop(develop, {
+    if (length(x) == 0L) {
+      stop("At least one artefact required")
+    }
+  })
 
   if (is.character(x)) {
     msg <- c("Your artefacts are misformatted.  You must provide a 'type'",
@@ -227,6 +241,7 @@ recipe_read_check_artefacts <- function(x, filename, path) {
   }
 
   res <- t(vapply(seq_along(x), check_artefact, vector("list", 3L)))
+  colnames(res) <- c("filenames", "description", "format")
 
   filenames <- unlist(res[, "filenames"])
   dups <- unique(filenames[duplicated(filenames)])
@@ -392,4 +407,13 @@ recipe_read_check_parameters <- function(parameters, filename) {
   }
 
   parameters
+}
+
+
+recipe_read_skip_on_develop <- function(develop, expr) {
+  if (develop) {
+    tryCatch(expr, error = function(e) orderly_log("warning", e$message))
+  } else {
+    force(expr)
+  }
 }
