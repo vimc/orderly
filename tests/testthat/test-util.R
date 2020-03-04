@@ -727,8 +727,9 @@ test_that("yaml parse failure", {
 
 
 test_that("insert into files", {
-  text <- c("a", "b", "c")
+  text <- c("a", "b", "c", "d", "e")
   value <- c("x", "y")
+  where <- 3
   path <- tempfile()
   writeLines(text, path)
 
@@ -737,7 +738,8 @@ test_that("insert into files", {
                      show = TRUE, edit = FALSE, prompt = FALSE))
   expect_match(res$messages, "Changes to '.+'")
   expect_equal(res$result, filediff(text, 2, value))
-  expect_equal(res$output, c("  2 | b\n+ 3 | x\n+ 4 | y\n  5 | c"))
+  expect_equal(res$output,
+               "  2 | b\n  3 | c\n+ 4 | x\n+ 5 | y\n  6 | d\n  7 | e")
 
   expect_equal(readLines(path), res$result$text) # unchanged
 
@@ -767,13 +769,13 @@ test_that("prompting prevents write", {
 
 
 test_that("format filediff", {
-  text <- c("a", "b", "c")
+  text <- c("a", "b", "c", "d", "e")
   value <- c("x", "y")
-  where <- 2L
+  where <- 3
   fd <- filediff(text, where, value)
 
   str1 <- format_filediff(fd, colour = FALSE)
-  expect_equal(str1, "  2 | b\n+ 3 | x\n+ 4 | y\n  5 | c\n")
+  expect_equal(str1, "  2 | b\n  3 | c\n+ 4 | x\n+ 5 | y\n  6 | d\n  7 | e\n")
   expect_false(crayon::has_style(str1))
 
   str2 <- withr::with_options(
@@ -787,4 +789,20 @@ test_that("format filediff", {
   withr::with_options(
     list(crayon.enabled = TRUE),
     expect_equal(format_filediff(fd), str2))
+})
+
+
+test_that("don't write with no changes", {
+  text <- letters
+  where <- 26
+  value <- character(0)
+
+  p <- tempfile()
+  expect_message(
+    res <- insert_into_file(text, where, value, p, FALSE, TRUE, FALSE),
+    "No changes to make to")
+
+  expect_equal(res$changed, numeric(0))
+  expect_equal(format_filediff(res), character(0))
+  expect_false(file.exists(p))
 })

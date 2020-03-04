@@ -774,12 +774,17 @@ yaml_block_info <- function(name, text) {
 insert_into_file <- function(text, where, value, path, show, edit, prompt) {
   x <- filediff(text, where, value)
 
+  if (length(x$changed) == 0L) {
+    message(sprintf("No changes to make to '%s'", path))
+    return(invisible(x))
+  }
+
   if (show) {
     message(sprintf("Changes to '%s'", path))
     cat(format_filediff(x))
   }
 
-  if (edit && prompt && !prompt_ask_yes_no("Write changes to file? ")) {
+  if (edit && prompt && !prompt_ask_yes_no("Write to file? ")) {
     edit <- FALSE
     message("Not modifying file")
   }
@@ -794,12 +799,22 @@ insert_into_file <- function(text, where, value, path, show, edit, prompt) {
 
 
 filediff <- function(text, where, value) {
-  i <- seq_len(where)
+  if (is.null(text)) {
+    result <- value
+    changed <- seq_along(value)
+    create <- TRUE
+  } else {
+    i <- seq_len(where)
+    result <- c(text[i], value, text[-i])
+    changed <- seq_along(value) + where
+    create <- FALSE
+  }
   ret <- list(text = text,
               where = where,
               value = value,
-              result = c(text[i], value, text[-i]),
-              changed = seq_along(value) + where)
+              result = result,
+              changed = changed,
+              create = create)
   class(ret) <- "filediff"
   ret
 }
@@ -807,9 +822,12 @@ filediff <- function(text, where, value) {
 
 format_filediff <- function(x, ..., context = 2L, colour = NULL) {
   colour <- colour %||% crayon::has_color()
+  if (length(x$changed) == 0) {
+    return(character(0))
+  }
   i <- seq_along(x$result)
   focus <- range(x$changed)
-  i <- i[i > focus[[1L]] - context & i < focus[[2L]] + context]
+  i <- i[i >= focus[[1L]] - context & i <= focus[[2L]] + context]
   line <- format(i)
   text <- x$result[i]
   changed <- i %in% x$changed
