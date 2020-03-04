@@ -143,6 +143,7 @@ report_db_init <- function(con, config, must_create = FALSE, validate = TRUE) {
 report_db_init_create <- function(con, config, dialect) {
   dat <- report_db_schema(config$fields, dialect)
   dat$values$changelog_label <- config$changelog
+  dat$values$tag <- data_frame(id = config$tags)
 
   DBI::dbBegin(con)
   on.exit(DBI::dbRollback(con))
@@ -187,6 +188,14 @@ report_db_open_existing <- function(con, config) {
   if (!ok) {
     stop(
       "changelog labels have changed: rebuild with orderly::orderly_rebuild()",
+      call. = FALSE)
+  }
+
+  tag <- DBI::dbReadTable(con, "tag")$id
+  ok <- setequal(tag, config$tags)
+  if (!ok) {
+    stop(
+      "tags have changed: rebuild with orderly::orderly_rebuild()",
       call. = FALSE)
   }
 }

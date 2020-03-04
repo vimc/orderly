@@ -368,3 +368,25 @@ test_that("db instance select rejects instance when no dbs support it", {
   expect_error(db_instance_select("a", config_db),
                "Can't specify 'instance' with no databases supporting it")
 })
+
+
+test_that("Create and verify tags on startup", {
+  root <- prepare_orderly_example("minimal")
+  append_lines(c("tags:", "  - tag1", "  - tag2"),
+               file.path(root, "orderly_config.yml"))
+  con <- orderly_db("destination", root = root)
+  expect_equal(DBI::dbReadTable(con, "tag"),
+               data_frame(id = c("tag1", "tag2")))
+  DBI::dbDisconnect(con)
+  append_lines("  - tag3", file.path(root, "orderly_config.yml"))
+  expect_error(
+    orderly_db("destination", root = root),
+    "tags have changed: rebuild with orderly::orderly_rebuild()",
+    fixed = TRUE)
+  orderly_rebuild(root)
+
+  con <- orderly_db("destination", root = root)
+  expect_equal(DBI::dbReadTable(con, "tag"),
+               data_frame(id = c("tag1", "tag2", "tag3")))
+  DBI::dbDisconnect(con)
+})
