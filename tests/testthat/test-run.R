@@ -848,3 +848,16 @@ test_that("Require simple parameters", {
                 root = path, echo = FALSE),
     "Invalid parameters: 'a', 'b' - must be scalar")
 })
+
+
+test_that("preserve tags in metadata", {
+  root <- prepare_orderly_example("minimal")
+  append_lines(c("tags:", "  - tag1", "  - tag2"),
+               file.path(root, "orderly_config.yml"))
+  append_lines(c("tags:", "  - tag1"),
+               file.path(root, "src", "example", "orderly.yml"))
+
+  id <- orderly_run("example", root = root, echo = FALSE)
+  d <- readRDS(path_orderly_run_rds(file.path(root, "draft", "example", id)))
+  expect_equal(d$meta$tags, "tag1")
+})

@@ -270,6 +270,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
                depends = depends,
                elapsed = as.numeric(elapsed, "secs"),
                changelog = info$changelog,
+               tags = info$tags,
                git = info$git)
 
   ## All the information about data - it's a little more complicated
