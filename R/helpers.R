@@ -93,7 +93,7 @@ orderly_use_edit_array <- function(entries, name_friendly, name_block, loc,
   name <- loc$name
   path <- loc$path
 
-  info <- recipe_read(path, config, FALSE)
+  info <- recipe_read(path, config, FALSE, develop = TRUE)
 
   err <- intersect(info[[name_block]], entries)
   if (length(err) > 0L) {
