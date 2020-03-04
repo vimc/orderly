@@ -440,7 +440,7 @@ versions.
 This process can be automated by running
 
 ```{r}
-orderly::orderly_use_gitignore(root = root, prompt = FALSE)
+orderly::orderly_use_gitignore(root = path, prompt = FALSE)
 ```
 
 (the default, `prompt = TRUE` will request user confirmation before writing the `.gitignore` file).
