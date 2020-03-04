@@ -118,3 +118,16 @@ test_that("Add packages (minimal test)", {
                                    show = FALSE, prompt = FALSE),
                "Package already declared: 'knitr'")
 })
+
+
+## Test for #177
+test_that("Add packages to malformed packages section", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "src", "example", "orderly.yml")
+  txt <- readLines(p)
+  writeLines(c(txt, "packages:"), p)
+  res <- orderly_use_package("knitr", name = "example", root = path,
+                             show = FALSE, prompt = FALSE)
+  expect_equal(tail(res$result, 2),
+               c("packages:", "  - knitr"))
+})

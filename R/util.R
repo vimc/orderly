@@ -747,20 +747,20 @@ yaml_block_info <- function(name, text) {
     return(list(name = name, exists = FALSE, block = FALSE))
   }
 
-  re <- sprintf("^%s\\s*:\\s*(#.*)?", name)
+  re <- sprintf("^%s\\s*:", name)
   if (length(start) > 1L) {
     stop("Failed to process yaml")
-  }
-
-  if (!grepl(paste0(re, "\\s*(#.*)?$"), text[[start]])) {
-    return(list(name = name, exists = TRUE, block = FALSE,
-                start = start, end = start))
   }
 
   ## Find end of the block - that will be the next zero-indented line
   ## or the EOF:
   end <- grep("^[^#[:space:]]", text)
   end <- c(end[end > start], length(text) + 1L)[[1L]] - 1L
+
+  if (start == end) {
+    return(list(name = name, exists = TRUE, block = FALSE,
+                start = start, end = start))
+  }
 
   tmp <- text[start:end][-1L]
   tmp <- tmp[!grepl("^\\s*(#.*)?$", tmp)][[1L]]
