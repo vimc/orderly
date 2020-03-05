@@ -199,7 +199,7 @@ orderly_use_dependency <- function(parent, filename, as = NULL,
     as <- filename
   } else {
     assert_character(as)
-    assert_length(as, length(filename))
+    assert_same_length(as, filename)
   }
   assert_unique(as)
 

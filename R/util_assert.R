@@ -109,9 +109,13 @@ assert_type <- function(x, type, name = deparse(substitute(x))) {
 }
 
 
-assert_length <- function(x, len, name = deparse(substitute(x))) {
+assert_same_length <- function(x, y, name_x = deparse(substitute(x)),
+                               name_y = deparse(substitute(y))) {
+  len <- length(y)
   if (length(x) != len) {
-    stop(sprintf("'%s' must have length %d", name, len))
+    stop(sprintf("'%s' must have the same length as '%s' (%d)",
+                 name_x, name_y, len),
+         call. = FALSE)
   }
   invisible(x)
 }

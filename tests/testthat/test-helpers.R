@@ -256,4 +256,9 @@ test_that("validation when adding a dependency", {
     f("example", c("data.rds", "data.rds"), as = c("a", "a")),
     "Duplicates are not allowed in 'as' (found 'a')",
     fixed = TRUE)
+
+  expect_error(
+    f("example", c("data.rds", "data.rds"), as = c("a")),
+    "'as' must have the same length as 'filename' (2)",
+    fixed = TRUE)
 })
