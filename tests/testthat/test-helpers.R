@@ -254,7 +254,7 @@ test_that("insert into existing dependency block", {
   path <- prepare_orderly_example("demo")
   res <- orderly_use_dependency("minimal", "mygraph.png",
                                 name = "use_dependency", root = path,
-                                prompt = FALSE, show = TRUE)
+                                prompt = FALSE, show = FALSE)
 
   expected <- c("depends:",
                 "  other:",
