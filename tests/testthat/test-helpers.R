@@ -250,6 +250,77 @@ test_that("Add multiple dependencies", {
 })
 
 
+test_that("insert into existing dependency block", {
+  path <- prepare_orderly_example("demo")
+  res <- orderly_use_dependency("minimal", "mygraph.png",
+                                name = "use_dependency", root = path,
+                                prompt = FALSE, show = TRUE)
+
+  expected <- c("depends:",
+                "  other:",
+                "    id: latest",
+                "    use:",
+                "      incoming.csv: summary.csv",
+                "  minimal:",
+                "    id: latest",
+                "    use:",
+                "      mygraph.png: mygraph.png")
+  expect_equal(length(res$changed), 4)
+  expect_equal(res$value, tail(expected, 4))
+  info <- yaml_block_info("depends", res$result)
+  expect_equal(res$result[info$start:info$end], expected)
+
+  info <- recipe_read(file.path(path, "src", "use_dependency"),
+                      orderly_config(path), validate = FALSE)
+  cmp <- data_frame(id = "latest",
+                    name = c("other", "minimal"),
+                    draft = NA,
+                    filename = c("summary.csv", "mygraph.png"),
+                    as = c("incoming.csv", "mygraph.png"),
+                    is_pinned = FALSE,
+                    index = 1:2)
+  expect_equal(info$depends, cmp)
+})
+
+
+test_that("preserve indentation", {
+
+  path <- prepare_orderly_example("demo")
+  p <- orderly_new("use", root = path)
+  config <- orderly_config(path)
+
+  res1 <- orderly_use_dependency("minimal", "mygraph.png",
+                                 name = "use", root = path, prompt = FALSE,
+                                 show = FALSE)
+  res1$result[res1$changed] <- gsub("  ", "    ", res1$value)
+  writeLines(res1$result, file.path(p, "orderly.yml"))
+
+  info1 <- recipe_read(p, config, validate = FALSE, develop = TRUE)
+
+  res2 <- orderly_use_dependency("other", "summary.csv",
+                                name = "use", root = path, prompt = FALSE,
+                                show = FALSE)
+  info2 <- recipe_read(p, config, validate = FALSE, develop = TRUE)
+
+  tmp <- yaml_block_info("depends", res2$result)
+  res2$result[tmp$start:tmp$end]
+
+  expect_equal(res2$value,
+               c("    other:",
+                 "        id: latest",
+                 "        use:",
+                 "            summary.csv: summary.csv"))
+  expect_equal(info2$depends,
+               data_frame(id = "latest",
+                          name = c("minimal", "other"),
+                          draft = NA,
+                          filename = c("mygraph.png", "summary.csv"),
+                          as = c("mygraph.png", "summary.csv"),
+                          is_pinned = FALSE,
+                          index = 1:2))
+})
+
+
 test_that("validation when adding a dependency", {
   path <- prepare_orderly_example("depends", testing = TRUE)
   p <- orderly_new("use", root = path)
