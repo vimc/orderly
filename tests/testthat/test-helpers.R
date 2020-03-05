@@ -217,6 +217,39 @@ test_that("Add a dependency", {
 })
 
 
+test_that("Add and rename dependency", {
+  path <- prepare_orderly_example("minimal")
+  p <- orderly_new("use", root = path)
+  res <- orderly_use_dependency("example", "mygraph.png", "imported.png",
+                                name = "use", root = path, prompt = FALSE,
+                                show = FALSE)
+  expected <- c("depends:",
+                 "  example:",
+                "    id: latest",
+                "    use:",
+                "      imported.png: mygraph.png")
+  expect_equal(length(res$changed), length(expected))
+})
+
+
+test_that("Add multiple dependencies", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+  p <- orderly_new("use", root = path)
+  res <- orderly_use_dependency("depend",
+                                c("mygraph.png", "output.rds"),
+                                c("upstream.png", "upstream.rds"),
+                                name = "use", root = path, prompt = FALSE,
+                                show = FALSE)
+  expected <- c("depends:",
+                 "  example:",
+                "    id: latest",
+                "    use:",
+                "      upstream.png: mygraph.png",
+                "      upstream.rds: output.rds")
+  expect_equal(length(res$changed), length(expected))
+})
+
+
 test_that("validation when adding a dependency", {
   path <- prepare_orderly_example("depends", testing = TRUE)
   p <- orderly_new("use", root = path)
