@@ -684,3 +684,17 @@ test_that("Validate report tag", {
   expect_error(recipe_read(path, config),
                "Duplicated tag: 'tag1'")
 })
+
+
+test_that("Better error message where tags not enabled", {
+  root <- prepare_orderly_example("minimal")
+  config <- orderly_config(root)
+  path <- file.path(root, "src", "example")
+  path_config <- file.path(path, "orderly.yml")
+  txt <- readLines(path_config)
+
+  writeLines(c(txt, "tags: tag1"), path_config)
+  expect_error(
+    recipe_read(path, config)$tags,
+    "Tags are not supported; please edit orderly_config.yml to enable")
+})

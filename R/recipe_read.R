@@ -79,7 +79,7 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
   }
 
   recipe_read_check_sources(info$sources, info$resources, filename, path)
-  info$tags <- recipe_read_check_tags(info$tags, config, filename)
+  info$tags <- recipe_read_check_tags(info$tags, config, fieldname("tags"))
 
   if (!is.null(info$connection)) {
     if (length(config$database) == 0L) {
@@ -418,9 +418,12 @@ recipe_read_skip_on_develop <- function(develop, expr) {
 }
 
 
-recipe_read_check_tags <- function(tags, config, filename) {
+recipe_read_check_tags <- function(tags, config, name) {
   if (!is.null(tags)) {
-    assert_character(tags, sprintf("%s:tags", filename))
+    if (is.null(config$tags)) {
+      stop("Tags are not supported; please edit orderly_config.yml to enable")
+    }
+    assert_character(tags, name)
     err <- setdiff(tags, config$tags)
     if (length(err) > 0L) {
       stop("Unknown tag: ", paste(squote(err), collapse = ", "),
