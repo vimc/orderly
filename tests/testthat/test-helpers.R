@@ -284,7 +284,6 @@ test_that("insert into existing dependency block", {
 
 
 test_that("preserve indentation", {
-
   path <- prepare_orderly_example("demo")
   p <- orderly_new("use", root = path)
   config <- orderly_config(path)
@@ -318,6 +317,24 @@ test_that("preserve indentation", {
                           as = c("mygraph.png", "summary.csv"),
                           is_pinned = FALSE,
                           index = 1:2))
+})
+
+
+test_that("add to null entry", {
+  path <- prepare_orderly_example("minimal")
+  p <- orderly_new("use", root = path)
+  config <- orderly_config(path)
+  append_lines("depends: ~", file.path(p, "orderly.yml"))
+  res <- orderly_use_dependency("example", "mygraph.png",
+                                name = "use", root = path, prompt = FALSE,
+                                show = FALSE)
+  expected <- c("# depends:",
+                "depends:",
+                "  example:",
+                "    id: latest",
+                "    use:",
+                "      mygraph.png: mygraph.png")
+  expect_equal(tail(res$result, 6), expected)
 })
 
 

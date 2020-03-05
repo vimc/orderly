@@ -254,10 +254,12 @@ orderly_use_dependency <- function(parent, filename, as = NULL,
     }
     where <- dat$end
   } else {
-    prev <- yaml_load(yml[[where]])[[name_block]]
-    ## TODO: confirm that this is really empty
-    browser()
     where <- dat$start
+    prev <- yaml_load(yml[[where]])[["depends"]]
+    if (!is.null(prev)) {
+      ## Practictically this should not happen often
+      stop("You have invalid yaml for 'depends:'; not continuing")
+    }
     yml[[where]] <- to_add[[1L]]
     to_add <- to_add[-1L]
   }
