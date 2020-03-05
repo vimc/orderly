@@ -338,6 +338,20 @@ test_that("add to null entry", {
 })
 
 
+test_that("validate null entry before writing", {
+  path <- prepare_orderly_example("minimal")
+  p <- orderly_new("use", root = path)
+  config <- orderly_config(path)
+  append_lines("depends: 1", file.path(p, "orderly.yml"))
+  expect_error(
+    orderly_use_dependency("example", "mygraph.png",
+                           name = "use", root = path, prompt = FALSE,
+                           show = FALSE),
+    "You have invalid yaml for 'depends:'; not continuing",
+    fixed = TRUE)
+})
+
+
 test_that("validation when adding a dependency", {
   path <- prepare_orderly_example("depends", testing = TRUE)
   p <- orderly_new("use", root = path)
