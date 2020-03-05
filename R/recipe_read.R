@@ -11,7 +11,7 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
                         remote = NULL, develop = FALSE) {
   assert_is(config, "orderly_config")
   filename <- file.path(path, "orderly.yml")
-  assert_file_exists(path, name = "Report working directory")
+  assert_file_exists(path, name = "Report source directory")
   assert_file_exists(filename, name = "Orderly configuration")
   info <- yaml_read(filename)
 

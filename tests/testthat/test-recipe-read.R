@@ -4,7 +4,7 @@ test_that("nonexistant file", {
   ## TODO: I think that we should be normalising the path here?
   config <- orderly_config_read_yaml("example_config.yml", ".")
   expect_error(recipe_read(tempfile(), config),
-               "Report working directory does not exist")
+               "Report source directory does not exist")
   expect_error(recipe_read(tempdir(), config),
                "Orderly configuration does not exist")
 })

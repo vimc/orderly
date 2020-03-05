@@ -121,7 +121,7 @@ assert_unique <- function(x, name = deparse(substitute(x))) {
   if (any(duplicated(x))) {
     dups <- unique(x[duplicated(x)])
     stop(sprintf("Duplicates are not allowed in '%s' (found %s)",
-                 name, paste(squote(dups, collapse = ", "))), call. = FALSE)
+                 name, paste(squote(dups), collapse = ", ")), call. = FALSE)
   }
   invisible(x)
 }
@@ -130,7 +130,7 @@ assert_unique <- function(x, name = deparse(substitute(x))) {
 assert_report_id <- function(x, name = deparse(substitute(x))) {
   assert_scalar_character(x, name = name)
   if (x != "latest" && !grepl(VERSION_ID_RE, x)) {
-    stop(sprintf("%s must be a report id or 'latest'", name),
+    stop(sprintf("%s must be a valid report id or 'latest'", name),
          call. = FALSE)
   }
 }

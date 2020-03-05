@@ -215,3 +215,45 @@ test_that("Add a dependency", {
     hash_files(file.path(p, "mygraph.png"), FALSE),
     hash_files(file.path(path, "draft", "example", id, "mygraph.png"), FALSE))
 })
+
+
+test_that("validation when adding a dependency", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+  p <- orderly_new("use", root = path)
+
+  ## Reduce noise below:
+  f <- function(..., name = "use", root = path, prompt = FALSE, show = FALSE) {
+    orderly_use_dependency(
+      ..., name = name, root = root, prompt = prompt, show = show)
+  }
+
+  expect_error(
+    f("missing", "data.csv"),
+    "Report source directory does not exist")
+
+  ## Check names:
+  expect_error(
+    f("example", "data.csv"),
+    paste("Requested filename not an artefact of 'example': 'data.csv'",
+          "Valid options: 'data.rds'", sep = "\n"),
+    fixed = TRUE)
+  expect_error(
+    f("example", c("a", "b")),
+    paste("Requested filename not an artefact of 'example': 'a', 'b'",
+          "Valid options: 'data.rds'", sep = "\n"),
+    fixed = TRUE)
+  expect_error(
+    f("example", c("a", "data.rds", "b")),
+    paste("Requested filename not an artefact of 'example': 'a', 'b'",
+          "Valid options: 'data.rds'", sep = "\n"),
+    fixed = TRUE)
+
+  expect_error(
+    f("example", "data.rds", id = "previous"),
+    "id must be a valid report id or 'latest'")
+
+  expect_error(
+    f("example", c("data.rds", "data.rds"), as = c("a", "a")),
+    "Duplicates are not allowed in 'as' (found 'a')",
+    fixed = TRUE)
+})

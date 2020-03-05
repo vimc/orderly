@@ -187,12 +187,12 @@ orderly_use_edit_array <- function(entries, name_friendly, name_block, loc,
 
 
 orderly_use_dependency <- function(parent, filename, as = NULL,
-                                   version = "latest", name = NULL,
+                                   id = "latest", name = NULL,
                                    root = NULL, locate = TRUE, show = TRUE,
                                    edit = TRUE, prompt = TRUE) {
   loc <- orderly_develop_location(name, root, locate)
 
-  assert_report_id(version)
+  assert_report_id(id)
 
   assert_character(filename)
   if (is.null(as)) {
@@ -209,10 +209,11 @@ orderly_use_dependency <- function(parent, filename, as = NULL,
   msg <- setdiff(filename, pos)
   if (length(msg) > 0L) {
     stop(sprintf(
-      "Requested file not found in %s: %s\nValid options: %s",
+      "Requested filename not an artefact of '%s': %s\nValid options: %s",
       parent,
-      paste(squote(msg, collapse = ", ")),
-      paste(squote(pos, collapse = ", "))))
+      paste(squote(msg), collapse = ", "),
+      paste(squote(pos), collapse = ", ")),
+      call. = FALSE)
   }
 
   ## TODO: check to see if we have already imported this dependency,
@@ -230,7 +231,7 @@ orderly_use_dependency <- function(parent, filename, as = NULL,
   to_add <- c(
     "depends:",
     sprintf("  %s:", parent),
-    sprintf("    id: %s", version),
+    sprintf("    id: %s", id),
     sprintf("    use:"),
     sprintf("      %s: %s", as, filename))
 
