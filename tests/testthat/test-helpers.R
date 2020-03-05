@@ -194,7 +194,7 @@ test_that("Add a dependency", {
                                 name = "use", root = path, prompt = FALSE,
                                 show = FALSE)
   expected <- c("depends:",
-                 "  example:",
+                "  example:",
                 "    id: latest",
                 "    use:",
                 "      mygraph.png: mygraph.png")
@@ -224,7 +224,7 @@ test_that("Add and rename dependency", {
                                 name = "use", root = path, prompt = FALSE,
                                 show = FALSE)
   expected <- c("depends:",
-                 "  example:",
+                "  example:",
                 "    id: latest",
                 "    use:",
                 "      imported.png: mygraph.png")
@@ -241,7 +241,7 @@ test_that("Add multiple dependencies", {
                                 name = "use", root = path, prompt = FALSE,
                                 show = FALSE)
   expected <- c("depends:",
-                 "  example:",
+                "  example:",
                 "    id: latest",
                 "    use:",
                 "      upstream.png: mygraph.png",
