@@ -79,3 +79,35 @@ test_that("assert_is_directory", {
   expect_error(assert_is_directory(path), "File exists but is not a directory")
   expect_silent(assert_is_directory("."))
 })
+
+
+test_that("assert_same_length", {
+  a <- 1:10
+  b <- 1:5
+  expect_error(
+    assert_same_length(a, b),
+    "'a' must have the same length as 'b' (5)", fixed = TRUE)
+  expect_silent(
+    assert_same_length(a, a))
+})
+
+
+test_that("assert_unique", {
+  x <- c("a", "b", "c", "d", "b", "d")
+  expect_error(
+    assert_unique(x),
+    "Duplicates are not allowed in 'x' (found 'b', 'd')",
+    fixed = TRUE)
+  expect_silent(
+    assert_unique(x[1:4]))
+})
+
+
+test_that("assert_report_id", {
+  err <- "other"
+  expect_error(
+    assert_report_id(err),
+    "err must be a valid report id or 'latest'")
+  expect_silent(assert_report_id("latest"))
+  expect_silent(assert_report_id(new_report_id()))
+})
