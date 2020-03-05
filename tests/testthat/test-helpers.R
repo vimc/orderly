@@ -185,3 +185,33 @@ test_that("update existing gitignore", {
   expect_equal(res$changed, integer(0))
   expect_false(res$create)
 })
+
+
+test_that("Add a dependency", {
+  path <- prepare_orderly_example("minimal")
+  p <- orderly_new("use", root = path)
+  res <- orderly_use_dependency("example", "mygraph.png",
+                                name = "use", root = path, prompt = FALSE,
+                                show = FALSE)
+  expected <- c("depends:",
+                 "  example:",
+                "    id: latest",
+                "    use:",
+                "      mygraph.png: mygraph.png")
+  expect_is(res, "filediff")
+  expect_equal(length(res$changed), length(expected))
+  expect_false(res$create)
+  expect_equal(res$value, expected)
+  expect_equal(readLines(file.path(p, "orderly.yml")), res$result)
+
+  ## Check that all put together we do manage to get the files into
+  ## the directory.  Doing this well requires an upstream report to exist.
+  skip_on_cran_windows()
+  id <- orderly_run("example", root = path, echo = FALSE)
+  p <- orderly_develop_start("use", root = path, use_draft = TRUE)
+  expect_setequal(dir(p), c("orderly.yml", "mygraph.png"))
+
+  expect_equal(
+    hash_files(file.path(p, "mygraph.png"), FALSE),
+    hash_files(file.path(path, "draft", "example", id, "mygraph.png"), FALSE))
+})

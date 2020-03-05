@@ -107,3 +107,30 @@ assert_type <- function(x, type, name = deparse(substitute(x))) {
          numeric = assert_scalar_numeric(x, name),
          character = assert_scalar_character(x, name))
 }
+
+
+assert_length <- function(x, len, name = deparse(substitute(x))) {
+  if (length(x) != len) {
+    stop(sprintf("'%s' must have length %d", name, len))
+  }
+  invisible(x)
+}
+
+
+assert_unique <- function(x, name = deparse(substitute(x))) {
+  if (any(duplicated(x))) {
+    dups <- unique(x[duplicated(x)])
+    stop(sprintf("Duplicates are not allowed in '%s' (found %s)",
+                 name, paste(squote(dups, collapse = ", "))), call. = FALSE)
+  }
+  invisible(x)
+}
+
+
+assert_report_id <- function(x, name = deparse(substitute(x))) {
+  assert_scalar_character(x, name = name)
+  if (x != "latest" && !grepl(VERSION_ID_RE, x)) {
+    stop(sprintf("%s must be a report id or 'latest'", name),
+         call. = FALSE)
+  }
+}

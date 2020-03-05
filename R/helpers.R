@@ -184,3 +184,84 @@ orderly_use_edit_array <- function(entries, name_friendly, name_block, loc,
     config$root,
     insert_into_file(yml, where, to_add, path_yml, show, edit, prompt))
 }
+
+
+orderly_use_dependency <- function(parent, filename, as = NULL,
+                                   version = "latest", name = NULL,
+                                   root = NULL, locate = TRUE, show = TRUE,
+                                   edit = TRUE, prompt = TRUE) {
+  loc <- orderly_develop_location(name, root, locate)
+
+  assert_report_id(version)
+
+  assert_character(filename)
+  if (is.null(as)) {
+    as <- filename
+  } else {
+    assert_character(as)
+    assert_length(as, length(filename))
+  }
+  assert_unique(as)
+
+  info_parent <- recipe_read(file.path(loc$config$root, "src", parent),
+                             loc$config, validate = FALSE)
+  pos <- unlist(info_parent$artefacts[, "filenames"], FALSE, FALSE)
+  msg <- setdiff(filename, pos)
+  if (length(msg) > 0L) {
+    stop(sprintf(
+      "Requested file not found in %s: %s\nValid options: %s",
+      parent,
+      paste(squote(msg, collapse = ", ")),
+      paste(squote(pos, collapse = ", "))))
+  }
+
+  ## TODO: check to see if we have already imported this dependency,
+  ## in that case we *really should* add it to that list, but that's
+  ## another issue for later.
+
+  ## TODO: deal with marking deletions better, don't just remove them
+  ## like below.  This requires a bit of a tweak to the filediff
+  ## object.
+
+  path_yml <- file.path("src", name, "orderly.yml")
+  yml <- readLines(file.path(loc$config$root, path_yml))
+  dat <- yaml_block_info("depends", yml)
+
+  to_add <- c(
+    "depends:",
+    sprintf("  %s:", parent),
+    sprintf("    id: %s", version),
+    sprintf("    use:"),
+    sprintf("      %s: %s", as, filename))
+
+  if (!dat$exists) {
+    where <- length(yml)
+    ## TODO: find this line elsewhere in the file?  Or search for it
+    ## as an alternative place.
+    ##
+    ## This is added by the orderly template, so let's get rid of it.
+    if (where > 0 && yml[[where]] == "# depends:") {
+      yml <- yml[-where]
+      where <- length(yml)
+    }
+  } else if (dat$block) {
+    to_add <- to_add[-1L]
+    if (dat$indent != "  ") {
+      ## Reformat our additions to match the existing indent:
+      n <- nchar(sub("[^ ].*$", "", to_add)) / 2
+      to_add <- paste0(strrep(dat$indent, n), sub("^ *", "", to_add))
+    }
+    where <- dat$end
+  } else {
+    prev <- yaml_load(yml[[where]])[[name_block]]
+    ## TODO: confirm that this is really empty
+    browser()
+    where <- dat$start
+    yml[[where]] <- to_add[[1L]]
+    to_add <- to_add[-1L]
+  }
+
+  withr::with_dir(
+    loc$config$root,
+    insert_into_file(yml, where, to_add, path_yml, show, edit, prompt))
+}
