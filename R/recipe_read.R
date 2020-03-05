@@ -121,7 +121,9 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
     el <- config$fields[i, ]
     x <- info[[el$name]]
     if (!is.null(x) || el$required) {
-      assert_scalar_character(x, fieldname(el$name))
+      recipe_read_skip_on_develop(
+        develop,
+        assert_scalar_character(x, fieldname(el$name)))
     }
   }
 
