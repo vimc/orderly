@@ -848,3 +848,40 @@ test_that("Require simple parameters", {
                 root = path, echo = FALSE),
     "Invalid parameters: 'a', 'b' - must be scalar")
 })
+
+
+test_that("preserve tags in metadata", {
+  root <- prepare_orderly_example("minimal")
+  append_lines(c("tags:", "  - tag1", "  - tag2"),
+               file.path(root, "orderly_config.yml"))
+  append_lines(c("tags:", "  - tag1"),
+               file.path(root, "src", "example", "orderly.yml"))
+
+  id <- orderly_run("example", root = root, echo = FALSE)
+  d <- readRDS(path_orderly_run_rds(file.path(root, "draft", "example", id)))
+  expect_equal(d$meta$tags, "tag1")
+})
+
+
+test_that("Pass tags during run", {
+  root <- prepare_orderly_example("minimal")
+  append_lines(c("tags:", "  - tag1", "  - tag2"),
+               file.path(root, "orderly_config.yml"))
+  append_lines(c("tags:", "  - tag1"),
+               file.path(root, "src", "example", "orderly.yml"))
+
+  ## Add new tag
+  id <- orderly_run("example", root = root, echo = FALSE, tags = "tag2")
+  d <- readRDS(path_orderly_run_rds(file.path(root, "draft", "example", id)))
+  expect_equal(d$meta$tags, c("tag1", "tag2"))
+
+  ## Ignore already present tag
+  id <- orderly_run("example", root = root, echo = FALSE, tags = "tag1")
+  d <- readRDS(path_orderly_run_rds(file.path(root, "draft", "example", id)))
+  expect_equal(d$meta$tags, "tag1")
+
+  ## Error on unknown tag
+  expect_error(
+    orderly_run("example", root = root, echo = FALSE, tags = "tag3"),
+    "Unknown tag: 'tag3'")
+})

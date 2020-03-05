@@ -227,3 +227,13 @@ parameters:
           between integers and floating pointe numbers, instead using
           just "number" for both.  When storing booleans, we store
           lower case "true"/"false", like in JSON, and not like R.
+
+tag:
+  columns:
+    - id: {type: TEXT}
+
+report_version_tag:
+  columns:
+    - id: {type: SERIAL}
+    - report_version: {fk: report_version.id}
+    - tag: {fk: tag.id}

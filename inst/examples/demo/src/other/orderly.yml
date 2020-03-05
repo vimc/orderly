@@ -20,3 +20,5 @@ description: >-
 author: Dr Serious
 requester: ACME
 comment: This is another comment
+tags:
+  - dataset

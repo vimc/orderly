@@ -20,6 +20,7 @@ test_that("orderly_demo", {
 
   ## Ensure that the time manipulation affects the changelog too
   expect_true(nrow(DBI::dbReadTable(con, "changelog")) > 0)
+  expect_true(nrow(DBI::dbReadTable(con, "report_version_tag")) > 0)
 })
 
 

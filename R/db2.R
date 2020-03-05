@@ -8,7 +8,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-ORDERLY_SCHEMA_VERSION <- "0.0.9"
+ORDERLY_SCHEMA_VERSION <- "0.0.10"
 
 ## These will be used in a few places and even though they're not
 ## super likely to change it would be good
@@ -143,6 +143,7 @@ report_db_init <- function(con, config, must_create = FALSE, validate = TRUE) {
 report_db_init_create <- function(con, config, dialect) {
   dat <- report_db_schema(config$fields, dialect)
   dat$values$changelog_label <- config$changelog
+  dat$values$tag <- data_frame(id = config$tags)
 
   DBI::dbBegin(con)
   on.exit(DBI::dbRollback(con))
@@ -187,6 +188,14 @@ report_db_open_existing <- function(con, config) {
   if (!ok) {
     stop(
       "changelog labels have changed: rebuild with orderly::orderly_rebuild()",
+      call. = FALSE)
+  }
+
+  tag <- DBI::dbReadTable(con, "tag")$id
+  ok <- setequal(tag, config$tags)
+  if (!ok) {
+    stop(
+      "tags have changed: rebuild with orderly::orderly_rebuild()",
       call. = FALSE)
   }
 }
@@ -382,6 +391,13 @@ report_data_import <- function(con, name, id, config) {
       changelog$ordering <- seq_len(nrow(changelog)) + prev
       DBI::dbWriteTable(con, "changelog", changelog, append = TRUE)
     }
+  }
+
+  tags <- dat_rds$meta$tags
+  if (!is.null(tags)) {
+    report_version_tag <- data_frame(report_version = id, tag = tags)
+    DBI::dbWriteTable(con, "report_version_tag", report_version_tag,
+                      append = TRUE)
   }
 
   if (!is.null(dat_rds$meta$parameters)) {
