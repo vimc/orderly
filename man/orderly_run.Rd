@@ -17,7 +17,8 @@ orderly_run(
   message = NULL,
   instance = NULL,
   use_draft = FALSE,
-  remote = NULL
+  remote = NULL,
+  tags = NULL
 )
 }
 \arguments{
@@ -80,6 +81,12 @@ with \code{remote = NULL}, as the pull/run approach will use the
 latest report in \emph{your} archive but the \code{remote =
 "remote"} approach will use the latest approach in the
 \emph{remote} archive (which might be less recent).}
+
+\item{tags}{Character vector of tags to add to the report.  Tags
+are immutable and cannot be removed once the report is run.
+Tags added here will be \emph{in addition} to any tags listed in
+the \code{tags:} field in \code{orderly.yml} and must be present
+in \code{orderly_config.yml}.}
 }
 \value{
 The id of the newly created report

@@ -83,6 +83,12 @@
 ##'   "remote"} approach will use the latest approach in the
 ##'   \emph{remote} archive (which might be less recent).
 ##'
+##' @param tags Character vector of tags to add to the report.  Tags
+##'   are immutable and cannot be removed once the report is run.
+##'   Tags added here will be \emph{in addition} to any tags listed in
+##'   the \code{tags:} field in \code{orderly.yml} and must be present
+##'   in \code{orderly_config.yml}.
+##'
 ##' @seealso \code{\link{orderly_log}} for controlling display of log
 ##'   messages (not just R output)
 ##'
@@ -119,7 +125,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
                         root = NULL, locate = TRUE, echo = TRUE,
                         id_file = NULL, fetch = FALSE, ref = NULL,
                         message = NULL, instance = NULL, use_draft = FALSE,
-                        remote = NULL) {
+                        remote = NULL, tags = NULL) {
   envir <- orderly_environment(envir)
   config <- orderly_config_get(root, locate)
   config <- check_orderly_archive_version(config)
@@ -129,7 +135,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   }
 
   info <- recipe_prepare(config, name, id_file, ref, fetch, message,
-                         use_draft, remote)
+                         use_draft, remote, tags = tags)
 
   recipe_current_run_set(info)
   on.exit(recipe_current_run_clear())
@@ -144,7 +150,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
 recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
                            fetch = FALSE, message = NULL,
                            use_draft = FALSE, remote = NULL,
-                           copy_files = TRUE) {
+                           copy_files = TRUE, tags = NULL) {
   assert_is(config, "orderly_config")
   config <- orderly_config_get(config, FALSE)
 
@@ -159,6 +165,10 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
 
   info <- recipe_read(file.path(path_src(config$root), name),
                       config, use_draft = use_draft, remote = remote)
+
+  if (!is.null(tags)) {
+    info$tags <- union(info$tags, recipe_read_check_tags(tags, config, "tags"))
+  }
 
   id <- new_report_id()
   orderly_log("id", id)
