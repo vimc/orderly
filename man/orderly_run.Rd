@@ -122,6 +122,12 @@ id <- orderly::orderly_run("other", list(nmin = 0.2), root = path)
 \code{orderly.yml}.  It is an error if parameters without a
 default are omitted, and it is an error if unknown parameters are
 provided.
+
+Environment variables that are created in \code{orderly_envir.yml}
+will be available while the report runs.  Those that begin with
+\code{ORDERLY_} will be saved into the \code{orderly_run.rds}
+within the \code{$env} section (except for any that match the
+patterns "TOKEN", "PAT" or "PASS").
 }
 \examples{
 path <- orderly::orderly_example("demo")

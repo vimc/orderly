@@ -32,8 +32,9 @@
 ##' it will re-run through the setup steps, but beware that sourcing
 ##' functions is additive and never subtractive.  If you delete (or
 ##' rename) a function within a source file, it will not be removed
-##' from your global environment.  When in doubt, restart your R
-##' session.
+##' from your global environment.  Similarly, environment variables
+##' will be loaded each time you call this, but no deletions will
+##' happen.  When in doubt, restart your R session.
 ##'
 ##' Note that these functions are much more permissive as to the state
 ##' of your \code{orderly.yml} than \code{\link{orderly_run}} - in
@@ -94,6 +95,8 @@ orderly_develop_start <- function(name = NULL, parameters = NULL,
     info <- recipe_copy_depends(info)
     orderly_prepare_data(loc$config, info, parameters, envir, instance)
   })
+
+  sys_setenv(orderly_envir_read(loc$config$root))
 
   invisible(loc$path)
 }

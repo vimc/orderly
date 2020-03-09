@@ -841,3 +841,10 @@ format_filediff <- function(x, ..., context = 2L, colour = NULL) {
   }
   paste(sprintf("%s | %s\n", line, text), collapse = "")
 }
+
+
+sys_setenv <- function(env) {
+  if (length(env) > 0L) {
+    do.call("Sys.setenv", as.list(env))
+  }
+}

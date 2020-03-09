@@ -587,7 +587,7 @@ test_that("resolve_dependencies_remote", {
   config <- orderly_config(dat$path_local)
   remote <- get_remote("default", config)
 
-  p <- file.path(dat$path_local, "archive", "example")
+  p <- file.path(normalizePath(dat$path_local), "archive", "example")
 
   expect_equal(
     resolve_dependencies_remote("latest", "example", config, remote),

@@ -720,6 +720,21 @@ orderly::orderly_run(name,
                       instance = c(source = "production", extra = "staging"))
 ```
 
+## Using environment variables
+
+Envirionment variables that are stored in the top-level `orderly_envir.yml` are (since orderly 1.1.6) available as environment variables, via `Sys.getenv()`.  For example, if your `orderly_envir.yml` contains
+
+```r
+DATA_URL=https://www.example.com/thedata
+```
+
+Then in your script you can use
+
+```r
+url <- Sys.getenv("DATA_URL")
+download.file(url)
+```
+
 ## Developing a report
 
 Because orderly works in a directory that is not the same as the source directory (e.g., `draft/myreport/YYYYMMDD-HHMMSS-abcdefgh`), because global resources and dependencies etc are copied in just as it is used, and because `orderly` takes control of things like parameters and `source()`-ing files, it may not seem straightforward to develop a report as you would ordinarily.

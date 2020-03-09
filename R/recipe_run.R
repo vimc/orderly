@@ -28,6 +28,12 @@
 ##' default are omitted, and it is an error if unknown parameters are
 ##' provided.
 ##'
+##' Environment variables that are created in \code{orderly_envir.yml}
+##' will be available while the report runs.  Those that begin with
+##' \code{ORDERLY_} will be saved into the \code{orderly_run.rds}
+##' within the \code{$env} section (except for any that match the
+##' patterns "TOKEN", "PAT" or "PASS").
+##'
 ##' @title Run a report
 ##'
 ##' @param name Name of the report to run (see
@@ -140,8 +146,10 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   recipe_current_run_set(info)
   on.exit(recipe_current_run_clear())
 
-  info <- recipe_run(info, parameters, envir, config, echo = echo,
-                     instance = instance)
+  info <- withr::with_envvar(
+    orderly_envir_read(config$root),
+    recipe_run(info, parameters, envir, config, echo = echo,
+               instance = instance))
 
   info$id
 }
