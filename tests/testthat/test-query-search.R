@@ -195,3 +195,25 @@ test_that("Query environment tricks", {
   expect_true(eval(quote(1 == 1), env))
   expect_false(eval(quote(1 == NULL), env))
 })
+
+
+test_that("all together from a report", {
+  root <- prepare_orderly_example("demo")
+
+  p <- file.path(root, "src", "use_dependency", "orderly.yml")
+  txt <- readLines(p)
+  writeLines(sub("latest", "latest(nmin < 0.25)", txt, fixed = TRUE), p)
+
+  f <- function(nmin) {
+    id <- orderly_run("other", root = root, parameters = list(nmin = nmin),
+                      echo = FALSE)
+    orderly_commit(id, root = root)
+    id
+  }
+
+  ids <- c(f(0.1), f(0.2), f(0.3))
+  id <- orderly_run("use_dependency", root = root, echo = FALSE)
+  p <- path_orderly_run_rds(file.path(root, "draft", "use_dependency", id))
+  d <- readRDS(p)
+  expect_equal(d$meta$depends$id, ids[[2]])
+})
