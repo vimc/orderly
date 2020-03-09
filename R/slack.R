@@ -2,14 +2,18 @@
 
 slack_post_success <- function(dat, config) {
   if (!is.null(config$remote_identity)) {
-    remote <- config$remote[[config$remote_identity]]
-    driver <- get_remote(config$remote_identity, config)
-    report_url <- driver$url_report(dat$meta$name, dat$meta$id)
-    slack_url <- remote$slack_url
+    remote <- get_remote(config$remote_identity, config)
+
+    ## TODO(VIMC-3544): This moves into the object itself, using some
+    ## sort of data field, so we might use remote$data$slack_url and
+    ## remote$data$primary
+    slack_url <- attr(remote, "slack_url")
+    primary <- attr(remote, "primary")
+    assert_scalar_character(slack_url, "slack_url")
 
     if (!is.null(slack_url)) {
-      assert_scalar_character(slack_url, "slack_url")
-      data <- slack_data(dat, remote$name, report_url, remote$primary)
+      report_url <- remote$url_report(dat$meta$name, dat$meta$id)
+      data <- slack_data(dat, remote$name, report_url, primary)
       do_slack_post_success(slack_url, data)
     }
   }

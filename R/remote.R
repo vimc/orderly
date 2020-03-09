@@ -300,18 +300,34 @@ get_remote <- function(remote, config) {
 load_remote <- function(name, config) {
   remote <- config$remote[[name]]
   hash <- hash_object(remote)
-  if (is.null(cache$remotes[[hash]])) {
-    driver <- getExportedValue(remote$driver[[1L]], remote$driver[[2L]])
-    base <- "orderly_config.yml:remote"
-    remote <- resolve_secrets(
-      resolve_env(remote, sprintf("%s:%s", base, name)),
-      config)
-    args <- resolve_secrets(
-      resolve_env(remote$args, sprintf("%s:%s:args", base, name)),
-      config)
-    cache$remotes[[hash]] <- do.call(driver, args)
+
+  cached <- cache$remotes[[hash]]
+  if (!is.null(cached)) {
+    return(cached)
   }
-  cache$remotes[[hash]]
+
+  driver <- getExportedValue(remote$driver[[1L]], remote$driver[[2L]])
+  base <- "orderly_config.yml:remote"
+
+  where <- sprintf("%s:%s:args", base, name)
+  args <- resolve_secrets(resolve_env(remote$args, where), config)
+  value <- do.call(driver, args)
+
+  ## TODO(VIMC-3544): put this in an 'data' or equivalent argument
+  ## to the constructor, but that required fixing both drivers.
+  attr(value, "slack_url") <-
+    resolve_env(remote["slack_url"], error = FALSE)$slack_url
+  attr(value, "primary") <- isTRUE(remote$primary)
+
+  cache$remotes[[hash]] <- value
+
+  value
+}
+
+
+## For debugging
+clear_remote_cache <- function() {
+  cache$remotes <- list()
 }
 
 
