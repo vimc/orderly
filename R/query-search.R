@@ -1,33 +1,42 @@
 orderly_search <- function(query, name, root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
-
   dat <- parse_query(query)
-  parameters <- search_parameters_archive(name, config)
 
-  search1 <- function(p, expr, base) {
+  versions <- orderly_list_dir(file.path(config$root, "archive", name))
+  parameters <- tags <- NULL
+
+  if (dat$info$parameter) {
+    parameters <- search_parameters_archive(name, config)
+  }
+  if (dat$info$tag) {
+    tags <- search_tags_archive(name, config)
+  }
+
+  search1 <- function(v, expr, base) {
     env <- new.env(parent = base)
-    env$parameter <- p
+    env$parameter <- parameters[[v]]
+    env$tag <- tags[[v]]
     eval(expr, env)
   }
 
   env <- orderly_search_env()
-  res <- vlapply(parameters, search1, dat$expr, env)
+  res <- vlapply(versions, search1, dat$expr, env)
   names(res)[res]
 }
 
 
 orderly_search_env <- function() {
   env <- new.env()
-  for (op in c("(", parse_query_operators)) {
+  for (op in c("(", "is.null", parse_query_join)) {
     env[[op]] <- get(op)
   }
   safe_op <- function(op) {
-    force(op)
+    op <- match.fun(op)
     function(a, b) {
       !is.null(a) && !is.null(b) && op(a, b)
     }
   }
-  for (op in parse_query_join) {
+  for (op in setdiff(parse_query_operators, "is.null")) {
     env[[op]] <- safe_op(op)
   }
 
@@ -56,6 +65,20 @@ search_parameters_archive <- function(name, config) {
 }
 
 
+search_tags_archive <- function(name, config) {
+  con <- orderly_db("destination", config)
+  on.exit(DBI::dbDisconnect(con))
+
+  sql <- c("SELECT report_version_tag.*",
+           "  FROM report_version_tag",
+           "  JOIN report_version",
+           "    ON report_version.id = report_version_tag.report_version",
+           " WHERE report_version.report = $1")
+  res <- DBI::dbGetQuery(con, paste(sql, collapse = "\n"), name)
+  split(res$tag, res$report_version)
+}
+
+
 parse_query_operators <- c("is.null", "==", "!=", ">", ">=", "<", "<=")
 parse_query_join <- c("(", "&&", "||", "!")
 
@@ -67,7 +90,8 @@ parse_query <- function(x) {
   }
   dat <- parse_query_expr(expr[[1L]])
 
-  info <- data_frame(type = dat$type, key = dat$key)
+  test <- c("parameter", "tag")
+  info <- set_names(as.list(test %in% dat$type), test)
   expr <- dat$expr
   list(info = info, expr = expr)
 }
@@ -78,37 +102,54 @@ parse_query_expr <- function(expr) {
     stop("Invalid expression!")
   }
 
-  fn <- deparse(expr[[1]])
-  if (fn %in% parse_query_operators) {
-    return(parse_query_filter(expr))
-  }
+  if (is.call(expr) && deparse(expr[[1L]]) %in% parse_query_join) {
+    fn <- deparse(expr[[1]])
 
-  if (!(fn %in% parse_query_join)) {
-    stop("Invalid operation")
-  }
+    a <- parse_query_expr(expr[[2]])
+    expr[[2]] <- a$expr
 
-  a <- parse_query_expr(expr[[2]])
-  expr[[2]] <- a$expr
+    if (fn %in% c("&&", "||")) {
+      b <- parse_query_expr(expr[[3]])
+      expr[[3]] <- b$expr
+    } else {
+      b <- NULL
+    }
 
-  if (fn %in% c("&&", "||")) {
-    b <- parse_query_expr(expr[[3]])
-    expr[[3]] <- b$expr
+    list(type = c(a$type, b$type), expr = expr)
   } else {
-    b <- NULL
+    parse_query_filter(expr)
   }
-
-  list(type = c(a$type, b$type),
-       key = c(a$key, b$key),
-       expr = expr)
 }
 
-
+## examples
+##
+## * id == 1
+## * parameter:id == 1
+## * tag:weekly
 parse_query_filter <- function(expr) {
+  if (!is.call(expr)) {
+    stop("Expected an expression")
+  }
+
+  if (is_call(expr, ":") && length(expr) == 3L) {
+    type <- expr[[2L]]
+    stopifnot(is.symbol(type))
+    if (!identical(type, quote(tag))) {
+      stop(sprintf("Invalid query expression '%s' requires operator",
+                   paste(deparse(expr), collapse = "\n")),
+           call. = FALSE)
+    }
+    tag <- expr[[3L]]
+    stopifnot(is.symbol(tag))
+    return(list(type = "tag", expr = bquote(.(as.character(tag)) %in% tag)))
+  }
+
   if (length(expr) < 2L || length(expr) > 3L) {
     stop(sprintf("Invalid query expression '%s'",
                  paste(deparse(expr), collapse = "\n")),
          call. = FALSE)
   }
+
   type <- "parameter"
   rel <- as.character(expr[[1L]])
   key <- expr[[2L]]
@@ -127,6 +168,8 @@ parse_query_filter <- function(expr) {
 
   if (rel == "is.null") {
     stopifnot(length(expr) == 2L)
+  } else if (type == "tag") {
+    browser()
   } else {
     stopifnot(length(expr) == 3L)
     value <- expr[[3L]]
@@ -137,5 +180,5 @@ parse_query_filter <- function(expr) {
 
   expr[[2]] <- bquote(.(as.name(type))[[.(key)]])
 
-  list(type = type, key = key, expr = expr)
+  list(type = type, expr = expr)
 }
