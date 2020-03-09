@@ -2,7 +2,7 @@
 
 slack_post_success <- function(dat, config) {
   if (!is.null(config$remote_identity)) {
-    remote <- get_remote(config$remote_identity, config, FALSE)
+    remote <- get_remote(config$remote_identity, config)
 
     ## TODO(VIMC-3544): This moves into the object itself, using some
     ## sort of data field, so we might use remote$data$slack_url and
@@ -13,7 +13,7 @@ slack_post_success <- function(dat, config) {
 
     if (!is.null(slack_url)) {
       report_url <- remote$url_report(dat$meta$name, dat$meta$id)
-      data <- slack_data(dat, remote$name, report_url, remote$primary)
+      data <- slack_data(dat, remote$name, report_url, primary)
       do_slack_post_success(slack_url, data)
     }
   }
