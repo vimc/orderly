@@ -1,3 +1,7 @@
+# orderly 1.1.10
+
+* Secrets can be read from the vault and used in orderly reports (VIMC-3536)
+
 # orderly 1.1.9
 
 * Better parsing of parameters passed on the command line, allowing more parameters to be passed through, and coping better with shell quoting (VIMC-3550)
