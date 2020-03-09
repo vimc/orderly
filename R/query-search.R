@@ -1,3 +1,118 @@
+##' Search for orderly reports matching criteria.  This can be used to
+##' find reports where a particular parameter or tag was used (it will
+##' likely be expanded as time goes on - let us know if that would be
+##' useful).  We search within versions of a single report only.
+##'
+##' The query syntax is deliberately very simple; it may expand a bit
+##' later.  At this point you can search for parameters and for tags,
+##' and these can be combined.  Note that if you are using OrderlyWeb,
+##' then only orderly (and not OrderlyWeb) tags are searched.
+##'
+##' The idea here is that they queries can be used to find ids that
+##' match certain criteria for use as dependencies.  This function
+##' lets you work out what would be resolved by the query, and using
+##' this query string in a \code{depends:} section will let you select
+##' a report that matches some criteria.  For example, suppose that
+##' you have report \code{A} that takes a parameter "fruit" with
+##' values like "apple", "banana", and a report \code{B} that depends
+##' on A.  You could then write:
+##'
+##' \preformatted{
+##' depends:
+##'   A:
+##'     id: latest(fruit == "apple")
+##'     uses:
+##'       summary.csv: summary.csv
+##' }
+##'
+##' To get the \code{summary.csv} file out of the latest report
+##' \code{A} that was run with the "fruit" parameter set to "apple".
+##' If "B" itself takes parameters, you can use those parameters in
+##' these query expressions like
+##'
+##' \preformatted{
+##' depends:
+##'   A:
+##'     id: latest(fruit == target_fruit)
+##'     uses:
+##'       summary.csv: summary.csv
+##' }
+##'
+##' (assuming that \code{B} takes a parameter \code{target_fruit}).
+##'
+##' The syntax for tags is simpler, one uses \code{tag:tagname} to
+##' test for presence of a tag called "tagname".
+##'
+##' Search queries can be joined by \code{&&} and \code{||} and
+##' grouped using parentheses, these groups (or tags) can be negated
+##' with \code{!}, so a complicated query expression might look like:
+##'
+##' \preformatted{
+##' (fruit == "apple" && !tag:weekly) | fruit == "banana"
+##' }
+##'
+##' For clarity, parameters may be prefixed with \code{parameter:}
+##' (so, \code{parameter:fruit} in the above), though this is optional.
+##'
+##' @title Search for orderly reports matching criteria
+##'
+##' @param query The query string - see details and examples
+##'
+##' @param name Name of the report to search.  Only
+##'
+##' @inheritParams orderly_list
+##'
+##' @return A character vector of matching report ids, possibly
+##'   zero-length.  If the query is a "latest" query, then exactly one
+##'   report id, possibly NA.
+##'
+##' @export
+##' # We need a few reports here to actually query.  There is a report in
+##' # the "demo" example called "other" that takes a parameter "nmin",
+##' # which is used to filter data - it's not terribly important what it
+##' # does here, but it can give us a set of reports to use.
+##'
+##' # The demo set also includes configuration for two tags, called
+##' # "dataset" and "plot" - the "dataset" tag will always be applied
+##' # as it is listed in the orderly.yml but we can still add the
+##' # "plot" tag interactively
+##' root <- orderly::orderly_example("demo")
+##'
+##' # A helper function to mass-produce reports will reduce noise a bit
+##' run1 <- function(nmin, tags = NULL) {
+##'   id <- orderly_run("other", root = root, echo = FALSE,
+##'                     parameters = list(nmin = nmin), tags = tags)
+##'   orderly_commit(id, root = root)
+##'   id
+##' }
+##'
+##' ids <- c(run1(0.1), run1(0.2, "plot"), run1(0.3))
+##'
+##' # We can then ask for all reports where the parameter nmin was more
+##' # than some value
+##' orderly::orderly_search("nmin > 0.15", "other", root = root)
+##'
+##' # Or use "&&" to find tags within a range
+##' orderly::orderly_search("nmin > 0.1 && nmin < 0.3", "other", root = root)
+##'
+##' # We can look for tags
+##' orderly::orderly_search("tag:plot", "other", root = root)
+##'
+##' # or exclude them
+##' orderly::orderly_search("!tag:plot", "other", root = root)
+##'
+##' # or combine that with the presence/absence of a tag
+##' orderly::orderly_search("nmin > 0.15 && !tag:plot", "other", root = root)
+##'
+##' # Use latest() over a query to find the latest report matching the
+##' # query expression.
+##' orderly::orderly_search("latest(nmin > 0.15)", "other", root = root)
+##'
+##' # If no reports are found, then a zero-length character vector is returned
+##' orderly::orderly_search("nmin > 0.4", "other", root = root)
+##'
+##' # Or, in the case of latest(), NA
+##' orderly::orderly_search("latest(nmin > 0.4)", "other", root = root)
 orderly_search <- function(query, name, parameters = NULL,
                            root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
