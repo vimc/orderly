@@ -58,7 +58,15 @@
 ##'
 ##' @param query The query string - see details and examples
 ##'
-##' @param name Name of the report to search.  Only
+##' @param name Name of the report to search.  Only a single report
+##'   can be searched at once.
+##'
+##' @param draft Should draft reports be used searched?  This should
+##'   be used only in development.  Valid values are logical
+##'   (\code{TRUE}, \code{FALSE}) or use the string \code{newer} to
+##'   use draft reports where they are newer than archive reports.
+##'   For consistency, \code{always} and \code{never} are equivalent
+##'   to \code{TRUE} and \code{FALSE}, respectively.
 ##'
 ##' @inheritParams orderly_list
 ##'
@@ -114,22 +122,50 @@
 ##'
 ##' # Or, in the case of latest(), NA
 ##' orderly::orderly_search("latest(nmin > 0.4)", "other", root = root)
-orderly_search <- function(query, name, parameters = NULL,
+orderly_search <- function(query, name, parameters = NULL, draft = FALSE,
                            root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
-  query_parameters_check(parameters)
+  assert_scalar_character(name)
+  parameters <- query_check_parameters(parameters)
+  draft <- query_check_draft(draft)
+
   dat <- parse_query(query, parameters)
 
-  assert_scalar_character(name)
-  versions <- orderly_list_dir(file.path(config$root, "archive", name))
+  matches <- switch(
+    draft,
+    never  = orderly_search_do_search(dat, name, FALSE, config),
+    always = orderly_search_do_search(dat, name, TRUE, config),
+    newer = sort(c(
+      orderly_search_do_search(dat, name, TRUE, config),
+      orderly_search_do_search(dat, name, FALSE, config))))
+
+  if (dat$latest) {
+    latest_id(matches)
+  } else {
+    matches
+  }
+}
+
+
+orderly_search_do_search <- function(dat, name, draft, config) {
+  if (draft) {
+    where <- "draft"
+    search_parameters <- search_parameters_draft
+    search_tags <- search_tags_draft
+  } else {
+    where <- "archive"
+    search_parameters <- search_parameters_archive
+    search_tags <- search_tags_archive
+  }
+  versions <- orderly_list_dir(file.path(config$root, where, name))
 
   if (dat$use$parameter) {
-    parameters <- search_parameters_archive(name, config)
+    parameters <- search_parameters(name, config)
   } else {
     parameters <- NULL
   }
   if (dat$use$tag) {
-    tags <- search_tags_archive(name, config)
+    tags <- search_tags(name, config)
   } else {
     tags <- NULL
   }
@@ -143,12 +179,7 @@ orderly_search <- function(query, name, parameters = NULL,
 
   env <- orderly_search_env()
   i <- vlapply(versions, search1, dat$expr, env)
-  matches <- names(i)[i]
-  if (dat$latest) {
-    latest_id(matches)
-  } else {
-    matches
-  }
+  names(i)[i]
 }
 
 
@@ -203,6 +234,26 @@ search_tags_archive <- function(name, config) {
            " WHERE report_version.report = $1")
   res <- DBI::dbGetQuery(con, paste(sql, collapse = "\n"), name)
   split(res$tag, res$report_version)
+}
+
+
+search_x_draft <- function(name, config, extract) {
+  path <- file.path(config$root, "draft", name)
+  versions <- orderly_list_dir(path)
+  f <- function(p) {
+    extract(readRDS(path_orderly_run_rds(p)))
+  }
+  set_names(lapply(file.path(path, versions), f), versions)
+}
+
+
+search_parameters_draft <- function(name, config) {
+  search_x_draft(name, config, function(x) x$meta$parameters)
+}
+
+
+search_tags_draft <- function(name, config) {
+  search_x_draft(name, config, function(x) x$meta$tags)
 }
 
 
@@ -327,7 +378,7 @@ parse_query_filter <- function(expr, parameters) {
 }
 
 
-query_parameters_check <- function(parameters) {
+query_check_parameters <- function(parameters) {
   if (!is.null(parameters)) {
     nonscalar <- lengths(parameters) != 1
     if (any(nonscalar)) {
@@ -344,4 +395,16 @@ query_parameters_check <- function(parameters) {
         pasteq(names(err[err]))))
     }
   }
+  parameters
+}
+
+
+query_check_draft <- function(draft, as) {
+  if (is.logical(draft)) {
+    assert_scalar(draft)
+    draft <- if (draft) "always" else "never"
+  } else {
+    match_value(draft, c("always", "newer", "never"))
+  }
+  draft
 }

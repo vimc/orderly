@@ -197,6 +197,38 @@ test_that("Query environment tricks", {
 })
 
 
+test_that("search in drafts", {
+  skip_on_cran_windows()
+  root <- prepare_orderly_example("demo")
+
+  f <- function(nmin, tags = NULL) {
+    orderly_run("other", root = root, echo = FALSE,
+                parameters = list(nmin = nmin), tags = tags)
+  }
+
+  ids <- c(f(0.1), f(0.2, "plot"), f(0.3))
+
+  expect_equal(
+    orderly_search("nmin > 0.15", "other", root = root, draft = TRUE),
+    ids[2:3])
+  expect_equal(
+    orderly_search("tag:plot", "other", root = root, draft = TRUE),
+    ids[2])
+
+  ## then commit the last one
+  orderly_commit(ids[[3]], root = root)
+  expect_equal(
+    orderly_search("nmin > 0.15", "other", root = root, draft = TRUE),
+    ids[2])
+  expect_equal(
+    orderly_search("nmin > 0.15", "other", root = root, draft = FALSE),
+    ids[3])
+  expect_equal(
+    orderly_search("nmin > 0.15", "other", root = root, draft = "newer"),
+    ids[2:3])
+})
+
+
 test_that("all together from a report", {
   root <- prepare_orderly_example("demo")
 
