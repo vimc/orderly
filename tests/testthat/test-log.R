@@ -39,6 +39,8 @@ test_that("colour", {
 test_that("warning colourtion", {
   expect_equal(orderly_log_style("warning"), "alert")
   expect_equal(orderly_log_style("unexpected"), "alert")
+  expect_equal(orderly_log_style("ERROR"), "alert")
+  expect_equal(orderly_log_style("rollback"), "alert")
 
   expect_equal(orderly_log_style("depends"), "highlight")
   expect_equal(orderly_log_style("anythingelse"), "highlight")

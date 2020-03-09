@@ -114,8 +114,10 @@ orderly_warning <- function(msg) {
 
 
 orderly_log_style <- function(topic) {
-  switch(topic,
+  switch(tolower(topic),
          warning = "alert",
+         error = "alert",
          unexpected = "alert",
+         rollback = "alert",
          "highlight")
 }
