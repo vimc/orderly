@@ -95,6 +95,8 @@ orderly_develop_start <- function(name = NULL, parameters = NULL,
     orderly_prepare_data(loc$config, info, parameters, envir, instance)
   })
 
+  sys_setenv(orderly_envir_read(loc$config$root))
+
   invisible(loc$path)
 }
 

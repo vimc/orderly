@@ -885,3 +885,18 @@ test_that("Pass tags during run", {
     orderly_run("example", root = root, echo = FALSE, tags = "tag3"),
     "Unknown tag: 'tag3'")
 })
+
+
+test_that("orderly_envir is available during run", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "src", "example")
+  writeLines(c("MY_A: a", "ORDERLY_B: b"), file.path(path, "orderly_envir.yml"))
+  append_lines('writeLines(Sys.getenv("MY_A"), "env")',
+               file.path(p, "script.R"))
+  id <- orderly_run("example", root = path, echo = FALSE)
+
+  p <- file.path(path, "draft", "example", id)
+  expect_equal(readLines(file.path(p, "env")), "a")
+  expect_equal(readRDS(path_orderly_run_rds(p))$env,
+               list(ORDERLY_B = "b"))
+})

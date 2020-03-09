@@ -181,3 +181,14 @@ test_that("Can read malformed orderly.yml in develop start", {
     orderly_develop_clean("partial", root = path),
     NA) # (no error)
 })
+
+
+test_that("can load environment variables during develop", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "src", "example")
+  writeLines(c("MY_A: a", "ORDERLY_B: b"), file.path(path, "orderly_envir.yml"))
+  on.exit(Sys.unsetenv(c("MY_A", "ORDERLY_B")))
+  orderly_develop_start("example", root = path)
+  expect_equal(Sys.getenv("MY_A"), "a")
+  expect_equal(Sys.getenv("ORDERLY_B"), "b")
+})

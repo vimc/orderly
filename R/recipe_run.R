@@ -140,8 +140,10 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   recipe_current_run_set(info)
   on.exit(recipe_current_run_clear())
 
-  info <- recipe_run(info, parameters, envir, config, echo = echo,
-                     instance = instance)
+  info <- withr::with_envvar(
+    orderly_envir_read(config$root),
+    recipe_run(info, parameters, envir, config, echo = echo,
+               instance = instance))
 
   info$id
 }
