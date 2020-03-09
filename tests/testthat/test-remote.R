@@ -157,3 +157,36 @@ test_that("pull migrated archive", {
   ## because of issues re-running migrations.
   expect_silent(orderly_migrate(root = path_local))
 })
+
+
+test_that("silently ignore missing slack url, but resolve args", {
+  path <- prepare_orderly_example("minimal")
+
+  append_lines(
+    c("remote:",
+      "  default:",
+      "    driver: orderly::orderly_remote_path",
+      "    args:",
+      "      path: $ORDERLY_UNSET_REMOTE_PATH",
+      "    slack_url: $ORDERLY_UNSET_SLACK_URL"),
+    file.path(path, "orderly_config.yml"))
+
+  config <- orderly_config(path)
+
+  clear_remote_cache()
+  remote <- withr::with_envvar(
+    c(ORDERLY_UNSET_REMOTE_PATH = path),
+    get_remote("default", config))
+  expect_equal(length(orderly:::cache$remotes), 1L)
+  expect_null(attr(remote, "slack_url"))
+  expect_false(attr(remote, "primary"))
+
+  clear_remote_cache()
+  remote <- withr::with_envvar(
+    c(ORDERLY_UNSET_REMOTE_PATH = path,
+      ORDERLY_UNSET_SLACK_URL = "http://example.com/slack"),
+    get_remote("default", config))
+  expect_equal(length(orderly:::cache$remotes), 1L)
+  expect_equal(attr(remote, "slack_url"), "http://example.com/slack")
+  expect_false(attr(remote, "primary"))
+})
