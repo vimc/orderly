@@ -67,6 +67,7 @@
 ##'   report id, possibly NA.
 ##'
 ##' @export
+##' @examples
 ##' # We need a few reports here to actually query.  There is a report in
 ##' # the "demo" example called "other" that takes a parameter "nmin",
 ##' # which is used to filter data - it's not terribly important what it
