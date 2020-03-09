@@ -34,7 +34,7 @@ test_that("orderly_pull_archive with wrong version", {
 test_that("pull dependencies", {
   dat <- prepare_orderly_remote_example()
 
-  expect_message(
+  expect_log_message(
     orderly_pull_dependencies("depend", root = dat$config,
                               remote = dat$remote),
     "\\[ pull\\s+ \\]  example:")
@@ -44,7 +44,7 @@ test_that("pull dependencies", {
   ## and update
   id3 <- orderly_run("example", root = dat$path_remote, echo = FALSE)
   orderly_commit(id3, root = dat$path_remote)
-  expect_message(
+  expect_log_message(
     orderly_pull_dependencies("depend", root = dat$config,
                               remote = dat$remote),
     "\\[ pull\\s+ \\]  example:")
@@ -56,14 +56,14 @@ test_that("pull dependencies", {
 test_that("pull_dependencies counts dependencies", {
   dat <- prepare_orderly_remote_example()
 
-  expect_message(
+  expect_log_message(
     orderly_pull_dependencies("example", root = dat$config,
                               remote = dat$remote),
     "\\[ depends\\s+ \\]  example has 0 dependencies")
 
   id <- orderly_run("example", root = dat$path_remote, echo = FALSE)
   orderly_commit(id, root = dat$path_remote)
-  expect_message(
+  expect_log_message(
     orderly_pull_dependencies("depend", root = dat$config,
                               remote = dat$remote),
     "\\[ depends\\s+ \\]  depend has 1 dependency")
@@ -90,7 +90,7 @@ test_that("pull from old remote", {
   DBI::dbDisconnect(db_local)
   DBI::dbDisconnect(db_remote)
 
-  expect_message(
+  expect_log_message(
     orderly_pull_archive("minimal", root = path_local, remote = path_remote),
     "^\\[ migrate")
 

@@ -67,11 +67,11 @@ test_that("pull report: already done", {
 
   remote <- orderly_remote_path(path1)
 
-  expect_message(
+  expect_log_message(
     orderly_pull_archive("example", id, path2, remote = remote),
     sprintf("\\[ pull\\s+ \\]  example:%s\\s*$", id))
 
-  expect_message(
+  expect_log_message(
     orderly_pull_archive("example", id, path2, remote = remote),
     sprintf("\\[ pull\\s+ \\]  example:%s already exists", id))
 })
@@ -118,7 +118,7 @@ test_that("set_default", {
 test_that("pull dependencies", {
   dat <- prepare_orderly_remote_example()
 
-  expect_message(
+  expect_log_message(
     orderly_pull_dependencies("depend", root = dat$config,
                               remote = dat$remote),
     "\\[ pull\\s+ \\]  example:")
@@ -128,7 +128,7 @@ test_that("pull dependencies", {
   ## and update
   id3 <- orderly_run("example", root = dat$path_remote, echo = FALSE)
   orderly_commit(id3, root = dat$path_remote)
-  expect_message(
+  expect_log_message(
     orderly_pull_dependencies("depend", root = dat$config,
                               remote = dat$remote),
     "\\[ pull\\s+ \\]  example:")
