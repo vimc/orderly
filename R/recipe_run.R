@@ -31,7 +31,8 @@
 ##' Environment variables that are created in \code{orderly_envir.yml}
 ##' will be available while the report runs.  Those that begin with
 ##' \code{ORDERLY_} will be saved into the \code{orderly_run.rds}
-##' within the \code{$env} section.
+##' within the \code{$env} section (except for any that match the
+##' patterns "TOKEN", "PAT" or "PASS").
 ##'
 ##' @title Run a report
 ##'
