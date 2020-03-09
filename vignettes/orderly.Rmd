@@ -720,7 +720,7 @@ orderly::orderly_run(name,
                       instance = c(source = "production", extra = "staging"))
 ```
 
-## Using environment variables
+## Using environment variables and secrets
 
 Envirionment variables that are stored in the top-level `orderly_envir.yml` are (since orderly 1.1.6) available as environment variables, via `Sys.getenv()`.  For example, if your `orderly_envir.yml` contains
 
@@ -734,6 +734,15 @@ Then in your script you can use
 url <- Sys.getenv("DATA_URL")
 download.file(url)
 ```
+
+If the values are sensitive, then this is not ideal, as you will store your values in plain text in the `orderly_envir.yml`.  Instead, if using vault, you can use a `secrets:` section in `orderly.yml`, like:
+
+```yaml
+secrets:
+  password: /secret/myproject/login:value
+```
+
+and then an R variable `password` will be available to all the code in your report, containing the result of looking up `/secret/myproject/login` in your vault and getting the `value` field.
 
 ## Developing a report
 
