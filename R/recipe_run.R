@@ -387,6 +387,11 @@ recipe_data <- function(config, info, parameters, dest, instance) {
     info <- recipe_substitute(info, parameters)
   }
 
+  if (!is.null(info$secrets)) {
+    secrets <- resolve_secrets(info$secrets, config)
+    list2env(secrets, dest)
+  }
+
   ret <- list(dest = dest, parameters = parameters)
 
   if (length(info$data) == 0 && is.null(info$connection)) {
