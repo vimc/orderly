@@ -165,7 +165,8 @@ test_that("mixed migration", {
   msg <- capture_messages(
     orderly_migrate(path, to = curr))
   expect_true(
-    any(grepl(sprintf("[ ok         ]  example/%s", id), msg, fixed = TRUE)))
+    any(grepl(sprintf("[ ok         ]  example/%s", id),
+              crayon::strip_style(msg), fixed = TRUE)))
 })
 
 
