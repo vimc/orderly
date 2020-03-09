@@ -141,6 +141,14 @@ skip_on_cran_windows <- function() {
 }
 
 
+expect_log_message <- function(expr, ...) {
+  res <- testthat::evaluate_promise(expr)
+  expect_match(
+    crayon::strip_style(res$messages),
+    ..., all = FALSE)
+}
+
+
 if (Sys.getenv("NOT_CRAN") != "true") {
   options(orderly.nogit = TRUE)
 }

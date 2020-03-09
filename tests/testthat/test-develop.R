@@ -163,7 +163,7 @@ test_that("orderly_develop_status with changelog", {
 test_that("Can read malformed orderly.yml in develop start", {
   path <- prepare_orderly_example("minimal")
   p <- orderly_new("partial", root = path, quiet = TRUE)
-  expect_message(
+  expect_log_message(
     res <- orderly_develop_start("partial", root = path),
     "[ warning    ]  At least one artefact required",
     fixed = TRUE)

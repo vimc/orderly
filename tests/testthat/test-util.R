@@ -806,3 +806,17 @@ test_that("don't write with no changes", {
   expect_equal(format_filediff(res), character(0))
   expect_false(file.exists(p))
 })
+
+
+test_that("palette", {
+  withr::with_options(
+    list(crayon.enabled = TRUE), {
+      expect_equal(orderly_style("highlight")("x"),
+                   crayon::bold(crayon::make_style("steelblue3")("x")))
+      expect_equal(orderly_style("alert")("x"),
+                   crayon::bold(crayon::make_style("hotpink")("x")))
+      expect_equal(orderly_style("fade")("x"),
+                   crayon::make_style("grey")("x"))
+      expect_equal(orderly_style("other")("x"), "x")
+   })
+})
