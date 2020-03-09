@@ -84,11 +84,13 @@ orderly_log_off <- function() {
 ##' @export
 orderly_log <- function(topic, value) {
   if (!isTRUE(getOption("orderly.nolog"))) {
+    style <- orderly_style(orderly_log_style(topic))
     n <- length(value) - 1L
     if (n > 0L) {
       topic <- c(topic, rep_len("...", n))
     }
-    str <- trimws(sprintf("[ %-10s ]  %s", topic, value))
+    str <- trimws(sprintf("[ %s ]  %s",
+                          style(format(topic, width = 10)), value))
     if (n > 0L) {
       str <- paste(str, collapse = "\n")
     }
@@ -108,4 +110,12 @@ orderly_warning <- function(msg) {
   } else {
     warning(msg, immediate. = TRUE, call. = FALSE)
   }
+}
+
+
+orderly_log_style <- function(topic) {
+  switch(topic,
+         warning = "alert",
+         unexpected = "alert",
+         "highlight")
 }

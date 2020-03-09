@@ -848,3 +848,14 @@ sys_setenv <- function(env) {
     do.call("Sys.setenv", as.list(env))
   }
 }
+
+
+orderly_style <- function(name) {
+  switch(name,
+         highlight = crayon::combine_styles(
+           crayon::bold, crayon::make_style("steelblue3")),
+         alert = crayon::combine_styles(
+           crayon::bold, crayon::make_style("hotpink")),
+         fade = crayon::make_style("grey"),
+         identity)
+}
