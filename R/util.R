@@ -860,3 +860,11 @@ orderly_style <- function(name) {
          fade = crayon::make_style("grey"),
          identity)
 }
+
+
+is_call <- function(expr, valid) {
+  if (is.name(valid)) {
+    valid <- as.character(valid)
+  }
+  is.recursive(expr) && as.character(expr[[1]]) %in% valid
+}
