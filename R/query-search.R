@@ -1,15 +1,21 @@
-orderly_search <- function(query, name, root = NULL, locate = TRUE) {
+orderly_search <- function(query, name, parameters = NULL,
+                           root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
-  dat <- parse_query(query)
+  query_parameters_check(parameters)
+  dat <- parse_query(query, parameters)
 
+  assert_scalar_character(name)
   versions <- orderly_list_dir(file.path(config$root, "archive", name))
-  parameters <- tags <- NULL
 
-  if (dat$info$parameter) {
+  if (dat$use$parameter) {
     parameters <- search_parameters_archive(name, config)
+  } else {
+    parameters <- NULL
   }
-  if (dat$info$tag) {
+  if (dat$use$tag) {
     tags <- search_tags_archive(name, config)
+  } else {
+    tags <- NULL
   }
 
   search1 <- function(v, expr, base) {
@@ -20,8 +26,13 @@ orderly_search <- function(query, name, root = NULL, locate = TRUE) {
   }
 
   env <- orderly_search_env()
-  res <- vlapply(versions, search1, dat$expr, env)
-  names(res)[res]
+  i <- vlapply(versions, search1, dat$expr, env)
+  matches <- names(i)[i]
+  if (dat$latest) {
+    latest_id(matches)
+  } else {
+    matches
+  }
 }
 
 
@@ -83,21 +94,29 @@ parse_query_operators <- c("is.null", "==", "!=", ">", ">=", "<", "<=")
 parse_query_join <- c("(", "&&", "||", "!")
 
 
-parse_query <- function(x) {
+parse_query <- function(x, parameters) {
   expr <- parse(text = x)
   if (length(expr) != 1L) {
     stop("Expected a single expression")
   }
-  dat <- parse_query_expr(expr[[1L]])
+  expr <- expr[[1L]]
+
+  latest <- is_call(expr, "latest")
+  if (latest) {
+    stopifnot(length(expr) == 2L)
+    expr <- expr[[2L]]
+  }
+
+  dat <- parse_query_expr(expr, parameters)
 
   test <- c("parameter", "tag")
-  info <- set_names(as.list(test %in% dat$type), test)
+  use <- set_names(as.list(test %in% dat$type), test)
   expr <- dat$expr
-  list(info = info, expr = expr)
+  list(latest = latest, use = use, expr = expr)
 }
 
 
-parse_query_expr <- function(expr) {
+parse_query_expr <- function(expr, parameters) {
   if (!is.recursive(expr)) {
     stop("Invalid expression!")
   }
@@ -105,11 +124,11 @@ parse_query_expr <- function(expr) {
   if (is.call(expr) && deparse(expr[[1L]]) %in% parse_query_join) {
     fn <- deparse(expr[[1]])
 
-    a <- parse_query_expr(expr[[2]])
+    a <- parse_query_expr(expr[[2]], parameters)
     expr[[2]] <- a$expr
 
     if (fn %in% c("&&", "||")) {
-      b <- parse_query_expr(expr[[3]])
+      b <- parse_query_expr(expr[[3]], parameters)
       expr[[3]] <- b$expr
     } else {
       b <- NULL
@@ -117,7 +136,7 @@ parse_query_expr <- function(expr) {
 
     list(type = c(a$type, b$type), expr = expr)
   } else {
-    parse_query_filter(expr)
+    parse_query_filter(expr, parameters)
   }
 }
 
@@ -126,7 +145,7 @@ parse_query_expr <- function(expr) {
 ## * id == 1
 ## * parameter:id == 1
 ## * tag:weekly
-parse_query_filter <- function(expr) {
+parse_query_filter <- function(expr, parameters) {
   if (!is.call(expr)) {
     stop("Expected an expression")
   }
@@ -168,17 +187,45 @@ parse_query_filter <- function(expr) {
 
   if (rel == "is.null") {
     stopifnot(length(expr) == 2L)
-  } else if (type == "tag") {
-    browser()
   } else {
     stopifnot(length(expr) == 3L)
     value <- expr[[3L]]
+    if (is.name(value)) {
+      name <- as.character(value)
+      value <- parameters[[name]]
+      if (is.null(value)) {
+        stop(sprintf(
+          "Query parameter '%s' not found in supplied parameters",
+          name), call. = FALSE)
+      }
+      expr[[3L]] <- value
+    }
     if (!is.atomic(value)) {
       stop("Query value must be atomic (logical, numeric, string)")
     }
   }
 
-  expr[[2]] <- bquote(.(as.name(type))[[.(key)]])
+  expr[[2L]] <- bquote(.(as.name(type))[[.(key)]])
 
   list(type = type, expr = expr)
+}
+
+
+query_parameters_check <- function(parameters) {
+  if (!is.null(parameters)) {
+    nonscalar <- lengths(parameters) != 1
+    if (any(nonscalar)) {
+      stop(sprintf(
+        "Invalid parameters: %s - must be scalar",
+        pasteq(names(nonscalar[nonscalar]))))
+    }
+
+    err <- !vlapply(parameters, function(x)
+      is.character(x) || is.numeric(x) || is.logical(x))
+    if (any(err)) {
+      stop(sprintf(
+        "Invalid parameters: %s - must be character, numeric or logical",
+        pasteq(names(err[err]))))
+    }
+  }
 }
