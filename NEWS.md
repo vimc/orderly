@@ -1,3 +1,7 @@
+# orderly 1.1.6
+
+* Environment variables in `orderly_envir.yml` are available during report run (#180, VIMC-3530)
+
 # orderly 1.1.5
 
 * Introduce the concept of "tags"; these are immutable and exist at the level of a report version.  Currently there is nothing that can be done with tags, but these will become useful in conjuction with [OrderlyWeb](https://github.com/vimc/orderly-web) (VIMC-3514)
