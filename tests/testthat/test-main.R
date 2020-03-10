@@ -97,6 +97,7 @@ test_that("pass parameters", {
   expect_equal(f("a=1", "b=value", "c=TRUE"),
                list(a = 1, b = "value", c=TRUE))
   expect_equal(f("a=1+2"), list(a = "1+2"))
+  expect_equal(f("a='quoted string'"), list(a = "quoted string"))
 })
 
 
@@ -506,4 +507,12 @@ test_that("invalid parameters", {
     cli_args_process_run_parameters(c("a", "b=2", "c=3=4")),
     "Invalid parameters 'a', 'c=3=4' - all must be in form key=value",
     fixed = TRUE)
+})
+
+
+test_that("parameter type conversion", {
+  expect_equal(parse_parameter("abc"), "abc")
+  expect_equal(parse_parameter("123abc"), "123abc")
+  expect_equal(parse_parameter("123"), 123)
+  expect_equal(parse_parameter("TRUE"), TRUE)
 })

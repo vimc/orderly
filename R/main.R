@@ -361,9 +361,11 @@ cli_commands <- function() {
 
 
 parse_parameter <- function(x) {
-  value <- parse(text = x)[[1]]
+  value <- tryCatch(parse(text = x)[[1]], error = function(e) x)
   if (is.logical(value) || is.numeric(value)) {
     value
+  } else if (is.character(x) && grepl('^(".*"|\'.*\')$', x)) {
+    x <- substr(x, 2, nchar(x) - 1L)
   } else {
     x
   }
