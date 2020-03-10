@@ -771,3 +771,43 @@ test_that("can read env vars from orderly yml", {
   env_vars <- list(a = "ENV", b = "VAR")
   expect_equal(recipe_read_check_env_var(env_vars), env_vars)
 })
+
+
+test_that("Query interface", {
+  root <- prepare_orderly_example("demo")
+  config <- orderly_config(root)
+
+  p <- file.path(root, "src", "use_dependency", "orderly.yml")
+  txt <- readLines(p)
+  writeLines(sub("latest", "latest(nmin < 0.25)", txt, fixed = TRUE), p)
+
+  f <- function(nmin) {
+    orderly_run("other", root = root, parameters = list(nmin = nmin),
+                echo = FALSE)
+  }
+
+  ids <- c(f(0.1), f(0.2), f(0.3))
+
+  res <- resolve_dependencies_local("latest(nmin < 0.25)", "other",
+                                    config, TRUE)
+  expect_equal(res$path, file.path(config$root, "draft", "other", ids[[2]]))
+  expect_true(res$is_latest)
+
+  orderly_commit(ids[[2]], root = root)
+
+  res <- resolve_dependencies_local("latest(nmin < 0.25)", "other",
+                                    config, TRUE)
+  expect_equal(res$path, file.path(config$root, "draft", "other", ids[[1]]))
+  expect_true(res$is_latest)
+
+  res <- resolve_dependencies_local("latest(nmin < 0.25)", "other",
+                                    config, "newer")
+  expect_equal(res$path, file.path(config$root, "archive", "other", ids[[2]]))
+  expect_true(res$is_latest)
+
+
+  res <- resolve_dependencies_local("latest(nmin > 0.25)", "other",
+                                    config, "newer")
+  expect_equal(res$path, file.path(config$root, "draft", "other", ids[[3]]))
+  expect_true(res$is_latest)
+})

@@ -97,8 +97,7 @@ resolve_dependencies <- function(depends, config, use_draft, remote) {
 
 
 resolve_dependencies_local <- function(id, name, config, use_draft) {
-  ## Just a proof-of-concept for now; does not have the nicest failure
-  ## modes
+  is_latest <- grepl("^latest(\\(|$)", id)
   if (grepl("^latest\\s*\\(", id)) {
     query <- id
     id <- orderly_search(query, name, draft = use_draft,
@@ -110,7 +109,7 @@ resolve_dependencies_local <- function(id, name, config, use_draft) {
   }
   path <- orderly_find_report(id, name, config, draft = use_draft,
                               must_work = TRUE)
-  is_latest <- grepl("^latest", id) ||
+  is_latest <- is_latest ||
     basename(path) == orderly_latest(name, config, draft = use_draft)
   list(path = path, is_latest = is_latest)
 }
