@@ -1,3 +1,7 @@
+# orderly 1.1.9
+
+* Better parsing of parameters passed on the command line, allowing more parameters to be passed through, and coping better with shell quoting (VIMC-3550)
+
 # orderly 1.1.6
 
 * Environment variables in `orderly_envir.yml` are available during report run (#180, VIMC-3530)
