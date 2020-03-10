@@ -68,6 +68,10 @@
 ##'   For consistency, \code{always} and \code{never} are equivalent
 ##'   to \code{TRUE} and \code{FALSE}, respectively.
 ##'
+##' @param parameters Named list of parameters (as would be passed to
+##'   \code{\link{orderly_run}}) if your query uses parameters on the
+##'   right-hand-side of an expression.
+##'
 ##' @inheritParams orderly_list
 ##'
 ##' @return A character vector of matching report ids, possibly
