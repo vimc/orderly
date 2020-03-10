@@ -365,7 +365,7 @@ parse_parameter <- function(x) {
   if (is.logical(value) || is.numeric(value)) {
     value
   } else if (is.character(x) && grepl('^(".*"|\'.*\')$', x)) {
-    x <- substr(x, 2, nchar(x) - 1L)
+    substr(x, 2, nchar(x) - 1L)
   } else {
     x
   }
