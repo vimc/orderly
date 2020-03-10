@@ -515,4 +515,7 @@ test_that("parameter type conversion", {
   expect_equal(parse_parameter("123abc"), "123abc")
   expect_equal(parse_parameter("123"), 123)
   expect_equal(parse_parameter("TRUE"), TRUE)
+
+  expect_equal(parse_parameter("'quoted string'"), "quoted string")
+  expect_equal(parse_parameter('"quoted string"'), "quoted string")
 })
