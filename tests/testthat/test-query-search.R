@@ -103,18 +103,10 @@ test_that("parse query", {
 })
 
 
-test_that("integration", {
-  skip_on_cran_windows()
-  root <- prepare_orderly_example("demo")
-
-  f <- function(nmin) {
-    id <- orderly_run("other", root = root, parameters = list(nmin = nmin),
-                      echo = FALSE)
-    orderly_commit(id, root = root)
-    id
-  }
-
-  ids <- c(f(0.1), f(0.2), f(0.3))
+test_that("search an archive", {
+  dat <- prepare_orderly_query_example()
+  root <- dat$root
+  ids <- dat$ids
 
   expect_equal(
     orderly_search("nmin > 0.15", "other", root = root),
@@ -139,6 +131,8 @@ test_that("integration", {
 
 test_that("query on a tag", {
   skip_on_cran_windows()
+  ## NOTE: not using the pre-made example as there's more extensive
+  ## tagging done here.
   root <- prepare_orderly_example("minimal")
   append_lines(
     c("tags:",
@@ -198,15 +192,9 @@ test_that("Query environment tricks", {
 
 
 test_that("search in drafts", {
-  skip_on_cran_windows()
-  root <- prepare_orderly_example("demo")
-
-  f <- function(nmin, tags = NULL) {
-    orderly_run("other", root = root, echo = FALSE,
-                parameters = list(nmin = nmin), tags = tags)
-  }
-
-  ids <- c(f(0.1), f(0.2, "plot"), f(0.3))
+  dat <- prepare_orderly_query_example(TRUE)
+  root <- dat$root
+  ids <- dat$ids
 
   expect_equal(
     orderly_search("nmin > 0.15", "other", root = root, draft = TRUE),
@@ -230,20 +218,14 @@ test_that("search in drafts", {
 
 
 test_that("all together from a report", {
-  root <- prepare_orderly_example("demo")
+  dat <- prepare_orderly_query_example()
+  root <- dat$root
+  ids <- dat$ids
 
   p <- file.path(root, "src", "use_dependency", "orderly.yml")
   txt <- readLines(p)
   writeLines(sub("latest", "latest(nmin < 0.25)", txt, fixed = TRUE), p)
 
-  f <- function(nmin) {
-    id <- orderly_run("other", root = root, parameters = list(nmin = nmin),
-                      echo = FALSE)
-    orderly_commit(id, root = root)
-    id
-  }
-
-  ids <- c(f(0.1), f(0.2), f(0.3))
   id <- orderly_run("use_dependency", root = root, echo = FALSE)
   p <- path_orderly_run_rds(file.path(root, "draft", "use_dependency", id))
   d <- readRDS(p)
@@ -265,7 +247,9 @@ test_that("all together from a report", {
 
 
 test_that("Query resolution using parameter", {
-  root <- prepare_orderly_example("demo")
+  dat <- prepare_orderly_query_example()
+  root <- dat$root
+  ids <- dat$ids
 
   p <- file.path(root, "src", "use_dependency", "orderly.yml")
   txt <- readLines(p)
@@ -275,14 +259,6 @@ test_that("Query resolution using parameter", {
            "  p: ~")
   writeLines(txt, p)
 
-  f <- function(nmin) {
-    id <- orderly_run("other", root = root, parameters = list(nmin = nmin),
-                      echo = FALSE)
-    orderly_commit(id, root = root)
-    id
-  }
-
-  ids <- c(f(0.1), f(0.2), f(0.3))
   id <- orderly_run("use_dependency", parameters = list(p = 0.25),
                     root = root, echo = FALSE)
   p <- path_orderly_run_rds(file.path(root, "draft", "use_dependency", id))

@@ -1,3 +1,7 @@
+test_cache <- new.env(parent = emptyenv())
+test_cache$examples <- list()
+
+
 with_wd <- function(path, code) {
   owd <- setwd(path)
   on.exit(setwd(owd))
@@ -91,6 +95,41 @@ prepare_orderly_remote_example <- function(path = tempfile()) {
        remote = remote,
        id1 = id1,
        id2 = id2)
+}
+
+
+prepare_orderly_query_example <- function(draft = FALSE) {
+  if (is.null(test_cache$examples$query)) {
+    skip_on_cran_windows()
+    root <- prepare_orderly_example("demo")
+
+    f <- function(nmin, tags = NULL) {
+      id <- orderly_run("other", root = root, echo = FALSE,
+                        parameters = list(nmin = nmin), tags = tags)
+      orderly_commit(id, root = root)
+      id
+    }
+
+    ids <- c(f(0.1), f(0.2, "plot"), f(0.3))
+
+    zip <- tempfile(fileext = ".zip")
+    withr::with_dir(root, zip::zipr(zip, list.files()))
+
+    test_cache$examples$query <- zip
+  }
+
+  path <- tempfile()
+  dir.create(path)
+  zip::unzip(test_cache$examples$query, exdir = path)
+  ids <- dir(file.path(path, "archive", "other"))
+  if (draft) {
+    file.rename(
+      file.path(path, "archive", "other", ids),
+      file.path(path, "draft", "other", ids))
+    unlink(file.path(path, "orderly.sqlite"))
+  }
+
+  list(root = path, ids = sort(ids))
 }
 
 
