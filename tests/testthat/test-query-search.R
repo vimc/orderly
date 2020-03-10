@@ -262,3 +262,30 @@ test_that("all together from a report", {
   d <- readRDS(p)
   expect_equal(d$meta$depends$id, id_draft)
 })
+
+
+test_that("Query resolution using parameter", {
+  root <- prepare_orderly_example("demo")
+
+  p <- file.path(root, "src", "use_dependency", "orderly.yml")
+  txt <- readLines(p)
+  txt <- sub("latest", "latest(nmin < p)", txt, fixed = TRUE)
+  txt <- c(txt,
+           "parameters:",
+           "  p: ~")
+  writeLines(txt, p)
+
+  f <- function(nmin) {
+    id <- orderly_run("other", root = root, parameters = list(nmin = nmin),
+                      echo = FALSE)
+    orderly_commit(id, root = root)
+    id
+  }
+
+  ids <- c(f(0.1), f(0.2), f(0.3))
+  id <- orderly_run("use_dependency", parameters = list(p = 0.25),
+                    root = root, echo = FALSE)
+  p <- path_orderly_run_rds(file.path(root, "draft", "use_dependency", id))
+  d <- readRDS(p)
+  expect_equal(d$meta$depends$id, ids[[2]])
+})

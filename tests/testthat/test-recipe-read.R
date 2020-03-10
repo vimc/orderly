@@ -567,17 +567,17 @@ test_that("Can resolve dependencies remotely", {
                       FALSE)
   expect_equal(nrow(orderly_list_archive(dat$path_local)), 0)
   expect_error(
-    resolve_dependencies(info$depends, config, FALSE, NULL),
+    resolve_dependencies(info$depends, config, FALSE, NULL, NULL),
     "Did not find archive report example:latest")
 
   expect_error(
-    resolve_dependencies(info$depends, config, TRUE, "default"),
+    resolve_dependencies(info$depends, config, TRUE, NULL, "default"),
     "Can't use 'use_draft' with remote")
-  expect_null(resolve_dependencies(NULL, config, FALSE, NULL))
+  expect_null(resolve_dependencies(NULL, config, FALSE, NULL, NULL))
 
-  res <- resolve_dependencies(info$depends, config, FALSE, "default")
+  res <- resolve_dependencies(info$depends, config, FALSE, NULL, "default")
   expect_equal(nrow(orderly_list_archive(dat$path_local)), 1)
-  cmp <- resolve_dependencies(info$depends, config, FALSE, NULL)
+  cmp <- resolve_dependencies(info$depends, config, FALSE, NULL, NULL)
   expect_equal(res, cmp)
 })
 
@@ -810,4 +810,33 @@ test_that("Query interface", {
                                     config, "newer")
   expect_equal(res$path, file.path(config$root, "draft", "other", ids[[3]]))
   expect_true(res$is_latest)
+})
+
+
+test_that("pass parameters through query interface", {
+  root <- prepare_orderly_example("demo")
+  config <- orderly_config(root)
+
+  p <- file.path(root, "src", "use_dependency", "orderly.yml")
+  txt <- readLines(p)
+  writeLines(sub("latest", "latest(nmin < 0.25)", txt, fixed = TRUE), p)
+
+  f <- function(nmin) {
+    id <- orderly_run("other", root = root, parameters = list(nmin = nmin),
+                      echo = FALSE)
+    orderly_commit(id, root = root)
+    id
+  }
+
+  ids <- c(f(0.1), f(0.2), f(0.3))
+
+  res <- resolve_dependencies_local("latest(nmin < p)", "other",
+                                    config, list(p = 0.25), FALSE)
+  expect_equal(res$path, file.path(config$root, "archive", "other", ids[[2]]))
+  expect_true(res$is_latest)
+
+  expect_equal(
+    resolve_dependencies_local("latest(nmin < nmin)", "other",
+                               config, list(nmin = 0.25), FALSE),
+    res)
 })

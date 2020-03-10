@@ -87,7 +87,7 @@ orderly_develop_start <- function(name = NULL, parameters = NULL,
   orderly_log("name", loc$name)
 
   info <- recipe_read(loc$path, loc$config, use_draft = use_draft,
-                      remote = remote, develop = TRUE)
+                      parameters = parameters, remote = remote, develop = TRUE)
 
   info$workdir <- loc$path
   withr::with_dir(info$workdir, {

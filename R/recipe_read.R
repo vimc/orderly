@@ -8,7 +8,7 @@
 ## principly 'artefacts' and 'script', which is useful for
 ## orderly_develop_start etc.
 recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
-                        remote = NULL, develop = FALSE) {
+                        parameters = NULL, remote = NULL, develop = FALSE) {
   assert_is(config, "orderly_config")
   filename <- file.path(path, "orderly.yml")
   assert_file_exists(path, name = "Report working directory")
@@ -67,7 +67,7 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
     recipe_read_check_depends(info$depends, filename, config)
   if (validate) {
     info$depends <-
-      resolve_dependencies(info$depends, config, use_draft, remote)
+      resolve_dependencies(info$depends, config, use_draft, parameters, remote)
   }
 
   recipe_read_skip_on_develop(develop, {
