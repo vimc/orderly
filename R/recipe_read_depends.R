@@ -100,7 +100,13 @@ resolve_dependencies_local <- function(id, name, config, use_draft) {
   ## Just a proof-of-concept for now; does not have the nicest failure
   ## modes
   if (grepl("^latest\\s*\\(", id)) {
-    id <- orderly_search(id, name, root = config, locate = FALSE)
+    query <- id
+    id <- orderly_search(query, name, draft = use_draft,
+                         root = config, locate = FALSE)
+    if (is.na(id)) {
+      stop(sprintf("Query '%s' did not find suitable version", query),
+           call. = FALSE)
+    }
   }
   path <- orderly_find_report(id, name, config, draft = use_draft,
                               must_work = TRUE)
