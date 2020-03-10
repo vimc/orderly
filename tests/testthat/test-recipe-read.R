@@ -609,6 +609,17 @@ test_that("resolve_dependencies_remote", {
 })
 
 
+test_that("Can't use queries when resolving dependencies remotely", {
+  dat <- prepare_orderly_remote_example()
+  config <- orderly_config(dat$path_local)
+  remote <- get_remote("default", config)
+  expect_error(
+    resolve_dependencies_remote("latest()", "example", config, remote),
+    "Can't (yet) use query dependencies with remotes",
+    fixed = TRUE)
+})
+
+
 test_that("friendly error message if artefacts are incorrectly given", {
   path <- prepare_orderly_example("minimal")
   p <- file.path(path, "src", "example", "orderly.yml")

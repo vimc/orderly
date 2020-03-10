@@ -117,6 +117,10 @@ resolve_dependencies_local <- function(id, name, config, use_draft) {
 
 
 resolve_dependencies_remote <- function(id, name, config, remote) {
+  if (grepl("^latest\\s*\\(", id)) {
+    stop("Can't (yet) use query dependencies with remotes",
+         call. = FALSE)
+  }
   remote <- get_remote(remote, config)
 
   versions <- remote$list_versions(name)
