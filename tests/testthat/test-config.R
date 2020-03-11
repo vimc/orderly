@@ -444,3 +444,16 @@ test_that("tags are validated", {
     orderly_config(path),
     "orderly_config.yml:tags' must be character")
 })
+
+
+## VIMC-3442
+test_that("adding new fields in new versions gives good errors", {
+  path <- prepare_orderly_example("minimal")
+  append_lines(
+    c("new_toplevel_field: value",
+      "minimum_orderly_version: 9.9.9"),
+    file.path(path, "orderly_config.yml"))
+  expect_error(
+    orderly_config(path),
+    "Orderly version '9.9.9' is required, but only '.+' installed")
+})

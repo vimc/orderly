@@ -10,6 +10,14 @@ orderly_config <- function(root) {
 
 orderly_config_read_yaml <- function(filename, root) {
   info <- yaml_read(filename)
+
+  v <- info$minimum_orderly_version
+  if (!is.null(v) && utils::packageVersion("orderly") < v) {
+    stop(sprintf(
+      "Orderly version '%s' is required, but only '%s' installed",
+      v, utils::packageVersion("orderly")))
+  }
+
   check_fields(info, filename, character(),
                c("destination", "fields", "minimum_orderly_version",
                  "remote", "vault", "vault_server", "global_resources",
@@ -47,13 +55,6 @@ orderly_config_read_yaml <- function(filename, root) {
 
   if (!is.null(info$tags)) {
     assert_character(info$tags, sprintf("%s:tags", filename))
-  }
-
-  v <- info$minimum_orderly_version
-  if (!is.null(v) && utils::packageVersion("orderly") < v) {
-    stop(sprintf(
-      "Orderly version '%s' is required, but only '%s' installed",
-      v, utils::packageVersion("orderly")))
   }
 
   info[['vault']] <- config_check_vault(info[['vault']], info[['vault_server']], filename)
