@@ -56,7 +56,7 @@ later.  At this point you can search for parameters and for tags,
 and these can be combined.  Note that if you are using OrderlyWeb,
 then only orderly (and not OrderlyWeb) tags are searched.
 
-The idea here is that they queries can be used to find ids that
+The idea here is that the queries can be used to find ids that
 match certain criteria for use as dependencies.  This function
 lets you work out what would be resolved by the query, and using
 this query string in a \code{depends:} section will let you select
@@ -96,14 +96,16 @@ grouped using parentheses, these groups (or tags) can be negated
 with \code{!}, so a complicated query expression might look like:
 
 \preformatted{
-(parameter:fruit == "apple" && !tag:weekly) || paramerter:fruit == "banana"
+(parameter:fruit == "apple" && !tag:weekly) || parameter:fruit == "banana"
 }
 
-For clarity, parameters may be prefixed with \code{parameter:}
-(so, \code{parameter:fruit} in the above), though this is
-optional.  In the documentation and error messages we may refer to
-the left-hand-side of \code{:} as a "namespace".  At this point
-the only supported namespaces are \code{tag} and \code{parameter}.
+Be careful of comparing floating point numbers with \code{==} or
+\code{!=} may not always return what you expect (for example
+\code{sqrt(3)^2 == 3} is \code{FALSE}).
+
+In the documentation and error messages we may refer to the
+left-hand-side of \code{:} as a "namespace".  At this point the
+only supported namespaces are \code{tag} and \code{parameter}.
 }
 \examples{
 # We need a few reports here to actually query.  There is a report in
@@ -134,6 +136,12 @@ orderly::orderly_search("parameter:nmin > 0.15", "other", root = root)
 # Or use "&&" to find tags within a range
 orderly::orderly_search("parameter:nmin > 0.1 && parameter:nmin < 0.3",
                         "other", root = root)
+
+# If a parameter is not present in some versions of a report you
+# can use is.null to test for it (this is only ever the case if
+# you have altered a report definition to add or remove a
+# parameter)
+orderly::orderly_search("is.null(parameter:nmin)", "other", root = root)
 
 # We can look for tags
 orderly::orderly_search("tag:plot", "other", root = root)

@@ -288,7 +288,7 @@ test_that("unknown namespace raises error", {
   ## TODO:
   expect_error(
     parse_query("tag:abc > 1", NULL),
-    "In '.+', query namespace must be 'parameteter' but found 'tag'")
+    "In '.+', query namespace must be 'parameter' but found 'tag'")
 })
 
 
@@ -380,9 +380,9 @@ test_that("order of operands", {
 test_that("is.null requires a namespace", {
   expect_error(
     parse_query("is.null(x)"),
-    "Expected namespaced query element but recieved 'x'")
+    "Expected namespaced query element but received 'x'")
   expect_error(
     parse_query("is.null(tag:thing)"),
-    "In 'is.null(tag:thing)', query namespace must be 'parameteter' but found 'tag'",
+    "In 'is.null(tag:thing)', query namespace must be 'parameter' but found 'tag'",
     fixed = TRUE)
 })

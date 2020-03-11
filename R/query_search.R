@@ -8,7 +8,7 @@
 ##' and these can be combined.  Note that if you are using OrderlyWeb,
 ##' then only orderly (and not OrderlyWeb) tags are searched.
 ##'
-##' The idea here is that they queries can be used to find ids that
+##' The idea here is that the queries can be used to find ids that
 ##' match certain criteria for use as dependencies.  This function
 ##' lets you work out what would be resolved by the query, and using
 ##' this query string in a \code{depends:} section will let you select
@@ -48,14 +48,16 @@
 ##' with \code{!}, so a complicated query expression might look like:
 ##'
 ##' \preformatted{
-##' (parameter:fruit == "apple" && !tag:weekly) || paramerter:fruit == "banana"
+##' (parameter:fruit == "apple" && !tag:weekly) || parameter:fruit == "banana"
 ##' }
 ##'
-##' For clarity, parameters may be prefixed with \code{parameter:}
-##' (so, \code{parameter:fruit} in the above), though this is
-##' optional.  In the documentation and error messages we may refer to
-##' the left-hand-side of \code{:} as a "namespace".  At this point
-##' the only supported namespaces are \code{tag} and \code{parameter}.
+##' Be careful of comparing floating point numbers with \code{==} or
+##' \code{!=} may not always return what you expect (for example
+##' \code{sqrt(3)^2 == 3} is \code{FALSE}).
+##'
+##' In the documentation and error messages we may refer to the
+##' left-hand-side of \code{:} as a "namespace".  At this point the
+##' only supported namespaces are \code{tag} and \code{parameter}.
 ##'
 ##' @title Search for orderly reports matching criteria
 ##'
@@ -111,6 +113,12 @@
 ##' # Or use "&&" to find tags within a range
 ##' orderly::orderly_search("parameter:nmin > 0.1 && parameter:nmin < 0.3",
 ##'                         "other", root = root)
+##'
+##' # If a parameter is not present in some versions of a report you
+##' # can use is.null to test for it (this is only ever the case if
+##' # you have altered a report definition to add or remove a
+##' # parameter)
+##' orderly::orderly_search("is.null(parameter:nmin)", "other", root = root)
 ##'
 ##' # We can look for tags
 ##' orderly::orderly_search("tag:plot", "other", root = root)
@@ -351,7 +359,7 @@ parse_query_filter <- function(expr, parameters) {
     res <- parse_query_namespace(expr[[2L]])
     if (!identical(res$namespace, "parameter")) {
       stop(sprintf(
-        "In '%s', query namespace must be 'parameteter' but found '%s'",
+        "In '%s', query namespace must be 'parameter' but found '%s'",
         deparse_str(expr), res$namespace), call. = FALSE)
     }
     expr[[2L]] <- bquote(.(as.name(res$namespace))[[.(res$key)]])
@@ -392,7 +400,7 @@ parse_query_filter_element <- function(x, parameters) {
     ret <- parse_query_namespace(x)
     if (ret$namespace != "parameter") {
       stop(sprintf(
-        "In '%s', query namespace must be 'parameteter' but found '%s'",
+        "In '%s', query namespace must be 'parameter' but found '%s'",
         deparse_str(x), ret$namespace), call. = FALSE)
     }
   } else {
@@ -408,7 +416,7 @@ parse_query_filter_element <- function(x, parameters) {
 parse_query_namespace <- function(expr) {
   if (!is_call(expr, ":")) {
     stop(sprintf(
-      "Expected namespaced query element but recieved '%s'",
+      "Expected namespaced query element but received '%s'",
       deparse_str(expr)), call. = FALSE)
   }
 
