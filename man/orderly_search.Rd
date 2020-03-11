@@ -68,7 +68,7 @@ on A.  You could then write:
 \preformatted{
 depends:
   A:
-    id: latest(fruit == "apple")
+    id: latest(parameter:fruit == "apple")
     uses:
       summary.csv: summary.csv
 }
@@ -81,7 +81,7 @@ these query expressions like
 \preformatted{
 depends:
   A:
-    id: latest(fruit == target_fruit)
+    id: latest(parameter:fruit == target_fruit)
     uses:
       summary.csv: summary.csv
 }
@@ -96,7 +96,7 @@ grouped using parentheses, these groups (or tags) can be negated
 with \code{!}, so a complicated query expression might look like:
 
 \preformatted{
-(fruit == "apple" && !tag:weekly) || fruit == "banana"
+(parameter:fruit == "apple" && !tag:weekly) || paramerter:fruit == "banana"
 }
 
 For clarity, parameters may be prefixed with \code{parameter:}
@@ -129,10 +129,11 @@ ids <- c(run1(0.1), run1(0.2, "plot"), run1(0.3))
 
 # We can then ask for all reports where the parameter nmin was more
 # than some value
-orderly::orderly_search("nmin > 0.15", "other", root = root)
+orderly::orderly_search("parameter:nmin > 0.15", "other", root = root)
 
 # Or use "&&" to find tags within a range
-orderly::orderly_search("nmin > 0.1 && nmin < 0.3", "other", root = root)
+orderly::orderly_search("parameter:nmin > 0.1 && parameter:nmin < 0.3",
+                        "other", root = root)
 
 # We can look for tags
 orderly::orderly_search("tag:plot", "other", root = root)
@@ -141,15 +142,18 @@ orderly::orderly_search("tag:plot", "other", root = root)
 orderly::orderly_search("!tag:plot", "other", root = root)
 
 # or combine that with the presence/absence of a tag
-orderly::orderly_search("nmin > 0.15 && !tag:plot", "other", root = root)
+orderly::orderly_search("parameter:nmin > 0.15 && !tag:plot",
+                        "other", root = root)
 
 # Use latest() over a query to find the latest report matching the
 # query expression.
-orderly::orderly_search("latest(nmin > 0.15)", "other", root = root)
+orderly::orderly_search("latest(parameter:nmin > 0.15)",
+                        "other", root = root)
 
 # If no reports are found, then a zero-length character vector is returned
-orderly::orderly_search("nmin > 0.4", "other", root = root)
+orderly::orderly_search("parameter:nmin > 0.4", "other", root = root)
 
 # Or, in the case of latest(), NA
-orderly::orderly_search("latest(nmin > 0.4)", "other", root = root)
+orderly::orderly_search("latest(parameter:nmin > 0.4)",
+                        "other", root = root)
 }
