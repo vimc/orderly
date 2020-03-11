@@ -722,18 +722,21 @@ orderly::orderly_run(name,
 
 ## Using environment variables
 
-Envirionment variables that are stored in the top-level `orderly_envir.yml` are (since orderly 1.1.6) available as environment variables, via `Sys.getenv()`.  For example, if your `orderly_envir.yml` contains
+Environment variables declared in `orderly.yml` are made available in the report script (since orderly 1.1.10). For example, if your `orderly.yml` contains
 
-```r
-DATA_URL=https://www.example.com/thedata
+```yaml
+environment_variables:
+  external_file: EXTERNAL_FILE_PATH
+  variable_2: ENV_VAR_2
 ```
 
-Then in your script you can use
+Then orderly will evaluate the variables and make them available in your script via the specified name. For example in your script you can use
 
 ```r
-url <- Sys.getenv("DATA_URL")
-download.file(url)
+external_data <- read.csv(external_file)
 ```
+
+The expected use case for this is if you have data which you want to use in a report but do not want to be in the orderly repository (either because it is sensitive or particularly large). You can have the external files somewhere else on your machine and specify the path to them via an environment variable so they can then be accessed from the report script.
 
 ## Developing a report
 
