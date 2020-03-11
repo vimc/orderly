@@ -782,27 +782,29 @@ test_that("Query interface", {
 
   p <- file.path(root, "src", "use_dependency", "orderly.yml")
   txt <- readLines(p)
-  writeLines(sub("latest", "latest(nmin < 0.25)", txt, fixed = TRUE), p)
+  writeLines(
+    sub("latest", "latest(parameter:nmin < 0.25)", txt, fixed = TRUE),
+    p)
 
-  res <- resolve_dependencies_local("latest(nmin < 0.25)", "other",
+  res <- resolve_dependencies_local("latest(parameter:nmin < 0.25)", "other",
                                     config, NULL, TRUE)
   expect_equal(res$path, file.path(config$root, "draft", "other", ids[[2]]))
   expect_true(res$is_latest)
 
   orderly_commit(ids[[2]], root = root)
 
-  res <- resolve_dependencies_local("latest(nmin < 0.25)", "other",
+  res <- resolve_dependencies_local("latest(parameter:nmin < 0.25)", "other",
                                     config, NULL, TRUE)
   expect_equal(res$path, file.path(config$root, "draft", "other", ids[[1]]))
   expect_true(res$is_latest)
 
-  res <- resolve_dependencies_local("latest(nmin < 0.25)", "other",
+  res <- resolve_dependencies_local("latest(parameter:nmin < 0.25)", "other",
                                     config, NULL, "newer")
   expect_equal(res$path, file.path(config$root, "archive", "other", ids[[2]]))
   expect_true(res$is_latest)
 
 
-  res <- resolve_dependencies_local("latest(nmin > 0.25)", "other",
+  res <- resolve_dependencies_local("latest(parameter:nmin > 0.25)", "other",
                                     config, NULL, "newer")
   expect_equal(res$path, file.path(config$root, "draft", "other", ids[[3]]))
   expect_true(res$is_latest)
@@ -818,15 +820,17 @@ test_that("pass parameters through query interface", {
 
   p <- file.path(root, "src", "use_dependency", "orderly.yml")
   txt <- readLines(p)
-  writeLines(sub("latest", "latest(nmin < 0.25)", txt, fixed = TRUE), p)
+  writeLines(
+    sub("latest", "latest(parameter:nmin < 0.25)", txt, fixed = TRUE),
+    p)
 
-  res <- resolve_dependencies_local("latest(nmin < p)", "other",
+  res <- resolve_dependencies_local("latest(parameter:nmin < p)", "other",
                                     config, list(p = 0.25), FALSE)
   expect_equal(res$path, file.path(config$root, "archive", "other", ids[[2]]))
   expect_true(res$is_latest)
 
   expect_equal(
-    resolve_dependencies_local("latest(nmin < nmin)", "other",
+    resolve_dependencies_local("latest(parameter:nmin < nmin)", "other",
                                config, list(nmin = 0.25), FALSE),
     res)
 })
