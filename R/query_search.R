@@ -48,7 +48,7 @@
 ##' with \code{!}, so a complicated query expression might look like:
 ##'
 ##' \preformatted{
-##' (fruit == "apple" && !tag:weekly) | fruit == "banana"
+##' (fruit == "apple" && !tag:weekly) || fruit == "banana"
 ##' }
 ##'
 ##' For clarity, parameters may be prefixed with \code{parameter:}
