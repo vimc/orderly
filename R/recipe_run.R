@@ -393,8 +393,11 @@ recipe_data <- function(config, info, parameters, dest, instance) {
   }
   
   if (!is.null(info$environment)) {
-    env_vars <- resolve_env(info$environment,
-                            "orderly.yml:environment"))
+    env_vars <- lapply(names(info$environment), function(name) {
+      Sys_getenv(info$environment[[name]],
+                 sprintf("orderly.yml:environment:%s", name))
+    })
+    names(env_vars) <- names(info$environment)
     list2env(env_vars, dest)
   }
 

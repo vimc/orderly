@@ -935,8 +935,8 @@ test_that("can use environment variables in report", {
   
   append_lines(
     c("environment:",
-      paste("  data_path: $EXTRA_DATA_PATH"),
-      paste("  example_var: $EXAMPLE_VAR")),
+      paste("  data_path: EXTRA_DATA_PATH"),
+      paste("  example_var: EXAMPLE_VAR")),
     file.path(path, "src", "example", "orderly.yml"))
   
   append_lines(
@@ -945,7 +945,7 @@ test_that("can use environment variables in report", {
   
   expect_error(orderly_run("example", root = path),
                "Environment variable 'EXTRA_DATA_PATH' is not set
-\t(used in orderly.yml:environment:data_path", fixed = TRUE)
+\t(used in orderly.yml:environment:data_path)", fixed = TRUE)
   
   ## On windows if env variable is empty then windows will return NA from call
   ## to Sys.getenv
