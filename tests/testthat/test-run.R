@@ -924,7 +924,7 @@ test_that("Use secrets in report", {
     'writeLines(c(alice, bob), "passwords")',
     file.path(path, "src", "example", "script.R"))
 
-  id <- orderly_run("example", root = path)
+  id <- orderly_run("example", root = path, echo = FALSE)
   expect_equal(
     readLines(file.path(path, "draft", "example", id, "passwords")),
     c("ALICE", "BOB"))
@@ -947,13 +947,22 @@ test_that("can use environment variables in report", {
                "Environment variable 'EXTRA_DATA_PATH' is not set
 \t(used in orderly.yml:environment_variables:data_path", fixed = TRUE)
   
+  ## On windows if env variable is empty then windows will return NA from call
+  ## to Sys.getenv
+  if (is_windows()) {
+    expected_err <- "Environment variable 'EXAMPLE_VAR' is not set
+\t(used in orderly.yml:environment_variables:example_var)"
+  } else {
+    expected_err <- "Environment variable 'EXAMPLE_VAR' is empty
+\t(used in orderly.yml:environment_variables:example_var)"
+  }
+  
   data_path <- tempfile()
   withr::with_envvar(
     c("EXTRA_DATA_PATH" = data_path,
       "EXAMPLE_VAR" = ""),
     expect_error(orderly_run("example", root = path),
-                 "Environment variable 'EXAMPLE_VAR' is empty
-\t(used in orderly.yml:environment_variables:example_var)", fixed = TRUE)
+                 expected_err, fixed = TRUE)
   )
   
   withr::with_envvar(
