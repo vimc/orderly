@@ -282,5 +282,5 @@ test_that("unknown namespace raises error", {
     fixed = TRUE)
   expect_error(
     parse_query("tag:abc > 1", NULL),
-    "In '.+', query namespace must be 'parameteter' but found 'something'")
+    "In '.+', query namespace must be 'parameteter' but found 'tag'")
 })
