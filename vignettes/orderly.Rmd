@@ -725,7 +725,7 @@ orderly::orderly_run(name,
 Environment variables declared in `orderly.yml` are made available in the report script (since orderly 1.1.11). For example, if your `orderly.yml` contains
 
 ```yaml
-environment_variables:
+environment:
   external_file: EXTERNAL_FILE_PATH
   variable_2: ENV_VAR_2
 ```

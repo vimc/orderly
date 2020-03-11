@@ -37,7 +37,7 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
                 "global_resources",
                 "tags",
                 "secrets",
-                "environment_variables",
+                "environment",
                 config$fields$name[!config$fields$required])
 
   recipe_read_skip_on_develop(
@@ -128,8 +128,8 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
   
   info$secrets <- recipe_read_check_secrets(info$secrets, config, filename)
   
-  info$environment_variables <- recipe_read_check_env_var(
-    info$environment_variables, filename)
+  info$environment <- recipe_read_check_env_var(
+    info$environment, filename)
 
   info$name <- basename(normalizePath(path))
 
@@ -480,11 +480,11 @@ recipe_read_check_env_var <- function(env_vars, filename) {
     return(NULL)
   }
   assert_named(env_vars, TRUE,
-               name = sprintf("%s:environment_variables", filename))
+               name = sprintf("%s:environment", filename))
   for (name in names(env_vars)) {
     assert_scalar_character(
       env_vars[[name]],
-      sprintf("orderly.yml:environment_variables:%s", name))
+      sprintf("orderly.yml:environment:%s", name))
   }
   env_vars
 }

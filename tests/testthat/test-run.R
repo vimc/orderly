@@ -934,7 +934,7 @@ test_that("can use environment variables in report", {
   path <- prepare_orderly_example("minimal")
   
   append_lines(
-    c("environment_variables:",
+    c("environment:",
       paste("  data_path: $EXTRA_DATA_PATH"),
       paste("  example_var: $EXAMPLE_VAR")),
     file.path(path, "src", "example", "orderly.yml"))
@@ -945,16 +945,16 @@ test_that("can use environment variables in report", {
   
   expect_error(orderly_run("example", root = path),
                "Environment variable 'EXTRA_DATA_PATH' is not set
-\t(used in orderly.yml:environment_variables:data_path", fixed = TRUE)
+\t(used in orderly.yml:environment:data_path", fixed = TRUE)
   
   ## On windows if env variable is empty then windows will return NA from call
   ## to Sys.getenv
   if (is_windows()) {
     expected_err <- "Environment variable 'EXAMPLE_VAR' is not set
-\t(used in orderly.yml:environment_variables:example_var)"
+\t(used in orderly.yml:environment:example_var)"
   } else {
     expected_err <- "Environment variable 'EXAMPLE_VAR' is empty
-\t(used in orderly.yml:environment_variables:example_var)"
+\t(used in orderly.yml:environment:example_var)"
   }
   
   data_path <- tempfile()

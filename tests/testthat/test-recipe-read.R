@@ -746,16 +746,16 @@ test_that("can read env vars from orderly yml", {
   expect_null(recipe_read_check_env_var(NULL, filename))
   expect_error(
     recipe_read_check_env_var(list("ENV", "VAR"), filename),
-    "'orderly.yml:environment_variables' must be named")
+    "'orderly.yml:environment' must be named")
   expect_error(
     recipe_read_check_env_var(list(a = "ENV", a = "VAR"), filename),
-    "'orderly.yml:environment_variables' must have unique names")
+    "'orderly.yml:environment' must have unique names")
   expect_error(
     recipe_read_check_env_var(list(a = "ENV", b = 2), filename),
-    "'orderly.yml:environment_variables:b' must be character")
+    "'orderly.yml:environment:b' must be character")
   expect_error(
     recipe_read_check_env_var(list(a = list("ENV", "VAR")), filename),
-    "'orderly.yml:environment_variables:a' must be a scalar")
+    "'orderly.yml:environment:a' must be a scalar")
   
   env_vars <- list(a = "ENV", b = "VAR")
   expect_equal(recipe_read_check_env_var(env_vars), env_vars)

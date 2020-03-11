@@ -392,11 +392,11 @@ recipe_data <- function(config, info, parameters, dest, instance) {
     list2env(secrets, dest)
   }
   
-  if (!is.null(info$environment_variables)) {
+  if (!is.null(info$environment)) {
     yml_path <- info$inputs[info$inputs$file_purpose == "orderly_yml",
                             "filename"]
-    env_vars <- resolve_env(info$environment_variables,
-                            paste0(yml_path, ":environment_variables"))
+    env_vars <- resolve_env(info$environment,
+                            paste0(yml_path, ":environment"))
     list2env(env_vars, dest)
   }
 
