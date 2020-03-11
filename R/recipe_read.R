@@ -36,6 +36,7 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
                 "depends",
                 "global_resources",
                 "tags",
+                "secrets",
                 "environment_variables",
                 config$fields$name[!config$fields$required])
 
@@ -124,6 +125,8 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
       assert_scalar_character(x, fieldname(el$name))
     }
   }
+  
+  info$secrets <- recipe_read_check_secrets(info$secrets, config, filename)
   
   info$environment_variables <- recipe_read_check_env_var(
     info$environment_variables, filename)
@@ -440,6 +443,36 @@ recipe_read_check_tags <- function(tags, config, name) {
     }
   }
   tags
+}
+
+recipe_read_check_secrets <- function(secrets, config, filename) {
+  if (is.null(secrets)) {
+    return(NULL)
+  }
+  if (is.null(config$vault)) {
+    stop("Vault not enabled in orderly_config.yml")
+  }
+
+  assert_named(secrets, TRUE, name = sprintf("%s:secrets", filename))
+  as <- names(secrets)
+
+  for (i in seq_along(secrets)) {
+    assert_scalar_character(secrets[[i]],
+                            sprintf("orderly.yml:secrets:%s", as[[i]]))
+  }
+
+  path <- list_to_character(secrets, FALSE)
+  re <- "^([^:]+):([^:]+)$"
+  err <- !grepl(re, path)
+  if (any(err)) {
+    msg <- sprintf("'%s' for '%s'", path[err], as[err])
+    stop("Misformatted secret path: ", paste(msg, collapse = ", "),
+         call. = FALSE)
+  }
+
+  secrets[] <- paste0("VAULT:", path)
+
+  secrets
 }
 
 recipe_read_check_env_var <- function(env_vars, filename) {

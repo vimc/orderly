@@ -901,23 +901,52 @@ test_that("orderly_envir is available during run", {
                list(ORDERLY_B = "b"))
 })
 
+test_that("Use secrets in report", {
+  srv <- vaultr::vault_test_server()
+  cl <- srv$client()
+  cl$write("/secret/users/alice", list(password = "ALICE"))
+  cl$write("/secret/users/bob", list(password = "BOB"))
+
+  path <- prepare_orderly_example("minimal")
+  append_lines(
+    c("vault:",
+      paste("  addr:", srv$addr),
+      paste("  login: token"),
+      paste("  token:", srv$token)),
+    file.path(path, "orderly_config.yml"))
+
+  append_lines(c("secrets:",
+                 "  alice: /secret/users/alice:password",
+                 "  bob: /secret/users/bob:password"),
+               file.path(path, "src", "example", "orderly.yml"))
+
+  append_lines(
+    'writeLines(c(alice, bob), "passwords")',
+    file.path(path, "src", "example", "script.R"))
+
+  id <- orderly_run("example", root = path)
+  expect_equal(
+    readLines(file.path(path, "draft", "example", id, "passwords")),
+    c("ALICE", "BOB"))
+})
+
 test_that("can use environment variables in report", {
   path <- prepare_orderly_example("minimal")
-
+  
   append_lines(
     c("environment_variables:",
       paste("  data_path: $EXTRA_DATA_PATH"),
       paste("  example_var: $EXAMPLE_VAR")),
     file.path(path, "src", "example", "orderly.yml"))
-
+  
   append_lines(
     'writeLines(c(data_path, example_var), "env_vars")',
     file.path(path, "src", "example", "script.R"))
-
+  
   expect_error(orderly_run("example", root = path),
                "Environment variable 'EXTRA_DATA_PATH' is not set
 \t(used in orderly.yml:environment_variables:data_path", fixed = TRUE)
-
+  
   data_path <- tempfile()
   withr::with_envvar(
     c("EXTRA_DATA_PATH" = data_path,
@@ -926,7 +955,7 @@ test_that("can use environment variables in report", {
                  "Environment variable 'EXAMPLE_VAR' is empty
 \t(used in orderly.yml:environment_variables:example_var)", fixed = TRUE)
   )
-
+  
   withr::with_envvar(
     c("EXTRA_DATA_PATH" = data_path,
       "EXAMPLE_VAR" = "example value"),

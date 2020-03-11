@@ -387,6 +387,11 @@ recipe_data <- function(config, info, parameters, dest, instance) {
     info <- recipe_substitute(info, parameters)
   }
 
+  if (!is.null(info$secrets)) {
+    secrets <- resolve_secrets(info$secrets, config)
+    list2env(secrets, dest)
+  }
+  
   if (!is.null(info$environment_variables)) {
     yml_path <- info$inputs[info$inputs$file_purpose == "orderly_yml",
                             "filename"]

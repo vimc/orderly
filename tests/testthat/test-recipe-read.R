@@ -699,9 +699,50 @@ test_that("Better error message where tags not enabled", {
     "Tags are not supported; please edit orderly_config.yml to enable")
 })
 
-test_that("can read env vars from orderly yml", {
+test_that("read secrets", {
+  config <- list(root = tempfile(),
+                 vault = list(addr = "https://example.com/vault"))
   filename <- "orderly.yml"
 
+  expect_null(recipe_read_check_secrets(NULL, NULL, filename))
+  expect_error(
+    recipe_read_check_secrets(list(a = "path"), NULL, filename),
+    "Vault not enabled in orderly_config.yml")
+
+  expect_equal(
+    recipe_read_check_secrets(list(a = "first:one"), config, filename),
+    list(a = "VAULT:first:one"))
+  expect_equal(
+    recipe_read_check_secrets(list(a = "first:one", b = "second:other"),
+                              config, filename),
+    list(a = "VAULT:first:one",
+         b = "VAULT:second:other"))
+
+  expect_error(
+    recipe_read_check_secrets(list("path", "other"), config, filename),
+    "'orderly.yml:secrets' must be named")
+  expect_error(
+    recipe_read_check_secrets(list(a = "path", a = "other"), config, filename),
+    "'orderly.yml:secrets' must have unique names")
+  expect_error(
+    recipe_read_check_secrets(list(a = "path", b = 2), config, filename),
+    "'orderly.yml:secrets:b' must be character")
+  expect_error(
+    recipe_read_check_secrets(list(a = "path"), config, filename),
+    "Misformatted secret path: 'path' for 'a'")
+  expect_error(
+    recipe_read_check_secrets(list(a = "path", b = "other:field:what"),
+                              config, filename),
+    "Misformatted secret path: 'path' for 'a', 'other:field:what' for 'b'")
+  expect_error(
+    recipe_read_check_secrets(list(a = "first:path", b = "other:field:what"),
+                              config, filename),
+    "Misformatted secret path: 'other:field:what' for 'b'")
+})
+
+test_that("can read env vars from orderly yml", {
+  filename <- "orderly.yml"
+  
   expect_null(recipe_read_check_env_var(NULL, filename))
   expect_error(
     recipe_read_check_env_var(list("ENV", "VAR"), filename),
@@ -715,7 +756,7 @@ test_that("can read env vars from orderly yml", {
   expect_error(
     recipe_read_check_env_var(list(a = list("ENV", "VAR")), filename),
     "'orderly.yml:environment_variables:a' must be a scalar")
-
+  
   env_vars <- list(a = "ENV", b = "VAR")
   expect_equal(recipe_read_check_env_var(env_vars), env_vars)
 })

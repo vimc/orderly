@@ -720,9 +720,9 @@ orderly::orderly_run(name,
                       instance = c(source = "production", extra = "staging"))
 ```
 
-## Using environment variables
+## Using environment variables and secrets
 
-Environment variables declared in `orderly.yml` are made available in the report script (since orderly 1.1.10). For example, if your `orderly.yml` contains
+Environment variables declared in `orderly.yml` are made available in the report script (since orderly 1.1.11). For example, if your `orderly.yml` contains
 
 ```yaml
 environment_variables:
@@ -737,6 +737,28 @@ external_data <- read.csv(external_file)
 ```
 
 The expected use case for this is if you have data which you want to use in a report but do not want to be in the orderly repository (either because it is sensitive or particularly large). You can have the external files somewhere else on your machine and specify the path to them via an environment variable so they can then be accessed from the report script.
+
+Environment variables can also be used in top-level `orderly_envir.yml` (since orderly 1.1.6) which can be accessed via `Sys.getenv()`. For example, if your `orderly_envir.yml` contains
+
+```r
+DATA_URL=https://www.example.com/thedata
+```
+
+Then in your script you can use
+
+```r
+url <- Sys.getenv("DATA_URL")
+download.file(url)
+```
+
+If the values are sensitive, then this is not ideal, as you will store your values in plain text in the `orderly_envir.yml`.  Instead, if using vault, you can use a `secrets:` section in `orderly.yml`, like:
+
+```yaml
+secrets:
+  password: /secret/myproject/login:value
+```
+
+and then an R variable `password` will be available to all the code in your report, containing the result of looking up `/secret/myproject/login` in your vault and getting the `value` field.
 
 ## Developing a report
 
