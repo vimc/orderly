@@ -361,7 +361,7 @@ parse_query_filter <- function(expr, parameters) {
   } else {
     stopifnot(length(expr) == 3L)
     value <- expr[[3L]]
-    if (is.name(value)) {
+    if (is.symbol(value)) {
       name <- as.character(value)
       value <- parameters[[name]]
       if (is.null(value)) {

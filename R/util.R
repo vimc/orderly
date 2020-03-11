@@ -863,7 +863,7 @@ orderly_style <- function(name) {
 
 
 is_call <- function(expr, valid) {
-  if (is.name(valid)) {
+  if (is.symbol(valid)) {
     valid <- as.character(valid)
   }
   is.recursive(expr) && as.character(expr[[1]]) %in% valid
