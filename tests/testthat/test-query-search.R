@@ -100,6 +100,10 @@ test_that("parse query", {
                       parameter[["b"]] == "other")))
 
   res <- parse_query('a > 1 && tag:weekly')
+  expect_false(res$latest)
+  expect_equal(res$use, list(parameter = TRUE, tag = TRUE))
+  expect_equal(res$expr,
+               quote(parameter[["a"]] > 1 && "weekly" %in% tag))
 })
 
 
