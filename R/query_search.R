@@ -291,11 +291,7 @@ parse_query <- function(x, parameters) {
 
 
 parse_query_expr <- function(expr, parameters) {
-  if (!is.recursive(expr)) {
-    stop("Invalid expression!")
-  }
-
-  if (is.call(expr) && deparse(expr[[1L]]) %in% parse_query_join) {
+  if (is_call(expr, parse_query_join)) {
     fn <- deparse(expr[[1]])
 
     a <- parse_query_expr(expr[[2]], parameters)
@@ -321,7 +317,10 @@ parse_query_expr <- function(expr, parameters) {
 ## * tag:weekly
 parse_query_filter <- function(expr, parameters) {
   if (!is.call(expr)) {
-    stop("Expected an expression")
+    stop(sprintf(
+      "Invalid query '%s'; expected some sort of expression",
+      deparse_str(expr)),
+      call. = FALSE)
   }
 
   if (is_call(expr, ":") && length(expr) == 3L) {
