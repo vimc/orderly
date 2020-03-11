@@ -348,13 +348,13 @@ parse_query_filter <- function(expr, parameters) {
   if (is.symbol(key)) {
     key <- as.character(key)
   } else if (is_call(key, ":")) {
-    namespace <- deparse(key[[2L]])
-    if (namespace != "parameter") {
+    res <- parse_query_namespace(key)
+    if (res$namespace != "parameter") {
       stop(sprintf(
         "In '%s', query namespace must be 'parameteter' but found '%s'",
-        deparse_str(expr), namespace), call. = FALSE)
+        deparse_str(expr), res$namespace), call. = FALSE)
     }
-    key <- deparse(key[[3L]])
+    key <- res$key
   }
 
   if (!(rel %in% parse_query_operators)) {
