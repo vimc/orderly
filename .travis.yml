@@ -8,10 +8,12 @@ matrix:
   - r: release
     after_success:
     - Rscript -e 'covr::codecov()'
-  - r: release
-    os: osx
-    osx_image: xcode8.3
-    latex: false
+  # This turns out to be very slow and quite unstable. We should
+  # enable it before CRAN releases
+  # - r: release
+  #   os: osx
+  #   osx_image: xcode8.3
+  #   latex: false
 
 r_packages:
   - covr
