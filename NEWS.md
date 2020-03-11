@@ -1,3 +1,7 @@
+# orderly 1.1.11
+
+* Environment variables can be used in orderly reports by using the `environment:` field in `orderly.yml` (VIMC-3558)
+
 # orderly 1.1.10
 
 * Secrets can be read from the vault and used in orderly reports (VIMC-3536)

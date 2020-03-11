@@ -413,6 +413,20 @@ test_that("Sys_getenv", {
       expect_identical(Sys_getenv("SOME_VAR", "loc", FALSE, NA_character_),
                        NA_character_)
     })
+  
+  ## On windows if env variable is empty then windows will return NA from call
+  ## to Sys.getenv
+  if (is_windows()) {
+    expected_err <- "Environment variable 'SOME_VAR' is not set.*used in loc"
+  } else {
+    expected_err <- "Environment variable 'SOME_VAR' is empty.*used in loc"
+  }
+  
+  withr::with_envvar(
+    c("SOME_VAR" = ""),
+    expect_error(
+      Sys_getenv("SOME_VAR", "loc"),
+      expected_err))
   withr::with_envvar(
     c("SOME_VAR" = "x"),
     expect_identical(Sys_getenv("SOME_VAR", "loc"), "x"))

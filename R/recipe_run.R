@@ -391,6 +391,15 @@ recipe_data <- function(config, info, parameters, dest, instance) {
     secrets <- resolve_secrets(info$secrets, config)
     list2env(secrets, dest)
   }
+  
+  if (!is.null(info$environment)) {
+    env_vars <- lapply(names(info$environment), function(name) {
+      Sys_getenv(info$environment[[name]],
+                 sprintf("orderly.yml:environment:%s", name))
+    })
+    names(env_vars) <- names(info$environment)
+    list2env(env_vars, dest)
+  }
 
   ret <- list(dest = dest, parameters = parameters)
 

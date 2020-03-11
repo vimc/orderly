@@ -901,7 +901,6 @@ test_that("orderly_envir is available during run", {
                list(ORDERLY_B = "b"))
 })
 
-
 test_that("Use secrets in report", {
   srv <- vaultr::vault_test_server()
   cl <- srv$client()
@@ -925,8 +924,53 @@ test_that("Use secrets in report", {
     'writeLines(c(alice, bob), "passwords")',
     file.path(path, "src", "example", "script.R"))
 
-  id <- orderly_run("example", root = path)
+  id <- orderly_run("example", root = path, echo = FALSE)
   expect_equal(
     readLines(file.path(path, "draft", "example", id, "passwords")),
     c("ALICE", "BOB"))
+})
+
+test_that("can use environment variables in report", {
+  path <- prepare_orderly_example("minimal")
+  
+  append_lines(
+    c("environment:",
+      paste("  data_path: EXTRA_DATA_PATH"),
+      paste("  example_var: EXAMPLE_VAR")),
+    file.path(path, "src", "example", "orderly.yml"))
+  
+  append_lines(
+    'writeLines(c(data_path, example_var), "env_vars")',
+    file.path(path, "src", "example", "script.R"))
+  
+  expect_error(orderly_run("example", root = path),
+               "Environment variable 'EXTRA_DATA_PATH' is not set
+\t(used in orderly.yml:environment:data_path)", fixed = TRUE)
+  
+  ## On windows if env variable is empty then windows will return NA from call
+  ## to Sys.getenv
+  if (is_windows()) {
+    expected_err <- "Environment variable 'EXAMPLE_VAR' is not set
+\t(used in orderly.yml:environment:example_var)"
+  } else {
+    expected_err <- "Environment variable 'EXAMPLE_VAR' is empty
+\t(used in orderly.yml:environment:example_var)"
+  }
+  
+  data_path <- tempfile()
+  withr::with_envvar(
+    c("EXTRA_DATA_PATH" = data_path,
+      "EXAMPLE_VAR" = ""),
+    expect_error(orderly_run("example", root = path),
+                 expected_err, fixed = TRUE)
+  )
+  
+  withr::with_envvar(
+    c("EXTRA_DATA_PATH" = data_path,
+      "EXAMPLE_VAR" = "example value"),
+    id <- orderly_run("example", root = path, echo = FALSE)
+  )
+  expect_equal(
+    readLines(file.path(path, "draft", "example", id, "env_vars")),
+    c(data_path, "example value"))
 })
