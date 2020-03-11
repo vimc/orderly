@@ -203,8 +203,10 @@ orderly_search_do_search <- function(dat, name, draft, config) {
 
 
 orderly_search_env <- function() {
-  env <- new.env()
-  for (op in c("(", "is.null", parse_query_join)) {
+  env <- new.env(parent = emptyenv())
+  ## NOTE: would be nicer to get [[ and %in% in here outside the query
+  ## language but this works for now.
+  for (op in c("(", "is.null", "[[", "%in%", parse_query_join)) {
     env[[op]] <- get(op)
   }
   safe_op <- function(op) {
