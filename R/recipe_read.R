@@ -36,6 +36,7 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
                 "depends",
                 "global_resources",
                 "tags",
+                "environment_variables",
                 config$fields$name[!config$fields$required])
 
   recipe_read_skip_on_develop(
@@ -123,6 +124,9 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
       assert_scalar_character(x, fieldname(el$name))
     }
   }
+  
+  info$environment_variables <- recipe_read_check_env_var(
+    info$environment_variables, filename)
 
   info$name <- basename(normalizePath(path))
 
@@ -436,4 +440,18 @@ recipe_read_check_tags <- function(tags, config, name) {
     }
   }
   tags
+}
+
+recipe_read_check_env_var <- function(env_vars, filename) {
+  if (is.null(env_vars)) {
+    return(NULL)
+  }
+  assert_named(env_vars, TRUE,
+               name = sprintf("%s:environment_variables", filename))
+  for (name in names(env_vars)) {
+    assert_scalar_character(
+      env_vars[[name]],
+      sprintf("orderly.yml:environment_variables:%s", name))
+  }
+  env_vars
 }

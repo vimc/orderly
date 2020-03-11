@@ -414,6 +414,11 @@ test_that("Sys_getenv", {
                        NA_character_)
     })
   withr::with_envvar(
+    c("SOME_VAR" = ""),
+    expect_error(
+      Sys_getenv("SOME_VAR", "loc"),
+      "Environment variable 'SOME_VAR' is empty.*used in loc"))
+  withr::with_envvar(
     c("SOME_VAR" = "x"),
     expect_identical(Sys_getenv("SOME_VAR", "loc"), "x"))
 })

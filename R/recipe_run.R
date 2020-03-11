@@ -387,6 +387,14 @@ recipe_data <- function(config, info, parameters, dest, instance) {
     info <- recipe_substitute(info, parameters)
   }
 
+  if (!is.null(info$environment_variables)) {
+    yml_path <- info$inputs[info$inputs$file_purpose == "orderly_yml",
+                            "filename"]
+    env_vars <- resolve_env(info$environment_variables,
+                            paste0(yml_path, ":environment_variables"))
+    list2env(env_vars, dest)
+  }
+
   ret <- list(dest = dest, parameters = parameters)
 
   if (length(info$data) == 0 && is.null(info$connection)) {

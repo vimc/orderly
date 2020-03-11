@@ -698,3 +698,24 @@ test_that("Better error message where tags not enabled", {
     recipe_read(path, config)$tags,
     "Tags are not supported; please edit orderly_config.yml to enable")
 })
+
+test_that("can read env vars from orderly yml", {
+  filename <- "orderly.yml"
+
+  expect_null(recipe_read_check_env_var(NULL, filename))
+  expect_error(
+    recipe_read_check_env_var(list("ENV", "VAR"), filename),
+    "'orderly.yml:environment_variables' must be named")
+  expect_error(
+    recipe_read_check_env_var(list(a = "ENV", a = "VAR"), filename),
+    "'orderly.yml:environment_variables' must have unique names")
+  expect_error(
+    recipe_read_check_env_var(list(a = "ENV", b = 2), filename),
+    "'orderly.yml:environment_variables:b' must be character")
+  expect_error(
+    recipe_read_check_env_var(list(a = list("ENV", "VAR")), filename),
+    "'orderly.yml:environment_variables:a' must be a scalar")
+
+  env_vars <- list(a = "ENV", b = "VAR")
+  expect_equal(recipe_read_check_env_var(env_vars), env_vars)
+})

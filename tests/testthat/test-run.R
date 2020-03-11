@@ -900,3 +900,39 @@ test_that("orderly_envir is available during run", {
   expect_equal(readRDS(path_orderly_run_rds(p))$env,
                list(ORDERLY_B = "b"))
 })
+
+test_that("can use environment variables in report", {
+  path <- prepare_orderly_example("minimal")
+
+  append_lines(
+    c("environment_variables:",
+      paste("  data_path: $EXTRA_DATA_PATH"),
+      paste("  example_var: $EXAMPLE_VAR")),
+    file.path(path, "src", "example", "orderly.yml"))
+
+  append_lines(
+    'writeLines(c(data_path, example_var), "env_vars")',
+    file.path(path, "src", "example", "script.R"))
+
+  expect_error(orderly_run("example", root = path),
+               "Environment variable 'EXTRA_DATA_PATH' is not set
+\t(used in orderly.yml:environment_variables:data_path", fixed = TRUE)
+
+  data_path <- tempfile()
+  withr::with_envvar(
+    c("EXTRA_DATA_PATH" = data_path,
+      "EXAMPLE_VAR" = ""),
+    expect_error(orderly_run("example", root = path),
+                 "Environment variable 'EXAMPLE_VAR' is empty
+\t(used in orderly.yml:environment_variables:example_var)", fixed = TRUE)
+  )
+
+  withr::with_envvar(
+    c("EXTRA_DATA_PATH" = data_path,
+      "EXAMPLE_VAR" = "example value"),
+    id <- orderly_run("example", root = path, echo = FALSE)
+  )
+  expect_equal(
+    readLines(file.path(path, "draft", "example", id, "env_vars")),
+    c(data_path, "example value"))
+})
