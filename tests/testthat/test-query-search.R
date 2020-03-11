@@ -1,13 +1,9 @@
 context("query (search)")
 
 test_that("parse query filter", {
-  expect_equal(parse_query_filter(quote(a == 1), NULL),
+  expect_equal(parse_query_filter(quote(parameter:a == 1), NULL),
                list(namespace = "parameter",
                     expr = quote(parameter[["a"]] == 1)))
-  expect_equal(
-    parse_query_filter(quote(parameter:a == "value"), NULL),
-    list(namespace = "parameter",
-         expr = quote(parameter[["a"]] == "value")))
   expect_equal(
     parse_query_filter(quote(is.null(parameter:a)), NULL),
     list(namespace = "parameter",
@@ -19,7 +15,7 @@ test_that("parse query filter", {
 
   expect_error(
     parse_query_filter(quote(parameter:a == list(1, 2)), NULL),
-    "Query value must be atomic (logical, numeric, string)",
+    "Expected symbol, namespaced query element or literal value",
     fixed = TRUE)
   expect_error(
     parse_query_filter(quote(parameter:a %in% 1), NULL),
@@ -50,15 +46,17 @@ test_that("parse query filter", {
 
 test_that("parse query expression", {
   expect_equal(
-    parse_query_expr(quote(a == 1), NULL),
+    parse_query_expr(quote(parameter:a == 1), NULL),
     list(namespace = "parameter",
          expr = quote(parameter[["a"]] == 1)))
   expect_equal(
-    parse_query_expr(quote(a == 1 && parameter:b == "value"), NULL),
+    parse_query_expr(quote(parameter:a == 1 && parameter:b == "value"), NULL),
     list(namespace = c("parameter", "parameter"),
          expr = quote(parameter[["a"]] == 1 && parameter[["b"]] == "value")))
   expect_equal(
-    parse_query_expr(quote(a == 1 && (b == "value" || b == "other")), NULL),
+    parse_query_expr(quote(
+      parameter:a == 1 && (parameter:b == "value"
+        || parameter:b == "other")), NULL),
     list(namespace = c("parameter", "parameter", "parameter"),
          expr = quote(parameter[["a"]] == 1 &&
                       (parameter[["b"]] == "value" ||
@@ -72,7 +70,8 @@ test_that("parse query expression", {
     parse_query_expr(quote(!tag:mytag), NULL),
     list(namespace = "tag", expr = quote(!"mytag" %in% tag)))
   expect_equal(
-    parse_query_expr(quote(a > 1 && (tag:mytag || parameter:b == "use")), NULL),
+    parse_query_expr(quote(parameter:a > 1 &&
+                           (tag:mytag || parameter:b == "use")), NULL),
     list(namespace = c("parameter", "tag", "parameter"),
          expr = quote(parameter[["a"]] > 1 &&
                       ("mytag" %in% tag || parameter[["b"]] == "use"))))
@@ -80,18 +79,19 @@ test_that("parse query expression", {
 
 
 test_that("parse query", {
-  res <- parse_query('a > 1', NULL)
+  res <- parse_query('parameter:a > 1', NULL)
   expect_false(res$latest)
   expect_equal(res$use, list(parameter = TRUE, tag = FALSE))
   expect_equal(res$expr, quote(parameter[["a"]] > 1))
 
-  res <- parse_query('a > 1 && parameter:b == "value"', NULL)
+  res <- parse_query('parameter:a > 1 && parameter:b == "value"', NULL)
   expect_false(res$latest)
   expect_equal(res$use, list(parameter = TRUE, tag = FALSE))
   expect_equal(res$expr,
                quote(parameter[["a"]] > 1 && parameter[["b"]] == "value"))
 
-  res <- parse_query('latest(a > 1 && (b == "value" || b == "other"))', NULL)
+  res <- parse_query('latest(parameter:a > 1 &&
+    (parameter:b == "value" || parameter:b == "other"))', NULL)
   expect_true(res$latest)
   expect_equal(res$use, list(parameter = TRUE, tag = FALSE))
   expect_equal(res$expr,
@@ -99,7 +99,7 @@ test_that("parse query", {
                      (parameter[["b"]] == "value" ||
                       parameter[["b"]] == "other")))
 
-  res <- parse_query('a > 1 && tag:weekly')
+  res <- parse_query('parameter:a > 1 && tag:weekly')
   expect_false(res$latest)
   expect_equal(res$use, list(parameter = TRUE, tag = TRUE))
   expect_equal(res$expr,
@@ -113,22 +113,22 @@ test_that("search an archive", {
   ids <- dat$ids
 
   expect_equal(
-    orderly_search("nmin > 0.15", "other", root = root),
+    orderly_search("parameter:nmin > 0.15", "other", root = root),
     ids[2:3])
   expect_equal(
-    orderly_search("nmin > 0.0", "other", root = root),
+    orderly_search("parameter:nmin > 0.0", "other", root = root),
     ids)
   expect_equal(
-    orderly_search("latest(nmin > 0.0)", "other", root = root),
+    orderly_search("latest(parameter:nmin > 0.0)", "other", root = root),
     ids[[3]])
   expect_equal(
-    orderly_search("nmin > 1.0", "other", root = root),
+    orderly_search("parameter:nmin > 1.0", "other", root = root),
     character(0))
   expect_equal(
-    orderly_search("is.null(nmin)", "other", root = root),
+    orderly_search("is.null(parameter:nmin)", "other", root = root),
     character(0))
   expect_equal(
-    orderly_search("nmin > x", "other", list(x = 0.25), root = root),
+    orderly_search("parameter:nmin > x", "other", list(x = 0.25), root = root),
     ids[[3]])
 })
 
@@ -201,7 +201,7 @@ test_that("search in drafts", {
   ids <- dat$ids
 
   expect_equal(
-    orderly_search("nmin > 0.15", "other", root = root, draft = TRUE),
+    orderly_search("parameter:nmin > 0.15", "other", root = root, draft = TRUE),
     ids[2:3])
   expect_equal(
     orderly_search("tag:plot", "other", root = root, draft = TRUE),
@@ -210,13 +210,16 @@ test_that("search in drafts", {
   ## then commit the last one
   orderly_commit(ids[[3]], root = root)
   expect_equal(
-    orderly_search("nmin > 0.15", "other", root = root, draft = TRUE),
+    orderly_search("parameter:nmin > 0.15", "other", root = root,
+                   draft = TRUE),
     ids[2])
   expect_equal(
-    orderly_search("nmin > 0.15", "other", root = root, draft = FALSE),
+    orderly_search("parameter:nmin > 0.15", "other", root = root,
+                   draft = FALSE),
     ids[3])
   expect_equal(
-    orderly_search("nmin > 0.15", "other", root = root, draft = "newer"),
+    orderly_search("parameter:nmin > 0.15", "other", root = root,
+                   draft = "newer"),
     ids[2:3])
 })
 
@@ -228,7 +231,9 @@ test_that("all together from a report", {
 
   p <- file.path(root, "src", "use_dependency", "orderly.yml")
   txt <- readLines(p)
-  writeLines(sub("latest", "latest(nmin < 0.25)", txt, fixed = TRUE), p)
+  writeLines(
+    sub("latest", "latest(parameter:nmin < 0.25)", txt, fixed = TRUE),
+    p)
 
   id <- orderly_run("use_dependency", root = root, echo = FALSE)
   p <- path_orderly_run_rds(file.path(root, "draft", "use_dependency", id))
@@ -257,7 +262,7 @@ test_that("Query resolution using parameter", {
 
   p <- file.path(root, "src", "use_dependency", "orderly.yml")
   txt <- readLines(p)
-  txt <- sub("latest", "latest(nmin < p)", txt, fixed = TRUE)
+  txt <- sub("latest", "latest(parameter:nmin < p)", txt, fixed = TRUE)
   txt <- c(txt,
            "parameters:",
            "  p: ~")
@@ -280,6 +285,7 @@ test_that("unknown namespace raises error", {
     parse_query("something:abc > 1", NULL),
     "Query namespace (used as 'something') must be one of 'tag', 'parameter'",
     fixed = TRUE)
+  ## TODO:
   expect_error(
     parse_query("tag:abc > 1", NULL),
     "In '.+', query namespace must be 'parameteter' but found 'tag'")
@@ -344,4 +350,28 @@ test_that("query parameter validation", {
   expect_error(
     query_check_parameters(list(a = sin, b = 2)),
     "Invalid parameters: 'a' - must be character, numeric or logical")
+})
+
+
+test_that("order of operands", {
+  expect_equal(
+    parse_query("parameter:x > 1", NULL),
+    list(latest = FALSE,
+         use = list(parameter = TRUE, tag = FALSE),
+         expr = quote(parameter[["x"]] > 1)))
+  expect_equal(
+    parse_query("1 > parameter:x", NULL),
+    list(latest = FALSE,
+         use = list(parameter = TRUE, tag = FALSE),
+         expr = quote(1 > parameter[["x"]])))
+  expect_equal(
+    parse_query("parameter:x > x", list(x = 1)),
+    list(latest = FALSE,
+         use = list(parameter = TRUE, tag = FALSE),
+         expr = quote(parameter[["x"]] > 1)))
+  expect_equal(
+    parse_query("1 > parameter:x", list(x = 1)),
+    list(latest = FALSE,
+         use = list(parameter = TRUE, tag = FALSE),
+         expr = quote(1 > parameter[["x"]])))
 })

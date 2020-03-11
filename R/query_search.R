@@ -20,7 +20,7 @@
 ##' \preformatted{
 ##' depends:
 ##'   A:
-##'     id: latest(fruit == "apple")
+##'     id: latest(parameter:fruit == "apple")
 ##'     uses:
 ##'       summary.csv: summary.csv
 ##' }
@@ -33,7 +33,7 @@
 ##' \preformatted{
 ##' depends:
 ##'   A:
-##'     id: latest(fruit == target_fruit)
+##'     id: latest(parameter:fruit == target_fruit)
 ##'     uses:
 ##'       summary.csv: summary.csv
 ##' }
@@ -48,7 +48,7 @@
 ##' with \code{!}, so a complicated query expression might look like:
 ##'
 ##' \preformatted{
-##' (fruit == "apple" && !tag:weekly) || fruit == "banana"
+##' (parameter:fruit == "apple" && !tag:weekly) || paramerter:fruit == "banana"
 ##' }
 ##'
 ##' For clarity, parameters may be prefixed with \code{parameter:}
@@ -106,10 +106,11 @@
 ##'
 ##' # We can then ask for all reports where the parameter nmin was more
 ##' # than some value
-##' orderly::orderly_search("nmin > 0.15", "other", root = root)
+##' orderly::orderly_search("parameter:nmin > 0.15", "other", root = root)
 ##'
 ##' # Or use "&&" to find tags within a range
-##' orderly::orderly_search("nmin > 0.1 && nmin < 0.3", "other", root = root)
+##' orderly::orderly_search("parameter:nmin > 0.1 && parameter:nmin < 0.3",
+##'                         "other", root = root)
 ##'
 ##' # We can look for tags
 ##' orderly::orderly_search("tag:plot", "other", root = root)
@@ -118,17 +119,20 @@
 ##' orderly::orderly_search("!tag:plot", "other", root = root)
 ##'
 ##' # or combine that with the presence/absence of a tag
-##' orderly::orderly_search("nmin > 0.15 && !tag:plot", "other", root = root)
+##' orderly::orderly_search("parameter:nmin > 0.15 && !tag:plot",
+##'                         "other", root = root)
 ##'
 ##' # Use latest() over a query to find the latest report matching the
 ##' # query expression.
-##' orderly::orderly_search("latest(nmin > 0.15)", "other", root = root)
+##' orderly::orderly_search("latest(parameter:nmin > 0.15)",
+##'                         "other", root = root)
 ##'
 ##' # If no reports are found, then a zero-length character vector is returned
-##' orderly::orderly_search("nmin > 0.4", "other", root = root)
+##' orderly::orderly_search("parameter:nmin > 0.4", "other", root = root)
 ##'
 ##' # Or, in the case of latest(), NA
-##' orderly::orderly_search("latest(nmin > 0.4)", "other", root = root)
+##' orderly::orderly_search("latest(parameter:nmin > 0.4)",
+##'                         "other", root = root)
 orderly_search <- function(query, name, parameters = NULL, draft = FALSE,
                            root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
@@ -342,66 +346,81 @@ parse_query_filter <- function(expr, parameters) {
 
   namespace <- "parameter"
   rel <- as.character(expr[[1L]])
-  key <- expr[[2L]]
-
-  if (is.symbol(key)) {
-    key <- as.character(key)
-  } else if (is_call(key, ":")) {
-    res <- parse_query_namespace(key)
-    if (res$namespace != "parameter") {
-      stop(sprintf(
-        "In '%s', query namespace must be 'parameteter' but found '%s'",
-        deparse_str(expr), res$namespace), call. = FALSE)
-    }
-    key <- res$key
-  }
-
-  if (!(rel %in% parse_query_operators)) {
-    stop(sprintf("Query relationship '%s' not allowed", rel))
-  }
-
   if (rel == "is.null") {
     stopifnot(length(expr) == 2L)
-  } else {
-    stopifnot(length(expr) == 3L)
-    value <- expr[[3L]]
-    if (is.symbol(value)) {
-      name <- as.character(value)
-      value <- parameters[[name]]
-      if (is.null(value)) {
-        stop(sprintf(
-          "Query parameter '%s' not found in supplied parameters",
-          name), call. = FALSE)
+    res <- parse_query_namespace(expr[[2L]])
+    expr[[2L]] <- bquote(.(as.name(res$namespace))[[.(res$key)]])
+  } else if (rel %in% parse_query_operators) {
+    rewrite <- function(expr, i) {
+      x <- parse_query_filter_element(expr[[i]], parameters)
+      if (identical(x$namespace, "parameter")) {
+        expr[[i]] <- bquote(.(as.name(x$namespace))[[.(x$key)]])
+      } else {
+        expr[[i]] <- x$key
       }
-      expr[[3L]] <- value
+      expr
     }
-    if (!is.atomic(value)) {
-      stop("Query value must be atomic (logical, numeric, string)")
-    }
+    stopifnot(length(expr) == 3L)
+    expr <- rewrite(rewrite(expr, 2L), 3L)
+  } else {
+    stop(sprintf("Query relationship '%s' not allowed", rel))
   }
-
-  expr[[2L]] <- bquote(.(as.name(namespace))[[.(key)]])
 
   list(namespace = namespace, expr = expr)
 }
 
 
+parse_query_filter_element <- function(x, parameters) {
+  if (is.atomic(x)) {
+    ret <- list(namespace = NULL, key = x)
+  } else if (is.symbol(x)) {
+    name <- as.character(x)
+    value <- parameters[[name]]
+    if (is.null(value)) {
+      stop(sprintf(
+        paste("Query parameter '%s' not found in supplied parameters",
+              "did you mean 'parameter:%s'?"),
+        name, name), call. = FALSE)
+    }
+    ret <- list(namespace = NULL, key = value)
+  } else if (is_call(x, ":")) {
+    ret <- parse_query_namespace(x)
+    if (ret$namespace != "parameter") {
+      stop(sprintf(
+        "In '%s', query namespace must be 'parameteter' but found '%s'",
+        deparse_str(x), ret$namespace), call. = FALSE)
+    }
+  } else {
+    stop(sprintf(
+      paste("Expected symbol, namespaced query element or literal value but",
+            "received '%s'"), deparse_str(x)),
+      call. = FALSE)
+  }
+  ret
+}
+
+
 parse_query_namespace <- function(expr) {
+  if (!is_call(expr, ":")) {
+    stop(sprintf(
+      "Expected namespaced query element but recieved '%s'",
+      deparse_str(expr)), call. = FALSE)
+  }
+
   ns <- expr[[2L]]
   key <- expr[[3L]]
-
   if (!is.symbol(ns)) {
     stop(sprintf(
       "Invalid namespaced query element '%s'; expected symbol for namespace",
       deparse(expr)), call. = FALSE)
   }
+  ns <- as.character(ns)
+
   if (!is.symbol(key)) {
     stop(sprintf(
       "Invalid namespaced query element '%s'; expected symbol for key",
       deparse(expr)), call. = FALSE)
   }
-
-  ns <- as.character(ns)
   key <- as.character(key)
 
   match_value(ns, c("tag", "parameter"),
