@@ -900,3 +900,33 @@ test_that("orderly_envir is available during run", {
   expect_equal(readRDS(path_orderly_run_rds(p))$env,
                list(ORDERLY_B = "b"))
 })
+
+
+test_that("Use secrets in report", {
+  srv <- vaultr::vault_test_server()
+  cl <- srv$client()
+  cl$write("/secret/users/alice", list(password = "ALICE"))
+  cl$write("/secret/users/bob", list(password = "BOB"))
+
+  path <- prepare_orderly_example("minimal")
+  append_lines(
+    c("vault:",
+      paste("  addr:", srv$addr),
+      paste("  login: token"),
+      paste("  token:", srv$token)),
+    file.path(path, "orderly_config.yml"))
+
+  append_lines(c("secrets:",
+                 "  alice: /secret/users/alice:password",
+                 "  bob: /secret/users/bob:password"),
+               file.path(path, "src", "example", "orderly.yml"))
+
+  append_lines(
+    'writeLines(c(alice, bob), "passwords")',
+    file.path(path, "src", "example", "script.R"))
+
+  id <- orderly_run("example", root = path)
+  expect_equal(
+    readLines(file.path(path, "draft", "example", id, "passwords")),
+    c("ALICE", "BOB"))
+})
