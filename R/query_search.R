@@ -327,7 +327,7 @@ parse_query_filter <- function(expr, parameters) {
       call. = FALSE)
   }
 
-  if (is_call(expr, ":") && length(expr) == 3L) {
+  if (is_call(expr, ":")) {
     res <- parse_query_namespace(expr)
     if (res$namespace != "tag") {
       stop(sprintf("Invalid query expression '%s' requires operator",
@@ -349,6 +349,11 @@ parse_query_filter <- function(expr, parameters) {
   if (rel == "is.null") {
     stopifnot(length(expr) == 2L)
     res <- parse_query_namespace(expr[[2L]])
+    if (!identical(res$namespace, "parameter")) {
+      stop(sprintf(
+        "In '%s', query namespace must be 'parameteter' but found '%s'",
+        deparse_str(expr), res$namespace), call. = FALSE)
+    }
     expr[[2L]] <- bquote(.(as.name(res$namespace))[[.(res$key)]])
   } else if (rel %in% parse_query_operators) {
     rewrite <- function(expr, i) {

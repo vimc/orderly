@@ -375,3 +375,14 @@ test_that("order of operands", {
          use = list(parameter = TRUE, tag = FALSE),
          expr = quote(1 > parameter[["x"]])))
 })
+
+
+test_that("is.null requires a namespace", {
+  expect_error(
+    parse_query("is.null(x)"),
+    "Expected namespaced query element but recieved 'x'")
+  expect_error(
+    parse_query("is.null(tag:thing)"),
+    "In 'is.null(tag:thing)', query namespace must be 'parameteter' but found 'tag'",
+    fixed = TRUE)
+})
