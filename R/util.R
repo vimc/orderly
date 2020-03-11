@@ -245,9 +245,9 @@ append_text <- function(filename, txt) {
 
 Sys_getenv <- function(x, used_in, error = TRUE, default = NULL) {
   v <- Sys.getenv(x, NA_character_)
-  if (is.na(v) || grepl("^\\s*$", v)) {
+  if (is.na(v) || !nzchar(v)) {
     if (error) {
-      reason <- if (grepl("^\\s*$", v)) "empty" else "not set"
+      reason <- if (!nzchar(v)) "empty" else "not set"
       stop(sprintf("Environment variable '%s' is %s\n\t(used in %s)",
                    x, reason, used_in), call. = FALSE)
     } else {
