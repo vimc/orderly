@@ -868,3 +868,8 @@ is_call <- function(expr, valid) {
   }
   is.recursive(expr) && as.character(expr[[1]]) %in% valid
 }
+
+
+deparse_str <- function(x) {
+  paste(deparse(x), collapse = "\n")
+}

@@ -52,7 +52,10 @@
 ##' }
 ##'
 ##' For clarity, parameters may be prefixed with \code{parameter:}
-##' (so, \code{parameter:fruit} in the above), though this is optional.
+##' (so, \code{parameter:fruit} in the above), though this is
+##' optional.  In the documentation and error messages we may refer to
+##' the left-hand-side of \code{:} as a "namespace".  At this point
+##' the only supported namespaces are \code{tag} and \code{parameter}.
 ##'
 ##' @title Search for orderly reports matching criteria
 ##'
@@ -281,7 +284,7 @@ parse_query <- function(x, parameters) {
   dat <- parse_query_expr(expr, parameters)
 
   test <- c("parameter", "tag")
-  use <- set_names(as.list(test %in% dat$type), test)
+  use <- set_names(as.list(test %in% dat$namespace), test)
   expr <- dat$expr
   list(latest = latest, use = use, expr = expr)
 }
@@ -305,7 +308,7 @@ parse_query_expr <- function(expr, parameters) {
       b <- NULL
     }
 
-    list(type = c(a$type, b$type), expr = expr)
+    list(namespace = c(a$namespace, b$namespace), expr = expr)
   } else {
     parse_query_filter(expr, parameters)
   }
@@ -322,16 +325,14 @@ parse_query_filter <- function(expr, parameters) {
   }
 
   if (is_call(expr, ":") && length(expr) == 3L) {
-    type <- expr[[2L]]
-    stopifnot(is.symbol(type))
-    if (!identical(type, quote(tag))) {
+    res <- parse_query_namespace(expr)
+    if (res$namespace != "tag") {
       stop(sprintf("Invalid query expression '%s' requires operator",
                    paste(deparse(expr), collapse = "\n")),
            call. = FALSE)
     }
-    tag <- expr[[3L]]
-    stopifnot(is.symbol(tag))
-    return(list(type = "tag", expr = bquote(.(as.character(tag)) %in% tag)))
+    tag <- res$key
+    return(list(namespace = "tag", expr = bquote(.(tag) %in% tag)))
   }
 
   if (length(expr) < 2L || length(expr) > 3L) {
@@ -340,15 +341,19 @@ parse_query_filter <- function(expr, parameters) {
          call. = FALSE)
   }
 
-  type <- "parameter"
+  namespace <- "parameter"
   rel <- as.character(expr[[1L]])
   key <- expr[[2L]]
 
   if (is.symbol(key)) {
     key <- as.character(key)
   } else if (is_call(key, ":")) {
-    type <- deparse(key[[2L]])
-    match_value(type, "parameter", "Query parameter type")
+    namespace <- deparse(key[[2L]])
+    if (namespace != "parameter") {
+      stop(sprintf(
+        "In '%s', query namespace must be 'parameteter' but found '%s'",
+        deparse_str(expr), namespace), call. = FALSE)
+    }
     key <- deparse(key[[3L]])
   }
 
@@ -376,9 +381,34 @@ parse_query_filter <- function(expr, parameters) {
     }
   }
 
-  expr[[2L]] <- bquote(.(as.name(type))[[.(key)]])
+  expr[[2L]] <- bquote(.(as.name(namespace))[[.(key)]])
 
-  list(type = type, expr = expr)
+  list(namespace = namespace, expr = expr)
+}
+
+
+parse_query_namespace <- function(expr) {
+  ns <- expr[[2L]]
+  key <- expr[[3L]]
+
+  if (!is.symbol(ns)) {
+    stop(sprintf(
+      "Invalid namespaced query element '%s'; expected symbol for namespace",
+      deparse(expr)), call. = FALSE)
+  }
+  if (!is.symbol(key)) {
+    stop(sprintf(
+      "Invalid namespaced query element '%s'; expected symbol for key",
+      deparse(expr)), call. = FALSE)
+  }
+
+  ns <- as.character(ns)
+  key <- as.character(key)
+
+  match_value(ns, c("tag", "parameter"),
+              sprintf("Query namespace (used as '%s')", ns, key))
+
+  list(namespace = ns, key = key)
 }
 
 

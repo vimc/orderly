@@ -2,20 +2,20 @@ context("query (search)")
 
 test_that("parse query filter", {
   expect_equal(parse_query_filter(quote(a == 1), NULL),
-               list(type = "parameter",
+               list(namespace = "parameter",
                     expr = quote(parameter[["a"]] == 1)))
   expect_equal(
     parse_query_filter(quote(parameter:a == "value"), NULL),
-    list(type = "parameter",
+    list(namespace = "parameter",
          expr = quote(parameter[["a"]] == "value")))
   expect_equal(
     parse_query_filter(quote(is.null(parameter:a)), NULL),
-    list(type = "parameter",
+    list(namespace = "parameter",
          expr = quote(is.null(parameter[["a"]]))))
 
   expect_equal(
     parse_query_filter(quote(tag:mytag), NULL),
-    list(type = "tag", expr = quote("mytag" %in% tag)))
+    list(namespace = "tag", expr = quote("mytag" %in% tag)))
 
   expect_error(
     parse_query_filter(quote(parameter:a == list(1, 2)), NULL),
@@ -39,11 +39,11 @@ test_that("parse query filter", {
     "Query parameter 'b' not found in supplied parameters")
   expect_equal(
     parse_query_filter(quote(parameter:a == b), list(b = 1)),
-    list(type = "parameter",
+    list(namespace = "parameter",
          expr = quote(parameter[["a"]] == 1)))
   expect_equal(
     parse_query_filter(quote(parameter:a == a), list(a = 1, b = 2)),
-    list(type = "parameter",
+    list(namespace = "parameter",
          expr = quote(parameter[["a"]] == 1)))
 })
 
@@ -51,29 +51,29 @@ test_that("parse query filter", {
 test_that("parse query expression", {
   expect_equal(
     parse_query_expr(quote(a == 1), NULL),
-    list(type = "parameter",
+    list(namespace = "parameter",
          expr = quote(parameter[["a"]] == 1)))
   expect_equal(
     parse_query_expr(quote(a == 1 && parameter:b == "value"), NULL),
-    list(type = c("parameter", "parameter"),
+    list(namespace = c("parameter", "parameter"),
          expr = quote(parameter[["a"]] == 1 && parameter[["b"]] == "value")))
   expect_equal(
     parse_query_expr(quote(a == 1 && (b == "value" || b == "other")), NULL),
-    list(type = c("parameter", "parameter", "parameter"),
+    list(namespace = c("parameter", "parameter", "parameter"),
          expr = quote(parameter[["a"]] == 1 &&
                       (parameter[["b"]] == "value" ||
                        parameter[["b"]] == "other"))))
 
   expect_equal(
     parse_query_expr(quote(tag:mytag), NULL),
-    list(type = "tag", expr = quote("mytag" %in% tag)))
+    list(namespace = "tag", expr = quote("mytag" %in% tag)))
   ## Scary but correctt:
   expect_equal(
     parse_query_expr(quote(!tag:mytag), NULL),
-    list(type = "tag", expr = quote(!"mytag" %in% tag)))
+    list(namespace = "tag", expr = quote(!"mytag" %in% tag)))
   expect_equal(
     parse_query_expr(quote(a > 1 && (tag:mytag || parameter:b == "use")), NULL),
-    list(type = c("parameter", "tag", "parameter"),
+    list(namespace = c("parameter", "tag", "parameter"),
          expr = quote(parameter[["a"]] > 1 &&
                       ("mytag" %in% tag || parameter[["b"]] == "use"))))
 })
@@ -268,4 +268,15 @@ test_that("Query resolution using parameter", {
   p <- path_orderly_run_rds(file.path(root, "draft", "use_dependency", id))
   d <- readRDS(p)
   expect_equal(d$meta$depends$id, ids[[2]])
+})
+
+
+test_that("unknown namespace raises error", {
+  expect_error(
+    parse_query("something:abc", NULL),
+    "Query namespace (used as 'something') must be one of 'tag', 'parameter'",
+    fixed = TRUE)
+  expect_error(
+    parse_query("something:abc > 1", NULL),
+    "In '.+', query namespace must be 'parameteter' but found 'something'")
 })

@@ -100,7 +100,10 @@ with \code{!}, so a complicated query expression might look like:
 }
 
 For clarity, parameters may be prefixed with \code{parameter:}
-(so, \code{parameter:fruit} in the above), though this is optional.
+(so, \code{parameter:fruit} in the above), though this is
+optional.  In the documentation and error messages we may refer to
+the left-hand-side of \code{:} as a "namespace".  At this point
+the only supported namespaces are \code{tag} and \code{parameter}.
 }
 \examples{
 # We need a few reports here to actually query.  There is a report in
