@@ -284,3 +284,64 @@ test_that("unknown namespace raises error", {
     parse_query("tag:abc > 1", NULL),
     "In '.+', query namespace must be 'parameteter' but found 'tag'")
 })
+
+
+test_that("Single expression is required", {
+  expect_error(
+    parse_query("a > 1; b > 2"),
+    "Expected a single expression")
+  expect_error(
+    parse_query("a > 1\nb > 2"),
+    "Expected a single expression")
+  expect_error(
+    parse_query(""),
+    "Expected a single expression")
+})
+
+
+test_that("Provided query must be an expression", {
+  expect_error(
+    parse_query("TRUE"),
+    "Invalid query 'TRUE'; expected some sort of expression")
+  expect_error(
+    parse_query("1"),
+    "Invalid query '1'; expected some sort of expression")
+  expect_error(
+    parse_query("x"),
+    "Invalid query 'x'; expected some sort of expression")
+  expect_error(
+    parse_query("parameter:x > 1 && y"),
+    "Invalid query 'y'; expected some sort of expression")
+})
+
+
+test_that("Can't use a parameter without a filter operator", {
+  expect_error(
+    parse_query("parameter:a"),
+    "Invalid query expression 'parameter:a' requires operator")
+})
+
+
+test_that("Namespace and key must be symbols", {
+  expect_error(
+    parse_query("1:a > 1"),
+    "Invalid namespaced query element '1:a'; expected symbol for namespace")
+  expect_error(
+    parse_query("a:1 > 1"),
+    "Invalid namespaced query element 'a:1'; expected symbol for key")
+})
+
+
+## NOTE: this duplicates some of the run code
+test_that("query parameter validation", {
+  expect_null(query_check_parameters(NULL))
+  expect_equal(query_check_parameters(list()), list())
+  expect_equal(query_check_parameters(list(a = 1)), list(a = 1))
+
+  expect_error(
+    query_check_parameters(list(a = 1:2, b = 2)),
+    "Invalid parameters: 'a' - must be scalar")
+  expect_error(
+    query_check_parameters(list(a = sin, b = 2)),
+    "Invalid parameters: 'a' - must be character, numeric or logical")
+})
