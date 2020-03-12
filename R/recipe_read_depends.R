@@ -61,7 +61,8 @@ recipe_read_check_depends <- function(x, filename, config) {
 }
 
 
-resolve_dependencies <- function(depends, config, use_draft, remote) {
+resolve_dependencies <- function(depends, config, use_draft, parameters,
+                                 remote) {
   assert_is(config, "orderly_config")
   if (is.null(depends)) {
     return(NULL)
@@ -83,7 +84,8 @@ resolve_dependencies <- function(depends, config, use_draft, remote) {
       ## This is ugly but needs to stay for another couple of versions
       use_draft_i <- depends_split[[i]]$draft[[1]]
       use_draft_i <- if (is.na(use_draft_i)) use_draft else use_draft_i
-      res <- resolve_dependencies_local(id, name, config, use_draft_i)
+      res <- resolve_dependencies_local(id, name, config, parameters,
+                                        use_draft_i)
     } else {
       res <- resolve_dependencies_remote(id, name, config, remote)
     }
@@ -96,16 +98,31 @@ resolve_dependencies <- function(depends, config, use_draft, remote) {
 }
 
 
-resolve_dependencies_local <- function(id, name, config, use_draft) {
+resolve_dependencies_local <- function(id, name, config, parameters,
+                                       use_draft) {
+  is_latest <- grepl("^latest(\\(|$)", id)
+  if (grepl("^latest\\s*\\(", id)) {
+    query <- id
+    id <- orderly_search(query, name, parameters, draft = use_draft,
+                         root = config, locate = FALSE)
+    if (is.na(id)) {
+      stop(sprintf("Query '%s' did not find suitable version", query),
+           call. = FALSE)
+    }
+  }
   path <- orderly_find_report(id, name, config, draft = use_draft,
                               must_work = TRUE)
-  is_latest <- id == "latest" ||
+  is_latest <- is_latest ||
     basename(path) == orderly_latest(name, config, draft = use_draft)
   list(path = path, is_latest = is_latest)
 }
 
 
 resolve_dependencies_remote <- function(id, name, config, remote) {
+  if (grepl("^latest\\s*\\(", id)) {
+    stop("Can't (yet) use query dependencies with remotes",
+         call. = FALSE)
+  }
   remote <- get_remote(remote, config)
 
   versions <- remote$list_versions(name)

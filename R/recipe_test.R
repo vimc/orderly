@@ -53,7 +53,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = parent.frame(),
   config <- orderly_config_get(root, locate)
   info <- recipe_prepare(config, name, id_file = NULL, ref = NULL,
                          fetch = FALSE, message = NULL, use_draft = use_draft,
-                         remote = remote)
+                         parameters = parameters, remote = remote)
   prep <- withr::with_dir(
     info$workdir,
     orderly_prepare_data(config, info, parameters, envir, instance))
@@ -126,7 +126,7 @@ orderly_data <- function(name, parameters = NULL, envir = NULL,
                          use_draft = FALSE) {
   config <- orderly_config_get(root, locate)
   info <- recipe_read(file.path(path_src(config$root), name),
-                      config, use_draft = use_draft)
+                      config, use_draft = use_draft, parameters = parameters)
   envir <- orderly_environment(envir)
   recipe_data(config, info, parameters, envir, instance)$dest
 }

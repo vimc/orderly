@@ -1,3 +1,7 @@
+# orderly 1.1.12
+
+* Introduces a basic query interface for searching for reports that match criteria based on parameters and tags, which can be used directly `orderly::orderly_search` or when declaring dependencies (VIMC-3538)
+
 # orderly 1.1.11
 
 * Environment variables can be used in orderly reports by using the `environment:` field in `orderly.yml` (VIMC-3558)

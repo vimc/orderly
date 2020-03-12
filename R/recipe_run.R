@@ -141,7 +141,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
   }
 
   info <- recipe_prepare(config, name, id_file, ref, fetch, message,
-                         use_draft, remote, tags = tags)
+                         use_draft, parameters, remote, tags = tags)
 
   recipe_current_run_set(info)
   on.exit(recipe_current_run_clear())
@@ -157,7 +157,7 @@ orderly_run <- function(name, parameters = NULL, envir = NULL,
 
 recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
                            fetch = FALSE, message = NULL,
-                           use_draft = FALSE, remote = NULL,
+                           use_draft = FALSE, parameters = NULL, remote = NULL,
                            copy_files = TRUE, tags = NULL) {
   assert_is(config, "orderly_config")
   config <- orderly_config_get(config, FALSE)
@@ -172,7 +172,8 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
   }
 
   info <- recipe_read(file.path(path_src(config$root), name),
-                      config, use_draft = use_draft, remote = remote)
+                      config, use_draft = use_draft, parameters = parameters,
+                      remote = remote)
 
   if (!is.null(tags)) {
     info$tags <- union(info$tags, recipe_read_check_tags(tags, config, "tags"))

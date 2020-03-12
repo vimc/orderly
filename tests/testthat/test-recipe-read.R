@@ -567,17 +567,17 @@ test_that("Can resolve dependencies remotely", {
                       FALSE)
   expect_equal(nrow(orderly_list_archive(dat$path_local)), 0)
   expect_error(
-    resolve_dependencies(info$depends, config, FALSE, NULL),
+    resolve_dependencies(info$depends, config, FALSE, NULL, NULL),
     "Did not find archive report example:latest")
 
   expect_error(
-    resolve_dependencies(info$depends, config, TRUE, "default"),
+    resolve_dependencies(info$depends, config, TRUE, NULL, "default"),
     "Can't use 'use_draft' with remote")
-  expect_null(resolve_dependencies(NULL, config, FALSE, NULL))
+  expect_null(resolve_dependencies(NULL, config, FALSE, NULL, NULL))
 
-  res <- resolve_dependencies(info$depends, config, FALSE, "default")
+  res <- resolve_dependencies(info$depends, config, FALSE, NULL, "default")
   expect_equal(nrow(orderly_list_archive(dat$path_local)), 1)
-  cmp <- resolve_dependencies(info$depends, config, FALSE, NULL)
+  cmp <- resolve_dependencies(info$depends, config, FALSE, NULL, NULL)
   expect_equal(res, cmp)
 })
 
@@ -606,6 +606,17 @@ test_that("resolve_dependencies_remote", {
   expect_error(
     resolve_dependencies_remote(new_report_id(), "example", config, remote),
     "Did not find report 'example:.+' on remote 'default'")
+})
+
+
+test_that("Can't use queries when resolving dependencies remotely", {
+  dat <- prepare_orderly_remote_example()
+  config <- orderly_config(dat$path_local)
+  remote <- get_remote("default", config)
+  expect_error(
+    resolve_dependencies_remote("latest()", "example", config, remote),
+    "Can't (yet) use query dependencies with remotes",
+    fixed = TRUE)
 })
 
 
@@ -759,4 +770,67 @@ test_that("can read env vars from orderly yml", {
   
   env_vars <- list(a = "ENV", b = "VAR")
   expect_equal(recipe_read_check_env_var(env_vars), env_vars)
+})
+
+
+test_that("Query interface", {
+  dat <- prepare_orderly_query_example(TRUE)
+  root <- dat$root
+  ids <- dat$ids
+
+  config <- orderly_config(root)
+
+  p <- file.path(root, "src", "use_dependency", "orderly.yml")
+  txt <- readLines(p)
+  writeLines(
+    sub("latest", "latest(parameter:nmin < 0.25)", txt, fixed = TRUE),
+    p)
+
+  res <- resolve_dependencies_local("latest(parameter:nmin < 0.25)", "other",
+                                    config, NULL, TRUE)
+  expect_equal(res$path, file.path(config$root, "draft", "other", ids[[2]]))
+  expect_true(res$is_latest)
+
+  orderly_commit(ids[[2]], root = root)
+
+  res <- resolve_dependencies_local("latest(parameter:nmin < 0.25)", "other",
+                                    config, NULL, TRUE)
+  expect_equal(res$path, file.path(config$root, "draft", "other", ids[[1]]))
+  expect_true(res$is_latest)
+
+  res <- resolve_dependencies_local("latest(parameter:nmin < 0.25)", "other",
+                                    config, NULL, "newer")
+  expect_equal(res$path, file.path(config$root, "archive", "other", ids[[2]]))
+  expect_true(res$is_latest)
+
+
+  res <- resolve_dependencies_local("latest(parameter:nmin > 0.25)", "other",
+                                    config, NULL, "newer")
+  expect_equal(res$path, file.path(config$root, "draft", "other", ids[[3]]))
+  expect_true(res$is_latest)
+})
+
+
+test_that("pass parameters through query interface", {
+  dat <- prepare_orderly_query_example()
+  root <- dat$root
+  ids <- dat$ids
+
+  config <- orderly_config(root)
+
+  p <- file.path(root, "src", "use_dependency", "orderly.yml")
+  txt <- readLines(p)
+  writeLines(
+    sub("latest", "latest(parameter:nmin < 0.25)", txt, fixed = TRUE),
+    p)
+
+  res <- resolve_dependencies_local("latest(parameter:nmin < p)", "other",
+                                    config, list(p = 0.25), FALSE)
+  expect_equal(res$path, file.path(config$root, "archive", "other", ids[[2]]))
+  expect_true(res$is_latest)
+
+  expect_equal(
+    resolve_dependencies_local("latest(parameter:nmin < nmin)", "other",
+                               config, list(nmin = 0.25), FALSE),
+    res)
 })
