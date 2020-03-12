@@ -52,7 +52,7 @@
 ##' }
 ##'
 ##' Be careful of comparing floating point numbers with \code{==} or
-##' \code{!=} may not always return what you expect (for example
+##' \code{!=} as they may not always return what you expect (for example
 ##' \code{sqrt(3)^2 == 3} is \code{FALSE}).
 ##'
 ##' In the documentation and error messages we may refer to the
