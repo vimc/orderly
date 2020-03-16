@@ -106,8 +106,6 @@ file_store <- R6::R6Class(
     }
   ))
 
-## This is directly from storr and needs to have a PascalCase class
-## because that's what storr uses.
 hash_error <- function(hash) {
   structure(list(hash = hash,
                  message = sprintf("hash '%s' not found", hash),
