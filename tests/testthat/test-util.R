@@ -263,7 +263,7 @@ test_that("canonical case: single file", {
   root <- tempfile()
   dir.create(root)
   path <- "a"
-  PATH <- toupper(path)
+  PATH <- toupper(path) # nolint
   full <- file.path(root, path)
 
   dir.create(dirname(full), FALSE, TRUE)
@@ -300,7 +300,7 @@ test_that("canonical case: relative path", {
   root <- tempfile()
   dir.create(root)
   path <- file.path("a", "b", "c")
-  PATH <- toupper(path)
+  PATH <- toupper(path) # nolint
   full <- file.path(root, path)
 
   dir.create(dirname(full), FALSE, TRUE)
@@ -339,7 +339,7 @@ test_that("canonical case: absolute path", {
   dir.create(dirname(path), FALSE, TRUE)
   file.create(path)
   path <- normalizePath(path, "/")
-  PATH <- toupper(path)
+  PATH <- toupper(path) # nolint
   if (is_windows()) {
     ## On windows, use upper case drive letters here:
     path <- paste0(toupper(substr(path, 1, 1)),
@@ -403,17 +403,17 @@ test_that("abbreviate", {
 })
 
 
-test_that("Sys_getenv", {
+test_that("sys_getenv", {
   withr::with_envvar(
     c("SOME_VAR" = NA_character_), {
       expect_error(
-        Sys_getenv("SOME_VAR", "loc"),
+        sys_getenv("SOME_VAR", "loc"),
         "Environment variable 'SOME_VAR' is not set.*used in loc")
-      expect_null(Sys_getenv("SOME_VAR", "loc", FALSE))
-      expect_identical(Sys_getenv("SOME_VAR", "loc", FALSE, NA_character_),
+      expect_null(sys_getenv("SOME_VAR", "loc", FALSE))
+      expect_identical(sys_getenv("SOME_VAR", "loc", FALSE, NA_character_),
                        NA_character_)
     })
-  
+
   ## On windows if env variable is empty then windows will return NA from call
   ## to Sys.getenv
   if (is_windows()) {
@@ -421,15 +421,15 @@ test_that("Sys_getenv", {
   } else {
     expected_err <- "Environment variable 'SOME_VAR' is empty.*used in loc"
   }
-  
+
   withr::with_envvar(
     c("SOME_VAR" = ""),
     expect_error(
-      Sys_getenv("SOME_VAR", "loc"),
+      sys_getenv("SOME_VAR", "loc"),
       expected_err))
   withr::with_envvar(
     c("SOME_VAR" = "x"),
-    expect_identical(Sys_getenv("SOME_VAR", "loc"), "x"))
+    expect_identical(sys_getenv("SOME_VAR", "loc"), "x"))
 })
 
 
@@ -545,8 +545,6 @@ test_that("handle_missing_packages", {
 
   expect_error(handle_missing_packages(c("foo", "bar"), FALSE),
                "Missing packages: 'foo', 'bar'")
-
-##  handle_missing_packages(c("foo", "bar"), FALSE)
 })
 
 test_that("install_missing_packages", {
@@ -708,7 +706,7 @@ test_that("clean_path", {
 test_that("random_seed", {
   e1 <- new.env(parent = emptyenv())
   e2 <- new.env(parent = e1)
-  e1$.Random.seed <- pi
+  e1[[".Random.seed"]] <- pi
   expect_equal(random_seed(e1), pi)
   expect_null(random_seed(e2))
 })

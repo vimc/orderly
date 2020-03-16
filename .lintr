@@ -1,0 +1,7 @@
+linters: with_defaults(
+    object_length_linter = NULL,
+    object_usage_linter = NULL,
+    todo_comment_linter = NULL,
+    cyclocomp_linter = NULL
+    )
+exclusions: list("tests/testthat.R")

@@ -201,8 +201,8 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
                        instance = NULL) {
   assert_is(config, "orderly_config")
 
-  owd <- setwd(info$workdir)
-  on.exit(setwd(owd))
+  owd <- setwd(info$workdir) # nolint
+  on.exit(setwd(owd)) # nolint
 
   ## should these go later?
   con_rds <- orderly_db("rds", config, FALSE)
@@ -213,7 +213,8 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
 
   t0 <- Sys.time()
   orderly_log("start", as.character(t0))
-  source(info$script, local = envir,
+
+  source(info$script, local = envir, # nolint
          echo = echo, max.deparse.length = Inf)
   t1 <- Sys.time()
   elapsed <- t1 - t0
@@ -392,10 +393,10 @@ recipe_data <- function(config, info, parameters, dest, instance) {
     secrets <- resolve_secrets(info$secrets, config)
     list2env(secrets, dest)
   }
-  
+
   if (!is.null(info$environment)) {
     env_vars <- lapply(names(info$environment), function(name) {
-      Sys_getenv(info$environment[[name]],
+      sys_getenv(info$environment[[name]],
                  sprintf("orderly.yml:environment:%s", name))
     })
     names(env_vars) <- names(info$environment)
@@ -453,8 +454,8 @@ recipe_prepare_workdir <- function(info, message, config) {
   }
   src <- normalizePath(info$path, mustWork = TRUE)
   dir_create(info$workdir)
-  info$owd <- setwd(info$workdir)
-  on.exit(setwd(info$owd))
+  info$owd <- setwd(info$workdir) # nolint
+  on.exit(setwd(info$owd)) # nolint
 
   ## TODO: this supports a script in a subdirectory, but I don't think
   ## that is supported yet, and it's not clear it's a desirable thing
@@ -487,7 +488,7 @@ recipe_check_artefacts <- function(info) {
   if (length(unexpected) != 0) {
     orderly_log("unexpected", sprintf("%s", unexpected))
   }
-  
+
   h <- hash_artefacts(artefacts)
   orderly_log("artefact", sprintf("%s: %s", artefacts, h))
   h
@@ -563,7 +564,7 @@ recipe_check_sink_stack <- function(expected) {
     return()
   } else if (check > 0) {
     for (i in seq_len(check)) {
-      sink(NULL)
+      sink(NULL) # nolint
     }
     stop(ngettext(check,
                   "Report left 1 sink open",
@@ -608,10 +609,10 @@ orderly_prepare_data <- function(config, info, parameters, envir, instance) {
   }
 
   for (p in info$packages) {
-    library(p, character.only = TRUE)
+    library(p, character.only = TRUE) # nolint
   }
   for (s in info$sources) {
-    source(s, envir)
+    source(s, envir) # nolint
   }
 
   ret

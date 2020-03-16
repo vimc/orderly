@@ -42,7 +42,7 @@ useful to truncate a very large tree. (default = 100)}
 the latest.}
 }
 \value{
-An orderly Tree object with the root corresponding to the given
+An orderly tree object with the root corresponding to the given
         report.
 }
 \description{
@@ -59,7 +59,7 @@ There are two natural questions that can develop around this workflow:
    this report?
 
 This function display this information in an easily readable format.
-Allowing users to see the dependency tree and which reports are out of date 
+Allowing users to see the dependency tree and which reports are out of date
 and need to be re-run.
 }
 \section{Remark}{

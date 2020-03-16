@@ -10,7 +10,7 @@
 ##'    this report?
 ##'
 ##' This function display this information in an easily readable format.
-##' Allowing users to see the dependency tree and which reports are out of date 
+##' Allowing users to see the dependency tree and which reports are out of date
 ##' and need to be re-run.
 ##'
 ##' @section Remark:
@@ -34,7 +34,7 @@
 ##'                 the latest.
 ##' @inheritParams orderly_list
 ##'
-##' @return An orderly Tree object with the root corresponding to the given
+##' @return An orderly tree object with the root corresponding to the given
 ##'         report.
 ##' @export
 ##' @examples
@@ -92,7 +92,7 @@ orderly_graph <- function(name, id = "latest", root = NULL, locate = TRUE,
 ##' @export
 orderly_graph_out_of_date <- function(tree) {
   types <- class(tree)
-  assert_is(tree, "Tree")
+  assert_is(tree, "report_tree")
 
   reports <- out_of_date_reports(tree$root)
 
@@ -156,7 +156,7 @@ get_ids_by_name <- function(con, name) {
                      "WHERE", sprintf("report='%s'", name))
 
   query_return <- DBI::dbGetQuery(con, sql_query)
-  query_return <- query_return[rev(order(query_return$date)),]
+  query_return <- query_return[rev(order(query_return$date)), ]
 
   query_return
 }
@@ -279,7 +279,7 @@ is_out_of_date <- function(con, child_id) {
   }
 
   ## we iterate over rows of the data frame and make sure the artefact match
-  for (i in 1:nrow(child_query_return)) {
+  for (i in seq_len(nrow(child_query_return))) {
     filename <- child_query_return$filename[i]
     file_hash <- child_query_return$file_hash[i]
     report_id <- child_query_return$report_version[i]
@@ -346,7 +346,7 @@ check_parents <- function(parent_vertex, name) {
 ##' @param depth [internal] - only used ensure we don't get trapped in an
 ##'              infinite loop
 ##' @param parent [internal] - the previous vertex in the tree
-##' @param tree [internal] - The tree object that is built up and returned at
+##' @param graph [internal] - The tree object that is built up and returned at
 ##'             the end
 ##' @param con A connection to a database
 ##' @param direction A string indicating if we want to move up or down the tree
@@ -370,7 +370,7 @@ build_tree <- function(name, id, depth = 100, parent = NULL,
     }
   }
 
-  # do we need to find the latest version of the report?
+  ## do we need to find the latest version of the report?
   if (id == "latest") {
     id <- get_latest_by_name(con, name)
   } else if (id == "previous") {
@@ -396,8 +396,8 @@ build_tree <- function(name, id, depth = 100, parent = NULL,
 
   ## if this is no tree, create a tree...
   if (is.null(tree)) {
-    v <- Vertex$new(NULL, name, id, out_of_date)
-    tree <- Tree$new(v, direction)
+    v <- report_vertex$new(NULL, name, id, out_of_date)
+    tree <- report_tree$new(v, direction)
   } else { ## ...otherwise add a vertex
     v <- tree$add_child(parent, name, id, out_of_date)
   }
@@ -452,16 +452,14 @@ out_of_date_reports <- function(vertex, reports = c()) {
 ##' @noRd
 propagate <- function(vertex, direction) {
   for (child in vertex$children) {
-
-    if ((direction == "downstream") && (vertex$out_of_date)) {
-      child$out_of_date = TRUE
+    if (direction == "downstream" && vertex$out_of_date) {
+      child$out_of_date <- TRUE
     }
 
     propagate(child, direction)
 
-    if ((direction == "upstream") && (child$out_of_date)) {
-      vertex$out_of_date = TRUE
+    if (direction == "upstream" && child$out_of_date) {
+      vertex$out_of_date <- TRUE
     }
-
   }
 }

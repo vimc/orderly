@@ -24,11 +24,11 @@
 ##'
 ##' @example man-roxygen/example-remote.R
 orderly_remote_path <- function(path, name = NULL) {
-  R6_orderly_remote_path$new(path, name)
+  orderly_remote_path_$new(path, name)
 }
 
 
-R6_orderly_remote_path <- R6::R6Class(
+orderly_remote_path_ <- R6::R6Class(
   "orderly_remote_path",
 
   public = list(

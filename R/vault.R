@@ -1,5 +1,5 @@
 resolve_secrets <- function(x, config) {
-  if (is.null(config[['vault']])) {
+  if (is.null(config[["vault"]])) {
     return(x)
   }
   loadNamespace("vaultr")

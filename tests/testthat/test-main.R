@@ -95,7 +95,7 @@ test_that("pass parameters", {
   expect_equal(f("a=1"), list(a = 1))
   expect_equal(f("a=1", "b=value"), list(a = 1, b = "value"))
   expect_equal(f("a=1", "b=value", "c=TRUE"),
-               list(a = 1, b = "value", c=TRUE))
+               list(a = 1, b = "value", c = TRUE))
   expect_equal(f("a=1+2"), list(a = "1+2"))
   expect_equal(f("a='quoted string'"), list(a = "quoted string"))
 })
@@ -451,7 +451,7 @@ test_that("run: bad message", {
 })
 
 
-test_that("run: message no changelog",{
+test_that("run: message no changelog", {
   ## changelog not enabled
   path <- prepare_orderly_example("minimal")
   message <- "[label1] This is a test message."

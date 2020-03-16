@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 set -e
+
+if ! which -a realpath > /dev/null; then
+    realpath() {
+        [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+    }
+fi
+
 HERE=${BASH_SOURCE%/*}
 ROOT=$(realpath $HERE/..)
 DEST=$ROOT/tests/testthat/reference

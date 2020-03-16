@@ -153,7 +153,7 @@ test_that("leave connection open", {
   close(e$con)
 
   writeLines(
-    c('con <- file("mygraph.png", "w")', 'close(con)'),
+    c('con <- file("mygraph.png", "w")', "close(con)"),
     path_script)
 
   e <- new.env(parent = .GlobalEnv)
@@ -297,7 +297,8 @@ test_that("resources", {
   expect_true(file.exists(file.path(p, "meta/data.csv")))
   p <- orderly_commit(id, root = path)
 
-  h <- hash_files(file.path(path, "src", "use_resource", "meta", "data.csv"), FALSE)
+  h <- hash_files(
+    file.path(path, "src", "use_resource", "meta", "data.csv"), FALSE)
 
   con <- orderly_db("destination", root = path)
   d <- DBI::dbGetQuery(
@@ -685,8 +686,10 @@ test_that("multiple resources", {
   expect_true(file.exists(file.path(p, "meta/data2.csv")))
   p <- orderly_commit(id, root = path)
 
-  h1 <- hash_files(file.path(path, "src", "multiple_resources", "meta", "data.csv"), FALSE)
-  h2 <- hash_files(file.path(path, "src", "multiple_resources", "meta", "data2.csv"), FALSE)
+  h1 <- hash_files(
+    file.path(path, "src", "multiple_resources", "meta", "data.csv"), FALSE)
+  h2 <- hash_files(
+    file.path(path, "src", "multiple_resources", "meta", "data2.csv"), FALSE)
 
   con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
@@ -932,21 +935,21 @@ test_that("Use secrets in report", {
 
 test_that("can use environment variables in report", {
   path <- prepare_orderly_example("minimal")
-  
+
   append_lines(
     c("environment:",
       paste("  data_path: EXTRA_DATA_PATH"),
       paste("  example_var: EXAMPLE_VAR")),
     file.path(path, "src", "example", "orderly.yml"))
-  
+
   append_lines(
     'writeLines(c(data_path, example_var), "env_vars")',
     file.path(path, "src", "example", "script.R"))
-  
+
   expect_error(orderly_run("example", root = path),
                "Environment variable 'EXTRA_DATA_PATH' is not set
 \t(used in orderly.yml:environment:data_path)", fixed = TRUE)
-  
+
   ## On windows if env variable is empty then windows will return NA from call
   ## to Sys.getenv
   if (is_windows()) {
@@ -956,7 +959,7 @@ test_that("can use environment variables in report", {
     expected_err <- "Environment variable 'EXAMPLE_VAR' is empty
 \t(used in orderly.yml:environment:example_var)"
   }
-  
+
   data_path <- tempfile()
   withr::with_envvar(
     c("EXTRA_DATA_PATH" = data_path,
@@ -964,7 +967,7 @@ test_that("can use environment variables in report", {
     expect_error(orderly_run("example", root = path),
                  expected_err, fixed = TRUE)
   )
-  
+
   withr::with_envvar(
     c("EXTRA_DATA_PATH" = data_path,
       "EXAMPLE_VAR" = "example value"),

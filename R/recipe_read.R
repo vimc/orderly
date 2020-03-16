@@ -125,9 +125,9 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
       assert_scalar_character(x, fieldname(el$name))
     }
   }
-  
+
   info$secrets <- recipe_read_check_secrets(info$secrets, config, filename)
-  
+
   info$environment <- recipe_read_check_env_var(
     info$environment, filename)
 

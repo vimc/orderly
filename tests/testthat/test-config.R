@@ -163,8 +163,9 @@ test_that("remote parse check", {
                   args = list(root = path),
                   master_only = "yeah")))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
-  expect_error(orderly_config(path),
-               "'.+/orderly_config.yml:remote:myhost:master_only' must be logical")
+  expect_error(
+    orderly_config(path),
+    "'.+/orderly_config.yml:remote:myhost:master_only' must be logical")
 })
 
 test_that("no global folder", {
@@ -213,7 +214,7 @@ test_that("vault configuration requires string for url", {
 test_that("previous configuration is transformed with warning", {
   addr <- "https://vault.example.com"
   expect_warning(
-    res <- config_check_vault(NULL, addr, "orderly.yml")  ,
+    res <- config_check_vault(NULL, addr, "orderly.yml"),
     "Use of 'vault_server' is deprecated")
   expect_equal(res, list(addr = addr))
 })

@@ -1,7 +1,7 @@
 context("tree_class")
 
-test_that("Vertex", {
-  vert <- Vertex$new(NULL, "node", "0", TRUE)
+test_that("report_vertex", {
+  vert <- report_vertex$new(NULL, "node", "0", TRUE)
   expect_null(vert$parent)
   expect_match(vert$name, "node")
   expect_match(vert$id, "0")
@@ -11,7 +11,7 @@ test_that("Vertex", {
   printed_vertex <- vert$format()
   expect_match(printed_vertex, "node \\[0\\]")
 
-  child <- Vertex$new(vert, "child", "1", FALSE)
+  child <- report_vertex$new(vert, "child", "1", FALSE)
   expect_false(child$out_of_date)
   expect_match(child$parent$name, "node")
 
@@ -19,9 +19,9 @@ test_that("Vertex", {
   expect_true(length(vert$children) == 1)
 })
 
-test_that("Tree", {
-  root <- Vertex$new(NULL, "root_node", "0", TRUE)
-  tree <- Tree$new(root, "upstream")
+test_that("report_tree", {
+  root <- report_vertex$new(NULL, "root_node", "0", TRUE)
+  tree <- report_tree$new(root, "upstream")
 
   message_init <- tree$set_message("message_1")
   expect_null(message_init)

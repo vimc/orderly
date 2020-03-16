@@ -18,7 +18,7 @@ test_that("missing global file", {
   config_lines <- readLines(path_yaml)
   config_lines[11] <- "  data.csv: none.csv"
   writeLines(config_lines, path_yaml)
-  
+
   expected_error <- "Global resources in '.+/global' does not exist: 'none.csv'"
 
   tmp <- tempfile()

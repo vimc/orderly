@@ -2,7 +2,7 @@ context("orderly_runner")
 
 test_that("runner queue", {
   testthat::skip_on_cran()
-  queue <- runner_queue()
+  queue <- runner_queue$new()
   expect_equal(queue$status(""), list(state = "unknown", id = NA_character_))
   expect_null(queue$next_queued())
 
@@ -302,7 +302,7 @@ test_that("queue_status", {
 
   expect_equal(
     runner$queue_status(NULL),
-    list(status = "idle", queue = runner_queue()$get_df(), current = NULL))
+    list(status = "idle", queue = runner_queue$new()$get_df(), current = NULL))
 
   name <- "interactive"
   key1 <- runner$queue(name)

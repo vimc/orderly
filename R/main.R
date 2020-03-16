@@ -319,11 +319,11 @@ write_script <- function(path, versioned = FALSE) {
     stop("'path' must be a directory")
   }
   if (versioned) {
-    Rscript <- file.path(R.home(), "bin", "Rscript")
+    rscript <- file.path(R.home(), "bin", "Rscript")
   } else {
-    Rscript <- "/usr/bin/env Rscript"
+    rscript <- "/usr/bin/env Rscript"
   }
-  code <- c(sprintf("#!%s", Rscript),
+  code <- c(sprintf("#!%s", rscript),
             readLines(orderly_file("script")))
   path_bin <- file.path(path, "orderly")
   writeLines(code, path_bin)

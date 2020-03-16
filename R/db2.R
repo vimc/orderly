@@ -8,13 +8,9 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-ORDERLY_SCHEMA_VERSION <- "0.0.10"
-
-## These will be used in a few places and even though they're not
-## super likely to change it would be good
-ORDERLY_SCHEMA_TABLE <- "orderly_schema"
-ORDERLY_MAIN_TABLE <- "report_version"
-ORDERLY_TABLE_LIST <- "orderly_schema_tables"
+orderly_schema_version <- "0.0.10"
+orderly_schema_table <- "orderly_schema"
+orderly_table_list <- "orderly_schema_tables"
 
 report_db_schema_read <- function(fields = NULL, dialect = "sqlite") {
   d <- yaml_read(orderly_file("database/schema.yml"))
@@ -33,7 +29,7 @@ report_db_schema_read <- function(fields = NULL, dialect = "sqlite") {
     f <- set_names(Map(function(t, n) list(type = t, nullable = n),
                        rep("character", nrow(fields)), !fields$required),
                    fields$name)
-    d[[ORDERLY_MAIN_TABLE]]$columns <- c(d[[ORDERLY_MAIN_TABLE]]$columns, f)
+    d[["report_version"]]$columns <- c(d[["report_version"]]$columns, f)
   }
 
   prepare_table <- function(x) {
@@ -90,7 +86,7 @@ report_db_schema_read <- function(fields = NULL, dialect = "sqlite") {
       x$values <- data_frame(name = valid_formats())
     } else if (x$name == "orderly_schema") {
       x$values <- data_frame(
-        schema_version = ORDERLY_SCHEMA_VERSION,
+        schema_version = orderly_schema_version,
         orderly_version = as.character(utils::packageVersion("orderly")),
         created = Sys.time())
     } else if (x$name == "orderly_schema_tables") {
@@ -130,10 +126,10 @@ report_db_schema <- function(fields = NULL, dialect = "sqlite") {
 report_db_init <- function(con, config, must_create = FALSE, validate = TRUE) {
   sqlite_pragma_fk(con, TRUE)
 
-  if (!DBI::dbExistsTable(con, ORDERLY_SCHEMA_TABLE)) {
+  if (!DBI::dbExistsTable(con, orderly_schema_table)) {
     report_db_init_create(con, config, report_db_dialect(con))
   } else if (must_create) {
-    stop(sprintf("Table '%s' already exists", ORDERLY_SCHEMA_TABLE))
+    stop(sprintf("Table '%s' already exists", orderly_schema_table))
   } else if (validate) {
     report_db_open_existing(con, config)
   }
@@ -160,8 +156,8 @@ report_db_init_create <- function(con, config, dialect) {
 
 
 report_db_open_existing <- function(con, config) {
-  version_db <- DBI::dbReadTable(con, ORDERLY_SCHEMA_TABLE)$schema_version
-  version_package <- ORDERLY_SCHEMA_VERSION
+  version_db <- DBI::dbReadTable(con, orderly_schema_table)$schema_version
+  version_package <- orderly_schema_version
   if (numeric_version(version_db) < numeric_version(version_package)) {
     stop("orderly db needs rebuilding with orderly::orderly_rebuild()",
          call. = FALSE)
@@ -217,7 +213,7 @@ report_db_rebuild <- function(config, verbose = TRUE) {
   con <- orderly_db("destination", config, validate = FALSE)
   on.exit(DBI::dbDisconnect(con))
 
-  if (DBI::dbExistsTable(con, ORDERLY_TABLE_LIST)) {
+  if (DBI::dbExistsTable(con, orderly_table_list)) {
     report_db_destroy(con, config)
   }
   report_db_init(con, config)
@@ -241,8 +237,8 @@ report_db_needs_rebuild <- function(config) {
   con <- orderly_db("destination", config, FALSE, FALSE)
   on.exit(DBI::dbDisconnect(con))
 
-  d <- DBI::dbReadTable(con, ORDERLY_SCHEMA_TABLE)
-  numeric_version(d$schema_version) < numeric_version(ORDERLY_SCHEMA_VERSION)
+  d <- DBI::dbReadTable(con, orderly_schema_table)
+  numeric_version(d$schema_version) < numeric_version(orderly_schema_version)
 }
 
 
@@ -477,7 +473,7 @@ report_db_destroy <- function(con, config) {
   dialect <- report_db_dialect(con)
   schema <- names(report_db_schema(config$fields, dialect)$tables)
   existing <- DBI::dbListTables(con)
-  known <- DBI::dbReadTable(con, ORDERLY_TABLE_LIST)[[1L]]
+  known <- DBI::dbReadTable(con, orderly_table_list)[[1L]]
   drop <- intersect(known, existing)
   extra <- setdiff(intersect(schema, existing), drop)
 

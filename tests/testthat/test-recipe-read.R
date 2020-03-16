@@ -165,7 +165,7 @@ test_that("dependencies must be scalar", {
 
   filename <- file.path(path, "src", "depend", "orderly.yml")
   dat <- yaml_read(filename)
-  dat$depends$example$use$previous.rds <- character(0)
+  dat$depends$example$use[["previous.rds"]] <- character(0)
   yaml_write(dat, filename)
 
   expect_error(orderly_run("depend", root = path, echo = FALSE),
@@ -179,7 +179,7 @@ test_that("dependencies must exist", {
 
   filename <- file.path(path, "src", "depend", "orderly.yml")
   dat <- yaml_read(filename)
-  dat$depends$example$use$previous.rds <- "unknown.file"
+  dat$depends$example$use[["previous.rds"]] <- "unknown.file"
   yaml_write(dat, filename)
 
   expect_error(orderly_run("depend", root = path, echo = FALSE,
@@ -753,7 +753,7 @@ test_that("read secrets", {
 
 test_that("can read env vars from orderly yml", {
   filename <- "orderly.yml"
-  
+
   expect_null(recipe_read_check_env_var(NULL, filename))
   expect_error(
     recipe_read_check_env_var(list("ENV", "VAR"), filename),
@@ -767,7 +767,7 @@ test_that("can read env vars from orderly yml", {
   expect_error(
     recipe_read_check_env_var(list(a = list("ENV", "VAR")), filename),
     "'orderly.yml:environment:a' must be a scalar")
-  
+
   env_vars <- list(a = "ENV", b = "VAR")
   expect_equal(recipe_read_check_env_var(env_vars), env_vars)
 })

@@ -63,7 +63,7 @@ test_that("get missing hash", {
   st <- file_store_rds(path)
   expect_error(st$get(ids::random_id()),
                "hash '[[:xdigit:]]{32}' not found",
-               class = "HashError")
+               class = "hash_error")
 })
 
 test_that("mget", {

@@ -195,8 +195,10 @@ test_that("db includes file information", {
   path <- prepare_orderly_example("demo")
   id <- orderly_run("multifile-artefact", root = path, echo = FALSE)
   p <- orderly_commit(id, root = path)
-  h1 <- hash_files(file.path(path, "src", "multifile-artefact", "orderly.yml"), FALSE)
-  h2 <- hash_files(file.path(path, "src", "multifile-artefact", "script.R"), FALSE)
+  h1 <- hash_files(
+    file.path(path, "src", "multifile-artefact", "orderly.yml"), FALSE)
+  h2 <- hash_files(
+    file.path(path, "src", "multifile-artefact", "script.R"), FALSE)
   con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
 
