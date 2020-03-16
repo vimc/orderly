@@ -406,7 +406,7 @@ sys_which <- function(name) {
 }
 
 zip_dir <- function(path, dest = paste0(basename(path), ".zip")) {
-  withr::with_wd(dirname(path), {
+  withr::with_dir(dirname(path), {
     zip::zipr(dest, basename(path))
     normalizePath(dest)
   })
