@@ -4,7 +4,7 @@ TAG=$(git rev-parse --short=7 HEAD)
 DEST=build
 rm -rf $DEST
 docker run --rm --entrypoint create_orderly_demo.sh \
-       -u `id -u teamcity` \
+       -u $(id -u teamcity) \
        -v "${PWD}":/orderly \
        -w /orderly \
        "docker.montagu.dide.ic.ac.uk:5000/orderly:${TAG}" \

@@ -1,9 +1,11 @@
 FROM openjdk:8-jre
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
         graphviz \
-        wget
+        wget \
+        && apt-get clean \
+        && rm -rf /var/lib/apt/lists/*
 
 
 ENV SCHEMASPY_VERSION 6.0.0-rc2
