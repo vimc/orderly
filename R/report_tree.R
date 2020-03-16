@@ -41,7 +41,8 @@ report_tree <- R6::R6Class(
     ##
     ## * vertex is the current vertex to be printed
     ## * prefix is a offset string to get the indentation correct - it will be
-    ##   of the form "│       │   " (i.e. some combination of "│   " and "    ")
+    ##   of the form "│       │   " (i.e. some combination of "│   "
+    ##   and "    ")
     ## * tree_string is final printed string (with line breaks and colouring)
     format_helper = function(vertex = self$root,
                              prefix = "",
