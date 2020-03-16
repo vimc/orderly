@@ -66,3 +66,92 @@ Several commands can interact with the remote server:
 ## Future developments
 
 We hope that this system will become easier to deploy in future.  We use it internally on two projects with orderly archives that hold gigabytes of analyses, and it has evolved to meet our needs.  If you think it might work for you but can't get started, please get in touch.
+
+## Deploying a remote server
+
+We recommend using [HashiCorp's vault](https://www.vaultproject.io/) for storing secrets (of which several are used here), and our tooling is designed to make this easy.
+
+You will need to set up and/or gather a few things before hand
+
+* SSL certificate and private key for the reverse proxy; in the example below we have stored the certificate in the vault
+* If the orderly source repository is private, [create a deploy key](https://developer.github.com/v3/guides/managing-deploy-keys/#deploy-keys) with read-only access to your repository, and add that to the vault also
+* Create an OAuth app, following instructions [here](https://github.com/vimc/orderly-web/blob/master/docs/auth.md#authenticating-with-github), somewhat better instructions [here](https://github.com/ncov-ic/setup#create-an-oauth-app)
+* Create a docker image that has all of your wanted R packages and external software; this image should be based off of `vimc/orderly.server:master`, for example [the Dockerfile for the coronavirus response](https://github.com/ncov-ic/ncov-orderly/blob/master/docker/Dockerfile) and push that to some accessible location (either docker hub or a private registry).  You can initially skip this step and just use `vimc/orderly.server:master` but the set of built-in packages is very limited
+
+Create an orderly-web configuration; see [here](https://github.com/ncov-ic/ncov-orderly-web/blob/master/config/orderly-web.yml) for an example and [here](https://github.com/vimc/orderly-web-deploy/blob/master/config/complete/orderly-web.yml) for a highly annotated example.  A somewhat stripped down version of this looks like:
+
+```yaml
+vault:
+  addr: https://vault.dide.ic.ac.uk:8200
+  auth:
+    method: github
+
+container_prefix: orderly_web
+network: orderlyweb_nw
+
+volumes:
+  orderly: orderly_volume
+  proxy_logs: orderlyweb_proxy_logs
+  css: orderlywebweb_css
+
+orderly:
+  image:
+    repo: yourorg
+    name: orderly
+    tag: latest
+  initial:
+    source: clone
+    url: git@github.com:yourorg/orderly-reports
+  ssh:
+    public: VAULT:secret/deploy-key:public
+    private: VAULT:secret/deploy-key:private
+
+web:
+  image:
+    repo: vimc
+    name: orderly-web
+    tag: master
+    migrate: orderlyweb-migrate
+    admin: orderly-web-user-cli
+    css-generator: orderly-web-css-generator
+  url: https://orderly.example.com
+  dev_mode: false
+  port: 8888
+  name: Outputs
+  email: you@example.com
+  auth:
+    github_org: yourorg
+    github_team: yourteam
+    github_oauth:
+      id: VAULT:secret/oauth/real:id
+      secret: VAULT:secret/oauth/real:secret
+    fine_grained: false
+    montagu: false
+
+proxy:
+  enabled: true
+  ssl:
+    certificate: VAULT:secret/proxy/ssl_certificate:value
+    key: VAULT:secret/ncov/ssl_private_key:value
+  hostname: ncov.dide.ic.ac.uk
+  port_http: 80
+  port_https: 443
+  image:
+    repo: vimc
+    name: orderly-web-proxy
+    tag: master
+```
+
+You need to install the `orderly-web` deployment scripts from [PyPi](https://pypi.org/project/orderly-web/)
+
+```
+pip3 install --user orderly-web
+```
+
+With all that done, running
+
+```
+orderly-web start .
+```
+
+should bring everything up!
