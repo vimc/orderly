@@ -1,6 +1,6 @@
 var count = 0;
 
-/* exported clicked */
+/* eslint-disable */
 function clicked() {
 	var counter = document.getElementById("counter");
 	count++;
