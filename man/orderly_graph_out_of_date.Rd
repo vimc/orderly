@@ -8,7 +8,7 @@ that they should be re-run)}
 orderly_graph_out_of_date(tree)
 }
 \arguments{
-\item{tree}{A dpendency tree object from orderly_graph_out_of_date}
+\item{tree}{A dependency tree object from orderly_graph_out_of_date}
 }
 \value{
 a list of report names to be re-run. First report to rerun first

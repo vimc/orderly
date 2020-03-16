@@ -30,7 +30,7 @@ Backup is the responsibility of the researcher; if the computer is backed up, or
 
 ### Why not commit the archive to git?
 
-If your reports are very small, then this may work for you.  However, git becomes slow to use when many large files have been added to it, and most hosting platforms, including GitHub will prevent addition of files over a certain size and may complain about overal repositories reaching a certain size.  Cloning the source tree will become increasingly painful, and you may become wary of even *running* a report because of the impact it may have on the above problems.  In our opinion, you should store your archive outside of git and use an alternative method to back it up and distribute it.
+If your reports are very small, then this may work for you.  However, git becomes slow to use when many large files have been added to it, and most hosting platforms, including GitHub will prevent addition of files over a certain size and may complain about overall repositories reaching a certain size.  Cloning the source tree will become increasingly painful, and you may become wary of even *running* a report because of the impact it may have on the above problems.  In our opinion, you should store your archive outside of git and use an alternative method to back it up and distribute it.
 
 ## Small group, sharing via shared disk
 
@@ -46,7 +46,7 @@ However, we still must synchronise the reports that have been run.  Of course ev
 * if the report is long-running, this is time-consuming
 * everyone will end up with a different report id, so it is difficult to know that we're looking at the same "effective" report when results are shared
 
-What we want is that after a particular version of a report to have been run, it is easy for other people to start depending on it.  To achive this we need a method for getting the archive from one person's computer to another.
+What we want is that after a particular version of a report to have been run, it is easy for other people to start depending on it.  To achieve this we need a method for getting the archive from one person's computer to another.
 
 For this discussion we will assume two researchers ["Alice" and "Bob"](https://en.wikipedia.org/wiki/Alice_and_Bob) rather than "Researcher A" and "Researcher B".
 
@@ -101,7 +101,7 @@ This is especially useful if `report-b` has many dependencies, or depends on par
 There are a number of features about the system here that might not be obvious at first, but that will aid collaboration.
 
 * Because each report exists in its own directory within `src/` we reduce the potential for conflicts.  In a collaborative analysis where multiple files are shared across analyses, it is easy to have conflicts.  `orderly` forces analyses into separate directories, which means most of the time it is trivial to merge even long-lived branches.  This is particularly important with relatively new users of git.
-* Because every report gets a unique identifier, it is straightforward to combine outputs that were run on different machines.  In the example above this is a centralised system (one canonical source, several destinations) but in theory more complicated distributted workflows are possible.
+* Because every report gets a unique identifier, it is straightforward to combine outputs that were run on different machines.  In the example above this is a centralised system (one canonical source, several destinations) but in theory more complicated distributed workflows are possible.
 * On the central server, the archive directory is an "append only" system; nothing is ever modified.  This seems wasteful at first as there can be lots of copies of a report, but disk space is cheaper than researcher time (and you can remove redundancy with `orderly::orderly_deduplicate`)
 
 ## Group of researchers, sharing via server
@@ -111,12 +111,12 @@ This is the model that we use within the [MRC Centre for Global Infectious Disea
 As above, we use a single "source tree", kept on GitHub or similar.  However, someone in the group takes responsibility for setting up a copy of [OrderlyWeb](https://github.com/vimc/orderly-web), our open source, self-hosted orderly server.  The OrderlyWeb server software provides a number of things
 
 1. A persistent copy of R running `orderly` that can run reports as needed
-2. A web server that exposes a user-friendly web portal showing versions of orderly reports and an http api (this application is written in [Kotlin](https://kotlinlang.org))
+2. A web server that exposes a user-friendly web portal showing versions of orderly reports and an HTTP API (this application is written in [Kotlin](https://kotlinlang.org))
 3. A [reverse proxy](https://en.wikipedia.org/wiki/Reverse_proxy) used to secure the application with https
 
 This [diagram may help show how the pieces fit together](https://raw.githubusercontent.com/vimc/montagu-machine/master/docs/diagrams/OrderlyWeb%20architecture.png).
 
-If OrderlyWeb has beeen deployed onto `orderly.example.com`, then we might declare it in `orderly_config.yml`
+If OrderlyWeb has been deployed onto `orderly.example.com`, then we might declare it in `orderly_config.yml`
 
 ```yaml
 remote:
@@ -164,13 +164,13 @@ remote:
       token: $GITHUB_TOKEN
 ```
 
-Now, as part of the pull request review proceedure, the reviewer will run the report on the staging environment, which ensures that it will likely work without error on the production environment.
+Now, as part of the pull request review procedure, the reviewer will run the report on the staging environment, which ensures that it will likely work without error on the production environment.
 
 ```r
 orderly::orderly_run_remote("report-a", remote = "staging", ref = "origin/myfeature")
 ```
 
-where `myfeature` is the name of the branch.  This report can now be inspected (a url will be generated which may be emailed around), and after being merged, the report can be run on the production server with
+where `myfeature` is the name of the branch.  This report can now be inspected (a URL will be generated which may be emailed around), and after being merged, the report can be run on the production server with
 
 ```r
 orderly::orderly_run_remote("report-a", remote = "production")
@@ -195,13 +195,13 @@ To allow this, when running `orderly::orderly_run`, Alice can provide the argume
 
 **GIVE A CONCRETE EXAMPLE HERE, WITH DIAGRAM**
 
-Now, even if she has more recent copies of the dependncies locally, her report will use the same copies as would be used on the server she choses.
+Now, even if she has more recent copies of the dependencies locally, her report will use the same copies as would be used on the server she chooses.
 
 ## Looking forward, a fully decentralised approach
 
 With some additional development on `orderly`, further workflows are possible, including a decentralised approach.  We might like to have a set of known "good" archives, or partially overlapping source trees, or archives that depend on data sources that come from other orderly archives that are not even present in their source tree.
 
-To support this, we can have a network of orderly servers which can exchange subtrees amongst each other.  In this fashion, we can imagine the following things being possible
+To support this, we can have a network of orderly servers which can exchange sub-trees amongst each other.  In this fashion, we can imagine the following things being possible
 
 * Have common data processing tasks described in one orderly source tree, but used by several other sources trees
 * Have orderly "runners" available on HPC platforms, making it easy to reliably run demanding tasks on larger infrastructure then incorporate them back into the "canonical" archive
