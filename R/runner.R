@@ -33,19 +33,21 @@
 ##' path <- orderly::orderly_example("demo")
 ##' runner <- orderly::orderly_runner(path)
 orderly_runner <- function(path, allow_ref = NULL, backup_period = 600) {
-  R6_orderly_runner$new(path, allow_ref, backup_period)
+  orderly_runner_$new(path, allow_ref, backup_period)
 }
 
+## nolint start
 RUNNER_QUEUED  <- "queued"
 RUNNER_RUNNING <- "running"
 RUNNER_SUCCESS <- "success"
 RUNNER_ERROR   <- "error"
 RUNNER_KILLED  <- "killed"
 RUNNER_UNKNOWN <- "unknown"
+## nolint end
 
 ## TODO: through here we need to wrap some calls up in success/fail so
 ## that I can get that pushed back through the API.
-R6_orderly_runner <- R6::R6Class(
+orderly_runner_ <- R6::R6Class(
   "orderly_runner",
   cloneable = FALSE,
   public = list(
@@ -88,7 +90,7 @@ R6_orderly_runner <- R6::R6Class(
       ## useful if something else wants to access the database!
       DBI::dbDisconnect(orderly_db("destination", self$config, FALSE))
 
-      self$data <- runner_queue()
+      self$data <- runner_queue$new()
 
       self$path_log <- path_runner_log(path)
       self$path_id <- path_runner_id(path)
@@ -150,7 +152,7 @@ R6_orderly_runner <- R6::R6Class(
     queue_status = function(output = FALSE, limit = 50) {
       queue <- tail(self$data$get_df(), limit)
       if (is.null(self$process)) {
-        status <- "idle"
+        status <-  "idle"
         current <- NULL
       } else {
         status <- "running"
@@ -228,7 +230,7 @@ R6_orderly_runner <- R6::R6Class(
         ret <- "create"
         key <- self$process$key
       } else {
-        ret <-"idle"
+        ret <- "idle"
       }
       self$backup()
       attr(ret, "key") <- key
@@ -305,21 +307,6 @@ R6_orderly_runner <- R6::R6Class(
                 if (!is.na(dat$ref)) c("--ref", dat$ref),
                 parameters)
 
-      ## NOTE: sending stdout/stderr to "|" causes a big slowdown (as
-      ## in 5-10x longer to run than not going through processx). File
-      ## output seems not to have the same problem but if it does this
-      ## can be swapped in very easily for
-      ##
-      ##   px <- sys::exec_background(self$orderly_bin, args,
-      ##                              std_out = log_out, std_err = log_err)
-      ##
-      ## which just returns a PID (rather than an R6 object).
-      ##
-      ## The only other (non-test) place that needs updating is
-      ## px$is_alive() and px$get_exit_status() become
-      ## sys::exec_status(px, FALSE)
-      ##
-      ## There is also one test case that needs tweaking.
       log_out <- path_stdout(self$path_log, key)
       log_err <- path_stderr(self$path_log, key)
       px <- processx::process$new(self$orderly_bin, args,
@@ -345,12 +332,7 @@ path_stdout <- function(path, key) {
 }
 
 
-runner_queue <- function() {
-  R6_runner_queue$new()
-}
-
-
-R6_runner_queue <- R6::R6Class(
+runner_queue <- R6::R6Class(
   "runner_queue",
   private = list(
     data = NULL

@@ -1,4 +1,4 @@
-VERSION_ID_RE <- "^([0-9]{8}-[0-9]{6})-([[:xdigit:]]{4})([[:xdigit:]]{4})$"
+version_id_re <- "^([0-9]{8}-[0-9]{6})-([[:xdigit:]]{4})([[:xdigit:]]{4})$"
 
 ## This gives a list of the source report names known to the system.
 ## This will not include things that have been deleted in source but
@@ -208,7 +208,7 @@ orderly_find_report <- function(id, name, config, locate = FALSE,
   config <- orderly_config_get(config, locate)
 
   if (is.character(draft)) {
-    ## draft <- match_value(draft, c("always", "newer", "never"))
+    draft <- match_value(draft, c("always", "newer", "never"))
     search_draft <- draft != "never"
     search_archive <- draft != "always"
     what <- switch(draft,
@@ -275,18 +275,18 @@ latest_id <- function(ids) {
 
   ids <- sort_c(unique(ids))
 
-  err <- !grepl(VERSION_ID_RE, ids)
+  err <- !grepl(version_id_re, ids)
   if (any(err)) {
     stop(sprintf("Invalid report id: %s",
                  paste(squote(ids[err]), collapse = ", ")),
          call. = FALSE)
   }
 
-  isodate <- sub(VERSION_ID_RE, "\\1", ids)
+  isodate <- sub(version_id_re, "\\1", ids)
   ids <- ids[isodate == last(isodate)]
 
   if (length(ids) > 1L) {
-    ms <- sub(VERSION_ID_RE, "\\2", ids)
+    ms <- sub(version_id_re, "\\2", ids)
     ids <- ids[ms == last(ms)]
   }
 
@@ -296,7 +296,7 @@ latest_id <- function(ids) {
 
 orderly_list_dir <- function(path, check_run_rds = FALSE) {
   files <- dir(path)
-  err <- !grepl(VERSION_ID_RE, files)
+  err <- !grepl(version_id_re, files)
   if (any(err)) {
     stop(sprintf("Unexpected files within orderly directory '%s': %s",
                  path, paste(squote(files[err]), collapse = ", ")),

@@ -6,6 +6,7 @@
 [![Build Status](https://travis-ci.org/vimc/orderly.svg?branch=master)](https://travis-ci.org/vimc/orderly)
 [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/vimc/orderly?branch=master&svg=true)](https://ci.appveyor.com/project/richfitz/orderly)
 [![codecov.io](https://codecov.io/github/vimc/orderly/coverage.svg?branch=master)](https://codecov.io/github/vimc/orderly?branch=master)
+[![CodeFactor](https://www.codefactor.io/repository/github/vimc/orderly/badge)](https://www.codefactor.io/repository/github/vimc/orderly)
 [![](https://www.r-pkg.org/badges/version/orderly)](https://cran.r-project.org/package=orderly)
 <!-- badges: end -->
 
@@ -79,7 +80,8 @@ Then if one of the dependencies of a report changes (the used data, code, etc), 
 In the [MRC Centre for Global Infectious Disease Analysis](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis) we use `orderly` on two major projects:
 
 - The [Vaccine Impact Modelling Consortium](https://www.vaccineimpact.org/)
-- Our part of the response to the 2018-2019 Ebola outbreak in the Democratic Republic of Congo
+- Our part of the response to the 2018-2020 Ebola outbreak in the Democratic Republic of Congo
+- Our part of the response to the 2019-2020 2019-nCoV-SARS/COVID-19 pandemic
 
 The workflows we have developed here are oriented towards collaborative groups of researchers - other workflows are possible (indeed `orderly` is also designed to support a _decentralised_ workflow, though this has not been used in practice yet).
 

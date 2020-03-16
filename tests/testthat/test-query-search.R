@@ -79,7 +79,7 @@ test_that("parse query expression", {
 
 
 test_that("parse query", {
-  res <- parse_query('parameter:a > 1', NULL)
+  res <- parse_query("parameter:a > 1", NULL)
   expect_false(res$latest)
   expect_equal(res$use, list(parameter = TRUE, tag = FALSE))
   expect_equal(res$expr, quote(parameter[["a"]] > 1))
@@ -99,7 +99,7 @@ test_that("parse query", {
                      (parameter[["b"]] == "value" ||
                       parameter[["b"]] == "other")))
 
-  res <- parse_query('parameter:a > 1 && tag:weekly')
+  res <- parse_query("parameter:a > 1 && tag:weekly")
   expect_false(res$latest)
   expect_equal(res$use, list(parameter = TRUE, tag = TRUE))
   expect_equal(res$expr,
@@ -153,36 +153,36 @@ test_that("query on a tag", {
   ids <- c(f(c("weekly", "monthly")), f("monthly"), f(NULL), f("weekly"))
 
   expect_equal(
-    orderly_search('tag:weekly', "example", root = root),
+    orderly_search("tag:weekly", "example", root = root),
     ids[c(1, 4)])
   expect_equal(
-    orderly_search('tag:monthly', "example", root = root),
+    orderly_search("tag:monthly", "example", root = root),
     ids[c(1, 2)])
   expect_equal(
-    orderly_search('tag:monthly && !tag:weekly', "example", root = root),
+    orderly_search("tag:monthly && !tag:weekly", "example", root = root),
     ids[2])
   expect_equal(
-    orderly_search('tag:monthly || tag:weekly', "example", root = root),
+    orderly_search("tag:monthly || tag:weekly", "example", root = root),
     ids[c(1, 2, 4)])
   expect_equal(
-    orderly_search('tag:yearly', "example", root = root),
+    orderly_search("tag:yearly", "example", root = root),
     character(0))
 
   expect_equal(
-    orderly_search('latest(tag:weekly)', "example", root = root),
+    orderly_search("latest(tag:weekly)", "example", root = root),
     ids[[4]])
   expect_equal(
-    orderly_search('latest(tag:monthly)', "example", root = root),
+    orderly_search("latest(tag:monthly)", "example", root = root),
     ids[[2]])
   expect_equal(
-    orderly_search('latest(tag:monthly && !tag:weekly)', "example",
+    orderly_search("latest(tag:monthly && !tag:weekly)", "example",
                    root = root),
     ids[[2]])
   expect_equal(
-    orderly_search('latest(tag:monthly || tag:weekly)', "example", root = root),
+    orderly_search("latest(tag:monthly || tag:weekly)", "example", root = root),
     ids[[4]])
   expect_equal(
-    orderly_search('latest(tag:yearly)', "example", root = root),
+    orderly_search("latest(tag:yearly)", "example", root = root),
     NA_character_)
 })
 
@@ -383,6 +383,7 @@ test_that("is.null requires a namespace", {
     "Expected namespaced query element but received 'x'")
   expect_error(
     parse_query("is.null(tag:thing)"),
-    "In 'is.null(tag:thing)', query namespace must be 'parameter' but found 'tag'",
+    paste("In 'is.null(tag:thing)', query namespace must be 'parameter'",
+          "but found 'tag'"),
     fixed = TRUE)
 })

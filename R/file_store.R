@@ -5,9 +5,6 @@
 ## * use storr errors
 ## * use storr mget semantics
 ## * check against remake use
-file_store <- function(path, read, write, ext) {
-  R6_file_store$new(path, read, write, ext)
-}
 
 ## Alternatively, hash files based on *disk content*.  Should make
 ## that an option.  One slight downside is that unless some serious
@@ -18,7 +15,7 @@ file_store <- function(path, read, write, ext) {
 ## store" because we store an R object, by value, in a file.  The
 ## paths to do this are via csv and rds in our case, and the filename
 ## is going to be derived from the hash of the object itself.
-R6_file_store <- R6::R6Class(
+file_store <- R6::R6Class(
   "file_store",
   public = list(
     path = NULL,
@@ -50,13 +47,14 @@ R6_file_store <- R6::R6Class(
     set = function(data) {
       ## We only save data.frames
       assert_is(data, "data.frame")
-      hash <- self$hash_object(data) ## self$hash(data)
+      hash <- self$hash_object(data)
       dest <- self$filename(hash)
       if (!file.exists(dest)) {
         self$write(data, dest)
       }
       invisible(hash)
     },
+
     mset = function(data) {
       vcapply(data, self$set)
     },
@@ -65,7 +63,7 @@ R6_file_store <- R6::R6Class(
       assert_scalar(hash)
       filename <- self$filename(hash, TRUE)
       if (is.na(filename)) {
-        stop(HashError(hash))
+        stop(hash_error(hash))
       }
       self$read(filename)
     },
@@ -108,20 +106,18 @@ R6_file_store <- R6::R6Class(
     }
   ))
 
-## This is directly from storr and needs to have a PascalCase class
-## because that's what storr uses.
-HashError <- function(hash) {
+hash_error <- function(hash) {
   structure(list(hash = hash,
                  message = sprintf("hash '%s' not found", hash),
                  call = NULL),
-            class = c("HashError", "error", "condition"))
+            class = c("hash_error", "error", "condition"))
 }
 
 ## Helpers
 file_store_rds <- function(path) {
-  file_store(path, readRDS, saveRDS, ".rds")
+  file_store$new(path, readRDS, saveRDS, ".rds")
 }
 
 file_store_csv <- function(path) {
-  file_store(path, read_csv, write_csv, ".csv")
+  file_store$new(path, read_csv, write_csv, ".csv")
 }

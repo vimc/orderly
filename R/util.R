@@ -26,17 +26,17 @@ read_lines <- function(...) {
   paste(readLines(...), collapse = "\n")
 }
 
-vcapply <- function(X, FUN, ...) {
+vcapply <- function(X, FUN, ...) { # nolint
   vapply(X, FUN, character(1), ...)
 }
 
 
-viapply <- function(X, FUN, ...) {
+viapply <- function(X, FUN, ...) { # nolint
   vapply(X, FUN, integer(1), ...)
 }
 
 
-vlapply <- function(X, FUN, ...) {
+vlapply <- function(X, FUN, ...) { # nolint
   vapply(X, FUN, logical(1), ...)
 }
 
@@ -78,7 +78,7 @@ orderly_file <- function(...) {
   system.file(..., package = "orderly", mustWork = TRUE)
 }
 
-`%||%` <- function(a, b) {
+`%||%` <- function(a, b) { # nolint
   if (is.null(a)) b else a
 }
 
@@ -195,12 +195,14 @@ pasteq <- function(x, sep = ", ") {
 
 
 capture_log <- function(expr, filename) {
+  ## nolint start
   con <- file(filename, "w")
   sink(con, split = FALSE)
   on.exit({
     sink(NULL)
     close(con)
   })
+  ## nolint end
   handle_message <- function(e) cat(e$message, file = stdout())
   suppressMessages(withCallingHandlers(force(expr), message = handle_message))
 }
@@ -243,7 +245,7 @@ append_text <- function(filename, txt) {
   writeLines(c(orig, txt), filename)
 }
 
-Sys_getenv <- function(x, used_in, error = TRUE, default = NULL) {
+sys_getenv <- function(x, used_in, error = TRUE, default = NULL) {
   v <- Sys.getenv(x, NA_character_)
   if (is.na(v) || !nzchar(v)) {
     if (error) {
@@ -327,7 +329,7 @@ resolve_driver_config <- function(args, config, name = NULL) {
 resolve_env <- function(x, used_in, error = TRUE, default = NULL) {
   f <- function(nm, x) {
     if (length(x) == 1L && is.character(x) && grepl("^\\$[0-9A-Z_]+$", x)) {
-      Sys_getenv(substr(x, 2, nchar(x)), sprintf("%s:%s", used_in, nm),
+      sys_getenv(substr(x, 2, nchar(x)), sprintf("%s:%s", used_in, nm),
                  error = error, default = NULL)
     } else {
       x
@@ -404,10 +406,10 @@ sys_which <- function(name) {
 }
 
 zip_dir <- function(path, dest = paste0(basename(path), ".zip")) {
-  owd <- setwd(dirname(path))
-  on.exit(setwd(owd))
-  zip::zipr(dest, basename(path))
-  normalizePath(dest)
+  withr::with_dir(dirname(path), {
+    zip::zipr(dest, basename(path))
+    normalizePath(dest)
+  })
 }
 
 file_exists <- function(..., check_case = FALSE, workdir = NULL,
@@ -415,8 +417,8 @@ file_exists <- function(..., check_case = FALSE, workdir = NULL,
   files <- c(...)
   if (!is.null(workdir)) {
     assert_scalar_character(workdir)
-    owd <- setwd(workdir)
-    on.exit(setwd(owd))
+    owd <- setwd(workdir) # nolint
+    on.exit(setwd(owd)) # nolint
   }
   exists <- file.exists(files)
 

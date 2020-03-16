@@ -6,7 +6,7 @@ resources:
 artefacts:
   interactivehtml:
     description: A demo interactive report
-    filenames: 
+    filenames:
       - index.html
       - script.js
 author: Dr Fun

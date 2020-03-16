@@ -1,0 +1,6 @@
+ignored:
+  # Affects Dockerfile.dev - version not found as it's an arg
+  - DL3006
+  # https://github.com/hadolint/hadolint/wiki/DL3008
+  # I can't imagine ever wanting this
+  - DL3008

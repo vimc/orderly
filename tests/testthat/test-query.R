@@ -68,6 +68,10 @@ test_that("query through lifecycle", {
 })
 
 test_that("latest_ids", {
+  ## There is a 1/6554 chance of collision here in the test where
+  ## generate 5 ids with the same leading component (down to the ms);
+  ## one collision seen now on travis (see 1 / pbirthday(5, 256^2))
+  skip_on_cran()
   skip_on_cran_windows()
   expect_equal(latest_id(character(0)), NA_character_)
 

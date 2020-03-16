@@ -80,7 +80,7 @@ test_that("has dependencies upstream", {
   run_orderly_demo(path)
 
   ## top report so has no dependencies upstream
-  tree <- orderly_graph("example", root = path, direction="upstream")
+  tree <- orderly_graph("example", root = path, direction = "upstream")
   root <- tree$root
   expect_true(length(root$children) == 0)
 
@@ -143,7 +143,7 @@ test_that("propagate", {
   ## report - this version does not depend2 on any out-of-date artefacts
   expect_false(root$out_of_date)
 
-  dep_1<- root$children[[1]]
+  dep_1 <- root$children[[1]]
   ## SHOULD be out of date since it depends on a report that has a more recent
   ## version
   expect_true(dep_1$out_of_date)
@@ -253,7 +253,7 @@ test_that("List out of date upstream", {
                         propagate = TRUE)
 
   bad_reports <- orderly_graph_out_of_date(tree)
-  expect_equal(bad_reports, c("depend3","depend2"))
+  expect_equal(bad_reports, c("depend3", "depend2"))
 })
 
 test_that("List out of date with duplicates", {
@@ -272,13 +272,13 @@ test_that("List out of date with duplicates", {
                         root = path, propagate = TRUE)
 
   bad_reports <- orderly_graph_out_of_date(tree)
-  expect_equal(bad_reports, c("depend2","depend3"))
+  expect_equal(bad_reports, c("depend2", "depend3"))
 })
 
 test_that("R6 errorMessages", {
   tree <- "Not an R6 object"
     expect_error(orderly_graph_out_of_date(tree),
-                 "'tree' must be a Tree")
+                 "'tree' must be a report_tree")
 })
 
 test_that("Only one report - previous", {
@@ -295,7 +295,7 @@ test_that("Only one report - previous", {
                "There is only one version of example")
 })
 
-test_that("Pinned reports",{
+test_that("Pinned reports", {
   ## There is logic in orderly_graph for different behaviour when a
   ## report uses an artefact from a pinned version of a report. We also
   ## distinguish between pinned to the latest and pinned to anything else.
@@ -329,7 +329,6 @@ test_that("Pinned reports",{
   yml <- file.path(path_example, "orderly.yml")
   txt <- yaml_read(yml)
   txt$depends[[1]]$depend2$id <- id_4
-  # print(txt)
   yaml_write(txt, file.path(path_example, "orderly.yml"))
 
   ## Run the third report

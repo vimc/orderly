@@ -57,7 +57,8 @@ orderly_config_read_yaml <- function(filename, root) {
     assert_character(info$tags, sprintf("%s:tags", filename))
   }
 
-  info[['vault']] <- config_check_vault(info[['vault']], info[['vault_server']], filename)
+  info[["vault"]] <-
+    config_check_vault(info[["vault"]], info[["vault_server"]], filename)
   info$remote <- config_check_remote(info$remote, filename)
 
   info$root <- normalizePath(root, mustWork = TRUE)

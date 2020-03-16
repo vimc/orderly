@@ -194,7 +194,7 @@ migration_result <- function(changed, data) {
 
 
 available_migrations <- function() {
-  avail <- dir(orderly_file("migrate"), pattern = "^([0-9]+\\.){3}R$",
+  avail <- dir(orderly_file("migrate"), pattern = "^([0-9]+\\.){3}R$", # nolint
                full.names = TRUE)
   names(avail) <- sub("\\.R$", "", basename(avail))
   avail[order(numeric_version(names(avail)))]
@@ -260,7 +260,7 @@ migrate_single <- function(path, config) {
 
 migrate_clean <- function(config, dry_run) {
   files <- list.files(file.path(config$root, "archive"),
-                      "^orderly_run_([0-9]+\\.){3}rds",
+                      "^orderly_run_([0-9]+\\.){3}rds", # nolint
                       recursive = TRUE, full.names = TRUE)
   size <- pretty_bytes(sum(file_size(files)))
   orderly_log("clean",

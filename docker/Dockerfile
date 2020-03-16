@@ -1,11 +1,14 @@
 FROM rocker/r-ver:3.6.2
 
-RUN apt-get update && apt-get -y install \
+RUN apt-get update && apt-get -y install --no-install-recommends \
   git \
   libssl-dev \
   libpq-dev \
   sqlite3 \
-  wget
+  wget \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
 
 RUN sed  -i'' '/mran.microsoft.com/d' /usr/local/lib/R/etc/Rprofile.site
 

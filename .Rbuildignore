@@ -16,3 +16,5 @@
 ^reference$
 ^README\.md\.in$
 ^orderly_.*\.tar\.gz$
+^\.lintr$
+^\.hadolint\.yaml$

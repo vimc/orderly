@@ -1,4 +1,5 @@
-Vertex <- R6::R6Class("Vertex",
+report_vertex <- R6::R6Class(
+  "report_vertex",
   public = list(
     parent = NULL,
     children = list(),
@@ -22,7 +23,8 @@ Vertex <- R6::R6Class("Vertex",
 )
 
 
-Tree <- R6::R6Class("Tree",
+report_tree <- R6::R6Class(
+  "report_tree",
   private = list(
     message = NULL,
     direction = NULL,
@@ -39,7 +41,8 @@ Tree <- R6::R6Class("Tree",
     ##
     ## * vertex is the current vertex to be printed
     ## * prefix is a offset string to get the indentation correct - it will be
-    ##   of the form "│       │   " (i.e. some combination of "│   " and "    ")
+    ##   of the form "│       │   " (i.e. some combination of "│   "
+    ##   and "    ")
     ## * tree_string is final printed string (with line breaks and colouring)
     format_helper = function(vertex = self$root,
                              prefix = "",
@@ -52,8 +55,7 @@ Tree <- R6::R6Class("Tree",
       }
 
       # append the current vertex to the end of the print string
-      console_colour <-
-                       if (vertex$out_of_date) {crayon::red} else {crayon::blue}
+      console_colour <- if (vertex$out_of_date) crayon::red else crayon::blue
       tree_string <- sprintf("%s%s\n", tree_string,
                                        console_colour(vertex$format()))
 
@@ -64,23 +66,22 @@ Tree <- R6::R6Class("Tree",
           is_last <- (i == number_children)
 
           console_colour <-
-                        if (child$out_of_date) {crayon::red} else {crayon::blue}
+            if (child$out_of_date) crayon::red else crayon::blue
 
           ## the start of the line = prefix + either +-- or +--
-          line_prefix <- sprintf("%s%s--", prefix,
-                                           if (is_last) {"+"} else {"+"})
+          line_prefix <- sprintf("%s+--", prefix)
 
           tree_string <- sprintf("%s%s", tree_string,
                                          console_colour(line_prefix))
 
           ## increase indentation with either "|   " or "    " (4 characters!)
-          prefix <- sprintf("%s%s   ", prefix,  if (is_last) {" "} else {"|"})
+          prefix <- sprintf("%s%s   ", prefix, if (is_last) " " else "|")
 
           tree_string <- private$format_helper(child, prefix, tree_string)
 
           ## decrease the indentation by 4 characters
           prefix <- substr(prefix, 1, nchar(prefix) - 4)
-          i <- i + 1
+          i <- i + 1L
         }
       }
       tree_string
@@ -95,7 +96,7 @@ Tree <- R6::R6Class("Tree",
       private$direction <- direction
     },
     add_child = function(parent, name, id, out_of_date) {
-      child <- Vertex$new(parent, name, id, out_of_date)
+      child <- report_vertex$new(parent, name, id, out_of_date)
       parent$add_child(child)
       private$vertices <- append(private$vertices, list(child))
       child
