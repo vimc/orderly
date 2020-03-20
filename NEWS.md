@@ -1,3 +1,7 @@
+# orderly 1.1.14
+
+* Fix bug in instance selection, probably introduced in 1.0.6 (VIMC-3589)
+
 # orderly 1.1.13
 
 * Enable implicit report name for `orderly::orderly_run` and `orderly::orderly_pull_dependenices` (VIMC-3512, #170)
