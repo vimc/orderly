@@ -27,7 +27,9 @@
 ##'
 ##' @title Download dependent reports
 ##'
-##' @param name Name of the report to download dependencies for
+##' @param name Name of the report to download dependencies for.
+##'   Alternatively, the default of \code{NULL} is useful if you have
+##'   already set the working directory to be the source directory.
 ##'
 ##' @param remote Description of the location.  Typically this is a
 ##'   character string indicating a remote specified in the
@@ -52,9 +54,11 @@
 ##'   remote system in more detail.
 ##'
 ##' @example man-roxygen/example-remote.R
-orderly_pull_dependencies <- function(name, root = NULL, locate = TRUE,
+orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
                                       remote = NULL) {
-  config <- orderly_config_get(root, locate)
+  loc <- orderly_develop_location(name, root, locate)
+  name <- loc$name
+  config <- loc$config
   remote <- get_remote(remote, config)
 
   path <- file.path(path_src(config$root), name)

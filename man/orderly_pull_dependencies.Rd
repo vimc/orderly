@@ -5,7 +5,12 @@
 \alias{orderly_pull_archive}
 \title{Download dependent reports}
 \usage{
-orderly_pull_dependencies(name, root = NULL, locate = TRUE, remote = NULL)
+orderly_pull_dependencies(
+  name = NULL,
+  root = NULL,
+  locate = TRUE,
+  remote = NULL
+)
 
 orderly_pull_archive(
   name,
@@ -16,7 +21,9 @@ orderly_pull_archive(
 )
 }
 \arguments{
-\item{name}{Name of the report to download dependencies for}
+\item{name}{Name of the report to download dependencies for.
+Alternatively, the default of \code{NULL} is useful if you have
+already set the working directory to be the source directory.}
 
 \item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working

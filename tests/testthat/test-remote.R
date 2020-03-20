@@ -53,6 +53,16 @@ test_that("pull dependencies", {
 })
 
 
+test_that("pull dependencies with implied name", {
+  dat <- prepare_orderly_remote_example()
+    expect_equal(nrow(orderly_list_archive(dat$config)), 0)
+  withr::with_dir(
+    file.path(dat$config$root, "src", "depend"),
+    orderly_pull_dependencies(remote = dat$remote))
+  expect_equal(nrow(orderly_list_archive(dat$config)), 1)
+})
+
+
 test_that("pull_dependencies counts dependencies", {
   dat <- prepare_orderly_remote_example()
 
