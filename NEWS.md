@@ -1,3 +1,7 @@
+# orderly 1.1.13
+
+* Enable implicit report name for `orderly::orderly_run` and `orderly::orderly_pull_dependenices` (VIMC-3512, #170)
+
 # orderly 1.1.12
 
 * Introduces a basic query interface for searching for reports that match criteria based on parameters and tags, which can be used directly `orderly::orderly_search` or when declaring dependencies (VIMC-3538)

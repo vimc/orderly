@@ -145,7 +145,7 @@ orderly_develop_location <- function(name, root, locate) {
   }
 
   path <- file.path(path_src(config$root), name)
-  inplace <- same_path(path, getwd())
+  inplace <- file.exists(path) && same_path(path, getwd())
 
   list(config = config, name = name, path = path, inplace = inplace)
 }

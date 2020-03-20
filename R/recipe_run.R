@@ -39,6 +39,8 @@
 ##' @param name Name of the report to run (see
 ##'   \code{\link{orderly_list}}).  A leading \code{src/} will be
 ##'   removed if provided, allowing easier use of autocomplete.
+##'   Alternatively, the default of \code{NULL} is useful if you have
+##'   already set the working directory to be the source directory.
 ##'
 ##' @param parameters Parameters passed to the report. A named list of
 ##'   parameters declared in the \code{orderly.yml}.  Each parameter
@@ -127,19 +129,16 @@
 ##'
 ##' # These parameters can be used in SQL queries or in the report
 ##' # code.
-orderly_run <- function(name, parameters = NULL, envir = NULL,
+orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
                         root = NULL, locate = TRUE, echo = TRUE,
                         id_file = NULL, fetch = FALSE, ref = NULL,
                         message = NULL, instance = NULL, use_draft = FALSE,
                         remote = NULL, tags = NULL) {
+  loc <- orderly_develop_location(name, root, locate)
+  name <- loc$name
+  config <- check_orderly_archive_version(loc$config)
+
   envir <- orderly_environment(envir)
-  config <- orderly_config_get(root, locate)
-  config <- check_orderly_archive_version(config)
-
-  if (grepl("^src/.+", name)) {
-    name <- sub("^src/", "", name)
-  }
-
   info <- recipe_prepare(config, name, id_file, ref, fetch, message,
                          use_draft, parameters, remote, tags = tags)
 
