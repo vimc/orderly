@@ -1,5 +1,6 @@
 changelog_load <- function(path, message, info, config) {
   changelog <- changelog_read(path)
+
   if (!is.null(message)) {
     changelog <- rbind(
       changelog_message_parse(message),

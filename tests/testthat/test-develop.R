@@ -22,7 +22,7 @@ test_that("orderly_develop_location", {
   skip_on_cran_windows()
   path <- prepare_orderly_example("demo")
 
-  cfg <- orderly_config(path)
+  cfg <- orderly_config$new(path)
   name <- "minimal"
   cmp1 <- list(config = cfg,
                name = name,

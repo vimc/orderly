@@ -181,7 +181,7 @@ test_that("silently ignore missing slack url, but resolve args", {
       "    slack_url: $ORDERLY_UNSET_SLACK_URL"),
     file.path(path, "orderly_config.yml"))
 
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
 
   clear_remote_cache()
   remote <- withr::with_envvar(

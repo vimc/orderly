@@ -196,7 +196,7 @@ test_that("main interface", {
 
   config <- withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = "production"),
-    orderly_config(path))
+    orderly_config$new(path))
 
   r <- slack_post_success(dat, config)
   expect_equal(r$status_code, 200L)
@@ -207,7 +207,7 @@ test_that("main interface", {
 
   config <- withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = "testing"),
-    orderly_config(path))
+    orderly_config$new(path))
 
   r <- slack_post_success(dat, config)
   expect_equal(r$status_code, 200L)

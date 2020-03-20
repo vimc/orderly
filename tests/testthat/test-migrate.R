@@ -7,7 +7,7 @@ test_that("0.3.2 -> 0.3.3", {
   path <- unpack_reference("0.3.2")
   cmp <- unpack_reference("0.4.8")
   orderly_migrate(path, to = "0.3.3")
-  patch_orderly_config(path)
+  patch_orderly_config$new(path)
 
   d <- orderly_list_archive(path)
   p <- file.path(d$name, d$id)
@@ -57,7 +57,7 @@ test_that("failed migrations are rolled back", {
     list(changed = TRUE, data = data)
   }
 
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   expect_error(migrate_apply(path, "0.3.3", fun, config, FALSE, FALSE),
                "some sort of migration failure")
   cmp <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
@@ -82,8 +82,8 @@ test_that("failed migrations can be skipped", {
     list(changed = TRUE, data = data)
   }
 
-  patch_orderly_config(path)
-  config <- orderly_config(path)
+  patch_orderly_config$new(path)
+  config <- orderly_config$new(path)
   migrate_apply(path, "0.3.3", fun, config, FALSE, TRUE)
 
   id <- "20170805-220525-1dc8fb81"
@@ -114,8 +114,8 @@ test_that("failed migrations warned in dry run", {
     list(changed = TRUE, data = data)
   }
 
-  patch_orderly_config(path)
-  config <- orderly_config(path)
+  patch_orderly_config$new(path)
+  config <- orderly_config$new(path)
   expect_message(
     migrate_apply(path, "0.3.3", fun, config, TRUE, TRUE),
     "this report would be moved to")
@@ -140,7 +140,7 @@ test_that("migrate_plan default is used", {
   on.exit(options(oo))
 
   path <- unpack_reference("0.3.2")
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   expect_equal(migrate_plan(config$archive_version), available_migrations())
   expect_equal(migrate_plan(config$archive_version, to = "0.0.1"),
                set_names(character(), character()))
@@ -189,7 +189,7 @@ test_that("can't commit old version", {
   on.exit(options(oo))
 
   path <- unpack_reference("0.3.2")
-  patch_orderly_config(path)
+  patch_orderly_config$new(path)
   contents <- orderly_list_archive(path)
 
   id <- contents$id[contents$name == "depend"][[1L]]
@@ -211,7 +211,7 @@ test_that("don't migrate new orderly", {
   path <- prepare_orderly_example("minimal")
   p <- path_orderly_archive_version(path)
   unlink(p)
-  check_orderly_archive_version(orderly_config(path))
+  check_orderly_archive_version(orderly_config$new(path))
   expect_true(file.exists(p))
   expect_equal(read_orderly_archive_version(path),
                as.character(cache$current_archive_version))
@@ -251,7 +251,7 @@ test_that("automatic migrations", {
   on.exit(options(oo))
 
   path <- unpack_reference("0.5.1")
-  patch_orderly_config(path)
+  patch_orderly_config$new(path)
   con <- orderly_db("destination", path, validate = FALSE)
   dat <- DBI::dbReadTable(con, "report_version")
   DBI::dbDisconnect(con)
@@ -271,7 +271,7 @@ test_that("migrate 0.5.4 -> 0.5.5", {
   orderly_migrate(path, to = "0.5.5")
   orderly_rebuild(path)
 
-  patch_orderly_config(path)
+  patch_orderly_config$new(path)
   con <- orderly_db("destination", path, validate = FALSE)
   dat <- DBI::dbReadTable(con, "report_version")
   DBI::dbDisconnect(con)
@@ -286,7 +286,7 @@ test_that("rebuild db with incorrect schema information", {
   on.exit(options(oo))
 
   path <- unpack_reference("0.5.17")
-  patch_orderly_config(path)
+  patch_orderly_config$new(path)
   con <- orderly_db("destination", path, validate = FALSE)
   on.exit(DBI::dbDisconnect(con), add = TRUE)
 

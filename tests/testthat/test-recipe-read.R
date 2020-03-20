@@ -14,7 +14,7 @@ test_that("minimal", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path))
 
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   path_example <- file.path(path, "src", "example")
   info <- recipe_read(path_example, config)
 
@@ -91,7 +91,7 @@ test_that("minimal", {
 test_that("ill formed artefacts", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path))
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   path_example <- file.path(path, "src", "example")
   yml <- file.path(path_example, "orderly.yml")
   dat <- yaml_read(yml)
@@ -108,7 +108,7 @@ test_that("ill formed artefacts", {
 test_that("unknown artefact type", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path))
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   path_example <- file.path(path, "src", "example")
   yml <- file.path(path_example, "orderly.yml")
   dat <- yaml_read(yml)
@@ -124,7 +124,7 @@ test_that("unknown artefact type", {
 test_that("duplicate artefact filenames; within artefact", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path))
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   path_example <- file.path(path, "src", "example")
   yml <- file.path(path_example, "orderly.yml")
   dat <- yaml_read(yml)
@@ -138,7 +138,7 @@ test_that("duplicate artefact filenames; within artefact", {
 test_that("duplicate artefact filenames; between artefacts", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path))
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   path_example <- file.path(path, "src", "example")
   yml <- file.path(path_example, "orderly.yml")
   dat <- yaml_read(yml)
@@ -230,7 +230,7 @@ test_that("use_draft = newer ignores fails drafts", {
   dat$depends$example$draft <- NULL
   yaml_write(dat, filename)
 
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   info <- recipe_read(file.path(path, "src", "depend"), config,
                       use_draft = "newer")
   expect_equal(basename(info$depends$path), id2)
@@ -298,7 +298,7 @@ test_that("can't use database in configurations that lack them", {
   dat <- list(data = list(dat = list(query = "SELECT name, number FROM thing")))
   writeLines(c(txt, yaml::as.yaml(dat)), p)
   expect_error(
-    recipe_read(dirname(p), orderly_config(path)),
+    recipe_read(dirname(p), orderly_config$new(path)),
     "No databases are configured - can't use a 'data' section")
 })
 
@@ -310,7 +310,7 @@ test_that("can't use connection in configurations that lack databases", {
   dat <- list(connection = "con")
   writeLines(c(txt, yaml::as.yaml(dat)), p)
   expect_error(
-    recipe_read(dirname(p), orderly_config(path)),
+    recipe_read(dirname(p), orderly_config$new(path)),
     "No databases are configured - can't use a 'connection' section")
 })
 
@@ -322,7 +322,7 @@ test_that("database names are required with more than one db", {
   dat$data$dat1$database <- NULL
   writeLines(yaml::as.yaml(dat), p)
   expect_error(
-    recipe_read(dirname(p), orderly_config(path)),
+    recipe_read(dirname(p), orderly_config$new(path)),
     "More than one database configured; a 'database' field is required for")
 })
 
@@ -334,7 +334,7 @@ test_that("connection names are required with more than one db", {
   dat$connection <- "con"
   writeLines(yaml::as.yaml(dat), p)
   expect_error(
-    suppressWarnings(recipe_read(dirname(p), orderly_config(path))),
+    suppressWarnings(recipe_read(dirname(p), orderly_config$new(path))),
     "More than one database configured; update 'connection' from 'con'")
 })
 
@@ -352,7 +352,7 @@ test_that("Can't use database name on old style configuration", {
 
   ## If database present, the new style is validated correctly:
   expect_warning(
-    config <- orderly_config(path),
+    config <- orderly_config$new(path),
     "Use of 'source' is deprecated")
 
   res <- recipe_read(dirname(p), config)
@@ -372,7 +372,7 @@ test_that("validate database names", {
   names(dat$database) <- c("db1", "db2")
   writeLines(yaml::as.yaml(dat), p)
 
-  cfg <- orderly_config(path)
+  cfg <- orderly_config$new(path)
 
   expect_error(recipe_read(file.path(path, "src", "example"), cfg),
                "orderly.yml:data:dat1:database must be one of 'db1', 'db2'",
@@ -389,7 +389,7 @@ test_that("warn old style db", {
     prepare_orderly_example("olddb", testing = TRUE))
   cfg <- withr::with_options(
     list(orderly.nowarnings = TRUE),
-    orderly_config(path))
+    orderly_config$new(path))
 
   expect_silent(
     recipe_read(file.path(path, "src", "example"), cfg))
@@ -399,7 +399,7 @@ test_that("warn old style db", {
   file.rename(file.path(path, "orderly_config.yml.new"),
               file.path(path, "orderly_config.yml"))
   expect_warning(
-    cfg <- orderly_config(path),
+    cfg <- orderly_config$new(path),
     "Please move your database arguments")
 
   expect_warning(
@@ -419,7 +419,7 @@ test_that("detect modified artefacts", {
   p <- orderly_commit(id, root = path)
   writeLines(character(0), file.path(p, "summary.csv"))
 
-  cfg <- orderly_config(path)
+  cfg <- orderly_config$new(path)
   expect_error(
     recipe_read(file.path(path, "src", "use_dependency"), config = cfg),
     paste("Validation of dependency 'summary.csv' (other/latest) failed:",
@@ -445,7 +445,7 @@ test_that("modified artefacts when more than one used", {
                                            mygraph.pdf = "mygraph.pdf")))
   yaml_write(yml, path_yml)
 
-  cfg <- orderly_config(path)
+  cfg <- orderly_config$new(path)
   expect_error(
     recipe_read(file.path(path, "src", "use_dependency"), config = cfg),
     paste("Validation of dependency 'mygraph.pdf' (multifile-artefact/latest)",
@@ -461,7 +461,7 @@ test_that("sources and resources are exclusive", {
   d$resources <- d$sources
   yaml_write(d, p)
 
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   expect_error(
     recipe_read(file.path(path, "src", "other"), config),
     "Do not list source files \\(sources\\) as resources:\\s+- functions\\.R")
@@ -512,7 +512,7 @@ test_that("old style global resources deprecated", {
   writeLines(config_lines, path_yaml)
 
   expect_warning(
-    res <- recipe_read(path_example, orderly_config(path)),
+    res <- recipe_read(path_example, orderly_config$new(path)),
     "Use of strings for global_resources: is deprecated")
   expect_equal(
     res$global_resources,
@@ -523,7 +523,7 @@ test_that("old style global resources deprecated", {
 test_that("read parameters", {
   path <- prepare_orderly_example("parameters", testing = TRUE)
   path_example <- file.path(path, "src", "example")
-  info <- recipe_read(path_example, orderly_config(path))
+  info <- recipe_read(path_example, orderly_config$new(path))
   expect_equal(info$parameters,
                list(a = NULL, b = NULL, c = list(default = 1)))
 })
@@ -537,7 +537,7 @@ test_that("read old-style parameters", {
   dat$parameters <- list("a", "b", "c")
   yaml_write(dat, path_orderly)
   expect_warning(
-    info <- recipe_read(path_example, orderly_config(path)),
+    info <- recipe_read(path_example, orderly_config$new(path)),
     "Use of strings for parameters: is deprecated")
   expect_equal(info$parameters,
                list(a = NULL, b = NULL, c = NULL))
@@ -548,7 +548,7 @@ test_that("validate parameters", {
   path <- prepare_orderly_example("parameters", testing = TRUE)
   path_example <- file.path(path, "src", "example")
   path_orderly <- file.path(path_example, "orderly.yml")
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
 
   dat <- yaml_read(path_orderly)
   dat$parameters <- list(a = list(something = 1))
@@ -562,7 +562,7 @@ test_that("validate parameters", {
 
 test_that("Can resolve dependencies remotely", {
   dat <- prepare_orderly_remote_example()
-  config <- orderly_config(dat$path_local)
+  config <- orderly_config$new(dat$path_local)
   info <- recipe_read(file.path(path_src(config$root), "depend"), config,
                       FALSE)
   expect_equal(nrow(orderly_list_archive(dat$path_local)), 0)
@@ -584,7 +584,7 @@ test_that("Can resolve dependencies remotely", {
 
 test_that("resolve_dependencies_remote", {
   dat <- prepare_orderly_remote_example()
-  config <- orderly_config(dat$path_local)
+  config <- orderly_config$new(dat$path_local)
   remote <- get_remote("default", config)
 
   p <- file.path(normalizePath(dat$path_local), "archive", "example")
@@ -611,7 +611,7 @@ test_that("resolve_dependencies_remote", {
 
 test_that("Can't use queries when resolving dependencies remotely", {
   dat <- prepare_orderly_remote_example()
-  config <- orderly_config(dat$path_local)
+  config <- orderly_config$new(dat$path_local)
   remote <- get_remote("default", config)
   expect_error(
     resolve_dependencies_remote("latest()", "example", config, remote),
@@ -627,7 +627,7 @@ test_that("friendly error message if artefacts are incorrectly given", {
   dat$artefacts <- "mygraph.png"
   yaml_write(dat, p)
 
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   err <- expect_error(
     recipe_read(dirname(p), config),
     "Your artefacts are misformatted.  You must provide")
@@ -649,7 +649,7 @@ test_that("friendly error message if artefacts are incorrectly given", {
 test_that("Read partial orderly.yml", {
   path <- prepare_orderly_example("minimal")
   p <- orderly_new("partial", root = path, quiet = TRUE)
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   expect_message(
     recipe_read(p, config, develop = TRUE),
     "At least one artefact required")
@@ -663,7 +663,7 @@ test_that("Read completely empty orderly.yml", {
   path <- prepare_orderly_example("minimal")
   p <- orderly_new("partial", root = path, quiet = TRUE)
   file.create(file.path(p, "orderly.yml")) # truncates file
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   expect_message(
     recipe_read(p, config, develop = TRUE),
     "Fields missing from .*: script, artefacts")
@@ -674,7 +674,7 @@ test_that("Validate report tag", {
   root <- prepare_orderly_example("minimal")
   append_lines(c("tags:", "  - tag1", "  - tag2"),
                file.path(root, "orderly_config.yml"))
-  config <- orderly_config(root)
+  config <- orderly_config$new(root)
   path <- file.path(root, "src", "example")
   path_config <- file.path(path, "orderly.yml")
   txt <- readLines(path_config)
@@ -699,7 +699,7 @@ test_that("Validate report tag", {
 
 test_that("Better error message where tags not enabled", {
   root <- prepare_orderly_example("minimal")
-  config <- orderly_config(root)
+  config <- orderly_config$new(root)
   path <- file.path(root, "src", "example")
   path_config <- file.path(path, "orderly.yml")
   txt <- readLines(path_config)
@@ -778,7 +778,7 @@ test_that("Query interface", {
   root <- dat$root
   ids <- dat$ids
 
-  config <- orderly_config(root)
+  config <- orderly_config$new(root)
 
   p <- file.path(root, "src", "use_dependency", "orderly.yml")
   txt <- readLines(p)
@@ -816,7 +816,7 @@ test_that("pass parameters through query interface", {
   root <- dat$root
   ids <- dat$ids
 
-  config <- orderly_config(root)
+  config <- orderly_config$new(root)
 
   p <- file.path(root, "src", "use_dependency", "orderly.yml")
   txt <- readLines(p)

@@ -41,7 +41,7 @@ orderly_remote_path_ <- R6::R6Class(
       if (!file.exists(path_orderly_config_yml(path))) {
         stop("Does not look like an orderly repository: ", squote(path))
       }
-      self$config <- orderly_config(path)
+      self$config <- orderly_config$new(path)
       self$name <- name %||% self$config$root
       lockBinding(quote(config), self)
       lockBinding(quote(name), self)

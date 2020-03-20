@@ -1,6 +1,8 @@
 ## Send slack messages!
 
 slack_post_success <- function(dat, config) {
+  stop("FIXME")
+  # instead need to go through server_options
   if (!is.null(config$remote_identity)) {
     remote <- get_remote(config$remote_identity, config)
 
