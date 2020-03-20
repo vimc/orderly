@@ -5,7 +5,7 @@
 \title{Run a report}
 \usage{
 orderly_run(
-  name,
+  name = NULL,
   parameters = NULL,
   envir = NULL,
   root = NULL,
@@ -24,7 +24,9 @@ orderly_run(
 \arguments{
 \item{name}{Name of the report to run (see
 \code{\link{orderly_list}}).  A leading \code{src/} will be
-removed if provided, allowing easier use of autocomplete.}
+removed if provided, allowing easier use of autocomplete.
+Alternatively, the default of \code{NULL} is useful if you have
+already set the working directory to be the source directory.}
 
 \item{parameters}{Parameters passed to the report. A named list of
 parameters declared in the \code{orderly.yml}.  Each parameter

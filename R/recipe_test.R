@@ -26,6 +26,11 @@
 ##' }
 ##'
 ##' @title Prepare a directory for orderly to use
+##'
+##' @param name Name of the report to run (see
+##'   \code{\link{orderly_list}}).  A leading \code{src/} will be
+##'   removed if provided, allowing easier use of autocomplete.
+##'
 ##' @inheritParams orderly_run
 ##' @return The path to the report directory
 ##' @export

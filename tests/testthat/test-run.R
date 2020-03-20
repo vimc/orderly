@@ -977,3 +977,14 @@ test_that("can use environment variables in report", {
     readLines(file.path(path, "draft", "example", id, "env_vars")),
     c(data_path, "example value"))
 })
+
+
+test_that("pick up name from the working directory", {
+  skip_on_cran_windows()
+  path <- prepare_orderly_example("minimal")
+
+  id <- withr::with_dir(
+    file.path(path, "src", "example"),
+    orderly_run(echo = FALSE))
+  expect_true(file.exists(file.path(path, "draft", "example", id)))
+})
