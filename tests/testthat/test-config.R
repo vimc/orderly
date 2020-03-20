@@ -354,8 +354,8 @@ test_that("multiple database configurations", {
   cfg <- orderly_config(path)
   expect_equal(cfg$database$source$args, list(dbname = "production.sqlite"))
   expect_equal(cfg$database$source$instances,
-               list(staging = list(dbname = "staging.sqlite"),
-                    production = list(dbname = "production.sqlite")))
+               list(production = list(dbname = "production.sqlite"),
+                    staging = list(dbname = "staging.sqlite")))
 })
 
 
