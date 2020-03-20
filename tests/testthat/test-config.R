@@ -421,10 +421,30 @@ test_that("default instance from an environmental variable", {
     orderly_config(path))
   expect_equal(cfg$database$source$args, list(dbname = "production.sqlite"))
 
+  cfg <- withr::with_envvar(
+    c("ORDERLY_TEST_DEFAULT_INSTANCE" = "staging"),
+    orderly_config(path))
+  expect_equal(cfg$database$source$args, list(dbname = "staging.sqlite"))
+
+  cfg_db <- withr::with_envvar(
+    c("ORDERLY_TEST_DEFAULT_INSTANCE" = "production"),
+    db_instance_select(NULL, orderly_config(path)$database))
+  expect_equal(cfg_db$source$args, list(dbname = "production.sqlite"))
+
+  cfg_db <- withr::with_envvar(
+    c("ORDERLY_TEST_DEFAULT_INSTANCE" = "staging"),
+    db_instance_select(NULL, orderly_config(path)$database))
+  expect_equal(cfg_db$source$args, list(dbname = "staging.sqlite"))
+
   writeLines("ORDERLY_TEST_DEFAULT_INSTANCE: production",
              file.path(path, "orderly_envir.yml"))
   cfg <- orderly_config(path)
   expect_equal(cfg$database$source$args, list(dbname = "production.sqlite"))
+
+  cfg_db <- withr::with_envvar(
+    c("ORDERLY_TEST_DEFAULT_INSTANCE" = "production"),
+    db_instance_select(NULL, orderly_config(path)$database))
+  expect_equal(cfg_db$source$args, list(dbname = "production.sqlite"))
 })
 
 
