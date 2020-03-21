@@ -71,7 +71,7 @@ We hope that this system will become easier to deploy in future.  We use it inte
 
 We recommend using [HashiCorp's vault](https://www.vaultproject.io/) for storing secrets (of which several are used here), and our tooling is designed to make this easy.
 
-You will need to set up and/or gather a few things before hand
+You will need to set up and/or gather a few things beforehand:
 
 * SSL certificate and private key for the reverse proxy; in the example below we have stored the certificate in the vault
 * If the orderly source repository is private, [create a deploy key](https://developer.github.com/v3/guides/managing-deploy-keys/#deploy-keys) with read-only access to your repository, and add that to the vault also

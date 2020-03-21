@@ -14,7 +14,7 @@ The key issues to consider are
 * how will report *sources* be shared?
 * how do the *inputs* (e.g., `orderly` resources) make it into the reports?
 * how will report *outputs* be shared?
-* who's outputs are the "canonical" version?
+* whose outputs are the "canonical" version?
 
 ## Individual researcher
 
@@ -34,23 +34,23 @@ If your reports are very small, then this may work for you.  However, git become
 
 ## Small group, sharing via shared disk
 
-As soon as more than one person is involved, things get more tricky.  We need to ensure that everybody has a few of the same set of archive reports, and over the same source tree, yet can work on their own work somewhat independently.
+As soon as more than one person is involved, things get more tricky.  We need to ensure that everybody has a view of the same set of archive reports, and over the same source tree, yet can work on their own work somewhat independently.
 
-The researchers use a common "source tree" which is under version control with git, and kept on GitHub.  Nobody may commit to master and all changes to master are introduced via a ["Pull Request"](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests) (other hosted source control platforms have equivalents, for example [GitLab merge requests](https://docs.gitlab.com/ee/user/project/merge_requests/)).  Everybody has this cloned locally, and the git repository does not include `archive` or `source`.  With this setup it is easy to ensure that different members of the team are looking at the same source code, and `orderly` will track that as part of its metadata (git's branch, sha and status).
+The researchers use a common "source tree" which is under version control with git, and kept on GitHub.  Nobody may commit to master and all changes to master are introduced via a ["Pull Request"](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests) (other hosted source control platforms have equivalents, for example [GitLab merge requests](https://docs.gitlab.com/ee/user/project/merge_requests/)).  Everybody has this cloned locally, and the git repository does not include `archive` or `draft`.  With this setup it is easy to ensure that different members of the team are looking at the same source code, and `orderly` will track that as part of its metadata (git's branch, sha and status).
 
 However, we still must synchronise the reports that have been run.  Of course everyone can run their own copy of a report and build off of that but this poses several potential problems:
 
-* if the report is stochastic, the results will likely differ
+* if the report is non-deterministic, the results will likely differ between runs
 * if the report depends on an external data source (a SQL database, web resource, etc) the results may differ
 * if underlying package versions have changed, the results may differ
 * if the report is long-running, this is time-consuming
 * everyone will end up with a different report id, so it is difficult to know that we're looking at the same "effective" report when results are shared
 
-What we want is that after a particular version of a report to have been run, it is easy for other people to start depending on it.  To achieve this we need a method for getting the archive from one person's computer to another.
+What we want is that after a particular version of a report has been run, it is easy for other people to start depending on it.  To achieve this we need a method for getting the archive from one person's computer to another.
 
 For this discussion we will assume two researchers ["Alice" and "Bob"](https://en.wikipedia.org/wiki/Alice_and_Bob) rather than "Researcher A" and "Researcher B".
 
-Alice develops a report `report-a` on her computer by running `orderly::orderly_new("report-a")` and working with `orderly::orderly_develop_start()` and `orderly::orderly_run()` until she is happy with the results.  She then creates a pull request, and Bob approves it (probably after checking that the report runs on his machine too) and merged it.
+Alice develops a report `report-a` on her computer by running `orderly::orderly_new("report-a")` and working with `orderly::orderly_develop_start()` and `orderly::orderly_run()` until she is happy with the results.  She then creates a pull request, and Bob approves it (probably after checking that the report runs on his machine too) and merges it.
 
 Now that this report has been merged into master we need to run a "canonical copy".  We do this on a third copy of the sources that are checked out somewhere accessible to *both* Alice and Bob; this might be using Dropbox or another file-sharing platform, or on a network drive visible to both users.
 
@@ -71,13 +71,13 @@ This tells `orderly` that we will use a file-based remote source (i.e., a shared
 To fill in the environment variable we create a file `orderly_envir.yml` (which should be added to `.gitignore`) containing the path to the shared source.  For Alice, this might look like
 
 ```yaml
-ORDERLY_PATH_DEFAULT_REMOTE: /Users/alice/Dropbox/ourorderly
+ORDERLY_PATH_DEFAULT_REMOTE: /Users/alice/Dropbox/our-project
 ```
 
 and for Bob it might look like
 
 ```yaml
-ORDERLY_PATH_DEFAULT_REMOTE: c:/Bob/Documents/Dropbox/ourorderly
+ORDERLY_PATH_DEFAULT_REMOTE: c:/Bob/Documents/Dropbox/our-project
 ```
 
 With this done, Bob can get a copy of `report-a` by running
@@ -88,7 +88,7 @@ orderly::orderly_pull_archive("report-a")
 
 which will copy the latest version of the report from the shared archive into their personal archive.  A this point, Bob has *exactly* the copy of `report-a` that was run on the shared archive.  In the same way that Alice and Bob can exchange git sha hashes to ensure that they are on the same version of the source tree, they can now exchange report ids and ensure that they are looking at the same output.
 
-If you are working on a report that has a dependency (say `report-b`, which depends on `report-b`), you can automatically pull its dependencies by running
+If you are working on a report that has a dependency (say `report-b`, which depends on `report-a`), you can automatically pull its dependencies by running
 
 ```r
 orderly::orderly_pull_dependencies("report-b")
@@ -135,7 +135,7 @@ orderly::orderly_run_remote("report-a", remote = "default")
 
 **ADD A GIF**
 
-this will print to screen the log, just as if it was running locally, though it is in fact running on a fresh R session remotely.  After being run, this report is available to everyone and can be pulled as above
+this will print to screen the log, just as if it were running locally, though it is in fact running on a fresh R session remotely.  After being run, this report is available to everyone and can be pulled as above
 
 ```r
 orderly::orderly_pull_archive("report-a", remote = "default")
@@ -164,7 +164,7 @@ remote:
       token: $GITHUB_TOKEN
 ```
 
-Now, as part of the pull request review procedure, the reviewer will run the report on the staging environment, which ensures that it will likely work without error on the production environment.
+Now, as part of the pull request review procedure, the reviewer will run the report on the staging environment, which means that it should work without error on the production environment if they have been set up the same way.
 
 ```r
 orderly::orderly_run_remote("report-a", remote = "staging", ref = "origin/myfeature")
