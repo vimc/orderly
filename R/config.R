@@ -259,6 +259,9 @@ config_read_db <- function(name, info, filename) {
       args <- dat$args
     } else {
       args <- instances[[dat$default_instance %||% 1L]]
+      v <- c(dat$default_instance,
+             setdiff(names(instances), dat$default_instance))
+      instances <- instances[v]
     }
   } else {
     if (!info$database_old_style) {
