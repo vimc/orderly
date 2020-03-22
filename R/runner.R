@@ -419,7 +419,7 @@ runner_allow_ref <- function(has_git, allow_ref, config) {
     allow_ref <- FALSE
   }
   if (is.null(allow_ref)) {
-    allow_ref <- !(config$server_options$master_only %||% FALSE)
+    allow_ref <- !(config$server_options()$master_only %||% FALSE)
   }
   if (allow_ref) {
     res <- git_run(c("rev-parse", "HEAD"), root = config$root, check = FALSE)

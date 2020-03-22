@@ -152,13 +152,16 @@ test_that("main interface", {
               git = NULL)
 
   config <- list(remote_identity = "myserver",
+                 server_options = function() {
+                   list(slack_url = "https://httpbin.org/post",
+                        primary = TRUE,
+                        master_only = FALSE)
+                 },
                  remote = list(
                    myserver = list(
                      driver = c("orderly", "orderly_remote_path"),
                      args = list(path = path),
-                     slack_url = "https://httpbin.org/post",
                      name = "myserver",
-                     primary = FALSE,
                      url = "https://example.com")))
   r <- slack_post_success(dat, config)
 
