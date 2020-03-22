@@ -297,18 +297,15 @@ test_that("can read a configuration with two databases", {
 
 
 test_that("warn when reading old-style configuration", {
-  skip("FIXME")
   path <- withr::with_options(
     list(orderly.nowarnings = TRUE),
     prepare_orderly_example("olddb", testing = TRUE))
-
   expect_warning(orderly_config$new(path),
                  "Use of 'source' is deprecated and will be removed")
 })
 
 
 test_that("warn when reading old-style db config", {
-  skip("FIXME")
   path <- prepare_orderly_example("minimal")
   content <- c(
     "database:",

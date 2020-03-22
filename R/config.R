@@ -58,7 +58,12 @@ orderly_config <- R6::R6Class(
       }
     },
 
+    migrate = function() {
+      self$data <- config_migrate(self$data)
+    },
+
     validate = function() {
+      self$migrate()
       withr::with_dir(
         self$root,
         withr::with_envvar(
@@ -73,9 +78,60 @@ orderly_config <- R6::R6Class(
       }
       ## TODO(VIMC-3590): Let's move these all under options at some point
       ret <- self$remote[[which(i)]]
-      ret[setdiff(names(ret), c("identity", "driver", "args", "name"))]
+      ret[setdiff(names(ret), c("identity", "driver", "args"))]
     }
   ))
+
+
+config_migrate <- function(data, filename) {
+  if (!is.null(data[["vault_server"]])) {
+    if (!is.null(data[["vault"]])) {
+      stop(sprintf("Can't specify both 'vault' and 'vault_server' in %s",
+                   filename))
+    }
+    msg <- c("Use of 'vault_server' is deprecated and will be removed in a",
+             "future orderly version.  Please use the new 'vault' server",
+             "field, which offers more flexibility")
+    orderly_warning(flow_text(msg))
+    assert_scalar_character(vault_server, sprintf("%s:vault_server", filename))
+    data$vault <- list(addr = vault_server)
+    data$vault_server <- NULL
+  }
+
+  if (!is.null(data[["source"]])) {
+    if (!is.null(data[["database"]])) {
+      stop("Both 'database' and 'source' fields may not be used")
+    }
+    msg <- c("Use of 'source' is deprecated and will be removed in a",
+             "future orderly version - please use 'database' instead.",
+             "See the main package vignette for details.")
+    orderly_warning(flow_text(msg))
+    src <- data$source
+    data$database <- list(
+      source = list(
+        driver = src$driver,
+        args = src[setdiff(names(src), "driver")]))
+    data$source <- NULL
+  }
+
+  for (i in seq_along(data[["database"]])) {
+    x <- data[["database"]][[i]]
+    if (!any(c("instance", "args") %in% names(x))) {
+      label <- sprintf("orderly_config.yml:database:%s", names(x)[[i]])
+      msg <- c("Please move your database arguments within an 'args'",
+               "block, as detecting them will be deprecated in a future",
+               "orderly version.  See the main package vignette for",
+               "details.  Reported for: ", label)
+      orderly_warning(flow_text(msg))
+      v <- setdiff(names(x), "driver")
+      data[["database"]][[i]] <- list(
+        driver = x$driver,
+        args = x[setdiff(names(x), "driver")])
+    }
+  }
+
+  data
+}
 
 
 config_validate <- function(self, filename) {
@@ -86,17 +142,13 @@ config_validate <- function(self, filename) {
   ## An important concept here is that none of the configuration
   ## fields depend on each other - we just plough through and read
   ## them one after another.  That makes things considerably easier to
-  ## reason about (note that none of these gets the fill structure and
-  ## the only two that get anything else are the old-style-handlers)
-
-  ## Write a small 'migration' layer here, I think.  Then things get a
-  ## lot easier.
+  ## reason about
   data <- self$data
 
   check_fields(data, filename, character(),
                c("minimum_orderly_version", "destination", "fields",
-                 "remote", "vault", "vault_server", "global_resources",
-                 "changelog", "tags", "source", "database"))
+                 "remote", "vault", "global_resources",
+                 "changelog", "tags", "database"))
 
   self$destination <- config_validate_destination(
     data[["destination"]], filename)
@@ -105,7 +157,7 @@ config_validate <- function(self, filename) {
   self$remote <- config_validate_remote(
     data[["remote"]], filename)
   self$vault <- config_validate_vault(
-    data[["vault"]], data[["vault_server"]], filename)
+    data[["vault"]], filename)
   self$global_resources <- config_validate_global_resources(
     data[["global_resources"]], filename)
   self$changelog <- config_validate_changelog(
@@ -113,7 +165,7 @@ config_validate <- function(self, filename) {
   self$tags <- config_validate_tags(
     data[["tags"]], filename)
   self$database <- config_validate_database(
-    data[["database"]], data[["source"]], filename)
+    data[["database"]], filename)
 
   self$archive_version <- read_orderly_archive_version(".")
 
@@ -232,23 +284,10 @@ config_validate_remote <- function(remote, filename) {
 }
 
 
-config_validate_vault <- function(vault, vault_server, filename) {
-  if (!is.null(vault_server)) {
-    if (!is.null(vault)) {
-      stop(sprintf("Can't specify both 'vault' and 'vault_server' in %s",
-                   filename))
-    }
-    msg <- c("Use of 'vault_server' is deprecated and will be removed in a",
-             "future orderly version.  Please use the new 'vault' server",
-             "field, which offers more flexibility")
-    orderly_warning(flow_text(msg))
-    assert_scalar_character(vault_server, sprintf("%s:vault_server", filename))
-    vault <- list(addr = vault_server)
-  }
+config_validate_vault <- function(vault, filename) {
   if (!is.null(vault)) {
     assert_named(vault, TRUE, sprintf("%s:vault", filename))
   }
-
   vault
 }
 
@@ -289,24 +328,9 @@ config_validate_tags <- function(tags, filename) {
 }
 
 
-config_validate_database <- function(database, source, filename) {
-  if (is.null(database) && is.null(source)) {
+config_validate_database <- function(database, filename) {
+  if (is.null(database)) {
     return(NULL)
-  }
-  database_old_style <- !is.null(source)
-  if (database_old_style) {
-    if (!is.null(database)) {
-      stop("Both 'database' and 'source' fields may not be used")
-    }
-    msg <- c("Use of 'source' is deprecated and will be removed in a",
-             "future orderly version - please use 'database' instead.",
-             "See the main package vignette for details.")
-    orderly_warning(flow_text(msg))
-    browser()
-    ## This bit needs work
-
-    prefix <- sprintf("%s:source", filename)
-    database <- list(source = config_validate_database1(source, prefix))
   }
 
   assert_named(database, unique = TRUE, sprintf("%s:database", filename))
@@ -320,10 +344,6 @@ config_validate_database <- function(database, source, filename) {
 
 
 config_validate_database1 <- function(db, prefix) {
-  ## TODO: dropping support here for old-style db entries, which
-  ## breaks migrations.  Might support a separate code-path for
-  ## old-style reading, but let's keep this clean.  Alternatively, we
-  ## might just rewrite the migrations before running.
   optional <- c("args", "instances", "default_instance")
   check_fields(db, prefix, "driver", optional)
 
