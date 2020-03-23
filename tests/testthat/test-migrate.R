@@ -7,7 +7,7 @@ test_that("0.3.2 -> 0.3.3", {
   path <- unpack_reference("0.3.2")
   cmp <- unpack_reference("0.4.8")
   orderly_migrate(path, to = "0.3.3")
-  patch_orderly_config$new(path)
+  patch_orderly_config(path)
 
   d <- orderly_list_archive(path)
   p <- file.path(d$name, d$id)
@@ -82,7 +82,7 @@ test_that("failed migrations can be skipped", {
     list(changed = TRUE, data = data)
   }
 
-  patch_orderly_config$new(path)
+  patch_orderly_config(path)
   config <- orderly_config$new(path)
   migrate_apply(path, "0.3.3", fun, config, FALSE, TRUE)
 
@@ -114,7 +114,7 @@ test_that("failed migrations warned in dry run", {
     list(changed = TRUE, data = data)
   }
 
-  patch_orderly_config$new(path)
+  patch_orderly_config(path)
   config <- orderly_config$new(path)
   expect_message(
     migrate_apply(path, "0.3.3", fun, config, TRUE, TRUE),
@@ -189,7 +189,7 @@ test_that("can't commit old version", {
   on.exit(options(oo))
 
   path <- unpack_reference("0.3.2")
-  patch_orderly_config$new(path)
+  patch_orderly_config(path)
   contents <- orderly_list_archive(path)
 
   id <- contents$id[contents$name == "depend"][[1L]]
@@ -251,7 +251,7 @@ test_that("automatic migrations", {
   on.exit(options(oo))
 
   path <- unpack_reference("0.5.1")
-  patch_orderly_config$new(path)
+  patch_orderly_config(path)
   con <- orderly_db("destination", path, validate = FALSE)
   dat <- DBI::dbReadTable(con, "report_version")
   DBI::dbDisconnect(con)
@@ -271,7 +271,7 @@ test_that("migrate 0.5.4 -> 0.5.5", {
   orderly_migrate(path, to = "0.5.5")
   orderly_rebuild(path)
 
-  patch_orderly_config$new(path)
+  patch_orderly_config(path)
   con <- orderly_db("destination", path, validate = FALSE)
   dat <- DBI::dbReadTable(con, "report_version")
   DBI::dbDisconnect(con)
@@ -286,7 +286,7 @@ test_that("rebuild db with incorrect schema information", {
   on.exit(options(oo))
 
   path <- unpack_reference("0.5.17")
-  patch_orderly_config$new(path)
+  patch_orderly_config(path)
   con <- orderly_db("destination", path, validate = FALSE)
   on.exit(DBI::dbDisconnect(con), add = TRUE)
 

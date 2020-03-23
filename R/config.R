@@ -93,8 +93,7 @@ config_migrate <- function(data, filename) {
              "future orderly version.  Please use the new 'vault' server",
              "field, which offers more flexibility")
     orderly_warning(flow_text(msg))
-    assert_scalar_character(vault_server, sprintf("%s:vault_server", filename))
-    data$vault <- list(addr = vault_server)
+    data$vault <- list(addr = data[["vault_server"]])
     data$vault_server <- NULL
   }
 
@@ -116,7 +115,7 @@ config_migrate <- function(data, filename) {
 
   for (i in seq_along(data[["database"]])) {
     x <- data[["database"]][[i]]
-    if (!any(c("instance", "args") %in% names(x))) {
+    if (!any(c("instances", "args") %in% names(x))) {
       label <- sprintf("orderly_config.yml:database:%s", names(x)[[i]])
       msg <- c("Please move your database arguments within an 'args'",
                "block, as detecting them will be deprecated in a future",

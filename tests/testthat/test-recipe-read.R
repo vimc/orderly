@@ -391,10 +391,12 @@ test_that("warn old style db", {
     list(orderly.nowarnings = TRUE),
     orderly_config$new(path))
 
-  expect_silent(
-    recipe_read(file.path(path, "src", "example"), cfg))
-  expect_silent(
-    recipe_read(file.path(path, "src", "connection"), cfg))
+  expect_warning(
+    recipe_read(file.path(path, "src", "example"), cfg),
+    "Use of strings for queries is deprecated")
+  expect_warning(
+    recipe_read(file.path(path, "src", "connection"), cfg),
+    "Use of strings for connection: is deprecated")
 
   file.rename(file.path(path, "orderly_config.yml.new"),
               file.path(path, "orderly_config.yml"))

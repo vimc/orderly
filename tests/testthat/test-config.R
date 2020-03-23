@@ -110,7 +110,7 @@ test_that("support declaring api server", {
   expect_null(cfg$remote$other$identity)
   expect_equal(
     cfg$server_options(),
-    list(primary = TRUE, master_only = TRUE))
+    list(primary = TRUE, master_only = TRUE, name = "main"))
 
   cfg <- withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = "other"),
@@ -119,7 +119,7 @@ test_that("support declaring api server", {
   expect_true(cfg$remote$other$identity)
   expect_equal(
     cfg$server_options(),
-    list(primary = FALSE, master_only = FALSE))
+    list(primary = FALSE, master_only = FALSE, name = "other"))
 
   cfg <- withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = NA),
@@ -192,17 +192,17 @@ test_that("no global folder", {
 
 
 test_that("vault configuration validation when absent", {
-  expect_null(config_validate_vault(NULL, NULL, "orderly.yml"))
+  expect_null(config_validate_vault(NULL, "orderly.yml"))
 })
 
 
 test_that("vault configuration validation for typical use", {
   vault <- list(addr = "https://vault.example.com")
-  expect_identical(config_validate_vault(vault, NULL, "orderly.yml"), vault)
+  expect_identical(config_validate_vault(vault, "orderly.yml"), vault)
 
   vault <- list(addr = "https://vault.example.com",
                 auth = list(method = "github"))
-  expect_identical(config_validate_vault(vault, NULL, "orderly.yml"), vault)
+  expect_identical(config_validate_vault(vault, "orderly.yml"), vault)
 })
 
 
