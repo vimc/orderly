@@ -428,7 +428,7 @@ test_that("prevent git changes", {
 test_that("allow ref logic", {
   testthat::skip_on_cran()
   path <- unzip_git_demo()
-  config <- list(server_options = list(master_only = FALSE),
+  config <- list(server_options = function() list(master_only = FALSE),
                  root = path)
 
   expect_false(runner_allow_ref(FALSE, TRUE, config))
@@ -437,13 +437,13 @@ test_that("allow ref logic", {
   expect_true(runner_allow_ref(TRUE, TRUE, config))
   expect_true(runner_allow_ref(TRUE, NULL, config))
 
-  config <- list(server_options = list(master_only = TRUE),
+  config <- list(server_options = function() list(master_only = TRUE),
                  root = path)
   expect_false(runner_allow_ref(TRUE, FALSE, config))
   expect_true(runner_allow_ref(TRUE, TRUE, config))
   expect_false(runner_allow_ref(TRUE, NULL, config))
 
-  config <- list(server_options = list(master_only = FALSE),
+  config <- list(server_options = function() list(master_only = FALSE),
                  root = tempfile())
   expect_false(runner_allow_ref(TRUE, FALSE, config))
   expect_false(runner_allow_ref(TRUE, TRUE, config))
