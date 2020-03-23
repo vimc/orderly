@@ -181,10 +181,6 @@ config_validate_destination <- function(destination, filename) {
   }
   label <- sprintf("%s:destination", filename)
 
-  if (!any(c("args", "instances") %in% names(destination))) {
-    stop("old style db")
-  }
-
   check_fields(destination, label, c("driver", "args"), character())
   destination$driver <-
     check_symbol_from_str(destination$driver, paste0(label, ":driver"))
