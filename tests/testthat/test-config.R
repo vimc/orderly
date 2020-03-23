@@ -1,7 +1,7 @@
 context("config")
 
 test_that("read", {
-  cfg <- orderly_config("example")
+  cfg <- orderly_config$new("example")
   expect_is(cfg, "orderly_config")
 
   ## default destination database:
@@ -28,7 +28,7 @@ test_that("environment variables", {
                               password = "$OURPASSWORD"))))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
 
-  cfg <- orderly_config(path)
+  cfg <- orderly_config$new(path)
 
   expect_error(
     orderly_db_args(cfg$database$source, cfg, "loc"),
@@ -42,8 +42,10 @@ test_that("environment variables", {
 })
 
 test_that("not found", {
-  expect_error(orderly_config(tempfile()),
-               "Did not find file 'orderly_config.yml' at path")
+  path <- tempfile()
+  dir.create(path)
+  expect_error(orderly_config$new(path),
+               "Orderly configuration does not exist: 'orderly_config.yml'")
 })
 
 test_that("get: invalid config", {
@@ -64,7 +66,7 @@ test_that("minimum orderly version is enforced", {
   dat <- list(minimum_orderly_version = "9.9.9")
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
 
-  expect_error(orderly_config(path),
+  expect_error(orderly_config$new(path),
                "Orderly version '9.9.9' is required, but only",
                fixed = TRUE)
 })
@@ -76,9 +78,9 @@ test_that("minimum version is a less than relationship", {
 
   dat <- list(minimum_orderly_version = as.character(packageVersion("orderly")))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
-  cfg <- orderly_config(path)
+  cfg <- orderly_config$new(path)
   expect_is(cfg, "orderly_config")
-  expect_equal(cfg$minimum_orderly_version, dat$minimum_orderly_version)
+  expect_equal(cfg$data$minimum_orderly_version, dat$minimum_orderly_version)
 })
 
 
@@ -95,7 +97,7 @@ test_that("support declaring api server", {
                   driver = "orderly::orderly_remote_path",
                   args = list(root = path))))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
-  cfg <- orderly_config(path)
+  cfg <- orderly_config$new(path)
 
   expect_is(cfg$remote, "list")
   expect_equal(cfg$remote$main$args,
@@ -103,29 +105,34 @@ test_that("support declaring api server", {
 
   cfg <- withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = "main"),
-    orderly_config(path))
-  expect_equal(cfg$remote_identity, "main")
-  expect_true(cfg$server_options$primary)
-  expect_true(cfg$server_options$master_only)
+    orderly_config$new(path))
+  expect_true(cfg$remote$main$identity)
+  expect_null(cfg$remote$other$identity)
+  expect_equal(
+    cfg$server_options(),
+    list(primary = TRUE, master_only = TRUE, name = "main"))
 
   cfg <- withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = "other"),
-    orderly_config(path))
-  expect_equal(cfg$remote_identity, "other")
-  expect_false(cfg$server_options$primary)
-  expect_false(cfg$server_options$master_only)
+    orderly_config$new(path))
+  expect_null(cfg$remote$main$identity)
+  expect_true(cfg$remote$other$identity)
+  expect_equal(
+    cfg$server_options(),
+    list(primary = FALSE, master_only = FALSE, name = "other"))
 
   cfg <- withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = NA),
-    orderly_config(path))
-  expect_null(cfg$remote_identity)
-  expect_null(cfg$server_options)
+    orderly_config$new(path))
+  expect_null(cfg$remote$main$identity)
+  expect_null(cfg$remote$other$identity)
+  expect_null(cfg$server_options())
 
   withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = "something-else"),
     expect_error(
-      orderly_config(path)$remote_identity,
-      "remote_identity must be one of 'main', 'other'"))
+      orderly_config$new(path)$remote_identity,
+      "identity must be one of 'main', 'other'"))
 })
 
 
@@ -144,11 +151,11 @@ test_that("api server has only one primary", {
 
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
   expect_error(
-    orderly_config(path),
+    orderly_config$new(path),
     "At most one remote can be listed as primary but here 2 are")
   dat$remote$other$primary <- FALSE
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
-  cfg <- orderly_config(path)
+  cfg <- orderly_config$new(path)
   expect_true(cfg$remote$main$primary)
   expect_false(cfg$remote$other$primary)
 })
@@ -164,8 +171,8 @@ test_that("remote parse check", {
                   master_only = "yeah")))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
   expect_error(
-    orderly_config(path),
-    "'.+/orderly_config.yml:remote:myhost:master_only' must be logical")
+    orderly_config$new(path),
+    "'orderly_config.yml:remote:myhost:master_only' must be logical")
 })
 
 test_that("no global folder", {
@@ -177,70 +184,103 @@ test_that("no global folder", {
   writeLines(yaml::as.yaml(dat), path_config)
 
   expect_error(
-    orderly_config(root = path),
-    "global resource does not exist: 'invalid_directory'",
+    orderly_config$new(root = path),
+    "Global resource directory does not exist: 'invalid_directory'",
     fixed = TRUE
   )
 })
 
 
 test_that("vault configuration validation when absent", {
-  expect_null(config_check_vault(NULL, NULL, "orderly.yml"))
+  expect_null(config_validate_vault(NULL, "orderly.yml"))
 })
 
 
 test_that("vault configuration validation for typical use", {
-  vault <- list(addr = "https://vault.example.com")
-  expect_identical(config_check_vault(vault, NULL, "orderly.yml"), vault)
+  path <- tempfile()
+  dir.create(path)
+  writeLines(c(
+    "vault:",
+    "  addr: https://vault.example.com"),
+    file.path(path, "orderly_config.yml"))
 
+  vault <- list(addr = "https://vault.example.com")
+  expect_identical(orderly_config$new(path)$vault, vault)
+
+  writeLines(c(
+    "vault:",
+    "  addr: https://vault.example.com",
+    "  auth:",
+    "    method: github"),
+    file.path(path, "orderly_config.yml"))
   vault <- list(addr = "https://vault.example.com",
                 auth = list(method = "github"))
-  expect_identical(config_check_vault(vault, NULL, "orderly.yml"), vault)
+  expect_identical(orderly_config$new(path)$vault, vault)
 })
 
 
 test_that("vault configuration requires string for url", {
   oo <- options(orderly.nowarnings = TRUE)
   on.exit(options(oo))
-  expect_error(config_check_vault(NULL, TRUE, "orderly.yml"),
-               "'orderly.yml:vault_server' must be character")
+
+  path <- tempfile()
+  dir.create(path)
+  writeLines("vault_server: true",
+             file.path(path, "orderly_config.yml"))
+
+  expect_error(orderly_config$new(path),
+               "'orderly_config.yml:vault_server' must be character")
+
+  writeLines("vault_server: [a, b]",
+             file.path(path, "orderly_config.yml"))
+
   expect_error(
-    config_check_vault(NULL, c("a", "b"), "orderly.yml"),
-    "'orderly.yml:vault_server' must be a scalar")
-  expect_null(config_check_vault(NULL, NULL, "orderly.yml"))
+    orderly_config$new(path),
+    "'orderly_config.yml:vault_server' must be a scalar")
 })
 
 
 test_that("previous configuration is transformed with warning", {
-  addr <- "https://vault.example.com"
+  path <- tempfile()
+  dir.create(path)
+  writeLines(
+    "vault_server: https://vault.example.com",
+    file.path(path, "orderly_config.yml"))
+
   expect_warning(
-    res <- config_check_vault(NULL, addr, "orderly.yml"),
+    res <- orderly_config$new(path)$vault,
     "Use of 'vault_server' is deprecated")
-  expect_equal(res, list(addr = addr))
+  expect_equal(res, list(addr = "https://vault.example.com"))
 })
 
 test_that("vault_server (not vault) in configuration yaml", {
-
-  # 1.0.10 - this fails if config.R:55 uses $vault instead of [['vault']]
+  ## 1.0.10 - this fails if config.R:55 uses $vault instead of [["vault"]]
 
   path <- prepare_orderly_example("minimal")
   path_config <- file.path(path, "orderly_config.yml")
   text <- readLines(path_config)
 
-  expect_null(orderly_config(root = path)$vault)
+  expect_null(orderly_config$new(root = path)$vault)
 
   url <- "https://vault.example.com"
   writeLines(c(text, sprintf("vault_server: %s", url)), path_config)
-  expect_warning(res <- orderly_config(root = path)$vault,
+  expect_warning(res <- orderly_config$new(root = path)$vault,
                  "Use of 'vault_server' is deprecated")
   expect_equal(res, list(addr = url))
 })
 
 test_that("Can't use both new and old vault configurations", {
-  expect_error(config_check_vault(list(login = "token"),
-                                  "https://vault.example.com",
-                                  "orderly.yml"),
-               "Can't specify both 'vault' and 'vault_server' in orderly.yml")
+  path <- tempfile()
+  dir.create(path)
+  writeLines(c(
+    "vault:",
+    "  login: token",
+    "vault_server: https://vault.example.com"),
+    file.path(path, "orderly_config.yml"))
+
+  expect_error(
+    orderly_config$new(path),
+    "Can't specify both 'vault' and 'vault_server' in orderly_config.yml")
 })
 
 
@@ -249,11 +289,11 @@ test_that("vault configuration", {
   path_config <- file.path(path, "orderly_config.yml")
   text <- readLines(path_config)
 
-  expect_null(orderly_config(root = path)$vault)
+  expect_null(orderly_config$new(root = path)$vault)
 
   url <- "https://vault.example.com"
   writeLines(c(text, sprintf("vault:\n  addr: %s", url)), path_config)
-  expect_equal(orderly_config(root = path)$vault, list(addr = url))
+  expect_equal(orderly_config$new(root = path)$vault, list(addr = url))
 })
 
 
@@ -264,7 +304,7 @@ test_that("can't use both database and source sections", {
   dat <- list(source = list(driver = "RSQLite::SQLite",
                             dbname = "source.sqlite"))
   writeLines(c(txt, yaml::as.yaml(dat)), path_config)
-  expect_error(orderly_config(path),
+  expect_error(orderly_config$new(path),
                "Both 'database' and 'source' fields may not be used",
                fixed = TRUE)
 })
@@ -272,21 +312,21 @@ test_that("can't use both database and source sections", {
 
 test_that("can read a configuration with no database", {
   path <- prepare_orderly_example("db0", testing = TRUE)
-  config <- orderly_config(path)
-  expect_false("database" %in% names(config))
+  config <- orderly_config$new(path)
+  expect_null(config$database)
 })
 
 
 test_that("can read a configuration with two databases", {
   path <- prepare_orderly_example("db2", testing = TRUE)
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   expect_setequal(names(config$database), c("source1", "source2"))
   expect_equal(config$database$source1$args, list(dbname = "source1.sqlite"))
   expect_equal(config$database$source2$args, list(dbname = "source2.sqlite"))
 
   con <- orderly_db("source", root = path)
-  DBI::dbListTables(con$source1)
-  DBI::dbListTables(con$source2)
+  expect_equal(DBI::dbListTables(con$source1), "mtcars")
+  expect_equal(DBI::dbListTables(con$source2), "iris")
 })
 
 
@@ -294,8 +334,7 @@ test_that("warn when reading old-style configuration", {
   path <- withr::with_options(
     list(orderly.nowarnings = TRUE),
     prepare_orderly_example("olddb", testing = TRUE))
-
-  expect_warning(orderly_config(path),
+  expect_warning(orderly_config$new(path),
                  "Use of 'source' is deprecated and will be removed")
 })
 
@@ -309,11 +348,11 @@ test_that("warn when reading old-style db config", {
     "    dbname: source.sqlite")
   writeLines(content, file.path(path, "orderly_config.yml"))
   expect_warning(
-    orderly_config(path),
+    orderly_config$new(path),
     "Please move your database arguments")
   withr::with_options(
     list(orderly.nowarnings = TRUE),
-    expect_warning(orderly_config(path), NA))
+    expect_warning(orderly_config$new(path), NA))
 })
 
 
@@ -329,11 +368,11 @@ test_that("warn when using url in remote definition", {
     "    slack_url: https://httpbin.org/post"),
     file.path(path, "orderly_config.yml"))
   expect_warning(
-    orderly_config(path),
+    orderly_config$new(path),
     "deprecated and will be dropped")
   withr::with_options(
     list(orderly.nowarnings = TRUE),
-    expect_warning(orderly_config(path), NA))
+    expect_warning(orderly_config$new(path), NA))
 })
 
 
@@ -351,7 +390,7 @@ test_that("multiple database configurations", {
     "        dbname: production.sqlite",
     "    default_instance: production"),
     p)
-  cfg <- orderly_config(path)
+  cfg <- orderly_config$new(path)
   expect_equal(cfg$database$source$args, list(dbname = "production.sqlite"))
   expect_equal(cfg$database$source$instances,
                list(production = list(dbname = "production.sqlite"),
@@ -370,6 +409,8 @@ test_that("instances not supported for destination db", {
     "        dbname: staging.sqlite",
     "destination:",
     "    driver: RSQLite::SQLite",
+    "    args:",
+    "      dbname: orderly.sqlite",
     "    instances:",
     "      staging:",
     "        dbname: dest-staging.sqlite",
@@ -377,7 +418,7 @@ test_that("instances not supported for destination db", {
     "        dbname: dest-production.sqlite"),
     p)
   expect_error(
-    orderly_config(path),
+    orderly_config$new(path),
     "Unknown fields in .*orderly_config.yml:destination: instances")
 })
 
@@ -394,7 +435,7 @@ test_that("default_instance not allowed without instances", {
     "    default_instance: production"),
     p)
   expect_error(
-    orderly_config(path),
+    orderly_config$new(path),
     "Can't specify 'default_instance' with no defined instances")
 })
 
@@ -413,47 +454,47 @@ test_that("default instance from an environmental variable", {
     "        dbname: production.sqlite",
     "    default_instance: $ORDERLY_TEST_DEFAULT_INSTANCE"),
     p)
-  cfg <- orderly_config(path)
+  cfg <- orderly_config$new(path)
   expect_equal(cfg$database$source$args, list(dbname = "staging.sqlite"))
 
   cfg <- withr::with_envvar(
     c("ORDERLY_TEST_DEFAULT_INSTANCE" = "production"),
-    orderly_config(path))
+    orderly_config$new(path))
   expect_equal(cfg$database$source$args, list(dbname = "production.sqlite"))
 
   cfg <- withr::with_envvar(
     c("ORDERLY_TEST_DEFAULT_INSTANCE" = "staging"),
-    orderly_config(path))
+    orderly_config$new(path))
   expect_equal(cfg$database$source$args, list(dbname = "staging.sqlite"))
 
   cfg_db <- withr::with_envvar(
     c("ORDERLY_TEST_DEFAULT_INSTANCE" = "production"),
-    db_instance_select(NULL, orderly_config(path)$database))
+    db_instance_select(NULL, orderly_config$new(path)$database))
   expect_equal(cfg_db$source$args, list(dbname = "production.sqlite"))
 
   cfg_db <- withr::with_envvar(
     c("ORDERLY_TEST_DEFAULT_INSTANCE" = "staging"),
-    db_instance_select(NULL, orderly_config(path)$database))
+    db_instance_select(NULL, orderly_config$new(path)$database))
   expect_equal(cfg_db$source$args, list(dbname = "staging.sqlite"))
 
   writeLines("ORDERLY_TEST_DEFAULT_INSTANCE: production",
              file.path(path, "orderly_envir.yml"))
-  cfg <- orderly_config(path)
+  cfg <- orderly_config$new(path)
   expect_equal(cfg$database$source$args, list(dbname = "production.sqlite"))
 
   cfg_db <- withr::with_envvar(
     c("ORDERLY_TEST_DEFAULT_INSTANCE" = "production"),
-    db_instance_select(NULL, orderly_config(path)$database))
+    db_instance_select(NULL, orderly_config$new(path)$database))
   expect_equal(cfg_db$source$args, list(dbname = "production.sqlite"))
 })
 
 
 test_that("tags can be included in the configuration", {
   path <- prepare_orderly_example("minimal")
-  expect_null(orderly_config(path)$tags)
+  expect_null(orderly_config$new(path)$tags)
   p <- file.path(path, "orderly_config.yml")
   append_lines(c("tags:", "  - tag1", "  - tag2"), p)
-  expect_equal(orderly_config(path)$tags, c("tag1", "tag2"))
+  expect_equal(orderly_config$new(path)$tags, c("tag1", "tag2"))
 })
 
 
@@ -462,7 +503,7 @@ test_that("tags are validated", {
   p <- file.path(path, "orderly_config.yml")
   append_lines(c("tags:", "  - 1", "  - 2"), p)
   expect_error(
-    orderly_config(path),
+    orderly_config$new(path),
     "orderly_config.yml:tags' must be character")
 })
 
@@ -475,6 +516,6 @@ test_that("adding new fields in new versions gives good errors", {
       "minimum_orderly_version: 9.9.9"),
     file.path(path, "orderly_config.yml"))
   expect_error(
-    orderly_config(path),
+    orderly_config$new(path),
     "Orderly version '9.9.9' is required, but only '.+' installed")
 })

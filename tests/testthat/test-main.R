@@ -325,7 +325,7 @@ test_that("migrate", {
   on.exit(options(oo))
 
   path <- unpack_reference("0.3.2")
-  expect_equal(orderly_config(path)$archive_version, "0.0.0")
+  expect_equal(orderly_config$new(path)$archive_version, "0.0.0")
 
   args <- c("--root", path, "migrate")
   res <- cli_args_process(args)
@@ -336,7 +336,7 @@ test_that("migrate", {
   expect_identical(res$target, main_do_migrate)
 
   res$target(res)
-  expect_equal(orderly_config(path)$archive_version,
+  expect_equal(orderly_config$new(path)$archive_version,
                as.character(cache$current_archive_version))
 })
 

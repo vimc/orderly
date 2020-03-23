@@ -176,7 +176,7 @@ test_that("vault configuration honours environment variables", {
 
   x <- list(name = "alice",
             password = "VAULT:/secret/users/alice:password")
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   ## Environment variable not resolved yet:
   expect_equal(config$vault$addr, "$ORDERLY_VAULT_ADDR")
   ## Sensible error if not set:

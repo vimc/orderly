@@ -5,7 +5,7 @@ test_that("minimal", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   info <- recipe_read(file.path(path, "src/example"), config)
   data <- recipe_data(config, info, NULL, new.env(parent = .GlobalEnv),
                       instance = NULL)
@@ -55,7 +55,7 @@ test_that("orderly_data", {
 test_that("fail to create artefact", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   writeLines("1 + 1", file.path(path, "src/example/script.R"))
   info <- recipe_read(file.path(path, "src/example"), config)
   envir <- orderly_environment(NULL)
@@ -67,7 +67,7 @@ test_that("fail to create artefact", {
 test_that("leave device open", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   txt <- readLines(file.path(path, "src/example/script.R"))
   writeLines(txt[!grepl("dev.off()", txt, fixed = TRUE)],
              file.path(path, "src/example/script.R"))
@@ -89,13 +89,13 @@ test_that("close too many devices", {
     }
   })
 
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   txt <- readLines(file.path(path, "src/example/script.R"))
   writeLines(c(txt, "dev.off()"), file.path(path, "src/example/script.R"))
   info <- recipe_read(file.path(path, "src/example"), config)
   envir <- orderly_environment(NULL)
   info <- recipe_prepare(config, "example")
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   expect_error(recipe_run(info, NULL, envir, config = config, echo = FALSE),
                "Report closed 1 more devices than it opened")
 })
@@ -103,7 +103,7 @@ test_that("close too many devices", {
 test_that("sink imbalance", {
   skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   path_script <- file.path(path, "src/example/script.R")
   txt <- readLines(path_script)
   writeLines(c("sink('somefile', split = TRUE)", txt), path_script)
@@ -138,7 +138,7 @@ test_that("leave connection open", {
   ## garbage collected.
   e <- new.env(parent = .GlobalEnv)
   path <- prepare_orderly_example("minimal")
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   path_script <- file.path(path, "src/example/script.R")
 
   writeLines(
@@ -173,7 +173,7 @@ test_that("connection", {
   dat <- list(connection = list(con = "source"))
   writeLines(c(txt, yaml::as.yaml(dat)), yml)
 
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   info <- recipe_read(path_example, config)
   expect_identical(info$connection, list("con" = "source"))
 
@@ -483,7 +483,7 @@ test_that("required field OK", {
   yml_path <- file.path(path_example, "orderly.yml")
   minimal_yml <- readLines(yml_path)
   # get required fields out of config
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   req_fields <- config$fields$name[config$fields$required]
   # set required fields to correct type
   minimal_yml <- c(minimal_yml, sprintf("%s: %s", req_fields[1], "character"))
@@ -507,7 +507,7 @@ test_that("missing required field", {
   yml_path <- file.path(path_example, "orderly.yml")
   minimal_yml <- readLines(yml_path)
   # get required fields out of config
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   req_fields <- config$fields$name[config$fields$required]
   # iterate over the required fields...
   for (field in req_fields) {
@@ -542,7 +542,7 @@ test_that("required field wrong type", {
   yml_path <- file.path(path_example, "orderly.yml")
   minimal_yml <- readLines(yml_path)
   # get required fields out of config
-  config <- orderly_config(path)
+  config <- orderly_config$new(path)
   req_fields <- config$fields$name[config$fields$required]
   # add the second required to the yml with the wrong type
   minimal_yml <- c(minimal_yml, sprintf("%s: %s", req_fields[1], "character"))

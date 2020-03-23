@@ -151,15 +151,22 @@ test_that("main interface", {
   dat <- list(meta = list(elapsed = 10, id = id, name = name),
               git = NULL)
 
-  config <- list(remote_identity = "myserver",
-                 remote = list(
-                   myserver = list(
-                     driver = c("orderly", "orderly_remote_path"),
-                     args = list(path = path),
-                     slack_url = "https://httpbin.org/post",
-                     name = "myserver",
-                     primary = FALSE,
-                     url = "https://example.com")))
+  path <- tempfile()
+  dir.create(path)
+  writeLines(
+    c("remote:",
+      "  myserver:",
+      "    driver: orderly::orderly_remote_path",
+      "    args:",
+      paste("      path:", path),
+      "    slack_url: https://httpbin.org/post",
+      "    primary: true"),
+    file.path(path, "orderly_config.yml"))
+
+  config <- withr::with_envvar(
+    c(ORDERLY_API_SERVER_IDENTITY = "myserver"),
+    orderly_config$new(path))
+
   r <- slack_post_success(dat, config)
 
   expect_equal(r$status_code, 200L)
@@ -196,7 +203,7 @@ test_that("main interface", {
 
   config <- withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = "production"),
-    orderly_config(path))
+    orderly_config$new(path))
 
   r <- slack_post_success(dat, config)
   expect_equal(r$status_code, 200L)
@@ -207,7 +214,7 @@ test_that("main interface", {
 
   config <- withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = "testing"),
-    orderly_config(path))
+    orderly_config$new(path))
 
   r <- slack_post_success(dat, config)
   expect_equal(r$status_code, 200L)

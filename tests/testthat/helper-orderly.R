@@ -86,7 +86,7 @@ prepare_orderly_remote_example <- function(path = tempfile()) {
                 args = list(path = path_remote))))
   append_lines(yaml::as.yaml(r), file.path(path_local, "orderly_config.yml"))
 
-  config <- orderly_config(path_local)
+  config <- orderly_config$new(path_local)
   remote <- get_remote(NULL, config)
 
   list(path_remote = path_remote,

@@ -88,14 +88,12 @@ recipe_read <- function(path, config, validate = TRUE, use_draft = FALSE,
       stop("No databases are configured - can't use a 'connection' section")
     }
     if (is.character(info$connection)) {
-      if (!config$database_old_style) {
-        ## TODO: Better message?
-        msg <- c("Use of strings for connection: is deprecated and will be",
-                 "removed in a future orderly version - please use",
-                 "connection: <object>: <dbname> instead.  See the main",
-                 "package vignette for details")
-        orderly_warning(flow_text(msg))
-      }
+      ## TODO: Better message?
+      msg <- c("Use of strings for connection: is deprecated and will be",
+               "removed in a future orderly version - please use",
+               "connection: <object>: <dbname> instead.  See the main",
+               "package vignette for details")
+      orderly_warning(flow_text(msg))
       if (length(config$database) > 1L) {
         msg <- paste("More than one database configured; update 'connection'",
                      sprintf("from '%s' to '%s: <dbname>' in '%s'",
@@ -351,13 +349,11 @@ recipe_read_query <- function(field, info, filename, config) {
       name <- sprintf("%s:%s:%s", filename, field, nm)
       d <- d[[nm]]
       if (is.character(d)) {
-        if (!config$database_old_style) {
-          msg <- c("Use of strings for queries is deprecated and will be",
-                   "removed in a future orderly version - please use",
-                   "query: <yourstring> instead.  See the main package",
-                   "vignette for details")
-          orderly_warning(flow_text(msg))
-        }
+        msg <- c("Use of strings for queries is deprecated and will be",
+                 "removed in a future orderly version - please use",
+                 "query: <yourstring> instead.  See the main package",
+                 "vignette for details")
+        orderly_warning(flow_text(msg))
         d <- string_or_filename(d, path, name)
       } else {
         check_fields(d, name, "query", "database")
