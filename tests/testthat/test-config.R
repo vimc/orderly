@@ -197,33 +197,60 @@ test_that("vault configuration validation when absent", {
 
 
 test_that("vault configuration validation for typical use", {
-  vault <- list(addr = "https://vault.example.com")
-  expect_identical(config_validate_vault(vault, "orderly.yml"), vault)
+  path <- tempfile()
+  dir.create(path)
+  writeLines(c(
+    "vault:",
+    "  addr: https://vault.example.com"),
+    file.path(path, "orderly_config.yml"))
 
+  vault <- list(addr = "https://vault.example.com")
+  expect_identical(orderly_config$new(path)$vault, vault)
+
+  writeLines(c(
+    "vault:",
+    "  addr: https://vault.example.com",
+    "  auth:",
+    "    method: github"),
+    file.path(path, "orderly_config.yml"))
   vault <- list(addr = "https://vault.example.com",
                 auth = list(method = "github"))
-  expect_identical(config_validate_vault(vault, "orderly.yml"), vault)
+  expect_identical(orderly_config$new(path)$vault, vault)
 })
 
 
 test_that("vault configuration requires string for url", {
   oo <- options(orderly.nowarnings = TRUE)
   on.exit(options(oo))
-  expect_error(config_validate_vault(NULL, TRUE, "orderly.yml"),
-               "'orderly.yml:vault_server' must be character")
+
+  path <- tempfile()
+  dir.create(path)
+  writeLines("vault_server: true",
+             file.path(path, "orderly_config.yml"))
+
+  expect_error(orderly_config$new(path),
+               "'orderly_config.yml:vault_server' must be character")
+
+  writeLines("vault_server: [a, b]",
+             file.path(path, "orderly_config.yml"))
+
   expect_error(
-    config_validate_vault(NULL, c("a", "b"), "orderly.yml"),
-    "'orderly.yml:vault_server' must be a scalar")
-  expect_null(config_validate_vault(NULL, NULL, "orderly.yml"))
+    orderly_config$new(path),
+    "'orderly_config.yml:vault_server' must be a scalar")
 })
 
 
 test_that("previous configuration is transformed with warning", {
-  addr <- "https://vault.example.com"
+  path <- tempfile()
+  dir.create(path)
+  writeLines(
+    "vault_server: https://vault.example.com",
+    file.path(path, "orderly_config.yml"))
+
   expect_warning(
-    res <- config_validate_vault(NULL, addr, "orderly.yml"),
+    res <- orderly_config$new(path)$vault,
     "Use of 'vault_server' is deprecated")
-  expect_equal(res, list(addr = addr))
+  expect_equal(res, list(addr = "https://vault.example.com"))
 })
 
 test_that("vault_server (not vault) in configuration yaml", {
@@ -243,10 +270,17 @@ test_that("vault_server (not vault) in configuration yaml", {
 })
 
 test_that("Can't use both new and old vault configurations", {
-  expect_error(config_validate_vault(list(login = "token"),
-                                  "https://vault.example.com",
-                                  "orderly.yml"),
-               "Can't specify both 'vault' and 'vault_server' in orderly.yml")
+  path <- tempfile()
+  dir.create(path)
+  writeLines(c(
+    "vault:",
+    "  login: token",
+    "vault_server: https://vault.example.com"),
+    file.path(path, "orderly_config.yml"))
+
+  expect_error(
+    orderly_config$new(path),
+    "Can't specify both 'vault' and 'vault_server' in orderly_config.yml")
 })
 
 

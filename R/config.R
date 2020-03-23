@@ -59,7 +59,7 @@ orderly_config <- R6::R6Class(
     },
 
     migrate = function() {
-      self$data <- config_migrate(self$data)
+      self$data <- config_migrate(self$data, "orderly_config.yml")
     },
 
     validate = function() {
@@ -93,6 +93,8 @@ config_migrate <- function(data, filename) {
              "future orderly version.  Please use the new 'vault' server",
              "field, which offers more flexibility")
     orderly_warning(flow_text(msg))
+    assert_scalar_character(data[["vault_server"]],
+                            "orderly_config.yml:vault_server")
     data$vault <- list(addr = data[["vault_server"]])
     data$vault_server <- NULL
   }
