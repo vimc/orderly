@@ -505,7 +505,7 @@ file_canonical_case <- function(filename) {
 }
 
 copy_directory <- function(src, as, rollback_on_error = FALSE) {
-  assert_is_directory(src)
+  assert_is_directory(src, FALSE)
   files <- dir(src, all.files = TRUE, no.. = TRUE, full.names = TRUE)
   if (rollback_on_error) {
     if (file.exists(as)) {
