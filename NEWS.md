@@ -1,3 +1,7 @@
+# orderly 1.1.15
+
+* Fix bug where report downloading did not work for some pathalogical windows paths (VIMC-3595)
+
 # orderly 1.1.14
 
 * Fix bug in instance selection, probably introduced in 1.0.6 (VIMC-3589)
