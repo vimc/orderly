@@ -4,9 +4,10 @@ orderly_recipe <- R6::R6Class(
   public = list(
     ## TODO: We run very quickly into a clash between methods and
     ## fieldnames if not careful (data is one example, used both in
-    ## the yml and here for referring to the raw data).
+    ## the yml and here for referring to the raw data) - we'll need to
+    ## think about that...
     config = NULL,
-    data = NULL,
+    raw = NULL,
     develop = NULL,
 
     packages = NULL,
@@ -25,7 +26,7 @@ orderly_recipe <- R6::R6Class(
     artefacts = NULL,
 
     connection = NULL,
-    database = NULL,
+    data = NULL,
     views = NULL,
 
     name = NULL,
@@ -40,7 +41,7 @@ orderly_recipe <- R6::R6Class(
       filename <- file.path(self$path, "orderly.yml")
       assert_file_exists(self$path, name = "Report working directory")
       assert_file_exists(filename, name = "Orderly configuration")
-      self$data <- yaml_read(filename)
+      self$raw <- yaml_read(filename)
       self$config <- config
       self$develop <- develop
 
@@ -48,7 +49,7 @@ orderly_recipe <- R6::R6Class(
     },
 
     migrate = function() {
-      self$data <- recipe_migrate(self$data, self$config, "orderly.yml")
+      self$raw <- recipe_migrate(self$raw, self$config, "orderly.yml")
     },
 
     validate = function() {
@@ -56,40 +57,49 @@ orderly_recipe <- R6::R6Class(
       withr::with_dir(
         self$path,
         recipe_validate(self, "orderly.yml"))
+      invisible(self)
+    },
+
+    resolve_dependencies = function(use_draft = FALSE, parameters = NULL,
+                                    remote = NULL) {
+      withr::with_dir(
+        self$path,
+        recipe_resolve_dependencies(self, use_draft, parameters, remote))
+      invisible(self)
     }
   ))
 
 
-recipe_migrate <- function(data, config, filename) {
+recipe_migrate <- function(raw, config, filename) {
   ## TODO: should move custom fields within their own section I think,
   ## so for now I'm going to process this with a migration and we can
   ## set up deprecating it later.
-  v <- intersect(config$fields$name, names(data))
+  v <- intersect(config$fields$name, names(raw))
   if (length(v) > 0L) {
-    data$fields <- data[intersect(config$fields$name, names(data))]
-    data <- data[setdiff(names(data), v)]
+    raw$fields <- raw[intersect(config$fields$name, names(raw))]
+    raw <- raw[setdiff(names(raw), v)]
   }
 
-  if (is.character(data$parameters)) {
+  if (is.character(raw$parameters)) {
     msg <- c("Use of strings for parameters: is deprecated and will be",
              "removed in a future orderly version - please use",
              "'name: ~' for each parameter instead (or add a default).",
              "See the main package vignette for details")
     orderly_warning(flow_text(msg))
-    data$parameters <- set_names(rep(list(NULL), length(data$parameters)),
-                                 data$parameters)
+    raw$parameters <- set_names(rep(list(NULL), length(raw$parameters)),
+                                raw$parameters)
   }
 
-  if (is.character(data$global_resources)) {
+  if (is.character(raw$global_resources)) {
     msg <- c("Use of strings for global_resources: is deprecated and will be",
              "removed in a future orderly version - please use",
              "<as>: <from> mapping pairs instead.")
     orderly_warning(flow_text(msg))
-    data$global_resources <- set_names(as.list(data$global_resources),
-                                       basename(data$global_resources))
+    raw$global_resources <- set_names(as.list(raw$global_resources),
+                                      basename(raw$global_resources))
   }
 
-  if (is.character(data$connection)) {
+  if (is.character(raw$connection)) {
     ## TODO: Better message?
     msg <- c("Use of strings for connection: is deprecated and will be",
              "removed in a future orderly version - please use",
@@ -99,37 +109,35 @@ recipe_migrate <- function(data, config, filename) {
     if (length(config$database) > 1L) {
       msg <- paste("More than one database configured; update 'connection'",
                    sprintf("from '%s' to '%s: <dbname>' in '%s'",
-                           data$connection, data$connection, filename))
+                           raw$connection, raw$connection, filename))
       stop(msg, call. = FALSE)
     }
-    data$connection <- set_names(as.list(names(config$database)),
-                                 data$connection)
+    if (!is.null(config$database)) {
+      raw$connection <- set_names(as.list(names(config$database)),
+                                  raw$connection)
+    }
   }
 
-  ## Rename to avoid clash
-  data$database <- data$data
-  data$data <- NULL
-
-  for (v in c("database", "views")) {
-    for (i in seq_along(data[[v]])) {
-      if (is.character(data[[v]][[i]])) {
+  for (v in c("data", "views")) {
+    for (i in seq_along(raw[[v]])) {
+      if (is.character(raw[[v]][[i]])) {
         msg <- c("Use of strings for queries is deprecated and will be",
                  "removed in a future orderly version - please use",
                  "query: <yourstring> instead.  See the main package",
                  "vignette for details")
         orderly_warning(flow_text(msg))
-        data[[v]][[i]] <- list(query = data[[v]][[i]])
+        raw[[v]][[i]] <- list(query = raw[[v]][[i]])
       }
     }
   }
 
-  data
+  raw
 }
 
 
 
 recipe_validate <- function(self, filename) {
-  data <- self$data
+  raw <- self$raw
   config <- self$config
 
   required <- c("script", # filename
@@ -154,31 +162,32 @@ recipe_validate <- function(self, filename) {
   ## TODO: let's deal with these properly by throwing a skippable
   ## error.  The other option is to wrap the calls with something that
   ## will do the skip for us.
+  check_fields(raw, filename, required, optional)
 
-  self$packages <- recipe_validate_packages(data$packages, config, filename)
+  self$packages <- recipe_validate_packages(raw$packages, config, filename)
 
-  self$script <- recipe_validate_script(data$script, config, filename)
-  self$sources <- recipe_validate_sources(data$sources, config, filename)
-  self$resources <- recipe_validate_resources(data$resources, config, filename)
+  self$script <- recipe_validate_script(raw$script, config, filename)
+  self$sources <- recipe_validate_sources(raw$sources, config, filename)
+  self$resources <- recipe_validate_resources(raw$resources, config, filename)
   self$global_resources <- recipe_validate_global_resources(
-    data$global_resources, config, filename)
+    raw$global_resources, config, filename)
 
   self$parameters <- recipe_validate_parameters(
-    data$parameters, config, filename)
-  self$fields <- recipe_validate_fields(data$fields, config, filename)
+    raw$parameters, config, filename)
+  self$fields <- recipe_validate_fields(raw$fields, config, filename)
 
-  self$tags <- recipe_validate_tags(data$tags, config, filename)
-  self$secrets <- recipe_validate_secrets(data$secrets, config, filename)
+  self$tags <- recipe_validate_tags(raw$tags, config, filename)
+  self$secrets <- recipe_validate_secrets(raw$secrets, config, filename)
   self$environment <- recipe_validate_environment(
-    data$environment, config, filename)
+    raw$environment, config, filename)
 
   self$connection <- recipe_validate_connection(
-    data$connection, config, filename)
-  self$database <- recipe_validate_database(data$database, config, filename)
-  self$views <- recipe_validate_views(data$views, config, filename)
+    raw$connection, config, filename)
+  self$data <- recipe_validate_database(raw$data, config, filename)
+  self$views <- recipe_validate_views(raw$views, config, filename)
 
-  self$artefacts <- recipe_validate_artefacts(data$artefacts, config, filename)
-  self$depends <- recipe_validate_depends(data$depends, config, filename)
+  self$artefacts <- recipe_validate_artefacts(raw$artefacts, config, filename)
+  self$depends <- recipe_validate_depends(raw$depends, config, filename)
 
   ## TODO: odd one out here; should probably read whole thing?
   if (file.exists("changelog.txt")) {

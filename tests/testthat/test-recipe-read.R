@@ -13,24 +13,21 @@ test_that("nonexistant file", {
 test_that("minimal", {
   skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
+  path_example <- file.path(path, "src", "example")
   on.exit(unlink(path))
 
   config <- orderly_config$new(path)
   info <- orderly_recipe$new("example", config)
 
-  expect_is(info$database$dat$query, "character")
-  expect_equal(info$database$dat$query, "SELECT name, number FROM thing")
-  expect_equal(info$database$dat$database, "source")
+  expect_is(info$data$dat$query, "character")
+  expect_equal(info$data$dat$query, "SELECT name, number FROM thing")
+  expect_equal(info$data$dat$database, "source")
 
   expect_equal(info$script, "script.R")
-  expect_equal(info$script_hash,
-               hash_files(file.path(path_example, "script.R"), FALSE))
   expect_equal(info$path, normalizePath(file.path(path, "src", "example")))
 
   expect_null(info$displayname)
   expect_null(info$description)
-
-  skip("defer this till later")
 
   ## Now, with this in place, check the parse:
   yml <- file.path(path_example, "orderly.yml")
@@ -43,48 +40,47 @@ test_that("minimal", {
   writeLines(dat$data$dat$query, sql)
   write(modifyList(dat, list(data = list(dat = list(query = "query.sql")))))
 
-  cmp <- recipe_read(path_example, config)
+  cmp <- orderly_recipe$new("example", config)
   expect_equal(cmp$data$dat$query_file, "query.sql")
-  cmp$data$dat$query_file <- NULL
-  info$database$dat$query_file <- NULL
-  expect_equal(cmp$data, info$database)
   expect_equal(cmp$resources, "query.sql")
+  expect_equal(cmp$data$dat[c("query", "database")],
+               info$data$dat[c("query", "database")])
 
   write(modifyList(dat, list(data = list(dat = list(query = "foo.sql")))))
-  expect_error(recipe_read(path_example, config),
+  expect_error(orderly_recipe$new("example", config),
                "SQL file does not exist: 'foo.sql'")
 
   ## TODO: The formatting of these error messages could be improved
   write(modifyList(dat, list("unknown" = "foo")))
-  expect_error(recipe_read(path_example, config),
+  expect_error(orderly_recipe$new("example", config),
                "Unknown fields in .*: unknown")
 
   write(dat[setdiff(names(dat), "script")])
-  expect_error(recipe_read(path_example, config),
+  expect_error(orderly_recipe$new("example", config),
                "Fields missing from .*: script")
 
   write(modifyList(dat, list(script = "missing.R")))
-  expect_error(recipe_read(path_example, config),
+  expect_error(orderly_recipe$new("example", config),
                "Script file does not exist: 'missing.R'")
 
   write(modifyList(dat, list(resources = "missing-file")))
-  expect_error(recipe_read(path_example, config),
+  expect_error(orderly_recipe$new("example", config),
                "Resource file does not exist: 'missing-file'")
 
   write(modifyList(dat, list(resources = "..")))
-  expect_error(recipe_read(path_example, config),
+  expect_error(orderly_recipe$new("example", config),
                "Declared resources not in right place: \\.\\.")
 
   write(modifyList(dat, list(resources = "query.sql")))
-  cmp <- recipe_read(path_example, config)
+  cmp <- orderly_recipe$new("example", config)
   expect_equal(cmp$resources, "query.sql")
 
   write(modifyList(dat, list(artefacts = character(0))))
-  expect_error(recipe_read(path_example, config),
+  expect_error(orderly_recipe$new("example", config),
                "At least one artefact required")
 
   write(modifyList(dat, list(packages = 10)))
-  expect_error(recipe_read(path_example, config),
+  expect_error(orderly_recipe$new("example", config),
                "orderly.yml:packages' must be character")
 })
 
@@ -232,12 +228,15 @@ test_that("use_draft = newer ignores fails drafts", {
   yaml_write(dat, filename)
 
   config <- orderly_config$new(path)
-  info <- recipe_read(file.path(path, "src", "depend"), config,
-                      use_draft = "newer")
+
+  info <- orderly_recipe$new("depend", config)
+  info$resolve_dependencies(use_draft = "newer")
+
   expect_equal(basename(info$depends$path), id2)
   unlink(file.path(path, "draft", "example", id2, "orderly_run.rds"))
-  info <- recipe_read(file.path(path, "src", "depend"), config,
-                      use_draft = "newer")
+
+  info <- orderly_recipe$new("depend", config)
+  info$resolve_dependencies(use_draft = "newer")
   expect_equal(basename(info$depends$path), id1)
 })
 
@@ -311,7 +310,7 @@ test_that("can't use connection in configurations that lack databases", {
   dat <- list(connection = "con")
   writeLines(c(txt, yaml::as.yaml(dat)), p)
   expect_error(
-    recipe_read(dirname(p), orderly_config$new(path)),
+    orderly_recipe$new("example", orderly_config$new(path)),
     "No databases are configured - can't use a 'connection' section")
 })
 
@@ -346,7 +345,7 @@ test_that("Can't use database name on old style configuration", {
   path <- prepare_orderly_example("db1", testing = TRUE)
   p <- file.path(path, "orderly_config.yml")
   dat <- yaml_read(p)
-  writeLines(yaml::as.yaml(list(source = dat$database$source1)), p)
+  writeLines(yaml::as.yaml(list(source = dat$data$source1)), p)
 
   p <- file.path(path, "src", "example", "orderly.yml")
   txt <- readLines(p)
@@ -358,12 +357,12 @@ test_that("Can't use database name on old style configuration", {
     "Use of 'source' is deprecated")
 
   res <- orderly_recipe$new("example", config)
-  expect_equal(res$database$dat1$database, "source")
+  expect_equal(res$data$dat1$database, "source")
 
   ## If database absent, the new style is imputed correctly
   writeLines(txt[!grepl("^ +database:", txt)], p)
   res <- orderly_recipe$new("example", config)
-  expect_equal(res$database$dat1$database, "source")
+  expect_equal(res$data$dat1$database, "source")
 })
 
 
@@ -371,7 +370,7 @@ test_that("validate database names", {
   path <- prepare_orderly_example("db2", testing = TRUE)
   p <- file.path(path, "orderly_config.yml")
   dat <- yaml_read(p)
-  names(dat$database) <- c("db1", "db2")
+  names(dat$data) <- c("db1", "db2")
   writeLines(yaml::as.yaml(dat), p)
 
   cfg <- orderly_config$new(path)
@@ -425,7 +424,7 @@ test_that("detect modified artefacts", {
 
   cfg <- orderly_config$new(path)
   expect_error(
-    recipe_read(file.path(path, "src", "use_dependency"), config = cfg),
+    orderly_recipe$new("use_dependency", cfg)$resolve_dependencies(),
     paste("Validation of dependency 'summary.csv' (other/latest) failed:",
           "artefact has been modified"), fixed = TRUE)
 })
@@ -451,7 +450,7 @@ test_that("modified artefacts when more than one used", {
 
   cfg <- orderly_config$new(path)
   expect_error(
-    recipe_read(file.path(path, "src", "use_dependency"), config = cfg),
+    orderly_recipe$new("use_dependency", cfg)$resolve_dependencies(),
     paste("Validation of dependency 'mygraph.pdf' (multifile-artefact/latest)",
           "failed: artefact has been modified"), fixed = TRUE)
 })
@@ -567,22 +566,25 @@ test_that("validate parameters", {
 test_that("Can resolve dependencies remotely", {
   dat <- prepare_orderly_remote_example()
   config <- orderly_config$new(dat$path_local)
-  info <- recipe_read(file.path(path_src(config$root), "depend"), config,
-                      FALSE)
+
+  info <- orderly_recipe$new("depend", config)
+
   expect_equal(nrow(orderly_list_archive(dat$path_local)), 0)
   expect_error(
-    resolve_dependencies(info$depends, config, FALSE, NULL, NULL),
+    info$resolve_dependencies(FALSE, NULL, NULL),
     "Did not find archive report example:latest")
 
   expect_error(
-    resolve_dependencies(info$depends, config, TRUE, NULL, "default"),
+    info$resolve_dependencies(TRUE, NULL, "default"),
     "Can't use 'use_draft' with remote")
-  expect_null(resolve_dependencies(NULL, config, FALSE, NULL, NULL))
 
-  res <- resolve_dependencies(info$depends, config, FALSE, NULL, "default")
+  info$resolve_dependencies(FALSE, NULL, "default")
   expect_equal(nrow(orderly_list_archive(dat$path_local)), 1)
-  cmp <- resolve_dependencies(info$depends, config, FALSE, NULL, NULL)
-  expect_equal(res, cmp)
+
+  cmp <- orderly_recipe$new("depend", config)
+  expect_equal(
+    cmp$resolve_dependencies(FALSE, NULL, NULL)$depends,
+    info$depends)
 })
 
 
