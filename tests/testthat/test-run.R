@@ -6,7 +6,7 @@ test_that("minimal", {
   on.exit(unlink(path, recursive = TRUE))
 
   config <- orderly_config$new(path)
-  info <- recipe_read(file.path(path, "src/example"), config)
+  info <- orderly_recipe$new("example", config)
   data <- recipe_data(config, info, NULL, new.env(parent = .GlobalEnv),
                       instance = NULL)
   expect_is(data$dest$dat, "data.frame")
@@ -57,7 +57,6 @@ test_that("fail to create artefact", {
   on.exit(unlink(path, recursive = TRUE))
   config <- orderly_config$new(path)
   writeLines("1 + 1", file.path(path, "src/example/script.R"))
-  info <- recipe_read(file.path(path, "src/example"), config)
   envir <- orderly_environment(NULL)
   info <- recipe_prepare(config, "example")
   expect_error(recipe_run(info, NULL, envir, config = config, echo = FALSE),
@@ -71,7 +70,6 @@ test_that("leave device open", {
   txt <- readLines(file.path(path, "src/example/script.R"))
   writeLines(txt[!grepl("dev.off()", txt, fixed = TRUE)],
              file.path(path, "src/example/script.R"))
-  info <- recipe_read(file.path(path, "src/example"), config)
   envir <- orderly_environment(NULL)
   info <- recipe_prepare(config, "example")
   expect_error(recipe_run(info, NULL, envir, config = config, echo = FALSE),
@@ -92,7 +90,6 @@ test_that("close too many devices", {
   config <- orderly_config$new(path)
   txt <- readLines(file.path(path, "src/example/script.R"))
   writeLines(c(txt, "dev.off()"), file.path(path, "src/example/script.R"))
-  info <- recipe_read(file.path(path, "src/example"), config)
   envir <- orderly_environment(NULL)
   info <- recipe_prepare(config, "example")
   config <- orderly_config$new(path)
@@ -174,7 +171,7 @@ test_that("connection", {
   writeLines(c(txt, yaml::as.yaml(dat)), yml)
 
   config <- orderly_config$new(path)
-  info <- recipe_read(path_example, config)
+  info <- orderly_recipe$new("example", config)
   expect_identical(info$connection, list("con" = "source"))
 
   data <- orderly_data("example",
