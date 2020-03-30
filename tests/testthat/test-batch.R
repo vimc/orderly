@@ -18,3 +18,17 @@ test_that("reports can be batch run", {
     expect_equal(d$meta$batch_id, batch_id)
   }))
 })
+
+test_that("return useful error if params passed without names", {
+  path <- prepare_orderly_example("parameters", testing = TRUE)
+  
+  params <- data_frame(
+    c("one", "two", "three"),
+    c(1, 2, 3)
+  )
+  expect_error(
+    orderly_batch("example", parameters = params, root = path, echo = FALSE),
+    "Missing parameters: 'a', 'b'",
+    fixed = TRUE
+  )
+})
