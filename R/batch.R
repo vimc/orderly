@@ -1,5 +1,5 @@
 ##' Run a batch of reports.
-##' 
+##'
 ##' Run one report multiple times with different sets of parameters.
 ##'
 ##' @param name Name of the report to run (see
@@ -17,9 +17,9 @@
 ##'
 ##' @export
 ##' @return List of ids of newly created reports
-##' 
+##'
 ##' @examples
-##' 
+##'
 ##' path <- orderly::orderly_example("demo")
 ##' params <- data.frame(nmin = c(0.2, 0.25))
 ##' ids <- orderly::orderly_run("other", params, root = path)
