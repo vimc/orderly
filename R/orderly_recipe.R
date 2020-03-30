@@ -30,6 +30,11 @@ orderly_recipe <- R6::R6Class(
     views = NULL,
 
     name = NULL,
+
+    ## TODO: refactor this out into a container class
+    id = NULL,
+    workdir = NULL,
+    git = NULL,
     path = NULL,
 
     initialize = function(name, config, develop = FALSE) {

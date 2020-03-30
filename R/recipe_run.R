@@ -157,6 +157,7 @@ orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
               add = TRUE)
     }
 
+    ## TODO: seal the class before this
     recipe_current_run_set(info)
     on.exit(recipe_current_run_clear(), add = TRUE)
 
@@ -662,6 +663,10 @@ recipe_current_run_clear <- function() {
 ##' code.  To use in conjunction with
 ##' \code{\link{orderly_test_start}}, you must pass in the path to the
 ##' report in question.
+##'
+##' @section Warning:
+##'
+##' It is important that this data is treated as \emph{readonly}!
 ##'
 ##' @title Information on current orderly run
 ##'
