@@ -21,7 +21,7 @@ test_that("reports can be batch run", {
 
 test_that("return useful error if params passed without names", {
   path <- prepare_orderly_example("parameters", testing = TRUE)
-  
+
   params <- data_frame(
     c("one", "two", "three"),
     c(1, 2, 3)

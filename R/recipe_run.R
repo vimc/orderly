@@ -96,8 +96,8 @@
 ##'   Tags added here will be \emph{in addition} to any tags listed in
 ##'   the \code{tags:} field in \code{orderly.yml} and must be present
 ##'   in \code{orderly_config.yml}.
-##'   
-##' @param batch_id ID of batch report run created by 
+##'
+##' @param batch_id ID of batch report run created by
 ##'   \code{\link{orderly_batch}}. Gets written into \code{orderly_run.rds} as
 ##'   metadata, not expected to be passed by user.
 ##'
@@ -197,7 +197,7 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
   }
   info$git <- git_info(info$path)
   info$batch_id <- batch_id
-  
+
   info
 }
 
