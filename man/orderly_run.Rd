@@ -18,7 +18,8 @@ orderly_run(
   instance = NULL,
   use_draft = FALSE,
   remote = NULL,
-  tags = NULL
+  tags = NULL,
+  batch_id = NULL
 )
 }
 \arguments{
@@ -89,6 +90,10 @@ are immutable and cannot be removed once the report is run.
 Tags added here will be \emph{in addition} to any tags listed in
 the \code{tags:} field in \code{orderly.yml} and must be present
 in \code{orderly_config.yml}.}
+
+\item{batch_id}{ID of batch report run created by 
+\code{\link{orderly_batch}}. Gets written into \code{orderly_run.rds} as
+metadata, not expected to be passed by user.}
 }
 \value{
 The id of the newly created report
