@@ -48,7 +48,7 @@ orderly_recipe <- R6::R6Class(
     },
 
     migrate = function() {
-      self$data <- recipe_migrate(self$data, "orderly.yml")
+      self$data <- recipe_migrate(self$data, self$config, "orderly.yml")
     },
 
     validate = function() {
@@ -60,7 +60,7 @@ orderly_recipe <- R6::R6Class(
   ))
 
 
-recipe_migrate <- function(data, filename) {
+recipe_migrate <- function(data, config, filename) {
   ## TODO: should move custom fields within their own section I think,
   ## so for now I'm going to process this with a migration and we can
   ## set up deprecating it later.
@@ -99,7 +99,7 @@ recipe_migrate <- function(data, filename) {
     if (length(config$database) > 1L) {
       msg <- paste("More than one database configured; update 'connection'",
                    sprintf("from '%s' to '%s: <dbname>' in '%s'",
-                           connection, connection, filename))
+                           data$connection, data$connection, filename))
       stop(msg, call. = FALSE)
     }
     data$connection <- set_names(as.list(names(config$database)),
@@ -108,6 +108,20 @@ recipe_migrate <- function(data, filename) {
 
   ## Rename to avoid clash
   data$database <- data$data
+  data$data <- NULL
+
+  for (v in c("database", "views")) {
+    for (i in seq_along(data[[v]])) {
+      if (is.character(data[[v]][[i]])) {
+        msg <- c("Use of strings for queries is deprecated and will be",
+                 "removed in a future orderly version - please use",
+                 "query: <yourstring> instead.  See the main package",
+                 "vignette for details")
+        orderly_warning(flow_text(msg))
+        data[[v]][[i]] <- list(query = data[[v]][[i]])
+      }
+    }
+  }
 
   data
 }
@@ -147,7 +161,7 @@ recipe_validate <- function(self, filename) {
   self$sources <- recipe_validate_sources(data$sources, config, filename)
   self$resources <- recipe_validate_resources(data$resources, config, filename)
   self$global_resources <- recipe_validate_global_resources(
-    self$global_resources, config, filename)
+    data$global_resources, config, filename)
 
   self$parameters <- recipe_validate_parameters(
     data$parameters, config, filename)
@@ -163,10 +177,11 @@ recipe_validate <- function(self, filename) {
   self$database <- recipe_validate_database(data$database, config, filename)
   self$views <- recipe_validate_views(data$views, config, filename)
 
-  self$artefacts <- recipe_validate_artefacts(data$artefacts, filename)
+  self$artefacts <- recipe_validate_artefacts(data$artefacts, config, filename)
+  self$depends <- recipe_validate_depends(data$depends, config, filename)
 
   ## TODO: odd one out here; should probably read whole thing?
-  if (file.exists(file.path(path, "changelog.txt"))) {
+  if (file.exists("changelog.txt")) {
     self$changelog <- "changelog.txt"
   }
 
@@ -189,7 +204,7 @@ recipe_validate_packages <- function(packages, config, filename) {
   if (is.null(packages)) {
     return(NULL)
   }
-  assert_character(packages, fieldname("packages"))
+  assert_character(packages, sprintf("%s:packages", filename))
   packages
 }
 
@@ -215,10 +230,9 @@ recipe_validate_resources <- function(resources, config, filename) {
   if (is.null(resources)) {
     return(NULL)
   }
-  browser()
 
-  # make sure that a directory resource does not have a trailing /
-  # There is much more sanitation that could be done here...
+  ## make sure that a directory resource does not have a trailing /
+  ## There is much more sanitation that could be done here...
   is_dir <- is_directory(resources)
   trailing <- grepl(pattern = "(\\/)$", resources)
   bad_resource <- is_dir & trailing
@@ -294,7 +308,7 @@ recipe_validate_fields <- function(fields, config, filename) {
   }
 
   ## Fill any any missing optional fields:
-  msg <- setdiff(config$fields$name %in% names(fields))
+  msg <- setdiff(config$fields$name, names(fields))
   if (length(msg) > 0L) {
     fields[msg] <- NA_character_
   }
@@ -379,11 +393,12 @@ recipe_validate_connection <- function(connection, config, filename) {
   if (length(config$database) == 0L) {
     stop("No databases are configured - can't use a 'connection' section")
   }
+
   assert_named(connection, unique = TRUE,
-               name = fieldname("connection"))
+               name = sprintf("%s:connection", filename))
   for (i in names(connection)) {
     match_value(connection[[i]], names(config$database),
-                name = sprintf("%s:%s", fieldname("connection"), i))
+                name = sprintf("%s:connection:%s", filename, i))
   }
   connection
 }
@@ -413,19 +428,10 @@ recipe_validate_query <- function(d, field, config, filename) {
   f <- function(nm) {
     name <- sprintf("%s:%s:%s", filename, field, nm)
     d <- d[[nm]]
-    if (is.character(d)) {
-      stop("FIXME: move to migration")
-      msg <- c("Use of strings for queries is deprecated and will be",
-               "removed in a future orderly version - please use",
-               "query: <yourstring> instead.  See the main package",
-               "vignette for details")
-      orderly_warning(flow_text(msg))
-      d <- string_or_filename(d, ".", name)
-    } else {
-      check_fields(d, name, "query", "database")
-      dat <- string_or_filename(d$query, ".", sprintf("%s:query", name))
-      d[names(dat)] <- dat
-    }
+    check_fields(d, name, "query", "database")
+    dat <- string_or_filename(d$query, ".", sprintf("%s:query", name))
+    d[names(dat)] <- dat
+
     if (is.null(d$database)) {
       if (length(config$database) > 1L) {
         msg <- paste("More than one database configured; a 'database'",

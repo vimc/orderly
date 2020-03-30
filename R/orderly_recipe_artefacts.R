@@ -9,7 +9,7 @@
 ##       - filename.png
 ##
 ## Which is simpler and will be easier to edit.
-recipe_validate_artefacts <- function(artefacts, filename) {
+recipe_validate_artefacts <- function(artefacts, config, filename) {
   if (length(artefacts) == 0L) {
     stop("At least one artefact required")
   }
@@ -88,7 +88,7 @@ recipe_validate_artefact1 <- function(artefact, config, filename) {
   ## NOTE: this means that we silently ignore the format and index
   ## fields if present, which they probably will not be
   v <- c("filenames", "description", "format", "index")
-  check_fields(artefact, sprintf("%s:artefacts[%d]", filename, i), v, NULL)
+  check_fields(artefact, sprintf("%s:artefacts[%d]", filename, index), v, NULL)
 
   assert_scalar_character(
     artefact$description,
@@ -96,9 +96,14 @@ recipe_validate_artefact1 <- function(artefact, config, filename) {
   assert_character(
     artefact$filenames,
     sprintf("%s:artefacts[%d]$filenames:%s", filename, index))
-  match_value(
-    artefact$format, valid_formats(),
-    sprintf("Format for %s:artefacts[%d]", filename, index))
+
+  if (!(artefact$format %in% valid_formats())) {
+    stop(sprintf(
+      "Unknown artefact type: '%s' for '%s:artefacts[%d]'; should be one of %s",
+      artefact$format, filename, artefact$index,
+      paste(squote(valid_formats()), collapse = ", ")),
+      call. = FALSE)
+  }
 
   artefact[c("filenames", "description", "format")]
 }

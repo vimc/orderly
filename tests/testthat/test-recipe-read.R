@@ -116,7 +116,7 @@ test_that("unknown artefact type", {
 
   expect_silent(orderly_recipe$new("example", config))
 
-  dat$artefacts <- list(unknown = list(filename = "foo", description = "bar"))
+  dat$artefacts <- list(unknown = list(filenames = "foo", description = "bar"))
   writeLines(yaml::as.yaml(dat), yml)
   expect_error(suppressMessages(orderly_recipe$new("example", config)),
                "Unknown artefact type: 'unknown'")
@@ -156,7 +156,7 @@ test_that("resource case matters", {
               file.path(path, "src", "example", "script.r"))
 
   config <- orderly_config_get(path, FALSE)
-  expect_error(recipe_read(file.path(path, "src", "example"), config),
+  expect_error(orderly_recipe$new("example", config),
                "Script file does not exist: 'script.R'")
 })
 
@@ -169,7 +169,7 @@ test_that("dependencies must be scalar", {
   dat$depends$example$use[["previous.rds"]] <- character(0)
   yaml_write(dat, filename)
 
-  expect_error(orderly_run("depend", root = path, echo = FALSE),
+  expect_error(orderly_recipe$new("depend", orderly_config$new(path)),
                "depends:example:use must all be scalar character")
 })
 
@@ -299,7 +299,7 @@ test_that("can't use database in configurations that lack them", {
   dat <- list(data = list(dat = list(query = "SELECT name, number FROM thing")))
   writeLines(c(txt, yaml::as.yaml(dat)), p)
   expect_error(
-    recipe_read(dirname(p), orderly_config$new(path)),
+    orderly_recipe$new("example", orderly_config$new(path)),
     "No databases are configured - can't use a 'data' section")
 })
 
@@ -323,7 +323,7 @@ test_that("database names are required with more than one db", {
   dat$data$dat1$database <- NULL
   writeLines(yaml::as.yaml(dat), p)
   expect_error(
-    recipe_read(dirname(p), orderly_config$new(path)),
+    orderly_recipe$new("example", orderly_config$new(path)),
     "More than one database configured; a 'database' field is required for")
 })
 
@@ -334,8 +334,9 @@ test_that("connection names are required with more than one db", {
   dat <- yaml_read(p)
   dat$connection <- "con"
   writeLines(yaml::as.yaml(dat), p)
+  config <- orderly_config$new(path)
   expect_error(
-    suppressWarnings(recipe_read(dirname(p), orderly_config$new(path))),
+    suppressWarnings(orderly_recipe$new("connection", config)),
     "More than one database configured; update 'connection' from 'con'")
 })
 
@@ -356,13 +357,13 @@ test_that("Can't use database name on old style configuration", {
     config <- orderly_config$new(path),
     "Use of 'source' is deprecated")
 
-  res <- recipe_read(dirname(p), config)
-  expect_equal(res$data$dat1$database, "source")
+  res <- orderly_recipe$new("example", config)
+  expect_equal(res$database$dat1$database, "source")
 
   ## If database absent, the new style is imputed correctly
   writeLines(txt[!grepl("^ +database:", txt)], p)
-  res <- recipe_read(dirname(p), config)
-  expect_equal(res$data$dat1$database, "source")
+  res <- orderly_recipe$new("example", config)
+  expect_equal(res$database$dat1$database, "source")
 })
 
 
@@ -375,10 +376,10 @@ test_that("validate database names", {
 
   cfg <- orderly_config$new(path)
 
-  expect_error(recipe_read(file.path(path, "src", "example"), cfg),
+  expect_error(orderly_recipe$new("example", cfg),
                "orderly.yml:data:dat1:database must be one of 'db1', 'db2'",
                fixed = TRUE)
-  expect_error(recipe_read(file.path(path, "src", "connection"), cfg),
+  expect_error(orderly_recipe$new("connection", cfg),
                "orderly.yml:connection:con1 must be one of 'db1', 'db2'",
                fixed = TRUE)
 })
@@ -393,10 +394,10 @@ test_that("warn old style db", {
     orderly_config$new(path))
 
   expect_warning(
-    recipe_read(file.path(path, "src", "example"), cfg),
+    orderly_recipe$new("example", cfg),
     "Use of strings for queries is deprecated")
   expect_warning(
-    recipe_read(file.path(path, "src", "connection"), cfg),
+    orderly_recipe$new("connection", cfg),
     "Use of strings for connection: is deprecated")
 
   file.rename(file.path(path, "orderly_config.yml.new"),
@@ -406,10 +407,10 @@ test_that("warn old style db", {
     "Please move your database arguments")
 
   expect_warning(
-    recipe_read(file.path(path, "src", "example"), cfg),
+    orderly_recipe$new("example", cfg),
     "Use of strings for queries is deprecated")
   expect_warning(
-    recipe_read(file.path(path, "src", "connection"), cfg),
+    orderly_recipe$new("connection", cfg),
     "Use of strings for connection: is deprecated")
 })
 
@@ -466,7 +467,7 @@ test_that("sources and resources are exclusive", {
 
   config <- orderly_config$new(path)
   expect_error(
-    recipe_read(file.path(path, "src", "other"), config),
+    orderly_recipe$new("other", config),
     "Do not list source files \\(sources\\) as resources:\\s+- functions\\.R")
 })
 
@@ -476,7 +477,7 @@ test_that("trailing slash on resource directory", {
   path <- prepare_orderly_example("demo")
   ## in report directory create a file called README.md
   report_path <- file.path(path, "src", "use_resource")
-  #rewrite yml to include extra readme file
+  ## rewrite yml to include extra readme file
   yml_path <- file.path(report_path, "orderly.yml")
   yml <- c("data:",
            "  dat:",
@@ -632,14 +633,14 @@ test_that("friendly error message if artefacts are incorrectly given", {
 
   config <- orderly_config$new(path)
   err <- expect_error(
-    recipe_read(dirname(p), config),
+    orderly_recipe$new("example", config),
     "Your artefacts are misformatted.  You must provide")
 
   ## check that the suggested fix is good:
   fix <- strsplit(err$message, "\n")[[1]][4:9]
   txt <- c(readLines(p)[1:4], fix)
   writeLines(txt, p)
-  res <- recipe_read(dirname(p), config)$artefacts
+  res <- orderly_recipe$new("example", config)$artefacts
   expect_equal(res[, "filenames"],
                list(filenames = "mygraph.png"))
   expect_equal(res[, "description"],
@@ -682,20 +683,20 @@ test_that("Validate report tag", {
   path_config <- file.path(path, "orderly.yml")
   txt <- readLines(path_config)
 
-  expect_null(recipe_read(path, config)$tags)
+  expect_null(orderly_recipe$new("example", config)$tags)
 
   writeLines(c(txt, "tags: tag1"), path_config)
-  expect_equal(recipe_read(path, config)$tags, "tag1")
+  expect_equal(orderly_recipe$new("example", config)$tags, "tag1")
 
   writeLines(c(txt, "tags:", "- tag1", "- tag2"), path_config)
-  expect_equal(recipe_read(path, config)$tags, c("tag1", "tag2"))
+  expect_equal(orderly_recipe$new("example", config)$tags, c("tag1", "tag2"))
 
   writeLines(c(txt, "tags:", "- tag1", "- tag2", "- tag3"), path_config)
-  expect_error(recipe_read(path, config),
+  expect_error(orderly_recipe$new("example", config),
                "Unknown tag: 'tag3'")
 
   writeLines(c(txt, "tags:", "- tag1", "- tag2", "- tag1"), path_config)
-  expect_error(recipe_read(path, config),
+  expect_error(orderly_recipe$new("example", config),
                "Duplicated tag: 'tag1'")
 })
 
@@ -709,7 +710,7 @@ test_that("Better error message where tags not enabled", {
 
   writeLines(c(txt, "tags: tag1"), path_config)
   expect_error(
-    recipe_read(path, config)$tags,
+    orderly_recipe$new("example", config),
     "Tags are not supported; please edit orderly_config.yml to enable")
 })
 
@@ -718,61 +719,62 @@ test_that("read secrets", {
                  vault = list(addr = "https://example.com/vault"))
   filename <- "orderly.yml"
 
-  expect_null(recipe_read_check_secrets(NULL, NULL, filename))
+  expect_null(recipe_validate_secrets(NULL, NULL, filename))
   expect_error(
-    recipe_read_check_secrets(list(a = "path"), NULL, filename),
+    recipe_validate_secrets(list(a = "path"), NULL, filename),
     "Vault not enabled in orderly_config.yml")
 
   expect_equal(
-    recipe_read_check_secrets(list(a = "first:one"), config, filename),
+    recipe_validate_secrets(list(a = "first:one"), config, filename),
     list(a = "VAULT:first:one"))
   expect_equal(
-    recipe_read_check_secrets(list(a = "first:one", b = "second:other"),
+    recipe_validate_secrets(list(a = "first:one", b = "second:other"),
                               config, filename),
     list(a = "VAULT:first:one",
          b = "VAULT:second:other"))
 
   expect_error(
-    recipe_read_check_secrets(list("path", "other"), config, filename),
+    recipe_validate_secrets(list("path", "other"), config, filename),
     "'orderly.yml:secrets' must be named")
   expect_error(
-    recipe_read_check_secrets(list(a = "path", a = "other"), config, filename),
+    recipe_validate_secrets(list(a = "path", a = "other"), config, filename),
     "'orderly.yml:secrets' must have unique names")
   expect_error(
-    recipe_read_check_secrets(list(a = "path", b = 2), config, filename),
+    recipe_validate_secrets(list(a = "path", b = 2), config, filename),
     "'orderly.yml:secrets:b' must be character")
   expect_error(
-    recipe_read_check_secrets(list(a = "path"), config, filename),
+    recipe_validate_secrets(list(a = "path"), config, filename),
     "Misformatted secret path: 'path' for 'a'")
   expect_error(
-    recipe_read_check_secrets(list(a = "path", b = "other:field:what"),
+    recipe_validate_secrets(list(a = "path", b = "other:field:what"),
                               config, filename),
     "Misformatted secret path: 'path' for 'a', 'other:field:what' for 'b'")
   expect_error(
-    recipe_read_check_secrets(list(a = "first:path", b = "other:field:what"),
+    recipe_validate_secrets(list(a = "first:path", b = "other:field:what"),
                               config, filename),
     "Misformatted secret path: 'other:field:what' for 'b'")
 })
 
 test_that("can read env vars from orderly yml", {
   filename <- "orderly.yml"
+  config <- NULL
 
-  expect_null(recipe_read_check_env_var(NULL, filename))
+  expect_null(recipe_validate_environment(NULL, config, filename))
   expect_error(
-    recipe_read_check_env_var(list("ENV", "VAR"), filename),
+    recipe_validate_environment(list("ENV", "VAR"), config, filename),
     "'orderly.yml:environment' must be named")
   expect_error(
-    recipe_read_check_env_var(list(a = "ENV", a = "VAR"), filename),
+    recipe_validate_environment(list(a = "ENV", a = "VAR"), config, filename),
     "'orderly.yml:environment' must have unique names")
   expect_error(
-    recipe_read_check_env_var(list(a = "ENV", b = 2), filename),
+    recipe_validate_environment(list(a = "ENV", b = 2), config, filename),
     "'orderly.yml:environment:b' must be character")
   expect_error(
-    recipe_read_check_env_var(list(a = list("ENV", "VAR")), filename),
+    recipe_validate_environment(list(a = list("ENV", "VAR")), config, filename),
     "'orderly.yml:environment:a' must be a scalar")
 
   env_vars <- list(a = "ENV", b = "VAR")
-  expect_equal(recipe_read_check_env_var(env_vars), env_vars)
+  expect_equal(recipe_validate_environment(env_vars), env_vars)
 })
 
 
