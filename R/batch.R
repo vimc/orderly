@@ -26,8 +26,8 @@
 orderly_batch <- function(name = NULL, parameters = NULL, ...) {
   ## Assert each column named? or a test at least if not to see what happens
   batch_id <- ids::random_id()
-  ids <- lapply(seq_len(nrow(params)), function(row) {
-    orderly_run(name, parameters = params[row, ], ..., batch_id = batch_id)
+  ids <- lapply(seq_len(nrow(parameters)), function(row) {
+    orderly_run(name, parameters = parameters[row, ], ..., batch_id = batch_id)
   })
   ids
 }
