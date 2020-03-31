@@ -21,6 +21,8 @@ orderly_recipe <- R6::R6Class(
     tags = NULL,
     secrets = NULL,
     environment = NULL,
+    displayname = NULL,
+    description = NULL,
 
     depends = NULL,
     artefacts = NULL,
@@ -147,54 +149,36 @@ recipe_validate <- function(self, filename) {
   raw <- self$raw
   config <- self$config
 
-  required <- c("script", # filename
-                "artefacts",
-                config$fields$name[config$fields$required])
-  optional <- c("displayname",
-                "description",
-                "data",
-                "parameters",
-                "views",
-                "packages",
-                "sources",
-                "resources",
-                "connection",
-                "depends",
-                "global_resources",
-                "tags",
-                "secrets",
-                "environment",
-                config$fields$name[!config$fields$required])
+  check <- list(packages = recipe_validate_packages,
+                script = recipe_validate_script,
+                sources = recipe_validate_sources,
+                resources = recipe_validate_resources,
+                global_resources = recipe_validate_global_resources,
+                parameters = recipe_validate_parameters,
+                fields = recipe_validate_fields,
+                tags = recipe_validate_tags,
+                secrets = recipe_validate_secrets,
+                environment = recipe_validate_environment,
+                connection = recipe_validate_connection,
+                data = recipe_validate_database,
+                views = recipe_validate_views,
+                artefacts = recipe_validate_artefacts,
+                depends = recipe_validate_depends,
+                displayname = recipe_validate_displayname,
+                description = recipe_validate_description)
 
-  ## TODO: let's deal with these properly by throwing a skippable
-  ## error.  The other option is to wrap the calls with something that
-  ## will do the skip for us.
-  check_fields(raw, filename, required, optional)
+  required <- c("script", "artefacts")
+  optional <- setdiff(names(check), required)
 
-  self$packages <- recipe_validate_packages(raw$packages, config, filename)
-
-  self$script <- recipe_validate_script(raw$script, config, filename)
-  self$sources <- recipe_validate_sources(raw$sources, config, filename)
-  self$resources <- recipe_validate_resources(raw$resources, config, filename)
-  self$global_resources <- recipe_validate_global_resources(
-    raw$global_resources, config, filename)
-
-  self$parameters <- recipe_validate_parameters(
-    raw$parameters, config, filename)
-  self$fields <- recipe_validate_fields(raw$fields, config, filename)
-
-  self$tags <- recipe_validate_tags(raw$tags, config, filename)
-  self$secrets <- recipe_validate_secrets(raw$secrets, config, filename)
-  self$environment <- recipe_validate_environment(
-    raw$environment, config, filename)
-
-  self$connection <- recipe_validate_connection(
-    raw$connection, config, filename)
-  self$data <- recipe_validate_database(raw$data, config, filename)
-  self$views <- recipe_validate_views(raw$views, config, filename)
-
-  self$artefacts <- recipe_validate_artefacts(raw$artefacts, config, filename)
-  self$depends <- recipe_validate_depends(raw$depends, config, filename)
+  develop <- self$develop
+  recipe_read_skip_on_develop(
+    develop,
+    check_fields(raw, filename, required, optional))
+  for (x in names(check)) {
+    recipe_read_skip_on_develop(
+      develop,
+      self[[x]] <- check[[x]](raw[[x]], config, filename))
+  }
 
   ## TODO: odd one out here; should probably read whole thing?
   if (file.exists("changelog.txt")) {
@@ -203,7 +187,7 @@ recipe_validate <- function(self, filename) {
 
   ## Combined validation:
   err <- intersect(self$sources, self$resources)
-  if (length(err)) {
+  if (length(err) && !develop) {
     stop(sprintf("Do not list source files (sources) as resources:%s",
                  paste(sprintf("\n  - %s", err), collapse = "")),
          call. = FALSE)
@@ -469,4 +453,20 @@ recipe_validate_query <- function(d, field, config, filename) {
   ## TODO: this is not amazing
   attr(d, "resources") <- query_files
   d
+}
+
+
+recipe_validate_displayname <- function(displayname, config, filename) {
+  if (is.null(displayname)) {
+    return(NULL)
+  }
+  assert_scalar_character(displayname, sprintf("%s:displayname", filename))
+}
+
+
+recipe_validate_description <- function(description, config, filename) {
+  if (is.null(description)) {
+    return(NULL)
+  }
+  assert_scalar_character(description, sprintf("%s:description", filename))
 }
