@@ -97,6 +97,10 @@
 ##'   the \code{tags:} field in \code{orderly.yml} and must be present
 ##'   in \code{orderly_config.yml}.
 ##'
+##' @param batch_id ID of batch report run created by
+##'   \code{\link{orderly_batch}}. Gets written into \code{orderly_run.rds} as
+##'   metadata, not expected to be passed by user.
+##'
 ##' @seealso \code{\link{orderly_log}} for controlling display of log
 ##'   messages (not just R output)
 ##'
@@ -133,14 +137,15 @@ orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
                         root = NULL, locate = TRUE, echo = TRUE,
                         id_file = NULL, fetch = FALSE, ref = NULL,
                         message = NULL, instance = NULL, use_draft = FALSE,
-                        remote = NULL, tags = NULL) {
+                        remote = NULL, tags = NULL, batch_id = NULL) {
   loc <- orderly_develop_location(name, root, locate)
   name <- loc$name
   config <- check_orderly_archive_version(loc$config)
 
   envir <- orderly_environment(envir)
   info <- recipe_prepare(config, name, id_file, ref, fetch, message,
-                         use_draft, parameters, remote, tags = tags)
+                         use_draft, parameters, remote, tags = tags,
+                         batch_id = batch_id)
 
   recipe_current_run_set(info)
   on.exit(recipe_current_run_clear())
@@ -157,7 +162,7 @@ orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
 recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
                            fetch = FALSE, message = NULL,
                            use_draft = FALSE, parameters = NULL, remote = NULL,
-                           copy_files = TRUE, tags = NULL) {
+                           copy_files = TRUE, tags = NULL, batch_id = NULL) {
   assert_is(config, "orderly_config")
   config <- orderly_config_get(config, FALSE)
 
@@ -191,6 +196,7 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
     info <- recipe_prepare_workdir(info, message, config)
   }
   info$git <- git_info(info$path)
+  info$batch_id <- batch_id
 
   info
 }
@@ -290,7 +296,8 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
                elapsed = as.numeric(elapsed, "secs"),
                changelog = info$changelog,
                tags = info$tags,
-               git = info$git)
+               git = info$git,
+               batch_id = info$batch_id)
 
   ## All the information about data - it's a little more complicated
   ## than the other types of inputs because there are *two* sizes at

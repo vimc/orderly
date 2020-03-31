@@ -872,3 +872,7 @@ is_call <- function(expr, valid) {
 deparse_str <- function(x) {
   paste(deparse(x), collapse = "\n")
 }
+
+df2list <- function(df) {
+  unname(split(df, seq_len(nrow(df))))
+}

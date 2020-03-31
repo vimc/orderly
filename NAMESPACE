@@ -2,6 +2,7 @@
 
 S3method(format,orderly_deduplicate_info)
 S3method(print,orderly_deduplicate_info)
+export(orderly_batch)
 export(orderly_cleanup)
 export(orderly_commit)
 export(orderly_data)
