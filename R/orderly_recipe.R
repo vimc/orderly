@@ -36,6 +36,8 @@ orderly_recipe <- R6::R6Class(
     workdir = NULL,
     git = NULL,
     path = NULL,
+    owd = NULL,
+    inputs = NULL,
 
     initialize = function(name, config, develop = FALSE) {
       assert_is(config, "orderly_config")

@@ -187,9 +187,9 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
     on.exit(git_checkout_branch(prev, TRUE, config$root))
   }
 
-  info <- recipe_read(file.path(path_src(config$root), name),
-                      config, use_draft = use_draft, parameters = parameters,
-                      remote = remote)
+  ## TODO: in the next PR this moves into its own class
+  info <- orderly_recipe$new(name, config)
+  info$resolve_dependencies(use_draft, parameters, remote)
 
   if (!is.null(tags)) {
     info$tags <- union(info$tags, recipe_read_check_tags(tags, config, "tags"))
