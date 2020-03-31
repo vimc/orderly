@@ -19,6 +19,21 @@ test_that("reports can be batch run", {
   }))
 })
 
+test_that("batch running with a single param retains name", {
+  path <- prepare_orderly_example("demo")
+  
+  params <- data.frame(nmin = c(0.2, 0.25))
+  batch_id <- ids::random_id()
+  mockery::stub(orderly_batch, "ids::random_id", batch_id)
+  ids <- orderly_batch("other", params, root = path, echo = FALSE)
+  data <- lapply(ids, function(id) {
+    readRDS(path_orderly_run_rds(file.path(path, "draft", "other", id)))
+  })
+  invisible(lapply(data, function(d) {
+    expect_equal(d$meta$batch_id, batch_id)
+  }))
+})
+
 test_that("return useful error if params passed without names", {
   path <- prepare_orderly_example("parameters", testing = TRUE)
 

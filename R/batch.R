@@ -22,12 +22,12 @@
 ##'
 ##' path <- orderly::orderly_example("demo")
 ##' params <- data.frame(nmin = c(0.2, 0.25))
-##' ids <- orderly::orderly_run("other", params, root = path)
+##' ids <- orderly::orderly_batch("other", params, root = path)
 orderly_batch <- function(name = NULL, parameters = NULL, ...) {
-  ## Assert each column named? or a test at least if not to see what happens
   batch_id <- ids::random_id()
   ids <- lapply(seq_len(nrow(parameters)), function(row) {
-    orderly_run(name, parameters = parameters[row, ], ..., batch_id = batch_id)
+    orderly_run(name, parameters = parameters[row, , drop = FALSE], ..., 
+                batch_id = batch_id)
   })
   ids
 }
