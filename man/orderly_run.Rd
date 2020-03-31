@@ -91,7 +91,7 @@ Tags added here will be \emph{in addition} to any tags listed in
 the \code{tags:} field in \code{orderly.yml} and must be present
 in \code{orderly_config.yml}.}
 
-\item{batch_id}{ID of batch report run created by 
+\item{batch_id}{ID of batch report run created by
 \code{\link{orderly_batch}}. Gets written into \code{orderly_run.rds} as
 metadata, not expected to be passed by user.}
 }
