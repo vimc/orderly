@@ -21,7 +21,7 @@ test_that("reports can be batch run", {
 
 test_that("batch running with a single param retains name", {
   path <- prepare_orderly_example("demo")
-  
+
   params <- data.frame(nmin = c(0.2, 0.25))
   batch_id <- ids::random_id()
   mockery::stub(orderly_batch, "ids::random_id", batch_id)
