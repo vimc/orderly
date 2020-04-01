@@ -315,10 +315,14 @@ recipe_validate_fields <- function(fields, config, filename) {
          call. = FALSE)
   }
 
-  ## Fill any any missing optional fields:
-  msg <- setdiff(config$fields$name, names(fields))
-  if (length(msg) > 0L) {
-    fields[msg] <- NA_character_
+  ## Fill any any missing optional fields, and validate type
+  for (i in seq_len(nrow(config$fields))) {
+    nm <- config$fields$name[[i]]
+    if (config$fields$required[[i]] || !is.null(fields[[nm]])) {
+      assert_scalar_character(fields[[nm]], sprintf("%s:%s", filename, nm))
+    } else {
+      fields[[nm]] <- NA_character_
+    }
   }
 
   fields

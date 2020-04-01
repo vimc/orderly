@@ -860,6 +860,23 @@ test_that("Errors are thrown if required missing fields are not present", {
 })
 
 
+test_that("Errors are thrown if required missing fields are wrong type", {
+  path <- prepare_orderly_example("demo")
+
+  config <- orderly_config$new(path)
+
+  path_example <- file.path(path, "src", "minimal")
+  yml_path <- file.path(path_example, "orderly.yml")
+  dat <- yaml_read(yml_path)
+  dat$requester <- 1
+  yaml_write(dat, yml_path)
+
+  expect_error(
+    orderly_recipe$new("minimal", config),
+    "'orderly.yml:requester' must be character")
+})
+
+
 test_that("Cope with missing optional fields", {
   path <- prepare_orderly_example("demo")
 

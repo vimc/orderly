@@ -516,9 +516,7 @@ test_that("missing required field", {
 
     # we are expecting an error message here
     if (length(missing_required) > 0) {
-      err_msg <- sprintf("Fields missing from .*: %s",
-                        paste(missing_required, collapse = ", ")
-                        )
+      err_msg <- sprintf("Fields missing from .*: '%s'", missing_required)
       expect_error(orderly_run("example", root = path, id_file = tmp,
                                echo = FALSE),
                    regexp = err_msg)
