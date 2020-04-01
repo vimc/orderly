@@ -42,11 +42,11 @@ orderly_recipe <- R6::R6Class(
     inputs = NULL,
     readme = NULL, # TODO: probably this one *is* part of the recipe?
 
-    initialize = function(name, config, develop = FALSE) {
+    initialize = function(name, config, develop = FALSE, path = NULL) {
       assert_is(config, "orderly_config")
 
       self$name <- name
-      self$path <- file.path(config$root, "src", name)
+      self$path <- path %||% file.path(config$root, "src", name)
 
       filename <- file.path(self$path, "orderly.yml")
       assert_file_exists(self$path, name = "Report working directory")
