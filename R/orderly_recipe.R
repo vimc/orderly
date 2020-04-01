@@ -179,13 +179,12 @@ recipe_validate <- function(self, develop, filename) {
       self[[x]] <- check[[x]](raw[[x]], config, filename))
   }
 
-  ## TODO: do the config check here
   recipe_validate_skip_on_develop(
     develop,
-    self$changelog <- changelog_read(self$path))
+    self$changelog <- recipe_validate_changelog(self$path))
   recipe_validate_skip_on_develop(
     develop,
-    self$readme <- recipe_validate_readme(self$path, config))
+    self$readme <- recipe_validate_readme(self$path))
 
   ## Combined validation:
   err <- intersect(self$sources, self$resources)
@@ -504,7 +503,7 @@ recipe_validate_skip_on_develop <- function(develop, expr) {
 }
 
 
-recipe_validate_readme <- function(path, config) {
+recipe_validate_readme <- function(path) {
   readme <- dir(path, pattern = "^README(|\\.md)$", ignore.case = TRUE,
                 recursive = TRUE)
   if (length(readme) == 0L) {
@@ -518,6 +517,20 @@ recipe_validate_readme <- function(path, config) {
                           toupper(sub(re, "\\2", readme, ignore.case = TRUE)),
                           tolower(sub(re, "\\3", readme, ignore.case = TRUE)))
   readme
+}
+
+
+recipe_validate_changelog <- function(path) {
+  filename <- path_changelog_txt(path)
+  if (!file_exists(filename)) {
+    return(NULL)
+  }
+  ## This takes care of the canonical casing for us, as people might
+  ## be tempted to use something like ChangeLog.txt, as capital 'L' is
+  ## canonical: https://en.wikipedia.org/wiki/Changelog
+  assert_file_exists(basename(filename), workdir = path, check_case = TRUE)
+  list(filename = basename(filename),
+       contents = readLines(filename))
 }
 
 

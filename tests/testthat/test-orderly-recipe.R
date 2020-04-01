@@ -913,9 +913,7 @@ test_that("read changelog", {
   expect_equal(
     info$changelog,
     list(filename = "changelog.txt",
-         contents = data_frame(label = "label1",
-                               value = "value1",
-                               from_file = TRUE)))
+         contents = readLines(path_cl)))
 })
 
 

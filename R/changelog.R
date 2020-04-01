@@ -2,7 +2,9 @@ changelog_load <- function(name, id, changelog, message, config) {
   if (!is.null(message)) {
     changelog <- rbind(
       changelog_message_parse(message),
-      changelog)
+      changelog_parse(changelog))
+  } else if (!is.null(changelog)) {
+    changelog <- changelog_parse(changelog)
   }
   if (!is.null(changelog) && is.null(config$changelog)) {
     stop(sprintf("report '%s' uses changelog, ", name),
@@ -83,20 +85,6 @@ changelog_update <- function(id, new, old) {
     ret <- old
   }
   ret
-}
-
-
-changelog_read <- function(path) {
-  filename <- path_changelog_txt(path)
-  if (!file_exists(filename)) {
-    return(NULL)
-  }
-  ## This takes care of the canonical casing for us, as people might
-  ## be tempted to use something like ChangeLog.txt, as capital 'L' is
-  ## canonical: https://en.wikipedia.org/wiki/Changelog
-  assert_file_exists(basename(filename), workdir = path, check_case = TRUE)
-  list(filename = basename(filename),
-       contents = changelog_parse(readLines(filename)))
 }
 
 
