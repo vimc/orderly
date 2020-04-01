@@ -107,3 +107,8 @@ recipe_validate_artefact1 <- function(artefact, config, filename) {
 
   artefact[c("filenames", "description", "format")]
 }
+
+
+valid_formats <- function() {
+  c("staticgraph", "interactivegraph", "data", "report", "interactivehtml")
+}

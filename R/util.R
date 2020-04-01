@@ -534,8 +534,7 @@ copy_directory <- function(src, as, rollback_on_error = FALSE) {
 ordered_map_to_list <- function(x) {
   ## This should not happen, but this is what would happen if we had
   ## a corrupted ordered map.  I think that the yaml parsers will
-  ## fix that for us though.  See similar faff in
-  ## recipe_read_check_artefacts.
+  ## fix that for us though.
   if (!all(lengths(x) == 1L)) {
     stop("Corrupt ordered map (this should never happen)")
   }

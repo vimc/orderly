@@ -1,4 +1,4 @@
-context("recipe_read")
+context("orderly_recipe")
 
 test_that("nonexistant file", {
   path <- prepare_orderly_example("minimal")

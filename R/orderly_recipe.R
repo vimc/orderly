@@ -173,11 +173,11 @@ recipe_validate <- function(self, filename) {
   optional <- setdiff(names(check), required)
 
   develop <- self$develop
-  recipe_read_skip_on_develop(
+  recipe_validate_skip_on_develop(
     develop,
     check_fields(raw, filename, required, optional))
   for (x in names(check)) {
-    recipe_read_skip_on_develop(
+    recipe_validate_skip_on_develop(
       develop,
       self[[x]] <- check[[x]](raw[[x]], config, filename))
   }
@@ -484,4 +484,27 @@ recipe_validate_description <- function(description, config, filename) {
   }
   assert_scalar_character(description, sprintf("%s:description", filename))
   description
+}
+
+
+recipe_validate_skip_on_develop <- function(develop, expr) {
+  if (develop) {
+    tryCatch(expr, error = function(e) orderly_log("warning", e$message))
+  } else {
+    force(expr)
+  }
+}
+
+
+string_or_filename <- function(x, path, name) {
+  assert_scalar_character(x, name)
+  if (grepl("\\.sql$", x)) {
+    file <- x
+    assert_file_exists(file, workdir = path, name = "SQL file")
+    query <- read_lines(file.path(path, file))
+  } else {
+    file <- NULL
+    query <- x
+  }
+  list(query = query, query_file = file)
 }
