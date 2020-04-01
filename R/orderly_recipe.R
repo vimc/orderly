@@ -255,9 +255,11 @@ recipe_validate_resources <- function(resources, config, filename) {
          paste(err, collapse = ", "))
   }
 
-  i <- grepl("^README(|\\.md)$", resources, ignore.case = TRUE)
+  i <- grepl("README(|\\.md)$", resources, ignore.case = TRUE)
   if (any(i)) {
-    orderly_log("warning", "README.md should not be listed as a resource")
+    orderly_log(
+      "warning",
+      sprintf("'%s' should not be listed as a resource", resources[i]))
     resources <- resources[!i]
   }
 

@@ -155,16 +155,23 @@ test_that("list README.md as resource in sub-directory", {
            "requester: ACME"
            )
   writeLines(yml, file.path(yml_path))
+
   # make sure we get a warning about this
   messages <- capture_messages(
     id <- orderly_run("use_resource", root = path, echo = FALSE))
-  expect_true(any(grep("should not be listed as a resource", messages)))
+  expect_match(
+    messages, "'meta/README.md' should not be listed as a resource",
+    fixed = TRUE, all = FALSE)
+  expect_match(
+    messages, "'README.md' should not be listed as a resource",
+    fixed = TRUE, all = FALSE)
 
   ## Try again _without_ listing the READMEs as a resource so that we
   ## see that they're copied over
   writeLines(yml[!grepl("README", yml)], file.path(yml_path))
-  id <- orderly_run("use_resource", root = path, echo = FALSE)
-
+  messages <- capture_messages(
+    id <- orderly_run("use_resource", root = path, echo = FALSE))
+  expect_false(any(grepl("should not be listed as a resource", messages)))
   p <- file.path(path, "draft", "use_resource", id)
   # make sure the file has been copied across
   expect_true(file.exists(file.path(p, "meta", "README.md")))

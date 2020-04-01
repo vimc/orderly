@@ -4,7 +4,6 @@ data:
 script: script.R
 resources:
   - meta/data.csv
-  - README.md
 artefacts:
   staticgraph:
     description: A graph of things

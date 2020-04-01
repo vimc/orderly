@@ -965,7 +965,7 @@ test_that("readme listed as a resource", {
   file.create(file.path(path_example, "README.md"))
   expect_message(
     orderly_recipe$new("example", orderly_config$new(path)),
-    "README.md should not be listed as a resource")
+    "'README.md' should not be listed as a resource")
 })
 
 

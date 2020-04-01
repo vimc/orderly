@@ -164,6 +164,7 @@ orderly_status <- function(path) {
                    source = info$sources,
                    changelog = info$changelog,
                    resource = info$resources,
+                   readme = unname(info$readme),
                    global = names(info$global_resources),
                    dependency = info$depends$as,
                    artefact = unlist(info$artefacts[, "filenames"],
