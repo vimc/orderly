@@ -473,6 +473,7 @@ recipe_validate_displayname <- function(displayname, config, filename) {
     return(NULL)
   }
   assert_scalar_character(displayname, sprintf("%s:displayname", filename))
+  displayname
 }
 
 
@@ -481,4 +482,5 @@ recipe_validate_description <- function(description, config, filename) {
     return(NULL)
   }
   assert_scalar_character(description, sprintf("%s:description", filename))
+  description
 }
