@@ -2,10 +2,10 @@ orderly_recipe <- R6::R6Class(
   "orderly_recipe",
 
   public = list(
-    ## TODO: We run very quickly into a clash between methods and
+    ## NOTE: We run very quickly into a clash between methods and
     ## fieldnames if not careful (data is one example, used both in
     ## the yml and here for referring to the raw data) - we'll need to
-    ## think about that...
+    ## think about that
     config = NULL,
     raw = NULL,
 
@@ -34,7 +34,7 @@ orderly_recipe <- R6::R6Class(
 
     name = NULL,
 
-    ## TODO: refactor this out into a container class
+    ## TODO(VIMC-3611): refactor this out into a container class
     id = NULL,
     workdir = NULL,
     git = NULL,
@@ -81,9 +81,9 @@ orderly_recipe <- R6::R6Class(
 
 
 recipe_migrate <- function(raw, config, filename) {
-  ## TODO: should move custom fields within their own section I think,
-  ## so for now I'm going to process this with a migration and we can
-  ## set up deprecating it later.
+  ## TODO(VIMC-3613): should move custom fields within their own
+  ## section I think, so for now I'm going to process this with a
+  ## migration and we can set up deprecating it later.
   v <- intersect(config$fields$name, names(raw))
   if (length(v) > 0L) {
     raw$fields <- raw[intersect(config$fields$name, names(raw))]
@@ -110,7 +110,6 @@ recipe_migrate <- function(raw, config, filename) {
   }
 
   if (is.character(raw$connection)) {
-    ## TODO: Better message?
     msg <- c("Use of strings for connection: is deprecated and will be",
              "removed in a future orderly version - please use",
              "connection: <object>: <dbname> instead.  See the main",
@@ -243,8 +242,6 @@ recipe_validate_resources <- function(resources, config, filename) {
 
   assert_character(resources, sprintf("%s:%s", filename, "resouces"))
   assert_file_exists(resources, name = "Resource file")
-  ## TODO: this is not quite right because the files need to be
-  ## tested (as done here) with names within that directory.
   err <- resources[!is_within_dir(resources, ".")]
   if (length(err) > 0L) {
     stop("Declared resources not in right place: ",
@@ -470,7 +467,6 @@ recipe_validate_query <- function(d, field, config, filename) {
 
   query_files <- unlist(lapply(d, "[[", "query_file"), FALSE, FALSE)
 
-  ## TODO: this is not amazing
   attr(d, "resources") <- query_files
   d
 }

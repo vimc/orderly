@@ -143,9 +143,9 @@ orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
   config <- check_orderly_archive_version(loc$config)
 
   envir <- orderly_environment(envir)
-
   capture <- isTRUE(config$get_run_option("capture_log"))
   logfile <- tempfile()
+
   info <- conditional_capture_log(capture, logfile, {
     info <- recipe_prepare(config, name, id_file, ref, fetch, message,
                            use_draft, parameters, remote, tags = tags,
@@ -187,7 +187,7 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
     on.exit(git_checkout_branch(prev, TRUE, config$root))
   }
 
-  ## TODO: in the next PR this moves into its own class
+  ## TODO(VIMC-3611): in the next PR this moves into its own class
   info <- orderly_recipe$new(name, config)
   info$resolve_dependencies(use_draft, parameters, remote)
 
