@@ -13,7 +13,9 @@ recipe_validate_depends <- function(depends, config, filename) {
     depends[[i]]$name <- names(depends)[[i]]
   }
 
-  rbind_df(lapply(depends, recipe_validate_depend1, filename))
+  ret <- rbind_df(lapply(depends, recipe_validate_depend1, filename))
+  rownames(ret) <- NULL
+  ret
 }
 
 
