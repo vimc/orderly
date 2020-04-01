@@ -8,7 +8,6 @@ orderly_recipe <- R6::R6Class(
     ## think about that...
     config = NULL,
     raw = NULL,
-    develop = NULL,
 
     packages = NULL,
     script = NULL,
@@ -55,20 +54,19 @@ orderly_recipe <- R6::R6Class(
       assert_file_exists(filename, name = "Orderly configuration")
       self$raw <- yaml_read(filename)
       self$config <- config
-      self$develop <- develop
 
-      self$validate()
+      self$validate(develop)
     },
 
     migrate = function() {
       self$raw <- recipe_migrate(self$raw, self$config, "orderly.yml")
     },
 
-    validate = function() {
+    validate = function(develop) {
       self$migrate()
       withr::with_dir(
         self$path,
-        recipe_validate(self, "orderly.yml"))
+        recipe_validate(self, develop, "orderly.yml"))
       invisible(self)
     },
 
@@ -147,7 +145,7 @@ recipe_migrate <- function(raw, config, filename) {
 }
 
 
-recipe_validate <- function(self, filename) {
+recipe_validate <- function(self, develop, filename) {
   raw <- self$raw
   config <- self$config
 
@@ -172,7 +170,6 @@ recipe_validate <- function(self, filename) {
   required <- c("script", "artefacts")
   optional <- setdiff(names(check), required)
 
-  develop <- self$develop
   recipe_validate_skip_on_develop(
     develop,
     check_fields(raw, filename, required, optional))
