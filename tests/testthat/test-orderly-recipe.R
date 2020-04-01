@@ -912,7 +912,10 @@ test_that("read changelog", {
   info <- orderly_recipe$new("example", orderly_config$new(path))
   expect_equal(
     info$changelog,
-    data_frame(label = "label1", value = "value1", from_file = TRUE))
+    list(filename = "changelog.txt",
+         contents = data_frame(label = "label1",
+                               value = "value1",
+                               from_file = TRUE)))
 })
 
 

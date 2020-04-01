@@ -95,7 +95,8 @@ changelog_read <- function(path) {
   ## be tempted to use something like ChangeLog.txt, as capital 'L' is
   ## canonical: https://en.wikipedia.org/wiki/Changelog
   assert_file_exists(basename(filename), workdir = path, check_case = TRUE)
-  changelog_parse(readLines(filename))
+  list(filename = basename(filename),
+       contents = changelog_parse(readLines(filename)))
 }
 
 

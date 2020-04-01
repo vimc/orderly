@@ -303,7 +303,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
                artefacts = artefacts,
                depends = depends,
                elapsed = as.numeric(elapsed, "secs"),
-               changelog = info$changelog,
+               changelog = info$changelog$contents,
                tags = info$tags,
                git = info$git,
                batch_id = info$batch_id)
@@ -488,8 +488,8 @@ recipe_prepare_workdir <- function(info, message, config) {
   info$inputs <- recipe_file_inputs(info)
   ## TODO(VIMC-3611): this is modifying the value of the changelog
   ## here, and should write to the new task/report object
-  info$changelog <-
-    changelog_load(info$name, info$id, info$changelog, message, config)
+  info$changelog$contents <- changelog_load(
+    info$name, info$id, info$changelog$contents, message, config)
 
   recipe_check_unique_inputs(info)
   info

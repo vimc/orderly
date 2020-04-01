@@ -162,7 +162,7 @@ orderly_status <- function(path) {
   internal <- list(orderly = "orderly.yml",
                    script = info$script,
                    source = info$sources,
-                   changelog = info$changelog,
+                   changelog = info$changelog$filename,
                    resource = info$resources,
                    readme = unname(info$readme),
                    global = names(info$global_resources),
