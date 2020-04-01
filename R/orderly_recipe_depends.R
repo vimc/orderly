@@ -93,43 +93,6 @@ recipe_resolve_dependencies <- function(self, use_draft, parameters, remote) {
 }
 
 
-resolve_dependencies <- function(depends, config, use_draft, parameters,
-                                 remote) {
-  assert_is(config, "orderly_config")
-  if (is.null(depends)) {
-    return(NULL)
-  }
-
-  if (!is.null(remote)) {
-    if (use_draft) {
-      stop("Can't use 'use_draft' with remote")
-    }
-    remote <- get_remote(remote, config)
-  }
-
-  depends_split <- unname(split(depends, depends$index))
-  for (i in seq_along(depends_split)) {
-    name <- depends_split[[i]]$name[[1]]
-    id <- depends_split[[i]]$id[[1]]
-    filename <- depends_split[[i]]$filename
-    if (is.null(remote)) {
-      ## This is ugly but needs to stay for another couple of versions
-      use_draft_i <- depends_split[[i]]$draft[[1]]
-      use_draft_i <- if (is.na(use_draft_i)) use_draft else use_draft_i
-      res <- resolve_dependencies_local(id, name, config, parameters,
-                                        use_draft_i)
-    } else {
-      res <- resolve_dependencies_remote(id, name, config, remote)
-    }
-    info <- resolve_dependencies_validate(id, name, res$path, filename)
-    extra <- as_data_frame(c(res, info))
-    depends_split[[i]] <- cbind(depends_split[[i]], extra)
-  }
-
-  rbind_df(depends_split)
-}
-
-
 resolve_dependencies_local <- function(id, name, config, parameters,
                                        use_draft) {
   is_latest <- grepl("^latest(\\(|$)", id)
