@@ -186,6 +186,9 @@ recipe_validate <- function(self, filename) {
   recipe_validate_skip_on_develop(
     develop,
     self$changelog <- changelog_read(self$path))
+  recipe_validate_skip_on_develop(
+    develop,
+    self$readme <- recipe_validate_readme(self$path, config))
 
   ## Combined validation:
   err <- intersect(self$sources, self$resources)
@@ -250,6 +253,12 @@ recipe_validate_resources <- function(resources, config, filename) {
   if (length(err) > 0L) {
     stop("Declared resources not in right place: ",
          paste(err, collapse = ", "))
+  }
+
+  i <- grepl("^README(|\\.md)$", resources, ignore.case = TRUE)
+  if (any(i)) {
+    orderly_log("warning", "README.md should not be listed as a resource")
+    resources <- resources[!i]
   }
 
   resources
@@ -493,6 +502,23 @@ recipe_validate_skip_on_develop <- function(develop, expr) {
   } else {
     force(expr)
   }
+}
+
+
+recipe_validate_readme <- function(path, config) {
+  readme <- dir(path, pattern = "^README(|\\.md)$", ignore.case = TRUE,
+                recursive = TRUE)
+  if (length(readme) == 0L) {
+    return(NULL)
+  }
+
+  ## Surprisingly awful; convert readme.md -> README.md readme ->
+  ## README, README.MD -> README.md etc
+  re <- "^(.*)?(README)(|\\.md)$"
+  names(readme) <- paste0(sub(re, "\\1", readme, ignore.case = TRUE),
+                          toupper(sub(re, "\\2", readme, ignore.case = TRUE)),
+                          tolower(sub(re, "\\3", readme, ignore.case = TRUE)))
+  readme
 }
 
 

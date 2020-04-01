@@ -24,12 +24,12 @@ test_that("lowercase README.md",  {
   file.create(file.path(report_path, "readme.MD"))
   id <- orderly_run("example", root = path, echo = FALSE)
   p <- file.path(path, "draft", "example", id)
-  expect_true(file.exists(file.path(p, "README.MD")))
+  expect_true(file.exists(file.path(p, "README.md")))
   orderly_commit(id, root = path)
   con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
   dat <- DBI::dbReadTable(con, "file_input")
-  expect_equal(sum(dat$filename == "README.MD"), 1)
+  expect_equal(sum(dat$filename == "README.md"), 1)
 })
 
 test_that("list README.md as resource",  {

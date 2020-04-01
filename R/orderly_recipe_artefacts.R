@@ -78,6 +78,10 @@ recipe_validate_artefacts <- function(artefacts, config, filename) {
          paste(squote(dups), collapse = ", "))
   }
 
+  if (any(grepl("^README(|.md)$", filenames, ignore.case = TRUE))) {
+    stop("README.md should not be listed as an artefact")
+  }
+
   res
 }
 

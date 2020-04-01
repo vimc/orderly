@@ -706,7 +706,7 @@ recipe_file_inputs <- function(info) {
   file_in_data(
     orderly_yml = file_info("orderly.yml"),
     script = file_info(info$script),
-    readme = file_info(info$readme),
+    readme = file_info(names(info$readme)),
     source = file_info(info$sources),
     resource = file_info(info$resources),
     global = file_info(names(info$global_resources)))
@@ -755,45 +755,10 @@ recipe_check_hashes <- function(pre, post, name1, name2) {
 
 
 recipe_copy_readme <- function(info, src) {
-  ## README logic:
-  ## * if there's a readme we copy it
-  ## * any casing is OK as input, but we always store in canonical case
-  ## * if they also list it as a resource let them know that's redundant
-  ## * if they also list it as an artefact then error
-  src_files <- dir(src)
-  readme_file <- src_files[tolower(src_files) == "readme.md"]
-
-  readme_files <- dir(src, pattern = "README(\\.md)?$",
-                      ignore.case = TRUE, recursive = TRUE)
-  ## Two readme files e.g. README.md and Readme.MD can happen on unix
-  ## systems; it is not clear what we should do here, so we just
-  ## ignore the readme silently for now.
-  if (length(readme_files) > 0) {
-    ## we copy the readme.md file to README.md irrespective of what
-    ## case filename the user has used
-    dir_create(dirname(readme_files))
-    canonical_readme_files <- sub("README(|.md)$", "README\\1", readme_files,
-                                  ignore.case = TRUE)
-    file_copy(file.path(src, readme_files), canonical_readme_files)
-    info$readme <- canonical_readme_files
-
-    ## now check if README is a resource
-    if (length(info$resources) > 0) {
-      i <- grepl("README(|.md)$", info$resources, ignore.case = TRUE)
-      if (any(i)) {
-        ## WARNING
-        orderly_log("readme", "README.md should not be listed as a resource")
-        info$resources <- info$resources[!i]
-      }
-    }
-
-    ## now check if README is an artefact
-    artefact_files <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
-    if (any(grepl("README(|.md)$", artefact_files, ignore.case = TRUE))) {
-      stop("README.md should not be listed as an artefact")
-    }
+  if (!is.null(info$readme)) {
+    dir_create(dirname(info$readme))
+    file_copy(file.path(src, info$readme), names(info$readme))
   }
-
   info
 }
 

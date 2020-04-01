@@ -345,7 +345,7 @@ test_that("Can't use database name on old style configuration", {
   path <- prepare_orderly_example("db1", testing = TRUE)
   p <- file.path(path, "orderly_config.yml")
   dat <- yaml_read(p)
-  writeLines(yaml::as.yaml(list(source = dat$data$source1)), p)
+  writeLines(yaml::as.yaml(list(source = dat$database$source1)), p)
 
   p <- file.path(path, "src", "example", "orderly.yml")
   txt <- readLines(p)
@@ -912,5 +912,87 @@ test_that("read changelog", {
   info <- orderly_recipe$new("example", orderly_config$new(path))
   expect_equal(
     info$changelog,
-    data_frame(label = "label1", value = value1, from_file = TRUE))
+    data_frame(label = "label1", value = "value1", from_file = TRUE))
+})
+
+
+test_that("readme detection", {
+  path <- prepare_orderly_example("minimal")
+  config <- orderly_config$new(path)
+  expect_null(orderly_recipe$new("example", config)$readme)
+
+  file.create(file.path(path, "src", "example", "README.md"))
+  expect_equal(
+    orderly_recipe$new("example", config)$readme,
+    c("README.md" = "README.md"))
+
+  dir.create(file.path(path, "src", "example", "subdir"))
+  file.create(file.path(path, "src", "example", "subdir", "Readme.MD"))
+  expect_mapequal(
+    orderly_recipe$new("example", config)$readme,
+    c("README.md" = "README.md", "subdir/README.md" = "subdir/Readme.MD"))
+
+  file.create(file.path(path, "src", "example", "subdir", "readme"))
+  expect_mapequal(
+    orderly_recipe$new("example", config)$readme,
+    c("README.md" = "README.md",
+      "subdir/README.md" = "subdir/Readme.MD",
+      "subdir/README" = "subdir/readme"))
+
+  file.create(file.path(path, "src", "example", "subdir", "please_README.md"))
+  expect_mapequal(
+    orderly_recipe$new("example", config)$readme,
+    c("README.md" = "README.md",
+      "subdir/README.md" = "subdir/Readme.MD",
+      "subdir/README" = "subdir/readme"))
+})
+
+
+test_that("readme listed as a resource", {
+  path <- prepare_orderly_example("minimal")
+  report_path <- file.path(path, "src", "example")
+  ## in report directory create a file called README.md
+  path_example <- file.path(path, "src", "example")
+  file.create(file.path(report_path, "README.md"))
+
+  yml_path <- file.path(path_example, "orderly.yml")
+  minimal_yml <- readLines(yml_path)
+  extended_yml <- c(minimal_yml,
+                    "resources:",
+                    "  README.md")
+  writeLines(extended_yml, yml_path)
+
+  file.create(file.path(path_example, "README.md"))
+  expect_message(
+    orderly_recipe$new("example", orderly_config$new(path)),
+    "README.md should not be listed as a resource")
+})
+
+
+test_that("list README.md as artefact",  {
+  path <- prepare_orderly_example("minimal")
+  report_path <- file.path(path, "src", "example")
+  ## in report directory create a file called README.md
+  path_example <- file.path(path, "src", "example")
+  file.create(file.path(report_path, "README.md"))
+
+  yml_path <- file.path(path_example, "orderly.yml")
+  ## rewrite the yaml to include README.md as a resource
+  yml <- c("data:",
+           "  dat:",
+           "    query: SELECT name, number FROM thing",
+           "script: script.R",
+           "artefacts:",
+           "  - staticgraph:",
+           "      description: A graph of things",
+           "      filenames: mygraph.png",
+           "  - data:",
+           "      description: a readme file",
+           "      filenames: README.md"
+           )
+  writeLines(yml, file.path(yml_path))
+
+  expect_error(
+    orderly_recipe$new("example", orderly_config$new(path)),
+    "README.md should not be listed as an artefact")
 })
