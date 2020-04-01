@@ -86,7 +86,7 @@ orderly_develop_start <- function(name = NULL, parameters = NULL,
 
   orderly_log("name", loc$name)
 
-  info <- orderly_recipe$new(log$name, log$config, develop = TRUE)
+  info <- orderly_recipe$new(loc$name, loc$config, develop = TRUE)
   info$resolve_dependencies(use_draft, use_parameters, remote)
 
   info$workdir <- loc$path
