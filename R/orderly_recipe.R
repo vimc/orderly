@@ -266,7 +266,12 @@ recipe_validate_global_resources <- function(global_resources, config,
     return(NULL)
   }
 
-  ## TODO: verify that global resources are supported
+  if (is.null(config$global_resources)) {
+    stop(paste("'global_resources' is not supported;",
+               "please edit orderly_config.yml to enable"),
+         call. = FALSE)
+  }
+
   prefix <- sprintf("%s:global_resources", filename)
 
   assert_named(global_resources, name = prefix)

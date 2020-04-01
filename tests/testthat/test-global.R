@@ -9,6 +9,18 @@ test_that("global", {
   )
 })
 
+
+test_that("can't use globals where not supported ", {
+  path <- prepare_orderly_example("minimal")
+  append_lines(
+    c("global_resources:", "  file.txt: file.txt"),
+    file.path(path, "src", "example", "orderly.yml"))
+  expect_error(
+    orderly_run("example", root = path, echo = FALSE),
+    "'global_resources' is not supported")
+})
+
+
 test_that("missing global file", {
   path <- prepare_orderly_example("global", testing = TRUE)
   # now we break the report yaml
