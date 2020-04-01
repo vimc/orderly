@@ -370,7 +370,7 @@ test_that("validate database names", {
   path <- prepare_orderly_example("db2", testing = TRUE)
   p <- file.path(path, "orderly_config.yml")
   dat <- yaml_read(p)
-  names(dat$data) <- c("db1", "db2")
+  names(dat$database) <- c("db1", "db2")
   writeLines(yaml::as.yaml(dat), p)
 
   cfg <- orderly_config$new(path)
