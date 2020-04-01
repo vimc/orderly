@@ -1,12 +1,11 @@
-changelog_load <- function(path, message, info, config) {
-  changelog <- changelog_read(path)
+changelog_load <- function(name, id, changelog, message, config) {
   if (!is.null(message)) {
     changelog <- rbind(
       changelog_message_parse(message),
       changelog)
   }
   if (!is.null(changelog) && is.null(config$changelog)) {
-    stop(sprintf("report '%s' uses changelog, ", info$name),
+    stop(sprintf("report '%s' uses changelog, ", name),
          "but this is not enabled in orderly_config.yml",
          call. = FALSE)
   }
@@ -18,8 +17,8 @@ changelog_load <- function(path, message, info, config) {
                  paste(squote(config$changelog$id), collapse = ", ")),
          call. = FALSE)
   }
-  prev <- changelog_read_previous(info$name, config)
-  changelog_update(info$id, changelog, prev)
+  prev <- changelog_read_previous(name, config)
+  changelog_update(id, changelog, prev)
 }
 
 

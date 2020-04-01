@@ -17,12 +17,14 @@ orderly_recipe <- R6::R6Class(
     global_resources = NULL,
     parameters = NULL,
     fields = NULL,
-    changelog = NULL,
     tags = NULL,
     secrets = NULL,
     environment = NULL,
     displayname = NULL,
     description = NULL,
+
+    readme = NULL,
+    changelog = NULL,
 
     depends = NULL,
     artefacts = NULL,
@@ -41,7 +43,6 @@ orderly_recipe <- R6::R6Class(
     owd = NULL,
     inputs = NULL,
     batch_id = NULL,
-    readme = NULL, # TODO: probably this one *is* part of the recipe?
 
     initialize = function(name, config, develop = FALSE, path = NULL) {
       assert_is(config, "orderly_config")
@@ -146,7 +147,6 @@ recipe_migrate <- function(raw, config, filename) {
 }
 
 
-
 recipe_validate <- function(self, filename) {
   raw <- self$raw
   config <- self$config
@@ -182,10 +182,10 @@ recipe_validate <- function(self, filename) {
       self[[x]] <- check[[x]](raw[[x]], config, filename))
   }
 
-  ## TODO: odd one out here; should probably read whole thing?
-  if (file.exists("changelog.txt")) {
-    self$changelog <- "changelog.txt"
-  }
+  ## TODO: do the config check here
+  recipe_validate_skip_on_develop(
+    develop,
+    self$changelog <- changelog_read(self$path))
 
   ## Combined validation:
   err <- intersect(self$sources, self$resources)

@@ -486,7 +486,10 @@ recipe_prepare_workdir <- function(info, message, config) {
   info <- recipe_copy_depends(info)
 
   info$inputs <- recipe_file_inputs(info)
-  info$changelog <- changelog_load(src, message, info, config)
+  ## TODO(VIMC-3611): this is modifying the value of the changelog
+  ## here, and should write to the new task/report object
+  info$changelog <-
+    changelog_load(info$name, info$id, info$changelog, message, config)
 
   recipe_check_unique_inputs(info)
   info

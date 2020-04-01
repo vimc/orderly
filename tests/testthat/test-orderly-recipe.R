@@ -895,3 +895,22 @@ test_that("Cope with missing optional fields", {
          author = "Researcher McResearcherface",
          comment = NA_character_))
 })
+
+
+test_that("read changelog", {
+  skip_on_cran_windows()
+  path <- prepare_orderly_example("changelog", testing = TRUE)
+
+  tmp <- tempfile()
+  path_example <- file.path(path, "src", "example")
+  path_cl <- path_changelog_txt(path_example)
+
+  info <- orderly_recipe$new("example", orderly_config$new(path))
+  expect_null(info$changelog)
+
+  writeLines(c("[label1]", "value1"), path_cl)
+  info <- orderly_recipe$new("example", orderly_config$new(path))
+  expect_equal(
+    info$changelog,
+    data_frame(label = "label1", value = value1, from_file = TRUE))
+})
