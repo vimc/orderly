@@ -40,6 +40,7 @@ orderly_recipe <- R6::R6Class(
     path = NULL,
     owd = NULL,
     inputs = NULL,
+    readme = NULL, # TODO: probably this one *is* part of the recipe?
 
     initialize = function(name, config, develop = FALSE) {
       assert_is(config, "orderly_config")

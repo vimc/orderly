@@ -265,11 +265,8 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
                          "id_requested", "is_latest", "is_pinned")]
   }
 
-  extra_fields <- drop_null(set_names(
-    lapply(config$fields$name, function(x) info[[x]]),
-    config$fields$name))
-  if (length(extra_fields) > 0L) {
-    extra_fields <- as_data_frame(extra_fields)
+  if (length(info$fields) > 0L) {
+    extra_fields <- as_data_frame(info$fields)
   } else {
     extra_fields <- NULL
   }
