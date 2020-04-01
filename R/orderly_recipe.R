@@ -308,6 +308,13 @@ recipe_validate_fields <- function(fields, config, filename) {
     return(NULL)
   }
 
+  err <- setdiff(config$fields$name[config$fields$required], names(fields))
+  if (length(err) > 0L) {
+    stop(sprintf("Fields missing from %s: %s",
+                 filename, paste(squote(err), collapse = ", ")),
+         call. = FALSE)
+  }
+
   ## Fill any any missing optional fields:
   msg <- setdiff(config$fields$name, names(fields))
   if (length(msg) > 0L) {

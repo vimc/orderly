@@ -841,3 +841,40 @@ test_that("pass parameters through query interface", {
                                config, list(nmin = 0.25), FALSE),
     res)
 })
+
+
+test_that("Errors are thrown if required missing fields are not present", {
+  path <- prepare_orderly_example("demo")
+
+  config <- orderly_config$new(path)
+
+  path_example <- file.path(path, "src", "minimal")
+  yml_path <- file.path(path_example, "orderly.yml")
+  dat <- yaml_read(yml_path)
+  dat$requester <- NULL
+  yaml_write(dat, yml_path)
+
+  expect_error(
+    orderly_recipe$new("minimal", config),
+    "Fields missing from orderly.yml: 'requester'")
+})
+
+
+test_that("Cope with missing optional fields", {
+  path <- prepare_orderly_example("demo")
+
+  config <- orderly_config$new(path)
+
+  path_example <- file.path(path, "src", "minimal")
+  yml_path <- file.path(path_example, "orderly.yml")
+  dat <- yaml_read(yml_path)
+  dat$comment <- NULL
+  yaml_write(dat, yml_path)
+
+  fields <- orderly_recipe$new("minimal", config)$fields
+  expect_mapequal(
+    fields,
+    list(requester = "Funder McFunderface",
+         author = "Researcher McResearcherface",
+         comment = NA_character_))
+})
