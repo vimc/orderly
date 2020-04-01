@@ -310,7 +310,7 @@ test_that("can't use connection in configurations that lack databases", {
   dat <- list(connection = "con")
   writeLines(c(txt, yaml::as.yaml(dat)), p)
   expect_error(
-    orderly_recipe$new("example", orderly_config$new(path)),
+    suppressWarnings(orderly_recipe$new("example", orderly_config$new(path))),
     "No databases are configured - can't use a 'connection' section")
 })
 
