@@ -184,8 +184,8 @@ do_run <- function(run_func) {
       ## we should run this with try() so that we can capture logs there
       ids <- capture_log(main_batch(), log)
       dest <- (if (commit) path_archive else path_draft)(config$root)
-      ## TODO: Here all orderly logs get the history for all reports in the batch
-      ## is this really what we want?
+      ## TODO: Here all orderly logs get the history for all reports in the
+      ## batch is this really what we want?
       lapply(ids, function(id) {
         file_copy(log, file.path(dest, name, id, "orderly.log"))
       })
@@ -219,7 +219,8 @@ Options:
   --pull           Pull git before running report
   --message=TEXT   A message explaining why the reports were run
 
-Parameters, if given, must be passed through as comma separated key=value1,value2 pairs"
+Parameters, if given, must be passed through as comma separated
+key=value1,value2 pairs"
 
 main_do_batch <- function(x) {
   do_run(orderly_batch)(x)

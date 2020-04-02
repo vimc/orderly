@@ -113,7 +113,8 @@ test_that("pass batch parameters", {
   expect_equal(f("a=1+2"), data_frame(a = "1+2"))
   expect_error(
     f("a='quoted string'"),
-    "Parameters with whitespace not supported in batch run, got param 'quoted string'")
+    paste0("Parameters with whitespace not supported in batch run, ",
+           "got param 'quoted string'"))
   expect_equal(f("a=1,2"), data_frame(a = c(1, 2)))
   expect_equal(f("a=1,2", "b=value1,value2"),
                data_frame(a = c(1, 2), b = c("value1", "value2")))
