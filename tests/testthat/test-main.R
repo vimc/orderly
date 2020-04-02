@@ -115,11 +115,11 @@ test_that("pass batch parameters", {
     f("a='quoted string'"),
     "Parameters with whitespace not supported in batch run, got param 'quoted string'")
   expect_equal(f("a=1,2"), data_frame(a = c(1, 2)))
-  expect_equal(f("a=1,2", "b=value1,value2"), 
+  expect_equal(f("a=1,2", "b=value1,value2"),
                data_frame(a = c(1, 2), b = c("value1", "value2")))
-  expect_equal(f("a=mixed_types,TRUE,3"), 
+  expect_equal(f("a=mixed_types,TRUE,3"),
                data_frame(a = c("mixed_types", "TRUE", "3")))
-  expect_error(f("a=1", "b=2,3"), 
+  expect_error(f("a=1", "b=2,3"),
                "All params must have the same number of values, got.*")
 })
 
@@ -546,17 +546,17 @@ test_that("parameter type conversion", {
 test_that("batch", {
   testthat::skip_on_cran()
   path <- unzip_git_demo()
-  
+
   args <- c("--root", path, "batch", "--ref", "other", "other", "nmin=0,0.2")
-  
+
   res <- cli_args_process(args)
   expect_equal(res$command, "batch")
   expect_equal(res$options$ref, "other")
   expect_equal(res$options$parameters, data_frame(nmin = c(0, 0.2)))
   expect_equal(res$target, main_do_batch)
-  
+
   expect_message(res$target(res), "ids:[\\w\\d-]*")
-  
+
   d <- orderly_list_archive(path)
   expect_equal(nrow(d), 2L)
   expect_equal(d$name, c("other", "other"))

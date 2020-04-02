@@ -91,7 +91,7 @@ cli_args_process_run_parameters <- function(parameters, command) {
       values_per_param <- lengths(strsplit(unlist(parameters), ","))
       if (length(unique(values_per_param)) != 1) {
         stop(sprintf(
-          "All params must have the same number of values, got \n%s", 
+          "All params must have the same number of values, got \n%s",
           paste(parameters, collapse = "\n")
         ))
       }
@@ -156,7 +156,7 @@ do_run <- function(run_func) {
     fetch <- x$options$fetch
     pull <- x$options$pull
     message <- x$options$message
-    
+
     main_batch <- function() {
       if (pull) {
         if (is.null(ref)) {
@@ -167,14 +167,14 @@ do_run <- function(run_func) {
         }
       }
       ids <- run_func(name, parameters, root = config, id_file = id_file,
-                      instance = instance, ref = ref, fetch = fetch, 
+                      instance = instance, ref = ref, fetch = fetch,
                       message = message)
       if (commit) {
         lapply(ids, orderly_commit, name, config)
       }
       ids
     }
-    
+
     if (print_log) {
       sink(stderr(), type = "output")
       on.exit(sink(NULL, type = "output"))
@@ -190,7 +190,7 @@ do_run <- function(run_func) {
         file_copy(log, file.path(dest, name, id, "orderly.log"))
       })
     }
-    
+
     if (commit) {
       lapply(ids, function(id) {
         path_rds <- path_orderly_run_rds(
@@ -198,7 +198,6 @@ do_run <- function(run_func) {
         slack_post_success(readRDS(path_rds), config)
       })
     }
-    
     message(ngettext(length(ids), "id:", "ids:"), paste(ids, collapse = ", "))
   }
 }
@@ -425,7 +424,7 @@ parse_parameter <- function(x) {
 parse_batch_parameters <- function(x) {
   if (grepl("\\s", x)) {
     stop(sprintf(
-      "Parameters with whitespace not supported in batch run, got param '%s'", 
+      "Parameters with whitespace not supported in batch run, got param '%s'",
       x))
   }
   params <- strsplit(x, ",")[[1]]
