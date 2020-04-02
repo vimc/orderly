@@ -136,38 +136,27 @@ main_do_run <- function(x) {
   fetch <- x$options$fetch
   pull <- x$options$pull
   message <- x$options$message
-
-  main_run <- function() {
-    if (pull) {
-      if (is.null(ref)) {
-        git_pull(config$root)
-      } else {
-        orderly_cli_error(
-          "Can't use --pull with --ref; perhaps you meant --fetch ?")
-      }
-    }
-    id <- orderly_run(name, parameters, root = config, id_file = id_file,
-                      instance = instance,
-                      ref = ref, fetch = fetch, message = message)
-    if (commit) {
-      orderly_commit(id, name, config)
-    }
-    id
-  }
-
+  
   if (print_log) {
     sink(stderr(), type = "output")
     on.exit(sink(NULL, type = "output"))
-    id <- main_run()
   } else {
-    log <- tempfile()
-    ## we should run this with try() so that we can capture logs there
-    id <- capture_log(main_run(), log)
-    dest <- (if (commit) path_archive else path_draft)(config$root)
-    file_copy(log, file.path(dest, name, id, "orderly.log"))
+    config$add_run_option("capture_log", FALSE)
   }
 
+  if (pull) {
+    if (is.null(ref)) {
+      git_pull(config$root)
+    } else {
+      orderly_cli_error(
+        "Can't use --pull with --ref; perhaps you meant --fetch ?")
+    }
+  }
+  id <- orderly_run(name, parameters, root = config, id_file = id_file,
+                    instance = instance,
+                    ref = ref, fetch = fetch, message = message)
   if (commit) {
+    orderly_commit(id, name, config)
     path_rds <- path_orderly_run_rds(
       file.path(config$root, "archive", name, id))
     slack_post_success(readRDS(path_rds), config)

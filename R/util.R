@@ -196,7 +196,12 @@ pasteq <- function(x, sep = ", ") {
 
 capture_log <- function(expr, filename) {
   ## nolint start
-  con <- file(filename, "w")
+  if (file.exists(filename)) {
+    mode = "a"
+  } else {
+    mode = "w"
+  }
+  con <- file(filename, mode)
   sink(con, split = FALSE)
   on.exit({
     sink(NULL)
@@ -205,6 +210,14 @@ capture_log <- function(expr, filename) {
   ## nolint end
   handle_message <- function(e) cat(e$message, file = stdout())
   suppressMessages(withCallingHandlers(force(expr), message = handle_message))
+}
+
+conditional_capture_log <- function(capture, filename, expr) {
+  if (isTRUE(capture)) {
+    capture_log(expr, filename)
+  } else {
+    force(expr)
+  }
 }
 
 last <- function(x) {
