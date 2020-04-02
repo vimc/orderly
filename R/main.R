@@ -20,9 +20,9 @@ cli_args_process <- function(args) {
   dat$target <- pos[[dat$command]]$target
 
   ## Any additional processing:
-  if (dat$command == "run") {
+  if (dat$command %in% c("run", "batch")) {
     dat$options$parameters <- cli_args_process_run_parameters(
-      dat$options$parameter)
+      dat$options$parameter, dat$command)
     dat$options$name <- dat$options[["<name>"]] # docopt bug?
   } else if (dat$command == "list") {
     dat$options$type <- cli_args_process_list_type(dat$options)
@@ -46,13 +46,14 @@ Commands:
   pull         Pull reports from remote servers
   cleanup      Remove drafts and dangling data
   rebuild      Rebuild the database
-  migrate      Migrate the archive"
+  migrate      Migrate the archive
+  batch        Run a batch of reports"
 
 cli_args_preprocess <- function(args) {
   ## This will work ok for filtering away unwanted arguments *if* the
   ## user chooses a reasonable argument name.  Things like
   ##
-  ##   orderly ruin --option name
+  ##   orderly run --option name
   ##
   ## will create some odd error messages, because the --option is not
   ## accepted.
@@ -75,7 +76,7 @@ cli_args_preprocess <- function(args) {
 }
 
 
-cli_args_process_run_parameters <- function(parameters) {
+cli_args_process_run_parameters <- function(parameters, command) {
   if (length(parameters) == 0L) {
     NULL
   } else {
@@ -86,8 +87,27 @@ cli_args_process_run_parameters <- function(parameters) {
         "Invalid parameters %s - all must be in form key=value",
         paste(squote(parameters[err]), collapse = ", ")))
     }
-    value <- lapply(p, function(x) parse_parameter(x[[2L]]))
-    set_names(value, vcapply(p, "[[", 1L))
+    if (command == "batch") {
+      values_per_param <- lengths(strsplit(unlist(parameters), ","))
+      if (length(unique(values_per_param)) != 1) {
+        stop(sprintf(
+          "All params must have the same number of values, got \n%s", 
+          paste(parameters, collapse = "\n")
+        ))
+      }
+    }
+    param_parser <- switch(command,
+                           run = parse_parameter,
+                           batch = parse_batch_parameters)
+    value <- lapply(p, function(x) param_parser(x[[2L]]))
+    t <- set_names(value, vcapply(p, "[[", 1L))
+    if (command == "batch") {
+      columns <- lapply(t, function(col) {
+        unlist(matrix(col))
+      })
+      t <- do.call(cbind.data.frame, c(columns, stringsAsFactors = FALSE))
+    }
+    t
   }
 }
 
@@ -114,68 +134,97 @@ Options:
 
 Parameters, if given, must be passed through in key=value pairs"
 
-
-main_do_run <- function(x) {
-  ## TODO: Get some classed errors though here and then write out
-  ## information about whether or not things worked and why they
-  ## didn't.  Possible issues (in order)
-  ##
-  ## * orderly report not found
-  ## * error while preparing (e.g., package not found)
-  ## * error while running report
-  ## * error checking artefacts
-  config <- orderly_config_get(x$options$root, TRUE)
-  name <- x$options$name
-  commit <- !x$options$no_commit
-  instance <- x$options$instance
-  parameters <- x$options$parameters
-  id_file <- x$options$id_file
-  parameters <- x$options$parameters
-  print_log <- x$options$print_log
-  ref <- x$options$ref
-  fetch <- x$options$fetch
-  pull <- x$options$pull
-  message <- x$options$message
-
-  main_run <- function() {
-    if (pull) {
-      if (is.null(ref)) {
-        git_pull(config$root)
-      } else {
-        orderly_cli_error(
-          "Can't use --pull with --ref; perhaps you meant --fetch ?")
+do_run <- function(run_func) {
+  function(x) {
+    ## TODO: Get some classed errors though here and then write out
+    ## information about whether or not things worked and why they
+    ## didn't.  Possible issues (in order)
+    ##
+    ## * orderly report not found
+    ## * error while preparing (e.g., package not found)
+    ## * error while running report
+    ## * error checking artefacts
+    config <- orderly_config_get(x$options$root, TRUE)
+    name <- x$options$name
+    commit <- !x$options$no_commit
+    instance <- x$options$instance
+    parameters <- x$options$parameters
+    id_file <- x$options$id_file
+    parameters <- x$options$parameters
+    print_log <- x$options$print_log
+    ref <- x$options$ref
+    fetch <- x$options$fetch
+    pull <- x$options$pull
+    message <- x$options$message
+    
+    main_batch <- function() {
+      if (pull) {
+        if (is.null(ref)) {
+          git_pull(config$root)
+        } else {
+          orderly_cli_error(
+            "Can't use --pull with --ref; perhaps you meant --fetch ?")
+        }
       }
+      ids <- run_func(name, parameters, root = config, id_file = id_file,
+                      instance = instance, ref = ref, fetch = fetch, 
+                      message = message)
+      if (commit) {
+        lapply(ids, orderly_commit, name, config)
+      }
+      ids
     }
-    id <- orderly_run(name, parameters, root = config, id_file = id_file,
-                      instance = instance,
-                      ref = ref, fetch = fetch, message = message)
+    
+    if (print_log) {
+      sink(stderr(), type = "output")
+      on.exit(sink(NULL, type = "output"))
+      ids <- main_batch()
+    } else {
+      log <- tempfile()
+      ## we should run this with try() so that we can capture logs there
+      ids <- capture_log(main_batch(), log)
+      dest <- (if (commit) path_archive else path_draft)(config$root)
+      ## TODO: Here all orderly logs get the history for all reports in the batch
+      ## is this really what we want?
+      lapply(ids, function(id) {
+        file_copy(log, file.path(dest, name, id, "orderly.log"))
+      })
+    }
+    
     if (commit) {
-      orderly_commit(id, name, config)
+      lapply(ids, function(id) {
+        path_rds <- path_orderly_run_rds(
+          file.path(config$root, "archive", name, id))
+        slack_post_success(readRDS(path_rds), config)
+      })
     }
-    id
+    
+    message(ngettext(length(ids), "id:", "ids:"), paste(ids, collapse = ", "))
   }
-
-  if (print_log) {
-    sink(stderr(), type = "output")
-    on.exit(sink(NULL, type = "output"))
-    id <- main_run()
-  } else {
-    log <- tempfile()
-    ## we should run this with try() so that we can capture logs there
-    id <- capture_log(main_run(), log)
-    dest <- (if (commit) path_archive else path_draft)(config$root)
-    file_copy(log, file.path(dest, name, id, "orderly.log"))
-  }
-
-  if (commit) {
-    path_rds <- path_orderly_run_rds(
-      file.path(config$root, "archive", name, id))
-    slack_post_success(readRDS(path_rds), config)
-  }
-
-  message("id:", id)
 }
 
+main_do_run <- function(x) {
+  do_run(orderly_run)(x)
+}
+
+usage_batch <- "Usage:
+  orderly batch [options] <name> [<parameter>...]
+
+Options:
+  --instance=NAME  Database instance to use (if instances are configured)
+  --no-commit      Do not commit the reports
+  --print-log      Print the logs (rather than storing it)
+  --id-file=FILE   File to write the ids into
+  --ref=REF        Git reference (branch or sha) to use
+  --fetch          Fetch git before updating reference
+  --pull           Pull git before running report
+  --message=TEXT   A message explaining why the reports were run
+
+Parameters, if given, must be passed through as comma separated key=value1,value2 pairs"
+
+main_do_batch <- function(x) {
+  do_run(orderly_batch)(x)
+}
 
 usage_cleanup <- "Usage:
   orderly cleanup [options]
@@ -313,7 +362,6 @@ main_do_migrate <- function(x) {
   orderly_migrate(root, to = to, dry_run = dry_run, clean = clean)
 }
 
-
 write_script <- function(path, versioned = FALSE) {
   if (!isTRUE(is_directory(path))) {
     stop("'path' must be a directory")
@@ -356,7 +404,10 @@ cli_commands <- function() {
                       target = main_do_rebuild),
        migrate = list(name = "migrate the archive",
                       usage = usage_migrate,
-                      target = main_do_migrate))
+                      target = main_do_migrate),
+       batch = list(name = "batch run reports",
+                      usage = usage_batch,
+                      target = main_do_batch))
 }
 
 
@@ -371,6 +422,16 @@ parse_parameter <- function(x) {
   }
 }
 
+parse_batch_parameters <- function(x) {
+  if (grepl("\\s", x)) {
+    stop(sprintf(
+      "Parameters with whitespace not supported in batch run, got param '%s'", 
+      x))
+  }
+  params <- strsplit(x, ",")[[1]]
+  params <- lapply(params, parse_parameter)
+  params
+}
 
 docopt_parse <- function(...) {
   tryCatch(
