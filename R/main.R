@@ -159,7 +159,6 @@ main_do_run <- function(x) {
   name <- x$options$name
   commit <- !x$options$no_commit
   instance <- x$options$instance
-  parameters <- x$options$parameters
   id_file <- x$options$id_file
   parameters <- x$options$parameters
   print_log <- x$options$print_log
@@ -344,14 +343,14 @@ main_do_migrate <- function(x) {
   orderly_migrate(root, to = to, dry_run = dry_run, clean = clean)
 }
 
+
+## 8. batch
 usage_batch <- "Usage:
   orderly batch [options] <name> [<parameter>...]
 
 Options:
   --instance=NAME  Database instance to use (if instances are configured)
-  --no-commit      Do not commit the reports
   --print-log      Print the logs (rather than storing it)
-  --id-file=FILE   File to write the ids into
   --ref=REF        Git reference (branch or sha) to use
   --fetch          Fetch git before updating reference
   --pull           Pull git before running report
@@ -371,10 +370,7 @@ main_do_batch <- function(x) {
   ## * error checking artefacts
   config <- orderly_config_get(x$options$root, TRUE)
   name <- x$options$name
-  commit <- !x$options$no_commit
   instance <- x$options$instance
-  parameters <- x$options$parameters
-  id_file <- x$options$id_file
   parameters <- x$options$parameters
   print_log <- x$options$print_log
   ref <- x$options$ref
@@ -391,12 +387,9 @@ main_do_batch <- function(x) {
           "Can't use --pull with --ref; perhaps you meant --fetch ?")
       }
     }
-    ids <- orderly_batch(name, parameters, root = config, id_file = id_file,
-                         instance = instance, ref = ref, fetch = fetch,
-                         message = message)
-    if (commit) {
-      lapply(ids, orderly_commit, name, config)
-    }
+    ids <- orderly_batch(name, parameters, root = config, instance = instance,
+                         ref = ref, fetch = fetch, message = message)
+    lapply(ids, orderly_commit, name, config)
     ids
   }
 
@@ -408,7 +401,7 @@ main_do_batch <- function(x) {
     log <- tempfile()
     ## we should run this with try() so that we can capture logs there
     ids <- capture_log(main_batch(), log)
-    dest <- (if (commit) path_archive else path_draft)(config$root)
+    dest <- path_archive(config$root)
     ## TODO: Here all orderly logs get the history for all reports in the
     ## batch is this really what we want?
     lapply(ids, function(id) {
@@ -416,13 +409,11 @@ main_do_batch <- function(x) {
     })
   }
 
-  if (commit) {
-    lapply(ids, function(id) {
-      path_rds <- path_orderly_run_rds(
-        file.path(config$root, "archive", name, id))
-      slack_post_success(readRDS(path_rds), config)
-    })
-  }
+  lapply(ids, function(id) {
+    path_rds <- path_orderly_run_rds(
+      file.path(config$root, "archive", name, id))
+    slack_post_success(readRDS(path_rds), config)
+  })
   message("ids:", paste(ids, collapse = ", "))
 }
 
