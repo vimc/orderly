@@ -387,7 +387,8 @@ main_do_batch <- function(x) {
           "Can't use --pull with --ref; perhaps you meant --fetch ?")
       }
     }
-    ids <- orderly_batch(name, parameters, root = config, instance = instance,
+    ids <- orderly_batch(name, parameters, root = config,
+                         instance = instance,
                          ref = ref, fetch = fetch, message = message)
     lapply(ids, orderly_commit, name, config)
     ids

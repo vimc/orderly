@@ -11,6 +11,8 @@
 ##' @param parameters Data frame of parameters passed to report. Each row
 ##'   represents a parameter set to be passed to one report run.
 ##'
+##' @param log_file File to log to
+##'
 ##' @param ... Additional args passed to \code{\link{orderly_run}}
 ##'
 ##' @seealso \code{\link{orderly_run}} for details of report running
@@ -26,6 +28,9 @@
 orderly_batch <- function(name = NULL, parameters = NULL, ...) {
   batch_id <- ids::random_id()
   vcapply(df2list(parameters), function(parameter_set) {
+    ## Capture log if some file path is passed in (as the root)
+    # log <- tempfile()
+    # capture_log(main_batch(), log)
     orderly_run(name, parameters = parameter_set, ..., batch_id = batch_id)
   })
 }
