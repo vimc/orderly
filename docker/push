@@ -3,8 +3,11 @@ set -e
 HERE=$(dirname $0)
 . $HERE/common
 
-# Push the human-readable tagged versions here (the SHA versions were
-# pushed during build)
+# In case we switch agents between steps
+[ ! -z $(docker images -q $TAG_SHA) ] || docker pull $TAG_SHA
+
+docker tag $TAG_SHA $TAG_BRANCH
+docker tag $TAG_SHA $TAG_VERSION
 docker push $TAG_BRANCH
 docker push $TAG_VERSION
 

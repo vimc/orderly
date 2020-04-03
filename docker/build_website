@@ -3,6 +3,9 @@ set -e
 HERE=$(dirname $0)
 . $HERE/common
 
+# In case we switch agents between steps
+[ ! -z $(docker images -q $TAG_SHA) ] || docker pull $TAG_SHA
+
 ORDERLY_BASE="$TAG_SHA"
 ORDERLY_DEV="${PACKAGE_ORG}/${PACKAGE_NAME}-dev:${GIT_SHA}"
 
@@ -19,8 +22,6 @@ DB_NAME=orderly
 SCHEMASPY_NAME=vimc/orderly-schemaspy
 
 DOCS_DIR=$PACKAGE_ROOT/docs
-
-docker pull $ORDERLY_BASE
 
 docker build \
        --build-arg ORDERLY_BASE=$ORDERLY_BASE \

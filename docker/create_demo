@@ -10,6 +10,9 @@ USER_STR="${USER_UID}:${USER_GID}"
 DEST=build
 rm -rf $DEST
 
+# In case we switch agents between steps
+[ ! -z $(docker images -q $TAG_SHA) ] || docker pull $TAG_SHA
+
 docker run --rm --entrypoint create_orderly_demo.sh \
        --user "$USER_STR" \
        -v "${PWD}":/orderly \

@@ -8,8 +8,6 @@ docker build --pull \
        --build-arg GIT_BRANCH=$GIT_BRANCH \
        --build-arg ORDERLY_VERSION=$PACKAGE_VERSION \
        --tag $TAG_SHA \
-       --tag $TAG_BRANCH \
-       --tag $TAG_VERSION \
        -f docker/Dockerfile \
        .
 
