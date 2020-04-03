@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# PACKAGE_ROOT=$(realpath $HERE/..)
-PACKAGE_ROOT=.
+PACKAGE_ROOT=$(realpath $HERE/..)
 PACKAGE_NAME=orderly
 PACKAGE_ORG=vimc
 
