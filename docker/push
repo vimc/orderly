@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -e
+HERE=$(dirname $0)
+. $HERE/common
+
+# Push the human-readable tagged versions here (the SHA versions were
+# pushed during build)
+docker push $TAG_BRANCH
+docker push $TAG_VERSION
+
+if [ $GIT_BRANCH == "master" ]; then
+   docker tag $TAG_BRANCH $TAG_LATEST
+   docker push $TAG_LATEST
+fi
