@@ -344,3 +344,54 @@ test_that("Pinned reports", {
   expect_match(tree_print, id_4)
   expect_match(tree_print, id_5)
 })
+
+
+test_that("source - downstream", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+
+  config <- orderly_config$new(path)
+  g <- orderly_graph_src("example", config, "downstream")
+
+  children <- g$root$children
+  expect_equal(length(children), 2)
+  nms <- vcapply(children, "[[", "name")
+  expect_setequal(nms, c("depend", "depend2"))
+  names(children) <- nms
+
+  expect_equal(children$depend$children, list())
+  expect_equal(length(children$depend2$children), 1)
+  expect_equal(children$depend2$children[[1]]$name, "depend3")
+})
+
+
+test_that("source - upstream", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+
+  config <- orderly_config$new(path)
+  g <- orderly_graph_src("depend3", config, "upstream")
+
+  expect_equal(length(g$root$children), 1)
+  expect_equal(g$root$children[[1]]$name, "depend2")
+
+  expect_equal(length(g$root$children[[1]]$children), 1)
+  expect_equal(g$root$children[[1]]$children[[1]]$name, "example")
+})
+
+
+test_that("can't get dependencies for nonexistant report", {
+  path <- prepare_orderly_example("minimal")
+  config <- orderly_config$new(path)
+  expect_error(
+    orderly_graph_src("missing", config, "upstream"),
+    "Unknown source report 'missing'")
+})
+
+
+test_that("prevent excessive recursion", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+
+  config <- orderly_config$new(path)
+  expect_error(
+    orderly_graph_src("depend3", config, "upstream", max_depth = 1),
+    "The tree is very large or degenerate")
+})
