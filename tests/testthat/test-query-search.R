@@ -387,3 +387,14 @@ test_that("is.null requires a namespace", {
           "but found 'tag'"),
     fixed = TRUE)
 })
+
+
+test_that("skip failed drafts on search", {
+  dat <- prepare_orderly_query_example(TRUE)
+  root <- dat$root
+  ids <- dat$ids
+  file.remove(file.path(root, "draft", "other", ids[[3]], "orderly_run.rds"))
+  expect_equal(
+    orderly_search("parameter:nmin > 0.15", "other", root = root, draft = TRUE),
+    ids[2])
+})
