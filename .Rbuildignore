@@ -18,3 +18,5 @@
 ^orderly_.*\.tar\.gz$
 ^\.lintr$
 ^\.hadolint\.yaml$
+^buildkite$
+^build$

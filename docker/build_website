@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
-set -ex
-HERE=${BASH_SOURCE%/*}
-ROOT=$(realpath $HERE/..)
+set -e
+HERE=$(dirname $0)
+. $HERE/common
 
-REGISTRY=docker.montagu.dide.ic.ac.uk:5000
-TAG=$(git symbolic-ref --short HEAD)
-SHA=$(git rev-parse --short=7 HEAD)
-
-ORDERLY_BASE=$REGISTRY/orderly:$TAG
-ORDERLY_DEV=$REGISTRY/orderly-dev:$TAG
+ORDERLY_BASE="$TAG_SHA"
+ORDERLY_DEV="${PACKAGE_ORG}/${PACKAGE_NAME}-dev:${GIT_SHA}"
 
 USER_UID=`id -u`
 USER_GID=`id -g`
@@ -22,17 +18,17 @@ DB_NAME=orderly
 
 SCHEMASPY_NAME=vimc/orderly-schemaspy
 
-DOCS_DIR=$ROOT/docs
+DOCS_DIR=$PACKAGE_ROOT/docs
 
 docker pull $ORDERLY_BASE
 
 docker build \
        --build-arg ORDERLY_BASE=$ORDERLY_BASE \
        --tag $ORDERLY_DEV \
-       -f $ROOT/docker/Dockerfile.dev \
-       $ROOT
+       -f $PACKAGE_ROOT/docker/Dockerfile.dev \
+       $PACKAGE_ROOT
 
-docker build -t $SCHEMASPY_NAME "$HERE/schema"
+docker build -t $SCHEMASPY_NAME "$PACKAGE_ROOT/docker/schema"
 
 docker network create $DB_NW || true
 
@@ -42,6 +38,7 @@ docker run -d --rm \
        -e POSTGRES_DB=$DB_NAME \
        --name $DB_CONTAINER \
        $DB_IMAGE
+
 function cleanup {
     echo "Cleaning up!"
     set +e
@@ -50,14 +47,14 @@ function cleanup {
 }
 trap cleanup EXIT
 
-docker cp "$HERE/schema/postgres_wait" $DB_CONTAINER:/usr/local/bin
+docker cp "$PACKAGE_ROOT/docker/schema/postgres_wait" $DB_CONTAINER:/usr/local/bin
 docker exec $DB_CONTAINER postgres_wait
 # I see a further required wait here
 sleep 2
 
 docker run --rm \
        --network=$DB_NW \
-       -w /orderly/scripts/schema \
+       -w /orderly/docker/schema \
        $ORDERLY_DEV \
        ./create_schema
 
@@ -90,8 +87,7 @@ docker run --rm \
        -o /schema
 
 if [ $TAG = "master" ]; then
-    REMOTE_URL=$(git config --get remote.origin.url | \
-                        sed -s 's;https://github.com/;git@github.com:;')
+    REMOTE_URL=git@github.com:vimc/orderly
     rm -rf ${DOCS_DIR}/.git
     git init ${DOCS_DIR}
     git -C ${DOCS_DIR} checkout --orphan gh-pages
