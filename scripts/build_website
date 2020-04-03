@@ -57,7 +57,7 @@ sleep 2
 
 docker run --rm \
        --network=$DB_NW \
-       -w /orderly/scripts/schema \
+       -w /orderly/docker/schema \
        $ORDERLY_DEV \
        ./create_schema
 
