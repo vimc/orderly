@@ -176,7 +176,7 @@ orderly_search_do_search <- function(dat, name, draft, config) {
     search_parameters <- search_parameters_archive
     search_tags <- search_tags_archive
   }
-  versions <- orderly_list_dir(file.path(config$root, where, name))
+  versions <- orderly_list_dir(file.path(config$root, where, name), TRUE)
 
   if (dat$use$parameter) {
     parameters <- search_parameters(name, config)
@@ -260,7 +260,7 @@ search_tags_archive <- function(name, config) {
 
 search_x_draft <- function(name, config, extract) {
   path <- file.path(config$root, "draft", name)
-  versions <- orderly_list_dir(path)
+  versions <- orderly_list_dir(path, TRUE)
   f <- function(p) {
     extract(readRDS(path_orderly_run_rds(p)))
   }
