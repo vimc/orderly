@@ -144,8 +144,7 @@ orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
 
   envir <- orderly_environment(envir)
 
-  capture <- inherits(root, "orderly_config") &&
-    isTRUE(root$get_run_option("capture_log"))
+  capture <- isTRUE(config$get_run_option("capture_log"))
   logfile <- tempfile()
   info <- conditional_capture_log(capture, logfile, {
     info <- recipe_prepare(config, name, id_file, ref, fetch, message,
