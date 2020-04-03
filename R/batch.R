@@ -11,8 +11,6 @@
 ##' @param parameters Data frame of parameters passed to report. Each row
 ##'   represents a parameter set to be passed to one report run.
 ##'
-##' @param log_file File to log to
-##'
 ##' @param ... Additional args passed to \code{\link{orderly_run}}
 ##'
 ##' @seealso \code{\link{orderly_run}} for details of report running
