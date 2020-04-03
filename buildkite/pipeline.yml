@@ -16,3 +16,9 @@ steps:
 
   - label: "Push images"
     command: docker/push
+
+  - wait
+
+  - trigger: "orderly-dot-server"
+    label: ":rocket: build"
+    # branches: "master"
