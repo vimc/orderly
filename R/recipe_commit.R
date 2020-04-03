@@ -38,10 +38,10 @@ orderly_commit <- function(id, name = NULL, root = NULL, locate = TRUE) {
   }
   workdir <- file.path(path_draft(config$root), name, id)
   
-  capture <- inherits(root, "orderly_config") && 
-    isTRUE(root$get_run_option("capture_log"))
+  capture_log <- isTRUE(config$get_run_option("capture_log"))
   logfile <- file.path(path_draft(config$root), name, id, "orderly.log")
-  conditional_capture_log(capture, logfile, recipe_commit(workdir, config$root))
+  conditional_capture_log(capture_log, logfile, 
+                          recipe_commit(workdir, config$root))
 }
 
 recipe_commit <- function(workdir, config) {
