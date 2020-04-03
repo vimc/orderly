@@ -840,11 +840,11 @@ test_that("can conditionally capture logs", {
   t <- tempfile()
   expect_message(conditional_capture_log(FALSE, t, fun()), "Test")
   expect_false(file.exists(t))
-  
+
   expect_silent(conditional_capture_log(TRUE, t, fun()))
   expect_true(file.exists(t))
   expect_equal(readLines(t), "Test")
-  
+
   ## Logfile can be appended to
   expect_silent(conditional_capture_log(TRUE, t, fun()))
   expect_equal(readLines(t), c("Test", "Test"))

@@ -136,7 +136,7 @@ main_do_run <- function(x) {
   fetch <- x$options$fetch
   pull <- x$options$pull
   message <- x$options$message
-  
+
   if (print_log) {
     sink(stderr(), type = "output")
     on.exit(sink(NULL, type = "output"))

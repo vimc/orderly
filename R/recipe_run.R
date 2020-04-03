@@ -143,24 +143,24 @@ orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
   config <- check_orderly_archive_version(loc$config)
 
   envir <- orderly_environment(envir)
-  
-  capture <- inherits(root, "orderly_config") && 
+
+  capture <- inherits(root, "orderly_config") &&
     isTRUE(root$get_run_option("capture_log"))
   logfile <- tempfile()
   info <- conditional_capture_log(capture, logfile, {
     info <- recipe_prepare(config, name, id_file, ref, fetch, message,
                            use_draft, parameters, remote, tags = tags,
                            batch_id = batch_id)
-    
+
     if (capture) {
       dest <- path_draft(config$root)
-      on.exit(file_copy(logfile, file.path(dest, name, info$id, "orderly.log")), 
+      on.exit(file_copy(logfile, file.path(dest, name, info$id, "orderly.log")),
               add = TRUE)
     }
-    
+
     recipe_current_run_set(info)
     on.exit(recipe_current_run_clear(), add = TRUE)
-    
+
     withr::with_envvar(
       orderly_envir_read(config$root),
       recipe_run(info, parameters, envir, config, echo = echo,
