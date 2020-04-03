@@ -1,9 +1,12 @@
 steps:
   - label: "Build"
-    command: docker/build-ci.sh
+    command: docker/build
 
   - label: "Create demo"
-    command: docker/teamcity-demo.sh
+    command: docker/create_demo
 
-  - label: "Website"
-    command: scripts/build_website
+  - label: "Create website"
+    command: docker/build_website
+
+  - label: "Push images"
+    command: docker/push
