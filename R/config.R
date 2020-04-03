@@ -340,7 +340,7 @@ config_validate_database <- function(database, filename) {
     return(NULL)
   }
 
-  assert_named(database, unique = TRUE, sprintf("%s:rawbase", filename))
+  assert_named(database, unique = TRUE, sprintf("%s:database", filename))
   for (nm in names(database)) {
     prefix <- sprintf("%s:database:%s", filename, nm)
     database[[nm]] <- config_validate_database1(database[[nm]], prefix)
