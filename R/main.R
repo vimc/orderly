@@ -171,7 +171,7 @@ main_do_run <- function(x) {
     sink(stderr(), type = "output")
     on.exit(sink(NULL, type = "output"))
   } else {
-    config$add_run_option("capture_log", FALSE)
+    config$add_run_option("capture_log", TRUE)
   }
 
   if (pull) {
@@ -367,43 +367,31 @@ main_do_batch <- function(x) {
   pull <- x$options$pull
   message <- x$options$message
 
-  main_batch <- function() {
-    if (pull) {
-      if (is.null(ref)) {
-        git_pull(config$root)
-      } else {
-        orderly_cli_error(
-          "Can't use --pull with --ref; perhaps you meant --fetch ?")
-      }
-    }
-    ids <- orderly_batch(name, parameters, root = config,
-                         instance = instance,
-                         ref = ref, fetch = fetch, message = message)
-    lapply(ids, orderly_commit, name, config)
-    ids
-  }
-
   if (print_log) {
     sink(stderr(), type = "output")
     on.exit(sink(NULL, type = "output"))
-    ids <- main_batch()
   } else {
-    log <- tempfile()
-    ## we should run this with try() so that we can capture logs there
-    ids <- capture_log(main_batch(), log)
-    dest <- path_archive(config$root)
-    ## TODO: Here all orderly logs get the history for all reports in the
-    ## batch is this really what we want?
-    lapply(ids, function(id) {
-      file_copy(log, file.path(dest, name, id, "orderly.log"))
-    })
+    config$add_run_option("capture_log", TRUE)
   }
 
+  if (pull) {
+    if (is.null(ref)) {
+      git_pull(config$root)
+    } else {
+      orderly_cli_error(
+        "Can't use --pull with --ref; perhaps you meant --fetch ?")
+    }
+  }
+
+  ids <- orderly_batch(name, parameters, root = config, instance = instance,
+                    ref = ref, fetch = fetch, message = message)
   lapply(ids, function(id) {
+    orderly_commit(id, name, config)
     path_rds <- path_orderly_run_rds(
       file.path(config$root, "archive", name, id))
     slack_post_success(readRDS(path_rds), config)
   })
+
   message("ids:", paste(ids, collapse = ", "))
 }
 

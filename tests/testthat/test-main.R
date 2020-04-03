@@ -544,6 +544,39 @@ test_that("parameter type conversion", {
 })
 
 
+test_that("run captures output", {
+  skip_on_cran_windows()
+  path <- prepare_orderly_example("minimal")
+  args <- c("--root", path, "run", "example")
+  res <- cli_args_process(args)
+  expect_identical(res$target, main_do_run)
+
+  expect_message(res$target(res))
+
+  archive_path <- file.path(path, "archive", "example")
+  id <- list.files(archive_path)
+  expect_length(id, 1)
+  log_file <- file.path(archive_path, id, "orderly.log")
+  expect_true(file.exists(log_file))
+  logs <- readLines(log_file)
+  expect_true(sprintf("[ id         ]  %s", id) %in% logs)
+
+  args <- c("--root", path, "run",  "--print-log", "example")
+  res <- cli_args_process(args)
+  expect_identical(res$target, main_do_run)
+
+  out <- evaluate_promise(capture.output(res$target(res), type = "message"))
+
+  ids <- list.files(archive_path)
+  expect_length(ids, 2)
+  id <- ids[ids != id]
+  expect_true(sprintf("[ id         ]  %s\n", id) %in% out$messages)
+  log_file <- file.path(archive_path, id, "orderly.log")
+  ## Logs have not been written to file
+  expect_false(file.exists(log_file))
+})
+
+
 test_that("batch", {
   testthat::skip_on_cran()
   path <- unzip_git_demo()
@@ -561,4 +594,13 @@ test_that("batch", {
   d <- orderly_list_archive(path)
   expect_equal(nrow(d), 2L)
   expect_equal(d$name, c("other", "other"))
+
+  invisible(lapply(d$id, function(id) {
+    log_file <- file.path(path, "archive", "other", id, "orderly.log")
+    expect_true(file.exists(log_file))
+    logs <- readLines(log_file)
+    ## Logs are only for one report
+    expect_true(sprintf("[ id         ]  %s", id) %in% logs)
+    expect_equal(sum(grepl("\\[ id         \\].*", logs)), 1)
+  }))
 })

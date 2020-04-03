@@ -28,9 +28,6 @@
 orderly_batch <- function(name = NULL, parameters = NULL, ...) {
   batch_id <- ids::random_id()
   vcapply(df2list(parameters), function(parameter_set) {
-    ## Capture log if some file path is passed in (as the root)
-    # log <- tempfile()
-    # capture_log(main_batch(), log)
     orderly_run(name, parameters = parameter_set, ..., batch_id = batch_id)
   })
 }
