@@ -2,11 +2,17 @@ steps:
   - label: "Build"
     command: docker/build
 
+  - wait
+
   - label: "Create demo"
     command: docker/create_demo
 
+  - wait
+
   - label: "Create website"
     command: docker/build_website
+
+  - wait
 
   - label: "Push images"
     command: docker/push
