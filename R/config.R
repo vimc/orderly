@@ -37,6 +37,7 @@ orderly_config <- R6::R6Class(
     tags = NULL,
     database = NULL,
     archive_version = NULL,
+    run_options = list(),
 
     initialize = function(root, validate = TRUE) {
       assert_is_directory(root)
@@ -79,6 +80,14 @@ orderly_config <- R6::R6Class(
       ## TODO(VIMC-3590): Let's move these all under options at some point
       ret <- self$remote[[which(i)]]
       ret[setdiff(names(ret), c("identity", "driver", "args"))]
+    },
+
+    add_run_option = function(name, value) {
+      self$run_options[[name]] <- value
+    },
+
+    get_run_option = function(name) {
+      self$run_options[[name]]
     }
   ))
 
