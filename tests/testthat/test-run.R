@@ -992,16 +992,16 @@ test_that("pick up name from the working directory", {
 test_that("orderly_run can capture messages", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
-  
+
   config <- orderly_config_get(path, TRUE)
   config$add_run_option("capture_log", TRUE)
   id <- orderly_run("example", root = config, echo = FALSE)
-  
+
   draft_logs <- file.path(path, "draft", "example", id, "orderly.log")
   expect_true(file.exists(draft_logs))
   log <- readLines(draft_logs)
   expect_true("[ name       ]  example" %in% log)
-  
+
   path <- orderly_commit(id, root = config)
   archive_logs <- file.path(path, "orderly.log")
   expect_true(file.exists(archive_logs))
@@ -1013,7 +1013,7 @@ test_that("orderly_run can capture messages", {
 test_that("logs from failed runs can still be written to file", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
-  
+
   config <- orderly_config_get(path, TRUE)
   config$add_run_option("capture_log", TRUE)
   append_lines('stop("some error")',
@@ -1021,7 +1021,7 @@ test_that("logs from failed runs can still be written to file", {
   expect_error(orderly_run("example", root = config, echo = FALSE),
                "some error")
   id <- dir(file.path(path, "draft", "example"))
-  
+
   draft_logs <- file.path(path, "draft", "example", id, "orderly.log")
   expect_true(file.exists(draft_logs))
   log <- readLines(draft_logs)

@@ -81,11 +81,11 @@ orderly_config <- R6::R6Class(
       ret <- self$remote[[which(i)]]
       ret[setdiff(names(ret), c("identity", "driver", "args"))]
     },
-    
+
     add_run_option = function(name, value) {
       self$run_options[[name]] <- value
     },
-    
+
     get_run_option = function(name) {
       self$run_options[[name]]
     }
