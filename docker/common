@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# PACKAGE_ROOT=$(realpath $HERE/..)
+PACKAGE_ROOT=.
+PACKAGE_NAME=orderly
+PACKAGE_ORG=vimc
+
+# Buildkite doesn't check out a full history from the remote (just the
+# single commit) so you end up with a detached head and git rev-parse
+# doesn't work
+if [ "$BUILDKITE" = "true" ]; then
+    GIT_SHA=${BUILDKITE_COMMIT:0:7}
+else
+    GIT_SHA=$(git -C "$PACKAGE_ROOT" rev-parse --short=7 HEAD)
+fi
+PKG_VERSION=$(cat $PACKAGE_ROOT/DESCRIPTION | grep '^Version:' | sed 's/^.*: *//')
+
+if [ "$TRAVIS" = "true" ]; then
+    GIT_BRANCH=$TRAVIS_BRANCH
+elif [ "$BUILDKITE" = "true" ]; then
+    GIT_BRANCH=$BUILDKITE_BRANCH
+else
+    GIT_BRANCH=$(git -C "$PACKAGE_ROOT" symbolic-ref --short HEAD)
+fi
+
+TAG_SHA="${PACKAGE_ORG}/${PACKAGE_NAME}:${GIT_SHA}"
+TAG_BRANCH="${PACKAGE_ORG}/${PACKAGE_NAME}:${GIT_BRANCH}"
+TAG_VERSION="${PACKAGE_ORG}/${PACKAGE_NAME}:v${PKG_VERSION}"
+TAG_LATEST="${PACKAGE_ORG}/${PACKAGE_NAME}:latest"

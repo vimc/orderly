@@ -1,0 +1,9 @@
+steps:
+  - label: "Build"
+    command: docker/build-ci.sh
+
+  - label: "Create demo"
+    command: docker/teamcity-demo.sh
+
+  - label: "Website"
+    command: scripts/build_website
