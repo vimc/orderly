@@ -10,7 +10,7 @@ steps:
       - build/git
       - build/demo
 
-  - label: ":spiderweb: Create website"
+  - label: ":spider_web: Create website"
     command: docker/build_website
 
   - wait
