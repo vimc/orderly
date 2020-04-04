@@ -7,8 +7,6 @@ steps:
   - label: ":construction_worker: Create demo"
     command: docker/create_demo
 
-  - wait
-
   - label: ":spiderweb: Create website"
     command: docker/build_website
 
