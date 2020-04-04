@@ -26,7 +26,7 @@ steps:
   # By default these will trigger the master branch on the downstream
   # repo - change the "branch:" key to use a feature branch
   - trigger: "orderly-dot-server"
-    label: ":rocket: build orderly.server from updated orderly :cloud:"
+    label: ":rocket: orderly.server (from orderly) :cloud:"
     # branches: "master"
     build:
       branch: vimc-3637
