@@ -27,6 +27,6 @@ steps:
   # repo - change the "branch:" key to use a feature branch
   - trigger: "orderly-dot-server"
     label: ":rocket: orderly.server (from orderly) :cloud:"
-    # branches: "master"
+    branches: "master"
     build:
-      branch: vimc-3637
+      branch: master
