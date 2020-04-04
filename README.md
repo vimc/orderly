@@ -78,7 +78,7 @@ Then if one of the dependencies of a report changes (the used data, code, etc), 
 
 ## Workflows with `orderly`
 
-In the [MRC Centre for Global Infectious Disease Analysis](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis) we use `orderly` on two major projects:
+In the [MRC Centre for Global Infectious Disease Analysis](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis) we use `orderly` on three major projects:
 
 - The [Vaccine Impact Modelling Consortium](https://www.vaccineimpact.org/)
 - Our part of the response to the 2018-2020 Ebola outbreak in the Democratic Republic of Congo
