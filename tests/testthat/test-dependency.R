@@ -422,3 +422,22 @@ test_that("id attribution", {
   expect_equal(g$root$id, "latest")
   expect_equal(g$root$children[[1]]$id, id)
 })
+
+
+test_that("detect loop", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+  append_lines(c("depends:",
+                 "  - depend2:",
+                 "      id: latest",
+                 "      use:",
+                 "        output.rds: output.rds"),
+               file.path(path, "src", "example", "orderly.yml"))
+
+  config <- orderly_config$new(path)
+  expect_error(
+    orderly_graph_src("depend3", config, "upstream"),
+    "Detected circular dependency: 'depend2' -> 'example' -> 'depend2'")
+  expect_error(
+    orderly_graph_src("example", config, "downstream"),
+    "Detected circular dependency: 'example' -> 'depend2' -> 'example'")
+})

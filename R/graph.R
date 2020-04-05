@@ -31,29 +31,31 @@ orderly_graph_src <- function(name, config, direction = "downstream",
 
   ## We then can work with this fairly easily I think
   root <- report_vertex$new(NULL, name, "latest", FALSE)
-  build_tree_src(root, deps, max_depth)
+  seen <- new.env()
+  build_tree_src(root, deps, max_depth, NULL)
   report_tree$new(root, direction)
 }
 
 
-## TODO: no max-depth checking here yet, but I think that we can deal
-## with that a different way; probably easiest to just check to see if
-## we've already visited a report for now.  We could also to a
-## topological sort on the deps and work with that, but that will not
-## work with the more complex dependency trees.
-build_tree_src <- function(parent, deps, depth) {
+build_tree_src <- function(parent, deps, depth, seen = NULL) {
   if (depth < 0) {
     stop("The tree is very large or degenerate.")
   }
   name <- parent$name
+  if (any(seen == name)) {
+    loop <- c(seen[which(seen == name):length(seen)], name)
+    stop(paste("Detected circular dependency:",
+               paste(squote(loop), collapse = " -> ")),
+         call. = FALSE)
+  }
   if (is.null(deps[[name]])) {
     return(NULL)
   }
   d <- deps[[name]]
-  for (i in seq_len(nrow(d))) {
+  for (i in seq_len(NROW(d))) {
     child <- report_vertex$new(parent, d$name[[i]], d$id[[i]], FALSE)
     parent$add_child(child)
-    build_tree_src(child, deps, depth - 1)
+    build_tree_src(child, deps, depth - 1, c(seen, name))
   }
   child
 }
