@@ -20,10 +20,8 @@ orderly_graph_src <- function(name, config, direction = "downstream",
   ## we're interested in how 'example' is used in downstream reports
   ## then the identifier information is tricky.
   if (direction == "downstream") {
-    if (any(unlist(lapply(deps, function(x) x$id), FALSE, FALSE) != "latest")) {
-      stop("Think about this some more")
-    }
-    ## Invert the dependency tree
+    ## Invert the dependency tree - this leaves ids in a weird place
+    ## but I guess that is ok.
     len <- viapply(deps, NROW, USE.NAMES = FALSE)
     parent <- unlist(lapply(deps, "[[", "name"), FALSE, FALSE)
     deps <- split(data_frame(

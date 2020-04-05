@@ -395,3 +395,30 @@ test_that("prevent excessive recursion", {
     orderly_graph_src("depend3", config, "upstream", max_depth = 1),
     "The tree is very large or degenerate")
 })
+
+
+test_that("id attribution", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+
+  p <- file.path(path, "src", "depend", "orderly.yml")
+  dat <- yaml::read_yaml(p)
+  id <- orderly::new_report_id()
+  dat$depends$example$id <- id
+  yaml::write_yaml(dat, p)
+
+  config <- orderly_config$new(path)
+  g <- orderly_graph_src("example", config, "downstream")
+
+  children <- g$root$children
+  expect_equal(length(children), 2)
+  nms <- vcapply(children, "[[", "name")
+  expect_setequal(nms, c("depend", "depend2"))
+  names(children) <- nms
+
+  expect_equal(children$depend$id, id)
+  expect_equal(children$depend2$id, "latest")
+
+  g <- orderly_graph_src("depend", config, "upstream")
+  expect_equal(g$root$id, "latest")
+  expect_equal(g$root$children[[1]]$id, id)
+})
