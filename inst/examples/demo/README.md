@@ -56,6 +56,6 @@ which will create a new directory with all the output in it.  This is also run o
 ```sh
 docker run --entrypoint create_orderly_demo.sh \
   -v $projectDir:/orderly \
-  -w /orderly docker.montagu.dide.ic.ac.uk:5000/orderly:master \
+  -w /orderly vimc/orderly:master \
   demo
 ```
