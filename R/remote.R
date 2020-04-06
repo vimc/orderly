@@ -60,9 +60,7 @@ orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
   name <- loc$name
   config <- loc$config
   remote <- get_remote(remote, config)
-
-  path <- file.path(path_src(config$root), name)
-  depends <- recipe_read(path, config, FALSE)$depends
+  depends <- orderly_recipe$new(name, config)$depends
 
   msg <- sprintf("%s has %d %s", name, NROW(depends),
                  ngettext(NROW(depends), "dependency", "dependencies"))

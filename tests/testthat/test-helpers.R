@@ -8,7 +8,7 @@ test_that("can add resource to an orderly without resources", {
                               show = FALSE, prompt = FALSE)
 
   config <- orderly_config$new(path)
-  info <- recipe_read(file.path(path, "src", "example"), config)
+  info <- orderly_recipe$new("example", config)
   expect_equal(info$resources, "new.txt")
 })
 
@@ -99,7 +99,7 @@ test_that("Add source (minimal test)", {
   res <- orderly_use_source("new.R", root = path, name = "example",
                             show = FALSE, prompt = FALSE)
   config <- orderly_config$new(path)
-  info <- recipe_read(file.path(path, "src", "example"), config)
+  info <- orderly_recipe$new("example", config)
   expect_equal(info$sources, "new.R")
   expect_error(orderly_use_source("new.R", root = path, name = "example",
                                   show = FALSE, prompt = FALSE),
@@ -112,7 +112,7 @@ test_that("Add packages (minimal test)", {
   res <- orderly_use_package("knitr", root = path, name = "example",
                              show = FALSE, prompt = FALSE)
   config <- orderly_config$new(path)
-  info <- recipe_read(file.path(path, "src", "example"), config)
+  info <- orderly_recipe$new("example", config)
   expect_equal(info$packages, "knitr")
   expect_error(orderly_use_package("knitr", root = path, name = "example",
                                    show = FALSE, prompt = FALSE),

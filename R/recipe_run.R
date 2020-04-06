@@ -143,9 +143,9 @@ orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
   config <- check_orderly_archive_version(loc$config)
 
   envir <- orderly_environment(envir)
-
   capture <- isTRUE(config$get_run_option("capture_log"))
   logfile <- tempfile()
+
   info <- conditional_capture_log(capture, logfile, {
     info <- recipe_prepare(config, name, id_file, ref, fetch, message,
                            use_draft, parameters, remote, tags = tags,
@@ -157,6 +157,7 @@ orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
               add = TRUE)
     }
 
+    ## TODO: seal the class before this
     recipe_current_run_set(info)
     on.exit(recipe_current_run_clear(), add = TRUE)
 
@@ -186,12 +187,12 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
     on.exit(git_checkout_branch(prev, TRUE, config$root))
   }
 
-  info <- recipe_read(file.path(path_src(config$root), name),
-                      config, use_draft = use_draft, parameters = parameters,
-                      remote = remote)
+  ## TODO(VIMC-3611): in the next PR this moves into its own class
+  info <- orderly_recipe$new(name, config)
+  info$resolve_dependencies(use_draft, parameters, remote)
 
   if (!is.null(tags)) {
-    info$tags <- union(info$tags, recipe_read_check_tags(tags, config, "tags"))
+    info$tags <- union(info$tags, recipe_validate_tags(tags, config, "tags"))
   }
 
   id <- new_report_id()
@@ -264,11 +265,8 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
                          "id_requested", "is_latest", "is_pinned")]
   }
 
-  extra_fields <- drop_null(set_names(
-    lapply(config$fields$name, function(x) info[[x]]),
-    config$fields$name))
-  if (length(extra_fields) > 0L) {
-    extra_fields <- as_data_frame(extra_fields)
+  if (length(info$fields) > 0L) {
+    extra_fields <- as_data_frame(info$fields)
   } else {
     extra_fields <- NULL
   }
@@ -305,7 +303,7 @@ recipe_run <- function(info, parameters, envir, config, echo = TRUE,
                artefacts = artefacts,
                depends = depends,
                elapsed = as.numeric(elapsed, "secs"),
-               changelog = info$changelog,
+               changelog = info$changelog$contents,
                tags = info$tags,
                git = info$git,
                batch_id = info$batch_id)
@@ -488,7 +486,10 @@ recipe_prepare_workdir <- function(info, message, config) {
   info <- recipe_copy_depends(info)
 
   info$inputs <- recipe_file_inputs(info)
-  info$changelog <- changelog_load(src, message, info, config)
+  ## TODO(VIMC-3611): this is modifying the value of the changelog
+  ## here, and should write to the new task/report object
+  info$changelog$contents <- changelog_load(
+    info$name, info$id, info$changelog$contents, message, config)
 
   recipe_check_unique_inputs(info)
   info
@@ -663,6 +664,10 @@ recipe_current_run_clear <- function() {
 ##' \code{\link{orderly_test_start}}, you must pass in the path to the
 ##' report in question.
 ##'
+##' @section Warning:
+##'
+##' It is important that this data is treated as \emph{readonly}!
+##'
 ##' @title Information on current orderly run
 ##'
 ##' @param path Path to the report currently being run.  This should
@@ -701,7 +706,7 @@ recipe_file_inputs <- function(info) {
   file_in_data(
     orderly_yml = file_info("orderly.yml"),
     script = file_info(info$script),
-    readme = file_info(info$readme),
+    readme = file_info(names(info$readme)),
     source = file_info(info$sources),
     resource = file_info(info$resources),
     global = file_info(names(info$global_resources)))
@@ -750,45 +755,10 @@ recipe_check_hashes <- function(pre, post, name1, name2) {
 
 
 recipe_copy_readme <- function(info, src) {
-  ## README logic:
-  ## * if there's a readme we copy it
-  ## * any casing is OK as input, but we always store in canonical case
-  ## * if they also list it as a resource let them know that's redundant
-  ## * if they also list it as an artefact then error
-  src_files <- dir(src)
-  readme_file <- src_files[tolower(src_files) == "readme.md"]
-
-  readme_files <- dir(src, pattern = "README(\\.md)?$",
-                      ignore.case = TRUE, recursive = TRUE)
-  ## Two readme files e.g. README.md and Readme.MD can happen on unix
-  ## systems; it is not clear what we should do here, so we just
-  ## ignore the readme silently for now.
-  if (length(readme_files) > 0) {
-    ## we copy the readme.md file to README.md irrespective of what
-    ## case filename the user has used
-    dir_create(dirname(readme_files))
-    canonical_readme_files <- sub("README(|.md)$", "README\\1", readme_files,
-                                  ignore.case = TRUE)
-    file_copy(file.path(src, readme_files), canonical_readme_files)
-    info$readme <- canonical_readme_files
-
-    ## now check if README is a resource
-    if (length(info$resources) > 0) {
-      i <- grepl("README(|.md)$", info$resources, ignore.case = TRUE)
-      if (any(i)) {
-        ## WARNING
-        orderly_log("readme", "README.md should not be listed as a resource")
-        info$resources <- info$resources[!i]
-      }
-    }
-
-    ## now check if README is an artefact
-    artefact_files <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
-    if (any(grepl("README(|.md)$", artefact_files, ignore.case = TRUE))) {
-      stop("README.md should not be listed as an artefact")
-    }
+  if (!is.null(info$readme)) {
+    dir_create(dirname(info$readme))
+    file_copy(file.path(src, info$readme), names(info$readme))
   }
-
   info
 }
 

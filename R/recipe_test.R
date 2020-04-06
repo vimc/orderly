@@ -84,7 +84,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = parent.frame(),
            "you will be responsible for getting back to your previous working",
            "directory after this, which you can do with",
            "",
-           sprintf('    setwd("%s")', clean_path(info$owd)),
+           sprintf('    setwd("%s")', clean_path(getwd())),
            "",
            "Please see the documentation ?orderly::orderly_test_start for",
            "more details")
@@ -130,8 +130,8 @@ orderly_data <- function(name, parameters = NULL, envir = NULL,
                          root = NULL, locate = TRUE, instance = NULL,
                          use_draft = FALSE) {
   config <- orderly_config_get(root, locate)
-  info <- recipe_read(file.path(path_src(config$root), name),
-                      config, use_draft = use_draft, parameters = parameters)
+  info <- orderly_recipe$new(name, config)
+  info$resolve_dependencies(use_draft, parameters)
   envir <- orderly_environment(envir)
   recipe_data(config, info, parameters, envir, instance)$dest
 }

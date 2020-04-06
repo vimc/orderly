@@ -18,7 +18,7 @@ migrate <- function(data, path, config) {
     return(migration_result(FALSE, data))
   }
 
-  recipe <- recipe_read(path, config, FALSE)
+  recipe <- orderly_recipe$new(basename(path), config, path = path)
   depends <- recipe$depends
 
   id_requested <- depends$id

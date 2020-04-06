@@ -101,10 +101,12 @@ test_that("status reports resources", {
   name <- "use_resource"
   p <- file.path(path, "src", name)
 
+  info <- orderly_recipe$new(name, orderly_config$new(path))
+
   cmp <- data_frame(
     filename = c("orderly.yml", "script.R", "meta/data.csv", "README.md",
                  "mygraph.png"),
-    type = c("orderly", "script", "resource", "resource", "artefact"),
+    type = c("orderly", "script", "resource", "readme", "artefact"),
     present = c(TRUE, TRUE, TRUE, TRUE, FALSE),
     derived = c(FALSE, FALSE, FALSE, FALSE, TRUE))
   class(cmp) <- c("orderly_status", "data.frame")

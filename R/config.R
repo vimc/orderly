@@ -27,7 +27,8 @@ orderly_config <- R6::R6Class(
     ## The core data will remain available as top-level keys, but
     ## we'll make this extensible when we do the plugins.
     root = NULL,
-    data = NULL,
+    raw = NULL,
+
     destination = NULL,
     fields = NULL,
     remote = NULL,
@@ -45,9 +46,9 @@ orderly_config <- R6::R6Class(
       filename <- path_orderly_config_yml(self$root)
       assert_file_exists(basename(filename), workdir = self$root,
                          name = "Orderly configuration")
-      self$data <- yaml_read(filename)
+      self$raw <- yaml_read(filename)
 
-      v <- self$data$minimum_orderly_version
+      v <- self$raw$minimum_orderly_version
       if (!is.null(v) && utils::packageVersion("orderly") < v) {
         stop(sprintf(
           "Orderly version '%s' is required, but only '%s' installed",
@@ -60,7 +61,7 @@ orderly_config <- R6::R6Class(
     },
 
     migrate = function() {
-      self$data <- config_migrate(self$data, "orderly_config.yml")
+      self$raw <- config_migrate(self$raw, "orderly_config.yml")
     },
 
     validate = function() {
@@ -92,9 +93,9 @@ orderly_config <- R6::R6Class(
   ))
 
 
-config_migrate <- function(data, filename) {
-  if (!is.null(data[["vault_server"]])) {
-    if (!is.null(data[["vault"]])) {
+config_migrate <- function(raw, filename) {
+  if (!is.null(raw[["vault_server"]])) {
+    if (!is.null(raw[["vault"]])) {
       stop(sprintf("Can't specify both 'vault' and 'vault_server' in %s",
                    filename))
     }
@@ -102,30 +103,30 @@ config_migrate <- function(data, filename) {
              "future orderly version.  Please use the new 'vault' server",
              "field, which offers more flexibility")
     orderly_warning(flow_text(msg))
-    assert_scalar_character(data[["vault_server"]],
+    assert_scalar_character(raw[["vault_server"]],
                             "orderly_config.yml:vault_server")
-    data$vault <- list(addr = data[["vault_server"]])
-    data$vault_server <- NULL
+    raw$vault <- list(addr = raw[["vault_server"]])
+    raw$vault_server <- NULL
   }
 
-  if (!is.null(data[["source"]])) {
-    if (!is.null(data[["database"]])) {
+  if (!is.null(raw[["source"]])) {
+    if (!is.null(raw[["database"]])) {
       stop("Both 'database' and 'source' fields may not be used")
     }
     msg <- c("Use of 'source' is deprecated and will be removed in a",
              "future orderly version - please use 'database' instead.",
              "See the main package vignette for details.")
     orderly_warning(flow_text(msg))
-    src <- data$source
-    data$database <- list(
+    src <- raw$source
+    raw$database <- list(
       source = list(
         driver = src$driver,
         args = src[setdiff(names(src), "driver")]))
-    data$source <- NULL
+    raw$source <- NULL
   }
 
-  for (i in seq_along(data[["database"]])) {
-    x <- data[["database"]][[i]]
+  for (i in seq_along(raw[["database"]])) {
+    x <- raw[["database"]][[i]]
     if (!any(c("instances", "args") %in% names(x))) {
       label <- sprintf("orderly_config.yml:database:%s", names(x)[[i]])
       msg <- c("Please move your database arguments within an 'args'",
@@ -134,13 +135,13 @@ config_migrate <- function(data, filename) {
                "details.  Reported for: ", label)
       orderly_warning(flow_text(msg))
       v <- setdiff(names(x), "driver")
-      data[["database"]][[i]] <- list(
+      raw[["database"]][[i]] <- list(
         driver = x$driver,
         args = x[setdiff(names(x), "driver")])
     }
   }
 
-  data
+  raw
 }
 
 
@@ -153,29 +154,29 @@ config_validate <- function(self, filename) {
   ## fields depend on each other - we just plough through and read
   ## them one after another.  That makes things considerably easier to
   ## reason about
-  data <- self$data
+  raw <- self$raw
 
-  check_fields(data, filename, character(),
+  check_fields(raw, filename, character(),
                c("minimum_orderly_version", "destination", "fields",
                  "remote", "vault", "global_resources",
                  "changelog", "tags", "database"))
 
   self$destination <- config_validate_destination(
-    data[["destination"]], filename)
+    raw[["destination"]], filename)
   self$fields <- config_validate_fields(
-    data[["fields"]], filename)
+    raw[["fields"]], filename)
   self$remote <- config_validate_remote(
-    data[["remote"]], filename)
+    raw[["remote"]], filename)
   self$vault <- config_validate_vault(
-    data[["vault"]], filename)
+    raw[["vault"]], filename)
   self$global_resources <- config_validate_global_resources(
-    data[["global_resources"]], filename)
+    raw[["global_resources"]], filename)
   self$changelog <- config_validate_changelog(
-    data[["changelog"]], filename)
+    raw[["changelog"]], filename)
   self$tags <- config_validate_tags(
-    data[["tags"]], filename)
+    raw[["tags"]], filename)
   self$database <- config_validate_database(
-    data[["database"]], filename)
+    raw[["database"]], filename)
 
   self$archive_version <- read_orderly_archive_version(".")
 

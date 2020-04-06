@@ -80,7 +80,7 @@ test_that("minimum version is a less than relationship", {
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
   cfg <- orderly_config$new(path)
   expect_is(cfg, "orderly_config")
-  expect_equal(cfg$data$minimum_orderly_version, dat$minimum_orderly_version)
+  expect_equal(cfg$raw$minimum_orderly_version, dat$minimum_orderly_version)
 })
 
 
