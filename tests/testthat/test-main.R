@@ -617,12 +617,13 @@ test_that("batch", {
   expect_equal(d$name, rep("other", times = 4))
 
   ids <- d$id[d$id != ids]
-  lapply(ids, function(id) {
+  archive_path <- file.path(path, "archive", "other")
+  invisible(lapply(ids, function(id) {
     expect_true(sprintf("[ id         ]  %s\n", id) %in% out$messages)
     log_file <- file.path(archive_path, id, "orderly.log")
     ## Logs have not been written to file
     expect_false(file.exists(log_file))
-  })
+  }))
 })
 
 
