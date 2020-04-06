@@ -194,3 +194,29 @@ test_that("can load environment variables during develop", {
   expect_equal(Sys.getenv("MY_A"), "a")
   expect_equal(Sys.getenv("ORDERLY_B"), "b")
 })
+
+
+test_that("Can develop a report with parameters and dependencies", {
+  skip_on_cran_windows()
+  root <- prepare_orderly_example("demo")
+
+  p <- file.path(root, "src", "use_dependency", "orderly.yml")
+  txt <- sub(": latest$", ": latest(parameter:nmin > nmin)", readLines(p))
+  txt <- c(txt, "parameters:", "  nmin: ~")
+  writeLines(txt, p)
+
+  id1 <- orderly_run("other", list(nmin = 0.5), root = root, echo = FALSE)
+  id2 <- orderly_run("other", list(nmin = 0.2), root = root, echo = FALSE)
+
+  orderly_develop_start("use_dependency", list(nmin = 0), root = root,
+                        use_draft = TRUE)
+  expect_equal(
+    hash_files(file.path(root, "src", "use_dependency", "incoming.csv"), FALSE),
+    hash_files(file.path(root, "draft", "other", id2, "summary.csv"), FALSE))
+
+  orderly_develop_start("use_dependency", list(nmin = 0.3), root = root,
+                        use_draft = TRUE)
+  expect_equivalent(
+    hash_files(file.path(root, "src", "use_dependency", "incoming.csv")),
+    hash_files(file.path(root, "draft", "other", id1, "summary.csv")))
+})
