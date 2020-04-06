@@ -106,6 +106,7 @@ test_that("pass batch parameters", {
   f <- function(...) {
     cli_args_process(c("batch", "report", ...))$options$parameters
   }
+  expect_equal(f(""), NULL)
   expect_equal(f("a=1"), data_frame(a = 1))
   expect_equal(f("a=1", "b=value"), data_frame(a = 1, b = "value"))
   expect_equal(f("a=1", "b=value", "c=TRUE"),
@@ -595,7 +596,8 @@ test_that("batch", {
   expect_equal(nrow(d), 2L)
   expect_equal(d$name, c("other", "other"))
 
-  invisible(lapply(d$id, function(id) {
+  ids <- d$id
+  invisible(lapply(ids, function(id) {
     log_file <- file.path(path, "archive", "other", id, "orderly.log")
     expect_true(file.exists(log_file))
     logs <- readLines(log_file)
@@ -603,4 +605,57 @@ test_that("batch", {
     expect_true(sprintf("[ id         ]  %s", id) %in% logs)
     expect_equal(sum(grepl("\\[ id         \\].*", logs)), 1)
   }))
+
+  ## Batch run without saving logs
+  args <- c("--root", path, "batch", "--ref", "other", "--print-log",
+            "other", "nmin=0,0.2")
+  res <- cli_args_process(args)
+  out <- evaluate_promise(capture.output(res$target(res), type = "message"))
+
+  d <- orderly_list_archive(path)
+  expect_equal(nrow(d), 4L)
+  expect_equal(d$name, rep("other", times = 4))
+
+  ids <- d$id[d$id != ids]
+  lapply(ids, function(id) {
+    expect_true(sprintf("[ id         ]  %s\n", id) %in% out$messages)
+    log_file <- file.path(archive_path, id, "orderly.log")
+    ## Logs have not been written to file
+    expect_false(file.exists(log_file))
+  })
+})
+
+
+test_that("batch: pull & ref don't go together", {
+  testthat::skip_on_cran()
+  path <- unzip_git_demo()
+  args <- c("--root", path, "batch", "--ref", "other", "--pull", "other")
+  res <- cli_args_process(args)
+  expect_error(res$target(res),
+               "Can't use --pull with --ref; perhaps you meant --fetch ?",
+               fixed = TRUE,
+               class = "orderly_cli_error")
+})
+
+test_that("batch: pull before run", {
+  testthat::skip_on_cran()
+  path <- unzip_git_demo()
+  git_checkout_branch("other", root = path)
+  path <- prepare_orderly_git_example(path, branch = "other")
+  path_local <- path[["local"]]
+  path_origin <- path[["origin"]]
+  sha_local <- git_ref_to_sha("HEAD", path_local)
+  sha_origin <- git_ref_to_sha("HEAD", path_origin)
+
+  args <- c("--root", path_local, "batch", "--pull", "other", "nmin=0,0.2")
+  res <- cli_args_process(args)
+  expect_true(res$options$pull)
+  expect_null(res$options$ref)
+  res$target(res)
+
+  id <- orderly_latest("other", root = path_local)
+  d <- readRDS(path_orderly_run_rds(
+    file.path(path_local, "archive", "other", id)))
+  expect_equal(d$git$sha, sha_origin)
+  expect_equal(git_ref_to_sha("HEAD", path_local), sha_origin)
 })

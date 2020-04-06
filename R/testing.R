@@ -230,14 +230,19 @@ unzip_git_demo <- function(path = tempfile()) {
   path
 }
 
-prepare_orderly_git_example <- function(path = tempfile(), run_report = FALSE) {
+prepare_orderly_git_example <- function(path = tempfile(), run_report = FALSE,
+                                        branch = "master") {
   path_upstream <- file.path(path, "upstream")
-  unzip_git_demo(path)
+  if (!file.exists(file.path(path, "orderly_config.yml"))) {
+    unzip_git_demo(path)
+  }
   unzip_git_demo(path_upstream)
+  git_run(c("checkout", branch), path_upstream)
 
   git_run(c("remote", "add", "origin", basename(path_upstream)), path)
   git_fetch(path)
-  git_run(c("branch", "--set-upstream-to", "origin/master", "master"), path)
+  git_run(c("branch", "--set-upstream-to", sprintf("origin/%s", branch),
+            branch), path)
 
   writeLines("new", file.path(path_upstream, "new"))
   git_run(c("add", "."), path_upstream)

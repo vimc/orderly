@@ -47,3 +47,10 @@ test_that("return useful error if params passed without names", {
     fixed = TRUE
   )
 })
+
+test_that("return useful error if no parameters are passed", {
+  path <- prepare_orderly_example("minimal")
+  expect_error(
+    orderly_batch("example", NULL),
+    "Parameters for a batch must be a data frame with at least one row")
+})
