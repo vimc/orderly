@@ -639,9 +639,7 @@ test_that("batch: pull & ref don't go together", {
 
 test_that("batch: pull before run", {
   testthat::skip_on_cran()
-  path <- unzip_git_demo()
-  git_checkout_branch("other", root = path)
-  path <- prepare_orderly_git_example(path, branch = "other")
+  path <- prepare_orderly_git_example(branch = "other")
   path_local <- path[["local"]]
   path_origin <- path[["origin"]]
   sha_local <- git_ref_to_sha("HEAD", path_local)

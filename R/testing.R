@@ -233,11 +233,10 @@ unzip_git_demo <- function(path = tempfile()) {
 prepare_orderly_git_example <- function(path = tempfile(), run_report = FALSE,
                                         branch = "master") {
   path_upstream <- file.path(path, "upstream")
-  if (!file.exists(file.path(path, "orderly_config.yml"))) {
-    unzip_git_demo(path)
-  }
+  unzip_git_demo(path)
   unzip_git_demo(path_upstream)
-  git_run(c("checkout", branch), path_upstream)
+  git_checkout_branch(branch, root = path)
+  git_checkout_branch(branch, root = path_upstream)
 
   git_run(c("remote", "add", "origin", basename(path_upstream)), path)
   git_fetch(path)
