@@ -210,9 +210,9 @@ test_that("Can develop a report with parameters and dependencies", {
 
   orderly_develop_start("use_dependency", list(nmin = 0), root = root,
                         use_draft = TRUE)
-  expect_equal(
-    hash_files(file.path(root, "src", "use_dependency", "incoming.csv"), FALSE),
-    hash_files(file.path(root, "draft", "other", id2, "summary.csv"), FALSE))
+  expect_equivalent(
+    hash_files(file.path(root, "src", "use_dependency", "incoming.csv")),
+    hash_files(file.path(root, "draft", "other", id2, "summary.csv")))
 
   orderly_develop_start("use_dependency", list(nmin = 0.3), root = root,
                         use_draft = TRUE)
