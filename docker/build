@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
-set -e
+set -ex
 HERE=$(dirname $0)
 . $HERE/common
 
 docker build --pull \
-       -t $TAG_SHA \
-       -t $TAG_BRANCH \
-       -t $TAG_VERSION \
+       --build-arg GIT_ID=$GIT_SHA \
+       --build-arg GIT_BRANCH=$GIT_BRANCH \
+       --build-arg ORDERLY_VERSION=$PACKAGE_VERSION \
+       --tag $TAG_SHA \
+       --tag $TAG_BRANCH \
+       --tag $TAG_VERSION \
        -f docker/Dockerfile \
        .
 
