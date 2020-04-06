@@ -8,7 +8,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-orderly_schema_version <- "0.0.10"
+orderly_schema_version <- "0.0.11"
 orderly_schema_table <- "orderly_schema"
 orderly_table_list <- "orderly_schema_tables"
 
@@ -404,6 +404,22 @@ report_data_import <- function(con, name, id, config) {
       type = report_db_parameter_type(p),
       value = report_db_parameter_serialise(p))
     DBI::dbWriteTable(con, "parameters", parameters, append = TRUE)
+  }
+
+  if (!is.null(dat_rds$meta$batch_id)) {
+    sql_batch <- "SELECT id FROM report_batch WHERE id = $1"
+    if (nrow(DBI::dbGetQuery(con, sql_batch, dat_rds$meta$batch_id)) == 0L) {
+      batch <- data_frame(
+        id = dat_rds$meta$batch_id
+      )
+      DBI::dbWriteTable(con, "report_batch", batch, append = TRUE)
+    }
+    report_version_batch <- data_frame(
+      report_version = id,
+      report_batch = dat_rds$meta$batch_id
+    )
+    DBI::dbWriteTable(con, "report_version_batch", report_version_batch,
+                      append = TRUE)
   }
 
   sql <- "UPDATE report SET latest = $1 WHERE name = $2"
