@@ -409,3 +409,28 @@ test_that("Add tags to db", {
     DBI::dbReadTable(con, "report_version_tag"),
     data_frame(id = 1, report_version = id, tag = "tag1"))
 })
+
+test_that("add batch info to db", {
+  path <- prepare_orderly_example("parameters", testing = TRUE)
+
+  params <- data_frame(
+    a = c("one", "two", "three"),
+    b = c(1, 2, 3)
+  )
+  batch_id <- ids::random_id()
+  mockery::stub(orderly_batch, "ids::random_id", batch_id)
+  ids <- orderly_batch("example", parameters = params,
+                       root = path, echo = FALSE)
+  p <- lapply(ids, function(id) {
+    orderly_commit(id, root = path)
+  })
+
+  con <- orderly_db("destination", path)
+  on.exit(DBI::dbDisconnect(con))
+  expect_equal(
+    DBI::dbReadTable(con, "report_batch"),
+    data_frame(id = batch_id))
+  expect_equal(
+    DBI::dbReadTable(con, "report_version_batch"),
+    data_frame(report_version = ids, report_batch = rep(batch_id, 3)))
+})

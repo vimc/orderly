@@ -1,3 +1,7 @@
+# orderly 1.1.20
+
+* Add support for running batches of orderly reports that differ in their parameters, available via `orderly::orderly_batch` and with the CLI as `orderly batch` (VIMC-3603)
+
 # orderly 1.1.15
 
 * Fix bug where report downloading did not work for some pathalogical windows paths (VIMC-3595)

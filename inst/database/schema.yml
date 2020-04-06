@@ -231,3 +231,12 @@ report_version_tag:
     - id: {type: SERIAL}
     - report_version: {fk: report_version.id}
     - tag: {fk: tag.id}
+
+report_batch:
+  columns:
+    - id: {type: TEXT}
+
+report_version_batch:
+  columns:
+    - report_version: {fk: report_version.id}
+    - report_batch: {fk: report_batch.id}
