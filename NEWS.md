@@ -1,3 +1,7 @@
+# orderly 1.1.19
+
+* Add `orderly::orderly_batch` for running a report with multiple sets of parameters. Adds CLI support and writes batch info into orderly db. (VIMC-3603)
+
 # orderly 1.1.15
 
 * Fix bug where report downloading did not work for some pathalogical windows paths (VIMC-3595)
