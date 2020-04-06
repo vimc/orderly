@@ -192,7 +192,7 @@ recipe_prepare <- function(config, name, id_file = NULL, ref = NULL,
   info$resolve_dependencies(use_draft, parameters, remote)
 
   if (!is.null(tags)) {
-    info$tags <- union(info$tags, recipe_validate_tags(tags, config, "tags"))
+    info$tags <- union(info$tags, recipe_validate_tags(tags, config, NULL))
   }
 
   id <- new_report_id()

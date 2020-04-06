@@ -700,6 +700,10 @@ test_that("Validate report tag", {
   writeLines(c(txt, "tags:", "- tag1", "- tag2", "- tag1"), path_config)
   expect_error(orderly_recipe$new("example", config),
                "Duplicated tag: 'tag1'")
+
+  writeLines(c(txt, "tags: 1"), path_config)
+  expect_error(orderly_recipe$new("example", config),
+               "'orderly.yml:tags' must be character")
 })
 
 

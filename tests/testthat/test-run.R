@@ -882,6 +882,9 @@ test_that("Pass tags during run", {
   expect_error(
     orderly_run("example", root = root, echo = FALSE, tags = "tag3"),
     "Unknown tag: 'tag3'")
+  expect_error(
+    orderly_run("example", root = root, echo = FALSE, tags = 1),
+    "'tags' must be character")
 })
 
 

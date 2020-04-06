@@ -347,6 +347,7 @@ recipe_validate_tags <- function(tags, config, filename) {
   if (is.null(config$tags)) {
     stop("Tags are not supported; please edit orderly_config.yml to enable")
   }
+  name <- if (is.null(filename)) "tags" else sprintf("%s:tags", filename)
   assert_character(tags, name)
   err <- setdiff(tags, config$tags)
   if (length(err) > 0L) {
