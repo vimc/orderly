@@ -139,7 +139,7 @@ orderly_use_edit_array <- function(entries, name_friendly, name_block, loc,
   name <- loc$name
   path <- loc$path
 
-  info <- recipe_read(path, config, FALSE, develop = TRUE)
+  info <- orderly_recipe$new(name, config, TRUE)
 
   err <- intersect(info[[name_block]], entries)
   if (length(err) > 0L) {
