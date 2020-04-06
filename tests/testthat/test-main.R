@@ -98,8 +98,32 @@ test_that("pass parameters", {
                list(a = 1, b = "value", c = TRUE))
   expect_equal(f("a=1+2"), list(a = "1+2"))
   expect_equal(f("a='quoted string'"), list(a = "quoted string"))
+  expect_equal(f("a=1,2"), list(a = "1,2"))
 })
 
+test_that("pass batch parameters", {
+  skip_on_cran_windows()
+  f <- function(...) {
+    cli_args_process(c("batch", "report", ...))$options$parameters
+  }
+  expect_equal(f(""), NULL)
+  expect_equal(f("a=1"), data_frame(a = 1))
+  expect_equal(f("a=1", "b=value"), data_frame(a = 1, b = "value"))
+  expect_equal(f("a=1", "b=value", "c=TRUE"),
+               data_frame(a = 1, b = "value", c = TRUE))
+  expect_equal(f("a=1+2"), data_frame(a = "1+2"))
+  expect_error(
+    f("a='quoted string'"),
+    paste0("Parameters with whitespace not supported in batch run, ",
+           "got param 'quoted string'"))
+  expect_equal(f("a=1,2"), data_frame(a = c(1, 2)))
+  expect_equal(f("a=1,2", "b=value1,value2"),
+               data_frame(a = c(1, 2), b = c("value1", "value2")))
+  expect_equal(f("a=mixed_types,TRUE,3"),
+               data_frame(a = c("mixed_types", "TRUE", "3")))
+  expect_error(f("a=1", "b=2,3"),
+               "All params must have the same number of values, got.*")
+})
 
 test_that("run: ref", {
   testthat::skip_on_cran()
@@ -518,4 +542,119 @@ test_that("parameter type conversion", {
 
   expect_equal(parse_parameter("'quoted string'"), "quoted string")
   expect_equal(parse_parameter('"quoted string"'), "quoted string")
+})
+
+
+test_that("run captures output", {
+  skip_on_cran_windows()
+  path <- prepare_orderly_example("minimal")
+  args <- c("--root", path, "run", "example")
+  res <- cli_args_process(args)
+  expect_identical(res$target, main_do_run)
+
+  expect_message(res$target(res))
+
+  archive_path <- file.path(path, "archive", "example")
+  id <- list.files(archive_path)
+  expect_length(id, 1)
+  log_file <- file.path(archive_path, id, "orderly.log")
+  expect_true(file.exists(log_file))
+  logs <- readLines(log_file)
+  expect_true(sprintf("[ id         ]  %s", id) %in% logs)
+
+  args <- c("--root", path, "run",  "--print-log", "example")
+  res <- cli_args_process(args)
+  expect_identical(res$target, main_do_run)
+
+  out <- evaluate_promise(capture.output(res$target(res), type = "message"))
+
+  ids <- list.files(archive_path)
+  expect_length(ids, 2)
+  id <- ids[ids != id]
+  expect_true(sprintf("[ id         ]  %s\n", id) %in% out$messages)
+  log_file <- file.path(archive_path, id, "orderly.log")
+  ## Logs have not been written to file
+  expect_false(file.exists(log_file))
+})
+
+
+test_that("batch", {
+  testthat::skip_on_cran()
+  path <- unzip_git_demo()
+
+  args <- c("--root", path, "batch", "--ref", "other", "other", "nmin=0,0.2")
+
+  res <- cli_args_process(args)
+  expect_equal(res$command, "batch")
+  expect_equal(res$options$ref, "other")
+  expect_equal(res$options$parameters, data_frame(nmin = c(0, 0.2)))
+  expect_equal(res$target, main_do_batch)
+
+  expect_message(res$target(res), "ids:[\\w\\d-]*")
+
+  d <- orderly_list_archive(path)
+  expect_equal(nrow(d), 2L)
+  expect_equal(d$name, c("other", "other"))
+
+  ids <- d$id
+  invisible(lapply(ids, function(id) {
+    log_file <- file.path(path, "archive", "other", id, "orderly.log")
+    expect_true(file.exists(log_file))
+    logs <- readLines(log_file)
+    ## Logs are only for one report
+    expect_true(sprintf("[ id         ]  %s", id) %in% logs)
+    expect_equal(sum(grepl("\\[ id         \\].*", logs)), 1)
+  }))
+
+  ## Batch run without saving logs
+  args <- c("--root", path, "batch", "--ref", "other", "--print-log",
+            "other", "nmin=0,0.2")
+  res <- cli_args_process(args)
+  out <- evaluate_promise(capture.output(res$target(res), type = "message"))
+
+  d <- orderly_list_archive(path)
+  expect_equal(nrow(d), 4L)
+  expect_equal(d$name, rep("other", times = 4))
+
+  ids <- d$id[d$id != ids]
+  archive_path <- file.path(path, "archive", "other")
+  invisible(lapply(ids, function(id) {
+    expect_true(sprintf("[ id         ]  %s\n", id) %in% out$messages)
+    log_file <- file.path(archive_path, id, "orderly.log")
+    ## Logs have not been written to file
+    expect_false(file.exists(log_file))
+  }))
+})
+
+
+test_that("batch: pull & ref don't go together", {
+  testthat::skip_on_cran()
+  path <- unzip_git_demo()
+  args <- c("--root", path, "batch", "--ref", "other", "--pull", "other")
+  res <- cli_args_process(args)
+  expect_error(res$target(res),
+               "Can't use --pull with --ref; perhaps you meant --fetch ?",
+               fixed = TRUE,
+               class = "orderly_cli_error")
+})
+
+test_that("batch: pull before run", {
+  testthat::skip_on_cran()
+  path <- prepare_orderly_git_example(branch = "other")
+  path_local <- path[["local"]]
+  path_origin <- path[["origin"]]
+  sha_local <- git_ref_to_sha("HEAD", path_local)
+  sha_origin <- git_ref_to_sha("HEAD", path_origin)
+
+  args <- c("--root", path_local, "batch", "--pull", "other", "nmin=0,0.2")
+  res <- cli_args_process(args)
+  expect_true(res$options$pull)
+  expect_null(res$options$ref)
+  res$target(res)
+
+  id <- orderly_latest("other", root = path_local)
+  d <- readRDS(path_orderly_run_rds(
+    file.path(path_local, "archive", "other", id)))
+  expect_equal(d$git$sha, sha_origin)
+  expect_equal(git_ref_to_sha("HEAD", path_local), sha_origin)
 })

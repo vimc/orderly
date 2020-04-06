@@ -26,6 +26,10 @@ cli_args_process <- function(args) {
     dat$options$name <- dat$options[["<name>"]] # docopt bug?
   } else if (dat$command == "list") {
     dat$options$type <- cli_args_process_list_type(dat$options)
+  } else if (dat$command == "batch") {
+    dat$options$parameters <- cli_args_process_batch_parameters(
+      dat$options$parameter)
+    dat$options$name <- dat$options[["<name>"]] # docopt bug?
   }
 
   dat
@@ -46,13 +50,14 @@ Commands:
   pull         Pull reports from remote servers
   cleanup      Remove drafts and dangling data
   rebuild      Rebuild the database
-  migrate      Migrate the archive"
+  migrate      Migrate the archive
+  batch        Run a batch of reports"
 
 cli_args_preprocess <- function(args) {
   ## This will work ok for filtering away unwanted arguments *if* the
   ## user chooses a reasonable argument name.  Things like
   ##
-  ##   orderly ruin --option name
+  ##   orderly run --option name
   ##
   ## will create some odd error messages, because the --option is not
   ## accepted.
@@ -79,16 +84,42 @@ cli_args_process_run_parameters <- function(parameters) {
   if (length(parameters) == 0L) {
     NULL
   } else {
-    p <- strsplit(parameters, "=", fixed = TRUE)
-    err <- lengths(p) != 2
-    if (any(err)) {
-      stop(sprintf(
-        "Invalid parameters %s - all must be in form key=value",
-        paste(squote(parameters[err]), collapse = ", ")))
-    }
+    p <- split_key_values(parameters)
     value <- lapply(p, function(x) parse_parameter(x[[2L]]))
     set_names(value, vcapply(p, "[[", 1L))
   }
+}
+
+cli_args_process_batch_parameters <- function(parameters) {
+  if (length(parameters) == 0L) {
+    NULL
+  } else {
+    p <- split_key_values(parameters)
+    values_per_param <- lengths(strsplit(unlist(parameters), ","))
+    if (length(unique(values_per_param)) != 1) {
+      stop(sprintf(
+        "All params must have the same number of values, got \n%s",
+        paste(parameters, collapse = "\n")
+      ))
+    }
+    value <- lapply(p, function(x) parse_batch_parameters(x[[2L]]))
+    t <- set_names(value, vcapply(p, "[[", 1L))
+    columns <- lapply(t, function(col) {
+      unlist(matrix(col))
+    })
+    do.call(cbind.data.frame, c(columns, stringsAsFactors = FALSE))
+  }
+}
+
+split_key_values <- function(parameters) {
+  p <- strsplit(parameters, "=", fixed = TRUE)
+  err <- lengths(p) != 2
+  if (any(err)) {
+    stop(sprintf(
+      "Invalid parameters %s - all must be in form key=value",
+      paste(squote(parameters[err]), collapse = ", ")))
+  }
+  p
 }
 
 
@@ -128,7 +159,6 @@ main_do_run <- function(x) {
   name <- x$options$name
   commit <- !x$options$no_commit
   instance <- x$options$instance
-  parameters <- x$options$parameters
   id_file <- x$options$id_file
   parameters <- x$options$parameters
   print_log <- x$options$print_log
@@ -141,7 +171,7 @@ main_do_run <- function(x) {
     sink(stderr(), type = "output")
     on.exit(sink(NULL, type = "output"))
   } else {
-    config$add_run_option("capture_log", FALSE)
+    config$add_run_option("capture_log", TRUE)
   }
 
   if (pull) {
@@ -303,6 +333,68 @@ main_do_migrate <- function(x) {
 }
 
 
+## 8. batch
+usage_batch <- "Usage:
+  orderly batch [options] <name> [<parameter>...]
+
+Options:
+  --instance=NAME  Database instance to use (if instances are configured)
+  --print-log      Print the logs (rather than storing it)
+  --ref=REF        Git reference (branch or sha) to use
+  --fetch          Fetch git before updating reference
+  --pull           Pull git before running report
+  --message=TEXT   A message explaining why the reports were run
+
+Parameters, if given, must be passed through as comma separated
+key=value1,value2 pairs"
+
+main_do_batch <- function(x) {
+  ## TODO: Get some classed errors though here and then write out
+  ## information about whether or not things worked and why they
+  ## didn't.  Possible issues (in order)
+  ##
+  ## * orderly report not found
+  ## * error while preparing (e.g., package not found)
+  ## * error while running report
+  ## * error checking artefacts
+  config <- orderly_config_get(x$options$root, TRUE)
+  name <- x$options$name
+  instance <- x$options$instance
+  parameters <- x$options$parameters
+  print_log <- x$options$print_log
+  ref <- x$options$ref
+  fetch <- x$options$fetch
+  pull <- x$options$pull
+  message <- x$options$message
+
+  if (print_log) {
+    sink(stderr(), type = "output")
+    on.exit(sink(NULL, type = "output"))
+  } else {
+    config$add_run_option("capture_log", TRUE)
+  }
+
+  if (pull) {
+    if (is.null(ref)) {
+      git_pull(config$root)
+    } else {
+      orderly_cli_error(
+        "Can't use --pull with --ref; perhaps you meant --fetch ?")
+    }
+  }
+
+  ids <- orderly_batch(name, parameters, root = config, instance = instance,
+                    ref = ref, fetch = fetch, message = message)
+  lapply(ids, function(id) {
+    orderly_commit(id, name, config)
+    path_rds <- path_orderly_run_rds(
+      file.path(config$root, "archive", name, id))
+    slack_post_success(readRDS(path_rds), config)
+  })
+
+  message("ids:", paste(ids, collapse = ", "))
+}
+
 write_script <- function(path, versioned = FALSE) {
   if (!isTRUE(is_directory(path))) {
     stop("'path' must be a directory")
@@ -345,7 +437,10 @@ cli_commands <- function() {
                       target = main_do_rebuild),
        migrate = list(name = "migrate the archive",
                       usage = usage_migrate,
-                      target = main_do_migrate))
+                      target = main_do_migrate),
+       batch = list(name = "batch run reports",
+                      usage = usage_batch,
+                      target = main_do_batch))
 }
 
 
@@ -360,6 +455,16 @@ parse_parameter <- function(x) {
   }
 }
 
+parse_batch_parameters <- function(x) {
+  if (grepl("\\s", x)) {
+    stop(sprintf(
+      "Parameters with whitespace not supported in batch run, got param '%s'",
+      x))
+  }
+  params <- strsplit(x, ",")[[1]]
+  params <- lapply(params, parse_parameter)
+  params
+}
 
 docopt_parse <- function(...) {
   tryCatch(
