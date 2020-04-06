@@ -24,7 +24,7 @@
 ##' params <- data.frame(nmin = c(0.2, 0.25))
 ##' ids <- orderly::orderly_batch("other", params, root = path)
 orderly_batch <- function(name = NULL, parameters = NULL, ...) {
-  if (NROW(parameters) < 1 ) {
+  if (NROW(parameters) < 1) {
     stop("Parameters for a batch must be a data frame with at least one row")
   }
   batch_id <- ids::random_id()
