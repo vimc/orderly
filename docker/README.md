@@ -7,7 +7,7 @@ docker run --rm --entrypoint create_orderly_demo.sh \
     -u ${UID} \
     -v ${PWD}:/orderly \
     -w /orderly \
-    docker.montagu.dide.ic.ac.uk:5000/orderly:master \
+    vimc/orderly:master \
     "demo"
 ```
 
@@ -18,7 +18,7 @@ docker run --rm \
     -u ${UID} \
     -v ${PWD}/demo:/orderly \
     -w /orderly \
-    docker.montagu.dide.ic.ac.uk:5000/orderly:master \
+    vimc/orderly:master \
     "minimal"
 ```
 
@@ -29,6 +29,6 @@ docker run --rm \
     -u ${UID} \
     -v ${PWD}/demo:/orderly \
     -w /orderly \
-    docker.montagu.dide.ic.ac.uk:5000/orderly:master \
+    vimc/orderly:master \
     --parameters '{"nmin": 0.5}' "other"
 ```
