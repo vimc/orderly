@@ -38,6 +38,9 @@ test_that("orderly_develop_location", {
 
   expect_equal(orderly_develop_location(name, path), cmp1)
   expect_equal(orderly_develop_location("src/minimal", path), cmp1)
+  ## Strip trailing slash too:
+  expect_equal(orderly_develop_location("minimal/", path), cmp1)
+  expect_equal(orderly_develop_location("src/minimal/", path), cmp1)
 
   expect_equal(
     withr::with_dir(cmp1$path, orderly_develop_location(name, path)),
