@@ -140,8 +140,13 @@ orderly_develop_location <- function(name, root, locate) {
       stop("Unexpected working directory - expected src/<name>")
     }
     name <- rel[[2L]]
-  } else if (grepl("^src/.+", name)) {
-    name <- sub("^src/", "", name)
+  } else {
+    if (grepl("^src/.+", name)) {
+      name <- sub("^src/", "", name)
+    }
+    if (grepl("/$", name)) {
+      name <- sub("/$", "", name)
+    }
   }
 
   path <- file.path(path_src(config$root), name)

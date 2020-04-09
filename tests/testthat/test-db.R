@@ -434,3 +434,11 @@ test_that("add batch info to db", {
     DBI::dbReadTable(con, "report_version_batch"),
     data_frame(report_version = ids, report_batch = rep(batch_id, 3)))
 })
+
+
+## Regression test for vimc-3652
+test_that("trailing slash in report name is tolerated", {
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("src/example/", root = path, echo = FALSE)
+  expect_error(orderly_commit(id, root = path), NA)
+})
