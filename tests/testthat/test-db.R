@@ -452,6 +452,7 @@ test_that("db includes elapsed time", {
   con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
   d <- DBI::dbReadTable(con, "report_version")
+  expect_true(d$elapsed > 0)
   expect_equal(d$elapsed,
                readRDS(path_orderly_run_rds(p))$meta$elapsed)
 })
