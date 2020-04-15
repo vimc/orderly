@@ -200,3 +200,28 @@ test_that("silently ignore missing slack url, but resolve args", {
   expect_equal(attr(remote, "slack_url"), "http://example.com/slack")
   expect_false(attr(remote, "primary"))
 })
+
+
+test_that("get remote", {
+  path_remote <- prepare_orderly_example("minimal")
+  path_local <- prepare_orderly_example("minimal")
+
+  ## Configure our remote:
+  path_config <- file.path(path_local, "orderly_config.yml")
+  txt <- readLines(path_config)
+  writeLines(c(
+    txt,
+    "remote:",
+    "  default:",
+    "    driver: orderly::orderly_remote_path",
+    "    args:",
+    paste("      path:", path_remote)),
+    path_config)
+
+  ## Get our remote:
+  remote <- orderly_remote(root = path_local)
+
+  expect_is(remote, "orderly_remote_path")
+  expect_equal(remote$name, "default")
+  expect_true(same_path(remote$config$root, path_remote))
+})

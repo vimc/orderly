@@ -275,6 +275,34 @@ orderly_default_remote_get <- function(root = NULL, locate = TRUE) {
 }
 
 
+##' Get a remote, based on the configuration in
+##' \code{orderly_config.yml} - different remote drivers have
+##' different methods, and this function gives you access to these
+##' lower-level objects.
+##'
+##' @title Get a remote
+##'
+##' @inheritParams orderly_pull_dependencies
+##'
+##' @return The orderly remote, as described in
+##'   \code{orderly_config.yml} - if no remotes are configured, or if
+##'   the requested remote does not exist, an error will be thrown.
+##'
+##' @seealso \code{\link{orderly_pull_dependencies}} which provides a
+##'   higher-level interface to pulling from a remote (including
+##'   adding the downloaded archive into your orderly repository), and
+##'   see the documentation underlying the orderly remote driver that
+##'   your \code{orderly_config.yml} declares for information about
+##'   using that remote.
+##'
+##' @export
+##' @example man-roxygen/example-orderly-remote.R
+orderly_remote <- function(remote = NULL, root = NULL, locate = TRUE) {
+  config <- orderly_config_get(root, locate)
+  get_remote(remote, config)
+}
+
+
 get_remote <- function(remote, config) {
   if (is.null(remote)) {
     return(orderly_default_remote_get(config))

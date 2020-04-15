@@ -1,3 +1,7 @@
+# orderly 1.1.23
+
+* New function `orderly::orderly_remote()` for geting an "orderly remote" object, as declared in the `orderly_config.yml` (VIMC-3655)
+
 # orderly 1.1.20
 
 * Add support for running batches of orderly reports that differ in their parameters, available via `orderly::orderly_batch` and with the CLI as `orderly batch` (VIMC-3603)

@@ -23,6 +23,12 @@ code.  To use in conjunction with
 \code{\link{orderly_test_start}}, you must pass in the path to the
 report in question.
 }
+\section{Warning}{
+
+
+It is important that this data is treated as \emph{readonly}!
+}
+
 \examples{
 path <- orderly::orderly_example("demo")
 
