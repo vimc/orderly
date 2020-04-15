@@ -67,5 +67,5 @@ remote$list_reports()
   adding the downloaded archive into your orderly repository), and
   see the documentation underlying the orderly remote driver that
   your \code{orderly_config.yml} declares for information about
-  using the that remote.
+  using that remote.
 }

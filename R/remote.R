@@ -293,7 +293,7 @@ orderly_default_remote_get <- function(root = NULL, locate = TRUE) {
 ##'   adding the downloaded archive into your orderly repository), and
 ##'   see the documentation underlying the orderly remote driver that
 ##'   your \code{orderly_config.yml} declares for information about
-##'   using the that remote.
+##'   using that remote.
 ##'
 ##' @export
 ##' @example man-roxygen/example-orderly-remote.R
