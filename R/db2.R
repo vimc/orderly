@@ -8,7 +8,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-orderly_schema_version <- "0.0.11"
+orderly_schema_version <- "1.1.24"
 orderly_schema_table <- "orderly_schema"
 orderly_table_list <- "orderly_schema_tables"
 
@@ -267,6 +267,7 @@ report_data_import <- function(con, name, id, config) {
     displayname = dat_rds$meta$displayname,
     description = dat_rds$meta$description,
     published = FALSE, # TODO: this eventually comes out
+    elapsed = dat_rds$meta$elapsed,
     connection = dat_rds$meta$connection,
     git_sha = dat_rds$git$sha %||% NA_character_,
     git_branch = dat_rds$git$branch %||% NA_character_,

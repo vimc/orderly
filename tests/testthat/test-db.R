@@ -442,3 +442,16 @@ test_that("trailing slash in report name is tolerated", {
   id <- orderly_run("src/example/", root = path, echo = FALSE)
   expect_error(orderly_commit(id, root = path), NA)
 })
+
+
+test_that("db includes elapsed time", {
+  skip_on_cran_windows()
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("example", root = path, echo = FALSE)
+  p <- orderly_commit(id, root = path)
+  con <- orderly_db("destination", root = path)
+  on.exit(DBI::dbDisconnect(con))
+  d <- DBI::dbReadTable(con, "report_version")
+  expect_equal(d$elapsed,
+               readRDS(path_orderly_run_rds(p))$meta$elapsed)
+})
