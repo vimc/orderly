@@ -118,7 +118,7 @@ sql_str_sub <- function(s, data) {
 }
 
 read_csv <- function(filename, ...) {
-  utils::read.csv(filename, stringsAsFactors = FALSE)
+  utils::read.csv(filename, ..., stringsAsFactors = FALSE)
 }
 
 write_csv <- function(data, filename, ...) {
