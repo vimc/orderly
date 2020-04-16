@@ -189,7 +189,7 @@ main_do_run <- function(x) {
     orderly_commit(id, name, config)
     path_rds <- path_orderly_run_rds(
       file.path(config$root, "archive", name, id))
-    slack_post_success(readRDS(path_rds), config)
+    post_success(readRDS(path_rds), config)
   }
 
   message("id:", id)
@@ -389,7 +389,7 @@ main_do_batch <- function(x) {
     orderly_commit(id, name, config)
     path_rds <- path_orderly_run_rds(
       file.path(config$root, "archive", name, id))
-    slack_post_success(readRDS(path_rds), config)
+    post_success(readRDS(path_rds), config)
   })
 
   message("ids:", paste(ids, collapse = ", "))
