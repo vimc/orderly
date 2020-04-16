@@ -75,7 +75,8 @@ teams_data <- function(dat, remote_name, report_url, remote_is_primary) {
         activityTitle = content$title,
         activityText = content$text,
         ## TODO: Choose another image from somewhere?
-        activityImage = "https://cdn.pixabay.com/photo/2017/06/10/07/18/list-2389219_960_720.png"
+        activityImage = paste0("https://cdn.pixabay.com/photo/2017/",
+                               "06/10/07/18/list-2389219_960_720.png")
       ),
       list(
         facts = facts
