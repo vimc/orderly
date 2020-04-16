@@ -322,6 +322,7 @@ test_that("teams payload is correct", {
           activityText = "on server *myserver* in 10 secs",
           activityImage = paste0("https://cdn.pixabay.com/photo/2017/",
                                  "06/10/07/18/list-2389219_960_720.png")
+        ),
         list(
           facts = list(list(
             name = "id:",
@@ -380,9 +381,9 @@ test_that("teams payload is correct with git information", {
         list(
           activityTitle = "Ran report 'example'",
           activityText = "on server *myserver* in 10 secs",
-          activityImage = "paste0(https://cdn.pixabay.com/photo/2017/0
-,
-                                 "06/10/07/18/list-2389219_960_720.png")        ),
+          activityImage = paste0("https://cdn.pixabay.com/photo/2017/0",
+                                 "06/10/07/18/list-2389219_960_720.png")
+        ),
         list(
           facts = list(list(
             name = "id:",
