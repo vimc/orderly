@@ -2,6 +2,8 @@
 
 post_success <- function(dat, config) {
   opts <- config$server_options()
+
+  response <- NULL
   if (!is.null(opts)) {
     remote <- get_remote(opts$name, config)
 
