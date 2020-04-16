@@ -525,3 +525,40 @@ test_that("clean up migrations", {
                       recursive = TRUE, full.names = TRUE)
   expect_equal(files, character(0))
 })
+
+
+test_that("migrate 0.3.2 => 1.1.25 adds elapsed", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
+  path <- unpack_reference("0.3.2")
+  d <- orderly_list_archive(path)
+  p <- path_orderly_run_rds(file.path(path, "archive", d$name, d$id))[[1]]
+  expect_null(readRDS(p)$meta$elapsed)
+
+  orderly_migrate(path, to = "1.1.25")
+  orderly_rebuild(path)
+
+  expect_equal(readRDS(p)$meta$elapsed, 0)
+  con <- orderly_db("destination", path, validate = FALSE)
+  on.exit(DBI::dbDisconnect(con), add = TRUE)
+  dat <- DBI::dbReadTable(con, "report_version")
+  expect_equal(dat$elapsed, rep(0, nrow(dat)))
+})
+
+
+test_that("migrate 0.6.0 => 1.1.25 preserves elapsed", {
+  oo <- options(orderly.nowarnings = TRUE)
+  on.exit(options(oo))
+
+  path <- unpack_reference("0.6.0")
+  d <- orderly_list_archive(path)
+  p <- path_orderly_run_rds(file.path(path, "archive", d$name, d$id))[[1]]
+  prev <- readRDS(p)
+  expect_is(prev$meta$elapsed, "numeric")
+
+  orderly_migrate(path, to = "1.1.25")
+  orderly_rebuild(path)
+
+  expect_equal(readRDS(p)$meta$elapsed, prev$meta$elapsed)
+})
