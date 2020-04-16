@@ -28,7 +28,7 @@ cli_args_process <- function(args) {
     dat$options$type <- cli_args_process_list_type(dat$options)
   } else if (dat$command == "batch") {
     dat$options$parameters <- cli_args_process_batch_parameters(
-      dat$options$parameter)
+      dat$options$parameter, dat$options$file)
     dat$options$name <- dat$options[["<name>"]] # docopt bug?
   }
 
@@ -90,8 +90,13 @@ cli_args_process_run_parameters <- function(parameters) {
   }
 }
 
-cli_args_process_batch_parameters <- function(parameters) {
-  if (length(parameters) == 0L) {
+cli_args_process_batch_parameters <- function(parameters, file) {
+  if (!is.null(file)) {
+    ## For now just assuming that this is a csv file but we can switch
+    ## behaviour here and take json if needed.
+    assert_file_exists(file, FALSE, name = "Parameters file")
+    read_csv(file, check.names = FALSE)
+  } else if (length(parameters) == 0L) {
     NULL
   } else {
     p <- split_key_values(parameters)
@@ -335,9 +340,10 @@ main_do_migrate <- function(x) {
 
 ## 8. batch
 usage_batch <- "Usage:
-  orderly batch [options] <name> [<parameter>...]
+  orderly batch [options] <name> ([<parameter>...]|--file=FILE)
 
 Options:
+  --file=FILE      File to read batch parameters from
   --instance=NAME  Database instance to use (if instances are configured)
   --print-log      Print the logs (rather than storing it)
   --ref=REF        Git reference (branch or sha) to use
