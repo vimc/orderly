@@ -85,7 +85,7 @@ teams_data <- function(dat, remote_name, report_url, remote_is_primary) {
     potentialAction = list(
       list(
         "@type" = "OpenUri",
-        name = "📋 View report",
+        name = "iew report",
         targets = list(
           list(
             os = "default",
