@@ -331,7 +331,7 @@ test_that("teams payload is correct", {
       ),
       potentialAction = list(list(
         "@type" = "OpenUri",
-        name = "iew report",
+        name = "View report",
         targets = list(
           list(os = "default", uri = report_url)
         )
@@ -396,7 +396,7 @@ test_that("teams payload is correct with git information", {
       ),
       potentialAction = list(list(
         "@type" = "OpenUri",
-        name = "📋ew report",
+        name = "View report",
         targets = list(
           list(os = "default", uri = report_url)
         )
