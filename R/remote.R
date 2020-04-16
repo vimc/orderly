@@ -347,6 +347,8 @@ load_remote <- function(name, config) {
   ## to the constructor, but that required fixing both drivers.
   attr(value, "slack_url") <-
     resolve_env(remote["slack_url"], error = FALSE)$slack_url
+  attr(value, "teams_url") <-
+    resolve_env(remote["teams_url"], error = FALSE)$teams_url
   attr(value, "primary") <- isTRUE(remote$primary)
 
   cache$remotes[[hash]] <- value

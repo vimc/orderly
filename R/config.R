@@ -240,7 +240,7 @@ config_validate_remote <- function(remote, filename) {
     d <- remote[[name]]
     check_fields(d, sprintf("%s:remote:%s", filename, name),
                  c("driver", "args"),
-                 c("url", "slack_url", "primary", "master_only"))
+                 c("url", "slack_url", "teams_url", "primary", "master_only"))
     field_name <- function(nm) {
       sprintf("%s:remote:%s:%s", filename, name, nm)
     }

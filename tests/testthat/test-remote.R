@@ -225,3 +225,35 @@ test_that("get remote", {
   expect_equal(remote$name, "default")
   expect_true(same_path(remote$config$root, path_remote))
 })
+
+test_that("teams url can be configured and silently ignored if missing", {
+  path <- prepare_orderly_example("minimal")
+
+  append_lines(
+    c("remote:",
+      "  default:",
+      "    driver: orderly::orderly_remote_path",
+      "    args:",
+      "      path: $ORDERLY_PATH",
+      "    teams_url: $ORDERLY_TEAMS_URL"),
+    file.path(path, "orderly_config.yml"))
+
+  config <- orderly_config$new(path)
+
+  clear_remote_cache()
+  remote <- withr::with_envvar(
+    c(ORDERLY_PATH = path),
+    get_remote("default", config))
+  expect_equal(length(orderly:::cache$remotes), 1L)
+  expect_null(attr(remote, "teams_url"))
+  expect_false(attr(remote, "primary"))
+
+  clear_remote_cache()
+  remote <- withr::with_envvar(
+    c(ORDERLY_PATH = path,
+      ORDERLY_TEAMS_URL = "http://example.com/slack"),
+    get_remote("default", config))
+  expect_equal(length(orderly:::cache$remotes), 1L)
+  expect_equal(attr(remote, "teams_url"), "http://example.com/slack")
+  expect_false(attr(remote, "primary"))
+})
