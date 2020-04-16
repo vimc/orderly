@@ -578,6 +578,21 @@ test_that("run captures output", {
 })
 
 
+test_that("batch parameters can be passed via file", {
+  skip_on_cran_windows()
+  f <- function(...) {
+    cli_args_process(c("batch", "report", ...))$options
+  }
+
+  expect_error(f("--file=myfile.csv"),
+               "Parameters file does not exist: 'myfile.csv'")
+  path <- tempfile()
+  pars <- data_frame(a = 1:5, b = letters[1:5])
+  write.csv(pars, path, row.names = FALSE)
+  expect_equal(f("--file", path)$parameters, pars)
+})
+
+
 test_that("batch", {
   testthat::skip_on_cran()
   path <- unzip_git_demo()
