@@ -415,3 +415,39 @@ test_that("teams payload is correct with git information", {
   expect_equal(d$`@type`, cmp$`@type`)
   expect_equal(d$`@context`, cmp$`@context`)
 })
+
+test_that("main teams interface", {
+  skip_if_no_internet()
+  skip_if_not_installed("jsonlite")
+
+  path <- prepare_orderly_example("minimal")
+  id <- "20181213-123456-fedcba98"
+  name <- "example"
+  dat <- list(meta = list(elapsed = 10, id = id, name = name),
+              git = NULL)
+
+  path <- tempfile()
+  dir.create(path)
+  writeLines(
+    c("remote:",
+      "  myserver:",
+      "    driver: orderly::orderly_remote_path",
+      "    args:",
+      paste("      path:", path),
+      "    teams_url: https://httpbin.org/post",
+      "    primary: true"),
+    file.path(path, "orderly_config.yml"))
+
+  config <- withr::with_envvar(
+    c(ORDERLY_API_SERVER_IDENTITY = "myserver"),
+    orderly_config$new(path))
+
+  r <- post_success(dat, config)
+
+  expect_equal(r$teams$status_code, 200L)
+  res <- jsonlite::fromJSON(httr::content(r$teams)$data, FALSE)
+  expect_equal(res$potentialAction[[1]]$targets[[1]]$uri,
+               orderly_remote_path(path)$url_report(name, id))
+
+  expect_null(r$slack)
+})
