@@ -27,15 +27,15 @@ Imports:
     DBI,
     R6,
     RSQLite,
+    crayon,
     digest,
+    docopt,
     fs (>= 1.2.7),
     ids,
     withr,
     yaml,
     zip (>= 2.0.0)
 Suggests:
-    crayon,
-    docopt,
     httr,
     jsonlite,
     knitr,
