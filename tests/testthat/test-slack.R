@@ -366,7 +366,7 @@ test_that("teams payload is correct with git information", {
                         dat$meta$name, dat$meta$id)
   d <- teams_data(dat, server_name, report_url, server_is_primary)
 
-  expceted_git_value <- paste0(
+  expected_git_value <- paste0(
     "[master](https://github.com/vimc/repo/tree/master)@",
     "[abcdefg](https://github.com/vimc/repo/tree/abcdefg)")
   expect_equal(
@@ -381,7 +381,7 @@ test_that("teams payload is correct with git information", {
         list(
           activityTitle = "Ran report 'example'",
           activityText = "on server *myserver* in 10 secs",
-          activityImage = paste0("https://cdn.pixabay.com/photo/2017/0",
+          activityImage = paste0("https://cdn.pixabay.com/photo/2017/",
                                  "06/10/07/18/list-2389219_960_720.png")
         ),
         list(
@@ -391,7 +391,7 @@ test_that("teams payload is correct with git information", {
           ),
           list(
             name = "git:",
-            value = expceted_git_value
+            value = expected_git_value
           ))
         )
       ),
