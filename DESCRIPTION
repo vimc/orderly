@@ -31,7 +31,6 @@ Imports:
     digest,
     docopt,
     fs (>= 1.2.7),
-    glue,
     ids,
     withr,
     yaml,
