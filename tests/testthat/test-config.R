@@ -365,7 +365,8 @@ test_that("warn when using url in remote definition", {
     "    url: https://example.com",
     "    args:",
     sprintf("      path: %s", path),
-    "    slack_url: https://httpbin.org/post"),
+    "    slack_url: https://httpbin.org/post",
+    "    teams_url: https://httpbin.org/post"),
     file.path(path, "orderly_config.yml"))
   expect_warning(
     orderly_config$new(path),

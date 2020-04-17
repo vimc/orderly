@@ -1,8 +1,9 @@
 ## Send slack messages!
 
-slack_post_success <- function(dat, config) {
+post_success <- function(dat, config) {
   opts <- config$server_options()
 
+  response <- NULL
   if (!is.null(opts)) {
     remote <- get_remote(opts$name, config)
 
@@ -10,53 +11,52 @@ slack_post_success <- function(dat, config) {
     ## sort of data field, so we might use remote$data$slack_url and
     ## remote$data$primary
     slack_url <- opts$slack_url
+    teams_url <- opts$teams_url
 
+    report_url <- remote$url_report(dat$meta$name, dat$meta$id)
+    response <- list()
     if (!is.null(slack_url)) {
       assert_scalar_character(slack_url, "slack_url")
-      report_url <- remote$url_report(dat$meta$name, dat$meta$id)
       data <- slack_data(dat, remote$name, report_url, opts$primary)
-      do_slack_post_success(slack_url, data)
+      response$slack <- do_post_success(slack_url, data, "slack")
+    }
+    if (!is.null(teams_url)) {
+      assert_scalar_character(teams_url, "teams_url")
+      data <- teams_data(dat, remote$name, report_url, opts$primary)
+      response$teams <- do_post_success(teams_url, data, "teams")
     }
   }
+  response
 }
 
-
 slack_data <- function(dat, remote_name, report_url, remote_is_primary) {
-  id <- dat$meta$id
-  name <- dat$meta$name
-  elapsed <- format(as.difftime(dat$meta$elapsed, units = "secs"), digits = 2)
-  git <- dat$git
+  content <- prepare_content(dat, remote_name, report_url, "<{url}|{label}>")
+  fields <- list(list(title = "id", value = content$id, short = TRUE))
 
-  if (!is.null(git)) {
-    branch <- git$branch %||% "(detached)"
-    sha <- git$sha_short
-    if (!is.null(git$github_url)) {
-      sha <- sprintf("<%s/tree/%s|%s>", git$github_url, sha, sha)
+  if (!is.null(dat$git)) {
+    branch <- dat$git$branch %||% "(detached)"
+    sha <- dat$git$sha_short
+    if (!is.null(dat$git$github_url)) {
+      sha <- sprintf("<%s/tree/%s|%s>", dat$git$github_url, sha, sha)
     }
-    if (!is.null(git$github_url) && !is.null(git$branch)) {
-      branch <- sprintf("<%s/tree/%s|%s>", git$github_url, branch, branch)
+    if (!is.null(dat$git$github_url) && !is.null(dat$git$branch)) {
+      branch <- sprintf("<%s/tree/%s|%s>", dat$git$github_url, branch, branch)
     }
-    git <- sprintf("%s@%s", branch, sha)
+    fields <- c(fields, list(list(title = "git",
+                                  value = sprintf("%s@%s", branch, sha),
+                                  short = TRUE)))
   }
 
-  title <- sprintf("Ran report '%s'", name)
-  text <- sprintf("on server *%s* in %s", remote_name, elapsed)
-  fallback <- sprintf("Ran '%s' as '%s'; view at %s", name, id, report_url)
   ## NOTE: 'warning' is actually quite a nice yellow colour
   col <- if (remote_is_primary) "good" else "warning"
-
-  fields <- list(list(title = "id", value = sprintf("`%s`", id), short = TRUE))
-  if (!is.null(git)) {
-    fields <- c(fields, list(list(title = "git", value = git, short = TRUE)))
-  }
 
   list(username = "orderly",
        icon_emoji = ":ambulance:",
        attachments = list(list(
-         title = title,
-         text = text,
+         title = content$title,
+         text = content$text,
          color = col,
-         fallback = fallback,
+         fallback = content$fallback,
          fields = fields,
          actions = list(list(
            name = "link",
@@ -66,8 +66,71 @@ slack_data <- function(dat, remote_name, report_url, remote_is_primary) {
            url = report_url)))))
 }
 
+teams_data <- function(dat, remote_name, report_url, remote_is_primary) {
+  content <- prepare_content(dat, remote_name, report_url, "[{label}]({url})")
+  facts <- list(list(name = "id:", value = content$id))
 
-do_slack_post_success <- function(slack_url, data) {
+  if (!is.null(dat$git)) {
+    branch <- dat$git$branch %||% "(detached)"
+    sha <- dat$git$sha_short
+    if (!is.null(dat$git$github_url)) {
+      sha <- sprintf("[%s](%s/tree/%s)", sha, dat$git$github_url, sha)
+    }
+    if (!is.null(dat$git$github_url) && !is.null(dat$git$branch)) {
+      branch <- sprintf("[%s](%s/tree/%s)", branch, dat$git$github_url, branch)
+    }
+    facts <- c(facts, list(list(name = "git:",
+                                value = sprintf("%s@%s", branch, sha))))
+  }
+
+  ## Using same colours as slack default for "good" and "warning" messages
+  col <- if (remote_is_primary) "2EB886" else "DAA038"
+
+  list(
+    "@type" = "MessageCard",
+    "@context" = "http://schema.org/extensions",
+    summary = content$fallback,
+    themeColor = col,
+    sections = list(
+      list(
+        activityTitle = content$title,
+        activityText = content$text,
+        activityImage = paste0("https://cdn.pixabay.com/photo/2017/",
+                               "06/10/07/18/list-2389219_960_720.png")
+      ),
+      list(
+        facts = facts
+      )
+    ),
+    potentialAction = list(
+      list(
+        "@type" = "OpenUri",
+        name = "View report",
+        targets = list(
+          list(
+            os = "default",
+            uri = report_url
+          )
+        )
+      )
+    )
+  )
+}
+
+prepare_content <- function(dat, remote_name, report_url, link_format) {
+  id <- dat$meta$id
+  name <- dat$meta$name
+  elapsed <- format(as.difftime(dat$meta$elapsed, units = "secs"), digits = 2)
+
+  list(
+    fallback = sprintf("Ran '%s' as '%s'; view at %s", name, id, report_url),
+    title = sprintf("Ran report '%s'", name),
+    text = sprintf("on server *%s* in %s", remote_name, elapsed),
+    id = sprintf("`%s`", id)
+  )
+}
+
+do_post_success <- function(url, data, destination) {
   if (!requireNamespace("httr", quietly = TRUE)) {
     message("not sending messages as httr is not available")
     return(invisible(NULL))
@@ -76,11 +139,11 @@ do_slack_post_success <- function(slack_url, data) {
   ## Never fail on sending the hook - but send an informational
   ## message instead.
   r <- tryCatch({
-    r <- httr::POST(slack_url, body = data, encode = "json")
+    r <- httr::POST(url, body = data, encode = "json")
     httr::stop_for_status(r)
     r
   }, error = function(e) {
-    message("NOTE: running slack hook failed\n", e$message)
+    message(sprintf("NOTE: running %s hook failed\n", destination), e$message)
     NULL
   })
   invisible(r)
