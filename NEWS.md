@@ -1,3 +1,7 @@
+# orderly 1.1.26
+
+* Add ability to post report commit notification to Microsoft Teams (VIMC-3640)
+
 # orderly 1.1.24
 
 * Batches of parameters can be supplied to `orderly batch` using a csv file via `--file` (VIMC-3569)
