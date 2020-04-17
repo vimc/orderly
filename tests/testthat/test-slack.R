@@ -405,8 +405,8 @@ test_that("teams payload is correct with git information", {
     ))
 
   skip_if_no_internet()
-  steamsurl <- "https://httpbin.org/post"
-  r <- do_post_success(steamsurl, d, "teams")
+  teamsurl <- "https://httpbin.org/post"
+  r <- do_post_success(teamsurl, d, "teams")
 
   str <- httr::content(r, "text", encoding = "UTF-8")
   cmp <- jsonlite::fromJSON(str, FALSE)$json
