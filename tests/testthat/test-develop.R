@@ -223,3 +223,17 @@ test_that("Can develop a report with parameters and dependencies", {
     hash_files(file.path(root, "src", "use_dependency", "incoming.csv")),
     hash_files(file.path(root, "draft", "other", id1, "summary.csv")))
 })
+
+
+test_that("can load environment variables during develop", {
+  path <- prepare_orderly_example("minimal")
+  p <- file.path(path, "src", "example")
+  on.exit(Sys.unsetenv("ORDERLY_TEST_VARIABLE"))
+  writeLines("ORDERLY_TEST_VARIABLE: hello",
+             file.path(path, "orderly_envir.yml"))
+  append_lines(c("environment:", "  a: ORDERLY_TEST_VARIABLE"),
+               file.path(p, "orderly.yml"))
+  e <- new.env()
+  orderly_develop_start("example", envir = e, root = path)
+  expect_equal(e$a, "hello")
+})

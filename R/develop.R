@@ -90,13 +90,17 @@ orderly_develop_start <- function(name = NULL, parameters = NULL,
   info$resolve_dependencies(use_draft, parameters, remote)
 
   info$workdir <- loc$path
+
+  env <- orderly_envir_read(loc$config$root)
   withr::with_dir(info$workdir, {
-    info <- recipe_copy_global(info, loc$config)
+    withr::with_envvar(env, {
+      info <- recipe_copy_global(info, loc$config)
     info <- recipe_copy_depends(info)
-    orderly_prepare_data(loc$config, info, parameters, envir, instance)
+      orderly_prepare_data(loc$config, info, parameters, envir, instance)
+    })
   })
 
-  sys_setenv(orderly_envir_read(loc$config$root))
+  sys_setenv(env)
 
   invisible(loc$path)
 }
