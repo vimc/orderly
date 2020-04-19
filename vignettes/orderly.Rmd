@@ -740,7 +740,7 @@ The expected use case for this is if you have data which you want to use in a re
 
 Environment variables can also be used in top-level `orderly_envir.yml` (since orderly 1.1.6) which can be accessed via `Sys.getenv()`. For example, if your `orderly_envir.yml` contains
 
-```r
+```yaml
 DATA_URL: https://www.example.com/thedata
 ```
 
