@@ -1,3 +1,7 @@
+# orderly 1.1.28
+
+* `orderly::orderly_develop_clean()` no longer deletes artefacts that are re-exported from sources (VIMC-3671, reported by @cewalters)
+
 # orderly 1.1.27
 
 * Allow `orderly::orderly_develop_start()` to use environment variables declared in `orderly.yml` and defined in `orderly_envir.yml` (#214, VIMC-3669, reported by @sangeetabhatia03)
