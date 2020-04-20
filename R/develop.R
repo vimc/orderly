@@ -187,6 +187,9 @@ orderly_status <- function(path) {
   }
   status$present <- file.exists(file.path(path, status$filename))
   status$derived <- status$type %in% c("global", "dependency", "artefact")
+  ## Files that are re-exported are not derived:
+  status$derived <- status$derived &
+    !(status$filename %in% status$filename[!status$derived])
 
   class(status) <- c("orderly_status", "data.frame")
   status

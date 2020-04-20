@@ -237,3 +237,26 @@ test_that("can load environment variables during develop", {
   orderly_develop_start("example", envir = e, root = path)
   expect_equal(e$a, "hello")
 })
+
+
+test_that("don't delete artefacts that are resources", {
+  path <- prepare_orderly_example("minimal")
+  name <- "example"
+  p <- file.path(path, "src", name)
+
+  path_orderly <- file.path(p, "orderly.yml")
+  dat <- yaml_read(path_orderly)
+  dat$artefacts <- list(dat$artefacts,
+                        list(data = list(description = "data",
+                                         filenames = "data.csv")))
+  dat$resources <- "data.csv"
+  yaml_write(dat, path_orderly)
+
+  file.create(file.path(p, "data.csv"))
+
+  d <- orderly_develop_status(name, root = path)
+  expect_false(d$derived[d$filename == "data.csv" & d$type == "artefact"])
+
+  orderly_develop_clean(name, root = path)
+  expect_true(file.exists(file.path(p, "data.csv")))
+})
