@@ -1,3 +1,7 @@
+# orderly 1.1.27
+
+* Allow `orderly::orderly_develop_start()` to use environment variables declared in `orderly.yml` and defined in `orderly_envir.yml` (#214, VIMC-3669, reported by @sangeetabhatia03)
+
 # orderly 1.1.26
 
 * Add ability to post report commit notification to Microsoft Teams (VIMC-3640)
