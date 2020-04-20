@@ -24,7 +24,8 @@ test_that("minimal", {
   expect_equal(info$data$dat$database, "source")
 
   expect_equal(info$script, "script.R")
-  expect_equal(info$path, normalizePath(file.path(path, "src", "example")))
+  expect_equal(normalizePath(info$path),
+               normalizePath(file.path(path, "src", "example")))
 
   expect_null(info$displayname)
   expect_null(info$description)
