@@ -451,3 +451,44 @@ test_that("main teams interface", {
 
   expect_null(r$slack)
 })
+
+
+test_that("look up environment variables before hook send", {
+  skip_if_no_internet()
+  skip_if_not_installed("jsonlite")
+
+  path <- prepare_orderly_example("minimal")
+  id <- "20181213-123456-fedcba98"
+  name <- "example"
+  dat <- list(meta = list(elapsed = 10, id = id, name = name),
+              git = NULL)
+
+  path <- tempfile()
+  dir.create(path)
+  writeLines(
+    c("remote:",
+      "  myserver:",
+      "    driver: orderly::orderly_remote_path",
+      "    args:",
+      paste("      path:", path),
+      "    slack_url: $ORDERLY_SLACK_URL",
+      "    primary: true"),
+    file.path(path, "orderly_config.yml"))
+
+  env <- c(ORDERLY_API_SERVER_IDENTITY = "myserver",
+           ORDERLY_SLACK_URL = "https://httpbin.org/post")
+
+  config <- withr::with_envvar(env, orderly_config$new(path))
+
+  r <- post_success(dat, config)
+  expect_equal(r, list())
+
+  r <- withr::with_envvar(env, post_success(dat, config))
+
+  expect_equal(r$slack$status_code, 200L)
+  res <- jsonlite::fromJSON(httr::content(r$slack)$data, FALSE)
+  expect_equal(res$attachments[[1]]$actions[[1]]$url,
+               orderly_remote_path(path)$url_report(name, id))
+
+  expect_null(r$teams)
+})
