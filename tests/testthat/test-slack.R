@@ -20,7 +20,7 @@ test_that("slack payload is correct", {
       username = "orderly",
       icon_emoji = ":ambulance:",
       attachments = list(list(
-        title = "Ran report 'example'",
+        title = "Ran report `example`",
         text = "on server *myserver* in 10 secs",
         color = "warning",
         fallback = sprintf("Ran '%s' as '%s'; view at %s",
@@ -265,7 +265,7 @@ test_that("slack payload is correct given actual run data", {
   expect_setequal(names(a),
                   c("title", "text", "color", "fallback", "fields", "actions"))
 
-  expect_equal(a$title, "Ran report 'minimal'")
+  expect_equal(a$title, "Ran report `minimal`")
   expect_match(a$text, "on server \\*myserver\\* in [0-9]+(.[0-9]+)? secs")
   expect_equal(a$color, "warning")
   expect_equal(a$fallback,
@@ -318,7 +318,7 @@ test_that("teams payload is correct", {
       themeColor = "DAA038",
       sections = list(
         list(
-          activityTitle = "Ran report 'example'",
+          activityTitle = "Ran report `example`",
           activityText = "on server *myserver* in 10 secs",
           activityImage = paste0("https://cdn.pixabay.com/photo/2017/",
                                  "06/10/07/18/list-2389219_960_720.png")
@@ -379,7 +379,7 @@ test_that("teams payload is correct with git information", {
       themeColor = "2EB886",
       sections = list(
         list(
-          activityTitle = "Ran report 'example'",
+          activityTitle = "Ran report `example`",
           activityText = "on server *myserver* in 10 secs",
           activityImage = paste0("https://cdn.pixabay.com/photo/2017/",
                                  "06/10/07/18/list-2389219_960_720.png")

@@ -125,7 +125,7 @@ prepare_content <- function(dat, remote_name, report_url, link_format) {
 
   list(
     fallback = sprintf("Ran '%s' as '%s'; view at %s", name, id, report_url),
-    title = sprintf("Ran report '%s'", name),
+    title = sprintf("Ran report `%s`", name),
     text = sprintf("on server *%s* in %s", remote_name, elapsed),
     id = sprintf("`%s`", id)
   )
