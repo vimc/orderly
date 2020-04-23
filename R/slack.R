@@ -6,6 +6,7 @@ post_success <- function(dat, config) {
   response <- NULL
   if (!is.null(opts)) {
     remote <- get_remote(opts$name, config)
+    opts <- resolve_env(opts, error = FALSE)
 
     ## TODO(VIMC-3544): This moves into the object itself, using some
     ## sort of data field, so we might use remote$data$slack_url and
