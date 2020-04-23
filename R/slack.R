@@ -18,12 +18,12 @@ post_success <- function(dat, config) {
     response <- list()
     if (!is.null(slack_url)) {
       assert_scalar_character(slack_url, "slack_url")
-      data <- slack_data(dat, remote$name, report_url, opts$primary)
+      data <- slack_data(dat, opts$name, report_url, opts$primary)
       response$slack <- do_post_success(slack_url, data, "slack")
     }
     if (!is.null(teams_url)) {
       assert_scalar_character(teams_url, "teams_url")
-      data <- teams_data(dat, remote$name, report_url, opts$primary)
+      data <- teams_data(dat, opts$name, report_url, opts$primary)
       response$teams <- do_post_success(teams_url, data, "teams")
     }
   }
