@@ -1,37 +1,77 @@
-##' orderly allows a report to rely on the artefacts of one or more other
-##' orderly reports. This allows users to develop a network of interconnected
-##' reports where the output from report becomes the source of data for another.
-##' There are two natural questions that can develop around this workflow:
-#'
-##' 1. We have updated a report and now need to re-run everything that depends
-##'    on it.
-##' 2. We have a report that we want to re-run to ensure uses the latest
-##'    information. Which other reports are used (directly or indirectly) by
-##'    this report?
+##' Investigate the dependency structure in a set of orderly reports.
+##' This function allows the dependency graph to be created for set of
+##' reports that have been run and committed (the archive) or of a set
+##' of reports that could be run (the src) to be discovered and
+##' printed to screen.  \emph{This is experimental and somewhat
+##' subject to change and improvement.}
 ##'
-##' This function display this information in an easily readable format.
-##' Allowing users to see the dependency tree and which reports are out of date
-##' and need to be re-run.
+##' orderly allows a report to rely on the artefacts of one or more
+##' other orderly reports. This allows users to develop a network of
+##' interconnected reports where the output from report becomes the
+##' source of data for another.  There are two natural questions that
+##' can develop around this workflow:
+##'
+##' \enumerate{
+##'
+##' \item{We have updated a report and now need to re-run everything
+##' that depends on it.}
+##'
+##' \item{We have a report that we want to re-run to ensure uses the
+##'    latest information. Which other reports are used (directly or
+##'    indirectly) by this report?}
+##'
+##' }
+##'
+##' This function display this information in an easily readable
+##' format.  Allowing users to see the dependency tree and which
+##' reports are out of date and need to be re-run.
 ##'
 ##' @section Remark:
-##' The tree is built using data from the local report database (see
-##' \code{\link{orderly_commit}}). This means that it will not find changes from
-##' a report that has not be run and commited. _i.e._ if a user changes a
-##' report to use or create different artefacts this will not be picked up by
-##' the function until the reports are re-run and commited to the archive.
+##'
+##' By default the tree is built using data from the local report
+##'   database (see \code{\link{orderly_commit}}). This means that it
+##'   will not find changes from a report that has not be run and
+##'   commited. \emph{i.e.} if a user changes a report to use or
+##'   create different artefacts this will not be picked up by the
+##'   function until the reports are re-run and commited to the
+##'   archive.
+##'
+##' It is possible to generate a tree from the source reports by using
+##'   \code{use = "src"} - this generates the "theoretical tree", and
+##'   has no concept of being "up to date" or of ids.
+##'
+##' @section Warning:
+##'
+##' \emph{This interface is considered experimental and may change
+##'   without notice}.  Please do not depend on it in scripts as it
+##'   may break things.  Consider this a (hopefully) useful way of
+##'   exploring the dependencies in your reports \emph{interactively}
+##'   - let us know what is missing and we'll try and build it out.
 ##'
 ##' @title Print the dependency tree for a given report using orderly log
 ##'
 ##' @param name the name of the report
-##' @param id the id of the report, if omitted, use the id of the latest report
-##' @param direction A string indicating if we want to move up or down the tree
-##'        permitted values are upstream, downstream
-##' @param propagate A boolean indicating if we want to propogate out of date
-##'                  through the tree
-##' @param max_depth A numeric, how far back should the tree go, this can be
-##'                  useful to truncate a very large tree. (default = 100)
-##' @param show_all A boolean, should we show all reports in the tree, not just
-##'                 the latest.
+##'
+##' @param id the id of the report, if omitted, use the id of the
+##'   latest report
+##'
+##' @param direction A string indicating if we want to move up or down
+##'   the tree permitted values are upstream, downstream
+##'
+##' @param propagate A boolean indicating if we want to propogate out
+##'   of date through the tree
+##'
+##' @param max_depth A numeric, how far back should the tree go, this
+##'   can be useful to truncate a very large tree. (default = 100)
+##'
+##' @param show_all A boolean, should we show all reports in the tree,
+##'   not just the latest.
+##'
+##' @param use Character string indicating what we read to infer the
+##'   dependency tree.  Current valid values are \code{archive} (the
+##'   default), which reads from archive reports and \code{src} which
+##'   reads from the source reports.
+##'
 ##' @inheritParams orderly_list
 ##'
 ##' @return An orderly tree object with the root corresponding to the given
@@ -49,7 +89,6 @@
 ##' orderly::orderly_graph("other", root = path)
 ##' orderly::orderly_graph("use_dependency_2", root = path,
 ##'                                  direction = "upstream")
-##'
 orderly_graph <- function(name, id = "latest", root = NULL, locate = TRUE,
                           direction = "downstream", propagate = TRUE,
                           max_depth = 100, show_all = FALSE,
