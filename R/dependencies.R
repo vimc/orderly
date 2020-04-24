@@ -52,18 +52,33 @@
 ##'
 orderly_graph <- function(name, id = "latest", root = NULL, locate = TRUE,
                           direction = "downstream", propagate = TRUE,
-                          max_depth = 100, show_all = FALSE) {
+                          max_depth = 100, show_all = FALSE,
+                          use = "archive") {
+  config <- orderly_config_get(root, locate)
+  use <- match_value(use, c("archive", "src"))
+  if (use == "archive") {
+    orderly_graph_archive(name, id, config, direction, propagate,
+                          max_depth, show_all)
+  } else {
+    ## id, propagate ignored
+    orderly_graph_src(name, config, direction, max_depth, show_all)
+  }
+}
+
+
+orderly_graph_archive <- function(name, id, config, direction = "downstream",
+                                  propagate = TRUE, max_depth = 100,
+                                  show_all = FALSE) {
   assert_scalar_character(direction)
   direction <- match_value(direction, c("upstream", "downstream"))
 
   assert_scalar_character(name)
   assert_scalar_character(id)
-  assert_scalar_logical(locate)
   assert_scalar_logical(propagate)
   assert_scalar_logical(show_all)
   assert_scalar_numeric(max_depth)
 
-  con <- orderly_db("destination", orderly_config_get(root, locate))
+  con <- orderly_db("destination", config)
   on.exit(DBI::dbDisconnect(con))
 
   # make sure a report with this name exists
