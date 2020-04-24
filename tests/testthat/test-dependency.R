@@ -350,7 +350,8 @@ test_that("source - downstream", {
   path <- prepare_orderly_example("depends", testing = TRUE)
 
   config <- orderly_config$new(path)
-  g <- orderly_graph_src("example", config, "downstream")
+  g <- orderly_graph("example", root = path,
+                     direction = "downstream", use = "src")
 
   children <- g$root$children
   expect_equal(length(children), 2)
@@ -367,8 +368,8 @@ test_that("source - downstream", {
 test_that("source - upstream", {
   path <- prepare_orderly_example("depends", testing = TRUE)
 
-  config <- orderly_config$new(path)
-  g <- orderly_graph_src("depend3", config, "upstream")
+  g <- orderly_graph("depend3", root = path,
+                     direction = "upstream", use = "src")
 
   expect_equal(length(g$root$children), 1)
   expect_equal(g$root$children[[1]]$name, "depend2")
