@@ -230,13 +230,15 @@ test_that("multiple dependencies", {
   tree <- orderly_graph("example", root = path,
                                   propagate = FALSE, show_all = TRUE)
 
-  tree_print <- tree$format()
+  tree_print <- withr::with_options(
+    list(crayon.enabled = FALSE),
+    tree$format(FALSE))
 
   ## make sure we print out the correct indentation
   expect_match(tree_print, "example \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
   expect_match(tree_print, "\\+--.*depend2")
-  expect_match(tree_print, "\\|   \\+--.*depend3")
-  expect_match(tree_print, "    \\+--.*depend3")
+  expect_match(tree_print, "\\|   `--.*depend3")
+  expect_match(tree_print, "    `--.*depend3")
 })
 
 test_that("List out of date upstream", {
