@@ -31,7 +31,8 @@ post_success <- function(dat, config) {
 }
 
 slack_data <- function(dat, remote_name, report_url, remote_is_primary) {
-  content <- prepare_content(dat, remote_name, report_url, "<{url}|{label}>")
+  content <- prepare_content(dat, remote_name, report_url, "<{url}|{label}>",
+                             escape = FALSE)
   fields <- list(list(title = "id", value = content$id, short = TRUE))
 
   if (!is.null(dat$git)) {
@@ -68,7 +69,8 @@ slack_data <- function(dat, remote_name, report_url, remote_is_primary) {
 }
 
 teams_data <- function(dat, remote_name, report_url, remote_is_primary) {
-  content <- prepare_content(dat, remote_name, report_url, "[{label}]({url})")
+  content <- prepare_content(dat, remote_name, report_url, "[{label}]({url})",
+                             escape = TRUE)
   facts <- list(list(name = "id:", value = content$id))
 
   if (!is.null(dat$git)) {
@@ -118,14 +120,21 @@ teams_data <- function(dat, remote_name, report_url, remote_is_primary) {
   )
 }
 
-prepare_content <- function(dat, remote_name, report_url, link_format) {
+prepare_content <- function(dat, remote_name, report_url, link_format,
+                            escape) {
   id <- dat$meta$id
   name <- dat$meta$name
   elapsed <- format(as.difftime(dat$meta$elapsed, units = "secs"), digits = 2)
 
+  if (escape) {
+    qname <- sprintf("`%s`", name)
+  } else {
+    qname <- sprintf("'%s'", name)
+  }
+
   list(
     fallback = sprintf("Ran '%s' as '%s'; view at %s", name, id, report_url),
-    title = sprintf("Ran report '%s'", name),
+    title = sprintf("Ran report %s", qname),
     text = sprintf("on server *%s* in %s", remote_name, elapsed),
     id = sprintf("`%s`", id)
   )
