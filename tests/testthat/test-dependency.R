@@ -403,7 +403,7 @@ test_that("id attribution", {
 
   p <- file.path(path, "src", "depend", "orderly.yml")
   dat <- yaml::read_yaml(p)
-  id <- orderly::new_report_id()
+  id <- new_report_id()
   dat$depends$example$id <- id
   yaml::write_yaml(dat, p)
 
