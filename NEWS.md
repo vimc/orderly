@@ -1,3 +1,7 @@
+# orderly 1.1.31
+
+* `orderly::orderly_rebuild()` creates a dated backup of the database before running, allowing this potentially destructive operation to be recovered from (VIMC-3702)
+
 # orderly 1.1.28
 
 * `orderly::orderly_develop_clean()` no longer deletes artefacts that are re-exported from sources (VIMC-3671, reported by @cewalters)

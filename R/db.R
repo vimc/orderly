@@ -184,6 +184,7 @@ orderly_rebuild <- function(root = NULL, locate = TRUE, verbose = TRUE,
   }
 
   if (!if_schema_changed || report_db_needs_rebuild(config)) {
+    orderly_backup(config, suffix = paste0(".", iso_time_str(Sys.time())))
     orderly_log("rebuild", "db")
     report_db_rebuild(config, verbose)
     invisible(TRUE)
@@ -202,12 +203,12 @@ orderly_rebuild <- function(root = NULL, locate = TRUE, verbose = TRUE,
 ## > backup may be performed on a live source database without
 ## > preventing other database connections from reading or writing to
 ## > the source database while the backup is underway.
-orderly_backup <- function(config = NULL, locate = TRUE) {
+orderly_backup <- function(config = NULL, locate = TRUE, suffix = NULL) {
   config <- orderly_config_get(config, locate)
   if (config$destination$driver[[1]] == "RSQLite") {
     curr <- orderly_db_args(config$destination, config)$args$dbname
 
-    dest <- path_db_backup(config$root, curr)
+    dest <- path_db_backup(config$root, curr, suffix)
     dir.create(dirname(dest), FALSE, TRUE)
 
     prefix <- paste0(config$root, "/")
