@@ -44,9 +44,7 @@ report_tree <- R6::R6Class(
     ##   of the form "│       │   " (i.e. some combination of "│   "
     ##   and "    ")
     ## * tree_string is final printed string (with line breaks and colouring)
-    format_helper = function(vertex = self$root,
-                             prefix = "",
-                             tree_string = "") {
+    format_helper = function(vertex, prefix, tree_string, chars) {
       ## if the tree has a warning message, append it to the front in the red
       if (!is.null(private$message)) {
         tree_string <- paste(tree_string, crayon::red(private$message), "\n",
@@ -68,16 +66,18 @@ report_tree <- R6::R6Class(
           console_colour <-
             if (child$out_of_date) crayon::red else crayon::blue
 
-          ## the start of the line = prefix + either +-- or +--
-          line_prefix <- sprintf("%s+--", prefix)
-
+          ## the start of the line = prefix + either +-- or `--
+          line_prefix <- paste0(prefix,
+                                chars[[if (is_last) "leaf_last" else "leaf"]])
           tree_string <- sprintf("%s%s", tree_string,
                                          console_colour(line_prefix))
 
           ## increase indentation with either "|   " or "    " (4 characters!)
-          prefix <- sprintf("%s%s   ", prefix, if (is_last) " " else "|")
+          vertical <- if (is_last) " " else chars[["vertical"]]
+          prefix <- sprintf("%s%s   ", prefix, vertical)
 
-          tree_string <- private$format_helper(child, prefix, tree_string)
+          tree_string <- private$format_helper(
+            child, prefix, tree_string, chars)
 
           ## decrease the indentation by 4 characters
           prefix <- substr(prefix, 1, nchar(prefix) - 4)
@@ -109,8 +109,32 @@ report_tree <- R6::R6Class(
     get_direction = function() {
       private$direction
     },
-    format = function() {
-      private$format_helper()
+    format = function(utf8 = NULL) {
+      private$format_helper(self$root, "", "", tree_chars(utf8))
     }
   )
 )
+
+
+## https://en.wikipedia.org/wiki/Box-drawing_character
+tree_chars <- function(utf8 = NULL) {
+  utf8 <- utf8 %||% l10n_info()[["UTF-8"]]
+  if (utf8) {
+    chars <- c(join = "\U251C",
+               join_last = "\U2514",
+               vertical = "\U2502",
+               horizontal = "\U2500")
+  } else {
+    chars <- c(join = "+",
+               join_last = "`",
+               vertical = "|",
+               horizontal = "-")
+  }
+
+  chars[["leaf"]] <- sprintf("%s%s%s", chars[["join"]],
+                             chars[["horizontal"]], chars[["horizontal"]])
+  chars[["leaf_last"]] <- sprintf("%s%s%s", chars[["join_last"]],
+                                  chars[["horizontal"]], chars[["horizontal"]])
+
+  chars
+}
