@@ -230,13 +230,15 @@ test_that("multiple dependencies", {
   tree <- orderly_graph("example", root = path,
                                   propagate = FALSE, show_all = TRUE)
 
-  tree_print <- tree$format()
+  tree_print <- withr::with_options(
+    list(crayon.enabled = FALSE),
+    tree$format(FALSE))
 
   ## make sure we print out the correct indentation
   expect_match(tree_print, "example \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
   expect_match(tree_print, "\\+--.*depend2")
-  expect_match(tree_print, "\\|   \\+--.*depend3")
-  expect_match(tree_print, "    \\+--.*depend3")
+  expect_match(tree_print, "\\|   `--.*depend3")
+  expect_match(tree_print, "    `--.*depend3")
 })
 
 test_that("List out of date upstream", {
@@ -343,4 +345,102 @@ test_that("Pinned reports", {
   expect_match(tree_print, id_1)
   expect_match(tree_print, id_4)
   expect_match(tree_print, id_5)
+})
+
+
+test_that("source - downstream", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+
+  config <- orderly_config$new(path)
+  g <- orderly_graph("example", root = path,
+                     direction = "downstream", use = "src")
+
+  children <- g$root$children
+  expect_equal(length(children), 2)
+  nms <- vcapply(children, "[[", "name")
+  expect_setequal(nms, c("depend", "depend2"))
+  names(children) <- nms
+
+  expect_equal(children$depend$children, list())
+  expect_equal(length(children$depend2$children), 1)
+  expect_equal(children$depend2$children[[1]]$name, "depend3")
+})
+
+
+test_that("source - upstream", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+
+  g <- orderly_graph("depend3", root = path,
+                     direction = "upstream", use = "src")
+
+  expect_equal(length(g$root$children), 1)
+  expect_equal(g$root$children[[1]]$name, "depend2")
+
+  expect_equal(length(g$root$children[[1]]$children), 1)
+  expect_equal(g$root$children[[1]]$children[[1]]$name, "example")
+})
+
+
+test_that("can't get dependencies for nonexistant report", {
+  path <- prepare_orderly_example("minimal")
+  config <- orderly_config$new(path)
+  expect_error(
+    orderly_graph_src("missing", config, "upstream"),
+    "Unknown source report 'missing'")
+})
+
+
+test_that("prevent excessive recursion", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+
+  config <- orderly_config$new(path)
+  expect_error(
+    orderly_graph_src("depend3", config, "upstream", max_depth = 1),
+    "The tree is very large or degenerate")
+})
+
+
+test_that("id attribution", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+
+  p <- file.path(path, "src", "depend", "orderly.yml")
+  dat <- yaml::read_yaml(p)
+  id <- new_report_id()
+  dat$depends$example$id <- id
+  yaml::write_yaml(dat, p)
+
+  config <- orderly_config$new(path)
+  g <- orderly_graph_src("example", config, "downstream")
+
+  children <- g$root$children
+  expect_equal(length(children), 2)
+  nms <- vcapply(children, "[[", "name")
+  expect_setequal(nms, c("depend", "depend2"))
+  names(children) <- nms
+
+  expect_equal(children$depend$id, id)
+  expect_equal(children$depend2$id, "latest")
+
+  g <- orderly_graph_src("depend", config, "upstream")
+  expect_equal(g$root$id, "latest")
+  expect_equal(g$root$children[[1]]$id, id)
+})
+
+
+test_that("detect loop", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+  append_lines(c("depends:",
+                 "  - depend2:",
+                 "      id: latest",
+                 "      use:",
+                 "        output.rds: output.rds"),
+               file.path(path, "src", "example", "orderly.yml"))
+
+  config <- orderly_config$new(path)
+  expect_error(
+    orderly_graph_src("depend3", config, "upstream"),
+    "Detected circular dependency: 'depend2' -> 'example' -> 'depend2'")
+  expect_error(
+    orderly_graph_src("example", config, "downstream"),
+    "Detected circular dependency: 'example' -> 'depend2' -> 'example'")
 })
