@@ -456,3 +456,32 @@ test_that("db includes elapsed time", {
   expect_equal(d$elapsed,
                readRDS(path_orderly_run_rds(p))$meta$elapsed)
 })
+
+
+test_that("rebuild nonempty database with backup", {
+  skip_on_cran_windows()
+  path <- prepare_orderly_example("minimal")
+  id <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id, root = path)
+
+  con <- orderly_db("destination", path)
+  DBI::dbExecute(con, "UPDATE report_version SET published = 1")
+  DBI::dbDisconnect(con)
+
+  orderly_rebuild(path)
+
+  files <- dir(file.path(path, "backup/db"))
+  expect_equal(length(files), 1)
+  expect_match(files, "^orderly\\.sqlite\\.[0-9]{8}-[0-9]{6}$")
+
+  con1 <- orderly_db("destination", path)
+  con2 <- DBI::dbConnect(RSQLite::SQLite(),
+                         dbname = file.path(path, "backup/db", files))
+  expect_equal(
+    DBI::dbReadTable(con1, "report_version")$published, 0)
+  expect_equal(
+    DBI::dbReadTable(con2, "report_version")$published, 1)
+
+  DBI::dbDisconnect(con1)
+  DBI::dbDisconnect(con2)
+})

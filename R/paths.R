@@ -63,8 +63,13 @@ path_changelog_txt <- function(path, type) {
 }
 
 
-path_db_backup <- function(root, file) {
-  file.path(root, "backup", "db", basename(file), fsep = "/")
+path_db_backup <- function(root, file, suffix = NULL) {
+  if (is.null(suffix)) {
+    filename <- basename(file)
+  } else {
+    filename <- paste0(basename(file), suffix)
+  }
+  file.path(root, "backup", "db", filename, fsep = "/")
 }
 
 
