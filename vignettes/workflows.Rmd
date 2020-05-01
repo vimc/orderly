@@ -14,7 +14,7 @@ The key issues to consider are
 * how will report *sources* be shared?
 * how do the *inputs* (e.g., `orderly` resources) make it into the reports?
 * how will report *outputs* be shared?
-* whose outputs are the "canonical" version?
+* whose outputs are considered the "canonical" version?
 
 ## Individual researcher
 
@@ -130,10 +130,10 @@ remote:
 Once this is done, both Alice and Bob can run reports *on* that server, for example
 
 ```r
-orderly::orderly_run_remote("report-a", remote = "default")
+orderly::orderly_run_remote("internal-2017-population-TUV-MHL", remote = "science")
 ```
 
-**ADD A GIF**
+![](workflows_run_remote.gif){width=700px}
 
 this will print to screen the log, just as if it were running locally, though it is in fact running on a fresh R session remotely.  After being run, this report is available to everyone and can be pulled as above
 
@@ -193,9 +193,7 @@ As soon as there are multiple archives, resolving dependencies becomes more chal
 
 To allow this, when running `orderly::orderly_run`, Alice can provide the argument `remote`, indicating which of her remotes she would like to use for dependency resolution.
 
-**GIVE A CONCRETE EXAMPLE HERE, WITH DIAGRAM**
-
-Now, even if she has more recent copies of the dependencies locally, her report will use the same copies as would be used on the server she chooses.
+Now, even if she has more recent copies of the dependencies locally, her report will use the same copies as would be used on the server she chooses.  Any local copies of remote reports will be downloaded to her computer before the report is run.
 
 ## Looking forward, a fully decentralised approach
 
