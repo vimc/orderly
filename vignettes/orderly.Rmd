@@ -618,7 +618,7 @@ vault:
   password: $VAULT_PASSWORD
 ```
 
-and the username and password will be found from environment variables (the actual secret resolution uses `vaultr::vault_resolve_secrets` - see the documentation in vaultr for further details).
+and the username and password will be found from environment variables (the actual secret resolution uses `vaultr::vault_resolve_secrets` - see the documentation in `vaultr` for further details).
 
 ### Advanced database configuration
 
@@ -626,7 +626,7 @@ _In general, you can ignore this section if you only use one global database._
 
 The above approach can be used to switch databases by using different environmental variables, but that can become tiresome.  If you have multiple database "instances" corresponding to different realisations of the same logical database (e.g., production and staging), then you can configure and switch between these directly from `orderly` commands.  At [VIMC](http://vaccineimpact.org) we have several copies of our main database: one called `production`, which is the canonical copy, and then several `staging` copies that we use for experimentation.
 
-To configure this situation, list commmon arguments within the `args` block as before, then add logical databases as named entries in an `instances` field:
+To configure this situation, list common arguments within the `args` block as before, then add logical databases as named entries in an `instances` field:
 
 ```
 database:
@@ -646,7 +646,7 @@ database:
     default_instance: $DEFAULT_INSTANCE
 ```
 
-Here - staging and production have different hostnames (`production.example.org` and `staging.example.org`) and different passwords (retrieved using environment variables) and the default instance is set with another environnent variable (`$DEFAULT_INSTANCE`, which must be one of `production` or `staging`).  To switch between databases, you can set that variable, or pass the `instance` argument to `orderly::orderly_run` and friends, as:
+Here - staging and production have different hostnames (`production.example.org` and `staging.example.org`) and different passwords (retrieved using environment variables) and the default instance is set with another environment variable (`$DEFAULT_INSTANCE`, which must be one of `production` or `staging`).  To switch between databases, you can set that variable, or pass the `instance` argument to `orderly::orderly_run` and friends, as:
 
 ```r
 orderly::orderly_run(name, instance = "production")
@@ -762,7 +762,7 @@ and then an R variable `password` will be available to all the code in your repo
 
 ## Developing a report
 
-Because orderly works in a directory that is not the same as the source directory (e.g., `draft/myreport/YYYYMMDD-HHMMSS-abcdefgh`), because global resources and dependencies etc are copied in just as it is used, and because `orderly` takes control of things like parameters and `source()`-ing files, it may not seem straightforward to develop a report as you would ordinarily.
+Because orderly works in a directory that is not the same as the source directory (e.g., `draft/myreport/YYYYMMDD-HHMMSS-abcdefgh`), because global resources and dependencies etc are copied in just as it is used, and because `orderly` takes control of things like parameters and sourcing files, it may not seem straightforward to develop a report as you would ordinarily.
 
 In order to make this easier, orderly has a set of functions to help develop a report within the source directory.  These functions are:
 

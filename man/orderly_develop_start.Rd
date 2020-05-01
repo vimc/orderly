@@ -108,7 +108,7 @@ git.  Rerunning \code{orderly_develop_start} will copy a fresh
 copy of dependencies into your tree, overwriting files that are
 there without warning.
 
-Repeately running \code{orderly_develop_start} is "safe", in that
+Repeatedly running \code{orderly_develop_start} is "safe", in that
 it will re-run through the setup steps, but beware that sourcing
 functions is additive and never subtractive.  If you delete (or
 rename) a function within a source file, it will not be removed

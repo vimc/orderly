@@ -60,7 +60,7 @@
 
 # orderly 1.1.5
 
-* Introduce the concept of "tags"; these are immutable and exist at the level of a report version.  Currently there is nothing that can be done with tags, but these will become useful in conjuction with [OrderlyWeb](https://github.com/vimc/orderly-web) (VIMC-3514)
+* Introduce the concept of "tags"; these are immutable and exist at the level of a report version.  Currently there is nothing that can be done with tags, but these will become useful in conjunction with [OrderlyWeb](https://github.com/vimc/orderly-web) (VIMC-3514)
 
 # orderly 1.1.4
 
@@ -130,7 +130,7 @@
 
 # orderly 1.0.3
 
-* `orderly::orderly_test_start` prints instructions that are pasteable on windows -- previously they may have contained backslashes (VIMC-3251).
+* `orderly::orderly_test_start` prints instructions that are paste-able on windows -- previously they may have contained backslashes (VIMC-3251).
 * `orderly::orderly_run` now strips a leading `src/` if provided, allowing easier tab-completion of report names (VIMC-3226).
 
 # orderly 1.0.2 (CRAN)

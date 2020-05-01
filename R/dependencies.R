@@ -31,9 +31,9 @@
 ##' By default the tree is built using data from the local report
 ##'   database (see \code{\link{orderly_commit}}). This means that it
 ##'   will not find changes from a report that has not be run and
-##'   commited. \emph{i.e.} if a user changes a report to use or
+##'   committed. \emph{i.e.} if a user changes a report to use or
 ##'   create different artefacts this will not be picked up by the
-##'   function until the reports are re-run and commited to the
+##'   function until the reports are re-run and committed to the
 ##'   archive.
 ##'
 ##' It is possible to generate a tree from the source reports by using
@@ -58,7 +58,7 @@
 ##' @param direction A string indicating if we want to move up or down
 ##'   the tree permitted values are upstream, downstream
 ##'
-##' @param propagate A boolean indicating if we want to propogate out
+##' @param propagate A boolean indicating if we want to propagate out
 ##'   of date through the tree
 ##'
 ##' @param max_depth A numeric, how far back should the tree go, this
@@ -140,7 +140,7 @@ orderly_graph_archive <- function(name, id, config, direction = "downstream",
 ##' @title Given a tree return a list of reports to be re-run (and the order
 ##' that they should be re-run)
 ##'
-##' @param tree A dpendency tree object from orderly_graph_out_of_date
+##' @param tree A dependency tree object from orderly_graph_out_of_date
 ##'
 ##' @return a list of report names to be re-run. First report to rerun first
 ##' @export
