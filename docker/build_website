@@ -87,7 +87,7 @@ docker run --rm \
        -s public \
        -o /schema
 
-if [ $TAG = "master" ]; then
+if [ $TAG == "master" ]; then
     REMOTE_URL=git@github.com:vimc/orderly
     rm -rf ${DOCS_DIR}/.git
     git init ${DOCS_DIR}
