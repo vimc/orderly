@@ -161,3 +161,78 @@ test_that("remote_path implements url_report", {
   expect_equal(remote$url_report("name", "id"),
                file.path(remote$config$root, "name", "id", fsep = "/"))
 })
+
+
+test_that("push report (path)", {
+  skip_on_cran_windows()
+  ours <- prepare_orderly_example("demo")
+  id <- orderly_run("multifile-artefact", root = ours, echo = FALSE)
+  orderly_commit(id, root = ours)
+
+  theirs <- prepare_orderly_example("demo")
+
+  remote <- orderly_remote_path(theirs)
+  res <- testthat::evaluate_promise(
+    orderly_push_archive("multifile-artefact", "latest", ours, remote = remote))
+
+  re <- "^\\[ push\\s+\\]  multifile-artefact:[0-9]{8}-[0-9]{6}-[[:xdigit:]]{8}"
+  expect_match(res$messages, paste0(re, "\\n$"))
+
+  d <- orderly_list_archive(theirs)
+  expect_equal(d$name, "multifile-artefact")
+  expect_equal(d$id, id)
+
+  res <- testthat::evaluate_promise(
+    orderly_push_archive("multifile-artefact", "latest", ours, remote = remote))
+  expect_match(res$messages, paste(re, "already exists, skipping\\n$"))
+})
+
+
+test_that("push report & deps", {
+  skip_on_cran_windows()
+  ours <- prepare_orderly_example("depends", testing = TRUE)
+  theirs <- prepare_orderly_example("depends", testing = TRUE)
+
+  id1 <- orderly_run("example", root = ours, echo = FALSE)
+  orderly_commit(id1, root = ours)
+  id2 <- orderly_run("depend2", root = ours, echo = FALSE)
+  orderly_commit(id2, root = ours)
+  id3 <- orderly_run("depend3", root = ours, echo = FALSE)
+  orderly_commit(id3, root = ours)
+
+  remote <- orderly_remote_path(theirs)
+  res <- testthat::evaluate_promise(
+    orderly_push_archive("depend3", "latest", ours, remote = remote))
+
+  ## All ended up in the archive:
+  d <- orderly_list_archive(theirs)
+  expect_setequal(d$name, c("example", "depend2", "depend3"))
+  expect_setequal(d$id, c(id1, id2, id3))
+  expect_equal(orderly_list_archive(ours), d)
+
+  re <- "\\[ ([a-z]+)\\s*\\]  ([a-z0-9]+)[:/](.*?)\\s*$"
+  expect_true(all(grepl(re, res$messages)))
+  expect_equal(
+    sub(re, "\\1", res$messages),
+    c("push", "depends", "push", "depends", "push"))
+  expect_equal(
+    sub(re, "\\2", res$messages),
+    c("depend3", "depend2", "depend2", "example", "example"))
+  expect_equal(
+    sub(re, "\\3", res$messages),
+    c(id3, id2, id2, id1, id1))
+})
+
+
+test_that("Fail to push if not supported", {
+  skip_on_cran_windows()
+  ours <- prepare_orderly_example("demo")
+  theirs <- prepare_orderly_example("demo")
+
+  remote <- as.list(orderly_remote_path(theirs))
+  remote$push <- NULL
+
+  expect_error(
+    orderly_push_archive("multifile-artefact", "latest", ours, remote = remote),
+    "'push' is not supported by this remote")
+})

@@ -63,6 +63,18 @@ orderly_remote_path_ <- R6::R6Class(
       dest
     },
 
+    push = function(path) {
+      path_meta <- file.path(path, "orderly_run.rds")
+      stopifnot(file.exists(path_meta))
+
+      dat <- readRDS(path_meta)
+      name <- dat$meta$name
+      id <- dat$meta$id
+
+      dest <- file.path(path_archive(self$config$root), name, id)
+      copy_directory(path, dest, rollback_on_error = TRUE)
+    },
+
     run = function(...) {
       stop("'orderly_remote_path' remotes do not run")
     },
