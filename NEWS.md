@@ -1,3 +1,7 @@
+# orderly 1.1.32
+
+* New function `orderly::orderly_push_archive()` which allows pushing of an archive to a remote.  The `orderly::orderly_remote_path` remote supports this, though care should be taken with what you push! (VIMC-3784)
+
 # orderly 1.1.31
 
 * `orderly::orderly_rebuild()` creates a dated backup of the database before running, allowing this potentially destructive operation to be recovered from (VIMC-3702)

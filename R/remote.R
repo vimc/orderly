@@ -25,6 +25,15 @@
 ##' administrator of the remote orderly archive to migrate their
 ##' archive, and then re-pull.
 ##'
+##' Pushing an archive is possible only if the remote supports it.
+##' Currently this is supported by \code{\link{orderly_remote_path}}
+##' remotes, though not by orderlyweb remotes.  There is no control
+##' over what will \emph{accept} a push at this point, nor any check
+##' that what you've pushed is "good" except that it exists in your
+##' archive.  As with pulling an archive, pushes are recusive with
+##' respect to dependencies.  The configuration interface here will
+##' likely change a little over time.
+##'
 ##' @title Download dependent reports
 ##'
 ##' @param name Name of the report to download dependencies for.
@@ -134,6 +143,8 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
 }
 
 
+##' @rdname orderly_pull_dependencies
+##' @export
 orderly_push_archive <- function(name, id = "latest", root = NULL,
                                  locate = TRUE, remote = NULL) {
   config <- orderly_config_get(root, locate)

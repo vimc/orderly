@@ -3,6 +3,7 @@
 \name{orderly_pull_dependencies}
 \alias{orderly_pull_dependencies}
 \alias{orderly_pull_archive}
+\alias{orderly_push_archive}
 \title{Download dependent reports}
 \usage{
 orderly_pull_dependencies(
@@ -13,6 +14,14 @@ orderly_pull_dependencies(
 )
 
 orderly_pull_archive(
+  name,
+  id = "latest",
+  root = NULL,
+  locate = TRUE,
+  remote = NULL
+)
+
+orderly_push_archive(
   name,
   id = "latest",
   root = NULL,
@@ -78,6 +87,15 @@ included in the downloaded archive in order to collect all the
 information required for the database.  In this case, ask the
 administrator of the remote orderly archive to migrate their
 archive, and then re-pull.
+
+Pushing an archive is possible only if the remote supports it.
+Currently this is supported by \code{\link{orderly_remote_path}}
+remotes, though not by orderlyweb remotes.  There is no control
+over what will \emph{accept} a push at this point, nor any check
+that what you've pushed is "good" except that it exists in your
+archive.  As with pulling an archive, pushes are recusive with
+respect to dependencies.  The configuration interface here will
+likely change a little over time.
 }
 \examples{
 # Suppose we have a "remote" orderly repository at some path.
