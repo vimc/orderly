@@ -422,7 +422,7 @@ remote_report_versions <- function(name, config = NULL, locate = TRUE,
 
 
 remote_name <- function(remote) {
-  remote$name
+  remote$name %||% "(unknown)"
 }
 
 
