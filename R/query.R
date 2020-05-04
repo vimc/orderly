@@ -287,7 +287,7 @@ latest_id <- function(ids) {
 
   if (length(ids) > 1L) {
     ms <- sub(version_id_re, "\\2", ids)
-    ids <- ids[ms == last(ms)]
+    ids <- max(ids[ms == last(ms)])
   }
 
   ids
