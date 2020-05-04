@@ -95,15 +95,24 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
                                  locate = TRUE, remote = NULL) {
   config <- orderly_config_get(root, locate)
   config <- check_orderly_archive_version(config)
+
+  browser()
+
   remote <- get_remote(remote, config)
 
   v <- remote_report_versions(name, config, FALSE, remote)
   if (length(v) == 0L) {
-    stop("Unknown report")
+    stop(sprintf("No versions of '%s' were found at '%s'",
+                 name, remote_name(remote)), call. = FALSE)
   }
 
   if (id == "latest") {
     id <- latest_id(v)
+  } else if (grepl("^latest\(", id)) {
+    ## Options here:
+    ##
+    ## * Simplest is to just keep going through the list and grab
+    stop("Query interface not supported")
   }
 
   if (!(id %in% v)) {

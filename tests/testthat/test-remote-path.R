@@ -236,3 +236,16 @@ test_that("Fail to push if not supported", {
     orderly_push_archive("multifile-artefact", "latest", ours, remote = remote),
     "'push' is not supported by this remote")
 })
+
+
+test_that("fetch remote metadata", {
+  dat <- prepare_orderly_remote_example()
+  base <- normalizePath(file.path(dat$path_remote, "archive"))
+
+  expect_equal(
+    dat$remote$metadata("example", dat$id1),
+    file.path(base, "example", dat$id1, "orderly_run.rds"))
+  expect_equal(
+    dat$remote$metadata("name", "version"),
+    file.path(base, "name", "version", "orderly_run.rds"))
+})

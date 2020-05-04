@@ -53,6 +53,33 @@ test_that("pull dependencies", {
 })
 
 
+test_that("pull dependencies", {
+  path_local <- orderly_example("demo")
+  path_remote <- orderly_example("demo")
+  remote <- orderly_remote_path(path_remote)
+  orderly_pull_dependencies("use_dependency",
+                            root = path_local, remote = path_remote)
+
+  expect_log_message(
+    orderly_pull_dependencies("depend", root = dat$config,
+                              remote = dat$remote),
+    "\\[ pull\\s+ \\]  example:")
+  expect_equal(orderly_list_archive(dat$config),
+               data_frame(name = "example", id = dat$id2))
+
+  ## and update
+  id3 <- orderly_run("example", root = dat$path_remote, echo = FALSE)
+  orderly_commit(id3, root = dat$path_remote)
+  expect_log_message(
+    orderly_pull_dependencies("depend", root = dat$config,
+                              remote = dat$remote),
+    "\\[ pull\\s+ \\]  example:")
+  expect_equal(orderly_list_archive(dat$config),
+               data_frame(name = "example", id = c(dat$id2, id3)))
+})
+
+
+
 test_that("pull dependencies with implied name", {
   dat <- prepare_orderly_remote_example()
     expect_equal(nrow(orderly_list_archive(dat$config)), 0)
