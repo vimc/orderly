@@ -93,17 +93,17 @@ test_that("latest_ids", {
   expect_identical(latest_id(sample(id_ms)), last(id_ms))
 
   ## Differ below the subsecond level
-  id_same <- replicate(5, new_report_id(t + 1))
-  expect_identical(latest_id(id_same), sort_c(id_same))
-  expect_identical(latest_id(sample(id_same)), sort_c(id_same))
+  id_same <- sort_c(replicate(5, new_report_id(t + 1)))
+  expect_identical(latest_id(id_same), last(id_same))
+  expect_identical(latest_id(sample(id_same)), last(id_same))
 
   id_both <- c(id_s, id_ms)
   expect_identical(latest_id(id_both), last(id_both))
   expect_identical(latest_id(sample(id_both)), last(id_both))
 
   id_all <- c(id_both, id_same)
-  expect_identical(latest_id(id_all), sort_c(id_same))
-  expect_identical(latest_id(sample(id_all)), sort_c(id_same))
+  expect_identical(latest_id(id_all), last(id_same))
+  expect_identical(latest_id(sample(id_all)), last(id_same))
 
   ## Unexpected inputs
   expect_error(latest_id(c(id, "other")),
