@@ -898,5 +898,6 @@ with_retry <- function(callback, n = 10, backoff = 1, match = NULL) {
     message(sprintf("Command failed; trying again in %f seconds", sleep))
     Sys.sleep(sleep)
   }
-  stop(sprintf("Failed to run command after %d attempts", n))
+  stop(sprintf("Failed to run command after %d attempts: %s", n,
+               result$value$message), call. = FALSE)
 }

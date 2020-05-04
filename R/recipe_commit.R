@@ -9,6 +9,16 @@
 ##' @param name The name of the report - this can be omitted and the
 ##'   name will be determined from the \code{id}.
 ##'
+##' @param retry_n Number of times to retry the commit; in parallel
+##'   the database may become locked and so we can retry with a
+##'   stochastic exponential backoff in this case for up to
+##'   \code{retry_n} times
+##'
+##' @param retry_backoff The rate at which to backoff; after the
+##'   \code{i}th attempt we will sleep for up to \code{2^(i - 1) *
+##'   backoff} seconds.  The default of 1 is probably reasonable for
+##'   most situations.
+##'
 ##' @inheritParams orderly_list
 ##'
 ##' @return The path to the newly committed report
@@ -26,7 +36,8 @@
 ##' # depenency in another report and is not subject to deletion by
 ##' # orderly::orderly_cleanup
 ##' orderly::orderly_list_archive(root = path)
-orderly_commit <- function(id, name = NULL, root = NULL, locate = TRUE) {
+orderly_commit <- function(id, name = NULL, root = NULL, locate = TRUE,
+                           retry_n = 5, retry_backoff = 1) {
   config <- orderly_config_get(root, locate)
   config <- check_orderly_archive_version(config)
   if (is.null(name)) {
@@ -40,11 +51,12 @@ orderly_commit <- function(id, name = NULL, root = NULL, locate = TRUE) {
 
   capture_log <- isTRUE(config$get_run_option("capture_log"))
   logfile <- file.path(path_draft(config$root), name, id, "orderly.log")
-  conditional_capture_log(capture_log, logfile,
-                          recipe_commit(workdir, config$root))
+  conditional_capture_log(
+    capture_log, logfile,
+    recipe_commit(workdir, config$root, retry_n, retry_backoff))
 }
 
-recipe_commit <- function(workdir, config) {
+recipe_commit <- function(workdir, config, retry_n = 1, retry_backoff = 1) {
   config <- orderly_config_get(config)
   name <- basename(dirname(workdir))
   id <- basename(workdir)
@@ -71,7 +83,9 @@ recipe_commit <- function(workdir, config) {
   dest <- copy_report(workdir, name, config)
 
   withCallingHandlers(
-    report_db_import(name, id, config),
+    with_retry(function() report_db_import(name, id, config),
+               match = "database( table)? is locked",
+               n = retry_n, backoff = retry_backoff),
     error = function(e) unlink(dest, TRUE))
 
   ## After success we can delete the draft directory
