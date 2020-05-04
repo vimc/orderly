@@ -25,6 +25,15 @@
 ##' administrator of the remote orderly archive to migrate their
 ##' archive, and then re-pull.
 ##'
+##' Pushing an archive is possible only if the remote supports it.
+##' Currently this is supported by \code{\link{orderly_remote_path}}
+##' remotes, though not by orderlyweb remotes.  There is no control
+##' over what will \emph{accept} a push at this point, nor any check
+##' that what you've pushed is "good" except that it exists in your
+##' archive.  As with pulling an archive, pushes are recusive with
+##' respect to dependencies.  The configuration interface here will
+##' likely change a little over time.
+##'
 ##' @title Download dependent reports
 ##'
 ##' @param name Name of the report to download dependencies for.
@@ -130,6 +139,33 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
       copy_directory(path, dest)
       report_db_import(name, id, config)
     }, error = function(e) unlink(dest, recursive = TRUE))
+  }
+}
+
+
+##' @rdname orderly_pull_dependencies
+##' @export
+orderly_push_archive <- function(name, id = "latest", root = NULL,
+                                 locate = TRUE, remote = NULL) {
+  config <- orderly_config_get(root, locate)
+  config <- check_orderly_archive_version(config)
+  remote <- get_remote(remote, config)
+  if (!is.function(remote$push)) {
+    stop("'push' is not supported by this remote")
+  }
+
+  if (id == "latest") {
+    id <- orderly_latest(name, config, FALSE)
+  }
+
+  v <- remote_report_versions(name, config, FALSE, remote)
+  if (id %in% v) {
+    orderly_log("push", sprintf("%s:%s already exists, skipping", name, id))
+  } else {
+    orderly_log("push", sprintf("%s:%s", name, id))
+    path <- file.path(config$root, "archive", name, id)
+    orderly_push_resolve_dependencies(path, remote, config)
+    remote$push(path)
   }
 }
 
@@ -405,6 +441,22 @@ orderly_pull_resolve_dependencies <- function(path, remote, config) {
                       collapse = ", "))
     for (i in seq_len(nrow(depends))) {
       orderly_pull_archive(depends$name[[i]], depends$id[[i]], root = config,
+                           locate = FALSE, remote = remote)
+    }
+  }
+}
+
+
+orderly_push_resolve_dependencies <- function(path, remote, config) {
+  d <- readRDS(path_orderly_run_rds(path))
+  depends <- d$meta$depends
+  if (NROW(depends) > 0L) { # NROW(x) is 0 for x = NULL
+    depends <- depends[!duplicated(depends$id), c("name", "id"), drop = FALSE]
+    orderly_log("depends",
+                paste(sprintf("%s/%s", depends$name, depends$id),
+                      collapse = ", "))
+    for (i in seq_len(nrow(depends))) {
+      orderly_push_archive(depends$name[[i]], depends$id[[i]], root = config,
                            locate = FALSE, remote = remote)
     }
   }
