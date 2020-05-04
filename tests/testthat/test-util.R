@@ -849,3 +849,38 @@ test_that("can conditionally capture logs", {
   expect_silent(conditional_capture_log(TRUE, t, fun()))
   expect_equal(readLines(t), c("Test", "Test"))
 })
+
+test_that("Can back off", {
+  m <- 3L
+  f <- function() {
+    if (m > 0) {
+      m <<- m - 1L
+      stop("Resource not ready")
+    }
+    TRUE
+  }
+  res <- testthat::evaluate_promise(with_retry(f, n = 20, backoff = 0.001))
+  expect_equal(length(res$messages), 3)
+  expect_true(res$result)
+})
+
+
+test_that("Can filter error messages", {
+  n <- 0
+  f <- function() {
+    stop("Unexpected error")
+  }
+  g <- function() {
+    if (n == 0) {
+      n <<- n + 1L
+      stop("Resource not ready")
+    }
+    TRUE
+  }
+
+  expect_error(
+    with_retry(f, n = 2, match = "Resource not ready"),
+    "Unexpected error")
+  expect_true(
+    with_retry(g, n = 2, match = "Resource not ready", backoff = 0))
+})
