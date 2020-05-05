@@ -497,6 +497,7 @@ test_that("db write collision", {
 
   orderly_commit(id1, root = path)
   con <- orderly_db("destination", root = path)
+  on.exit(DBI::dbDisconnect(con))
   DBI::dbBegin(con)
   DBI::dbExecute(con, "DELETE FROM file_artefact")
 
@@ -505,6 +506,8 @@ test_that("db write collision", {
     "Failed to run command after 5 attempts: database is locked")
 
   DBI::dbRollback(con)
-  expect_error(
-    orderly_commit(id2, root = path, retry_backoff = 0.001), NA)
+  p <- orderly_commit(id2, root = path, retry_backoff = 0.001)
+  ids <- DBI::dbGetQuery(con, "SELECT id from report_version")$id
+  expect_equal(length(ids), 2)
+  expect_setequal(ids, c(id1, id2))
 })
