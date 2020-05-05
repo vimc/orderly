@@ -11,11 +11,13 @@ test_that("runner queue", {
   key2 <- queue$insert("b", "parameters")
   key3 <- queue$insert("c", ref = "ref")
   key4 <- queue$insert("d", timeout = 200)
+  key5 <- queue$insert("e", instance = "instance")
 
   d <- queue$next_queued()
   expect_equal(d, list(key = key1, state = "queued", name = "a",
                        parameters = NA_character_, ref = NA_character_,
-                       id = NA_character_, timeout = 600))
+                       instance = NA_character_, id = NA_character_,
+                       timeout = 600))
 
   expect_true(queue$set_state(key1, "running"))
   expect_equal(queue$status(key1), list(state = "running", id = NA_character_))
@@ -23,22 +25,32 @@ test_that("runner queue", {
   d <- queue$next_queued()
   expect_equal(d, list(key = key2, state = "queued", name = "b",
                        parameters = "parameters", ref = NA_character_,
-                       id = NA_character_, timeout = 600))
+                       instance = NA_character_, id = NA_character_,
+                       timeout = 600))
 
   expect_true(queue$set_state(key2, "running", new_report_id()))
 
   d <- queue$next_queued()
   expect_equal(d, list(key = key3, state = "queued", name = "c",
                        parameters = NA_character_, ref = "ref",
-                       id = NA_character_, timeout = 600))
+                       instance = NA_character_, id = NA_character_,
+                       timeout = 600))
 
   expect_true(queue$set_state(key3, "running", new_report_id()))
 
   d <- queue$next_queued()
   expect_equal(d, list(key = key4, state = "queued", name = "d",
                        parameters = NA_character_, ref = NA_character_,
-                       id = NA_character_, timeout = 200))
+                       instance = NA_character_, id = NA_character_,
+                       timeout = 200))
   expect_true(queue$set_state(key4, "running", new_report_id()))
+
+  d <- queue$next_queued()
+  expect_equal(d, list(key = key5, state = "queued", name = "e",
+                       parameters = NA_character_, ref = NA_character_,
+                       instance = "instance", id = NA_character_,
+                       timeout = 600))
+  expect_true(queue$set_state(key5, "running", new_report_id()))
 
   expect_null(queue$next_queued())
 
@@ -473,4 +485,38 @@ test_that("backup", {
     DBI::dbReadTable(con, "report_version"))
 
   expect_equal(dat_orig, dat_backup)
+})
+
+test_that("runner can set instance", {
+  testthat::skip_on_cran()
+  skip_on_windows()
+  path <- prepare_orderly_example("demo")
+
+  mock_process <- mockery::mock(TRUE, cycle = TRUE)
+
+  ## procesx::process$new() calls internal function process_initialize
+  with_mock("processx:::process_initialize" = mock_process, {
+    runner <- orderly_runner(path)
+    key <- runner$queue("minimal", instance = "test")
+    runner$poll()
+  })
+
+  mockery::expect_called(mock_process, 1)
+  ## args are passed to process_initialize in 4th position
+  process_args <- mockery::mock_args(mock_process)[[1]][[4]]
+  instance_arg <- process_args == "--instance"
+  expect_equal(sum(instance_arg), 1)
+  expect_equal(process_args[which(instance_arg) + 1], "test")
+
+  ## Instance arg not passed when instance = NULL
+  with_mock("processx:::process_initialize" = mock_process, {
+    runner <- orderly_runner(path)
+    key <- runner$queue("minimal")
+    runner$poll()
+  })
+
+  mockery::expect_called(mock_process, 2)
+  ## args are passed to process_initialize in 4th position
+  process_args <- mockery::mock_args(mock_process)[[2]][[4]]
+  expect_false("--instance" %in% process_args)
 })
