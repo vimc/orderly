@@ -225,12 +225,13 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
                                open = TRUE, stop_on_error = TRUE,
                                stop_on_timeout = TRUE,
                                progress = TRUE,
-                               root = NULL, locate = TRUE, remote = NULL) {
+                               root = NULL, locate = TRUE, instance = NULL,
+                               remote = NULL) {
   remote <- get_remote(remote, orderly_config_get(root, locate))
   invisible(remote$run(
     name, parameters = parameters, ref = ref,
     timeout = timeout, wait = wait, poll = poll,
-    progress = progress, open = open,
+    progress = progress, open = open, instance = instance,
     stop_on_error = stop_on_error,
     stop_on_timeout = stop_on_timeout))
 }
