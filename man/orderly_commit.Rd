@@ -4,7 +4,14 @@
 \alias{orderly_commit}
 \title{Commit a generated report}
 \usage{
-orderly_commit(id, name = NULL, root = NULL, locate = TRUE)
+orderly_commit(
+  id,
+  name = NULL,
+  root = NULL,
+  locate = TRUE,
+  retry_n = 5,
+  retry_backoff = 1
+)
 }
 \arguments{
 \item{id}{The identifier of the report}
@@ -20,6 +27,16 @@ directory if \code{locate} is \code{TRUE}.}
 searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
+
+\item{retry_n}{Number of times to retry the commit; in parallel
+the database may become locked and so we can retry with a
+stochastic exponential backoff in this case for up to
+\code{retry_n} times}
+
+\item{retry_backoff}{The rate at which to backoff; after the
+\code{i}th attempt we will sleep for up to \code{2^(i - 1) *
+backoff} seconds.  The default of 1 is probably reasonable for
+most situations.}
 }
 \value{
 The path to the newly committed report

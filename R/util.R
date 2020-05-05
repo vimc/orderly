@@ -882,3 +882,22 @@ deparse_str <- function(x) {
 df2list <- function(df) {
   unname(split(df, seq_len(nrow(df))))
 }
+
+
+with_retry <- function(callback, n = 10, backoff = 1, match = NULL) {
+  for (i in seq_len(n)) {
+    result <- tryCatch(list(success = TRUE, value = callback()),
+                       error = function(e) list(success = FALSE, value = e))
+    if (result$success) {
+      return(result$value)
+    }
+    if (!is.null(match) && !grepl(match, result$value$message)) {
+      stop(result$value)
+    }
+    sleep <- runif(1, 0, 2^(i - 1) * backoff) # nolint
+    message(sprintf("Command failed; trying again in %f seconds", sleep))
+    Sys.sleep(sleep)
+  }
+  stop(sprintf("Failed to run command after %d attempts: %s", n,
+               result$value$message), call. = FALSE)
+}
