@@ -894,7 +894,7 @@ with_retry <- function(callback, n = 10, backoff = 1, match = NULL) {
     if (!is.null(match) && !grepl(match, result$value$message)) {
       stop(result$value)
     }
-    sleep <- runif(1, 0, 2^(i - 1) * backoff)
+    sleep <- runif(1, 0, 2^(i - 1) * backoff) # nolint
     message(sprintf("Command failed; trying again in %f seconds", sleep))
     Sys.sleep(sleep)
   }
