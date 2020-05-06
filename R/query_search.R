@@ -77,6 +77,10 @@
 ##'   \code{\link{orderly_run}}) if your query uses parameters on the
 ##'   right-hand-side of an expression.
 ##'
+##' @param remote A remote to use, if you want to apply the query
+##'   remotely.  If this is used then \code{draft} cannot be set to
+##'   \code{TRUE} as remotes do not expose draft reports.
+##'
 ##' @inheritParams orderly_list
 ##'
 ##' @return A character vector of matching report ids, possibly

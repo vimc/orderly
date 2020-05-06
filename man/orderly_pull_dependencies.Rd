@@ -18,7 +18,8 @@ orderly_pull_archive(
   id = "latest",
   root = NULL,
   locate = TRUE,
-  remote = NULL
+  remote = NULL,
+  parameters = NULL
 )
 
 orderly_push_archive(

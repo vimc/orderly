@@ -10,7 +10,8 @@ orderly_search(
   parameters = NULL,
   draft = FALSE,
   root = NULL,
-  locate = TRUE
+  locate = TRUE,
+  remote = NULL
 )
 }
 \arguments{
@@ -38,6 +39,10 @@ directory if \code{locate} is \code{TRUE}.}
 searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
+
+\item{remote}{A remote to use, if you want to apply the query
+remotely.  If this is used then \code{draft} cannot be set to
+\code{TRUE} as remotes do not expose draft reports.}
 }
 \value{
 A character vector of matching report ids, possibly
