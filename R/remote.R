@@ -209,6 +209,11 @@ orderly_push_archive <- function(name, id = "latest", root = NULL,
 ##'   used.  This cannot be used if the remote has \code{master_only}
 ##'   set.
 ##'
+##' @param instance Select instance of the source database to be used,
+##'   where multiple instances are configured. Use a single unnamed
+##'   character string to indicate an instance to match. Will use
+##'   default if NULL.
+##'
 ##' @inheritParams orderly_pull_dependencies
 ##'
 ##' @export

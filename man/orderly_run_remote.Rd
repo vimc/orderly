@@ -17,6 +17,7 @@ orderly_run_remote(
   progress = TRUE,
   root = NULL,
   locate = TRUE,
+  instance = NULL,
   remote = NULL
 )
 }
@@ -63,6 +64,11 @@ directory if \code{locate} is \code{TRUE}.}
 searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
+
+\item{instance}{Select instance of the source database to be used,
+where multiple instances are configured. Use a single unnamed
+character string to indicate an instance to match. Will use
+default if NULL.}
 
 \item{remote}{Description of the location.  Typically this is a
 character string indicating a remote specified in the
