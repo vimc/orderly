@@ -310,3 +310,8 @@ orderly_list_dir <- function(path, check_run_rds = FALSE) {
 
   files
 }
+
+
+id_is_query <- function(id) {
+  grepl("^latest\\s*\\(", id)
+}
