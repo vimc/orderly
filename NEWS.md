@@ -1,3 +1,7 @@
+# orderly 1.1.35
+
+* `orderly::orderly_pull_dependencies()` works where the dependencies use query ids, and `orderly::orderly_pull_archive()` accepts query ids (rather than just `latest`) as an argument (VIMC-3789)
+
 # orderly 1.1.34
 
 * `orderly::orderly_run_remote()` takes an instance argument to allow users to specify the source DB (VIMC-3698)
