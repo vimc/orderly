@@ -53,7 +53,7 @@ test_that("pull report: error not found", {
 
   expect_error(
     orderly_pull_archive("example", new_report_id(), path2, remote = remote),
-    "Unknown report")
+    "No versions of 'example' were found at")
 })
 
 
