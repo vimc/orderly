@@ -280,3 +280,26 @@ test_that("pull archive using query and parameters", {
     orderly_list_archive(root),
     data_frame(name = "other", id = dat$ids[[2]]))
 })
+
+
+test_that("pull dependencies that use a query", {
+  dat <- prepare_orderly_query_example()
+  remote <- orderly_remote_path(dat$root)
+
+  root <- prepare_orderly_example("demo")
+
+  p <- file.path(root, "src", "use_dependency", "orderly.yml")
+  txt <- readLines(p)
+  writeLines(sub("latest$", "latest(parameter:nmin < n)", txt), p)
+
+  expect_error(
+    orderly_pull_dependencies("use_dependency", root = root, remote = remote),
+    "Query parameter 'n' not found in supplied parameters")
+
+  orderly_pull_dependencies("use_dependency", root = root, remote = remote,
+                            parameters = list(n = 0.25))
+
+  expect_equal(
+    orderly_list_archive(root),
+    data_frame(name = "other", id = dat$ids[[2]]))
+})

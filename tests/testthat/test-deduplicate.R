@@ -142,6 +142,7 @@ test_that("don't deduplicate after file modification", {
     "Can't deduplicate files that have been modified:.+- minimal/.+/script.R")
 })
 
+
 test_that("relink basic case", {
   skip_on_cran()
   path <- tempfile()

@@ -49,6 +49,14 @@
 ##'   for this orderly repository is used - by default that is the
 ##'   first listed remote.
 ##'
+##' @param parameters Parameters to pass through when doing depenency
+##'   resolution.  If you are using a query for \code{id} that
+##'   involves a parameter (e.g., \code{latest(parameter:x == p)}) you
+##'   will need to pass in the parameters here.  Similarly, if you are
+##'   pulling a report that uses query dependencies that reference
+##'   parameters you need to pass them here (the same parameter set
+##'   will be passed through to all dependencies).
+##'
 ##' @inheritParams orderly_list
 ##' @export
 ##'
@@ -64,7 +72,7 @@
 ##'
 ##' @example man-roxygen/example-remote.R
 orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
-                                      remote = NULL) {
+                                      remote = NULL, parameters = NULL) {
   loc <- orderly_develop_location(name, root, locate)
   name <- loc$name
   config <- loc$config
@@ -79,7 +87,7 @@ orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
     for (i in seq_len(nrow(depends))) {
       if (!isTRUE(depends$draft[[i]])) {
         orderly_pull_archive(depends$name[[i]], depends$id[[i]], config,
-                             FALSE, remote)
+                             FALSE, remote, parameters)
       }
     }
   }
