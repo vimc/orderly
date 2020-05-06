@@ -571,7 +571,8 @@ test_that("run captures output", {
   ids <- list.files(archive_path)
   expect_length(ids, 2)
   id <- ids[ids != id]
-  expect_true(sprintf("[ id         ]  %s\n", id) %in% out$messages)
+  expect_true(sprintf("[ id         ]  %s\n", id)
+              %in% crayon::strip_style(out$messages))
   log_file <- file.path(archive_path, id, "orderly.log")
   ## Logs have not been written to file
   expect_false(file.exists(log_file))
@@ -617,7 +618,8 @@ test_that("batch", {
     expect_true(file.exists(log_file))
     logs <- readLines(log_file)
     ## Logs are only for one report
-    expect_true(sprintf("[ id         ]  %s", id) %in% logs)
+    expect_true(sprintf("[ id         ]  %s", id) %in%
+                crayon::strip_style(logs))
     expect_equal(sum(grepl("\\[ id         \\].*", logs)), 1)
   }))
 
@@ -634,7 +636,8 @@ test_that("batch", {
   ids <- d$id[d$id != ids]
   archive_path <- file.path(path, "archive", "other")
   invisible(lapply(ids, function(id) {
-    expect_true(sprintf("[ id         ]  %s\n", id) %in% out$messages)
+    expect_true(sprintf("[ id         ]  %s\n", id) %in%
+                crayon::strip_style(out$messages))
     log_file <- file.path(archive_path, id, "orderly.log")
     ## Logs have not been written to file
     expect_false(file.exists(log_file))
