@@ -476,3 +476,19 @@ orderly_push_resolve_dependencies <- function(path, remote, config) {
     }
   }
 }
+
+
+## Where will this really be used?  I have it just in query_search at
+## the moment, and it is written just to support that, but are there
+## other times where we want this?  Probably working with dependency
+## graphs too.
+remote_report_update_metadata <- function(name, remote, config) {
+  ids <- remote$list_versions(name)
+  path_cache <- file.path(path_remote_cache(config$root), name)
+  dir.create(path_cache, FALSE, TRUE)
+  msg <- setdiff(ids, dir(path_cache))
+  for (i in msg) {
+    file_copy(remote$metadata(name, i), file.path(path_cache, i))
+  }
+  data_frame(id = ids, path = file.path(path_cache, ids))
+}
