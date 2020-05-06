@@ -142,21 +142,22 @@
 ##' orderly::orderly_search("latest(parameter:nmin > 0.4)",
 ##'                         "other", root = root)
 orderly_search <- function(query, name, parameters = NULL, draft = FALSE,
-                           root = NULL, locate = TRUE) {
+                           root = NULL, locate = TRUE, remote = NULL) {
   config <- orderly_config_get(root, locate)
   assert_scalar_character(name)
   parameters <- query_check_parameters(parameters)
   draft <- query_check_draft(draft)
-
   dat <- parse_query(query, parameters)
 
-  matches <- switch(
-    draft,
-    never  = orderly_search_do_search(dat, name, FALSE, config),
-    always = orderly_search_do_search(dat, name, TRUE, config),
-    newer = sort(c(
-      orderly_search_do_search(dat, name, TRUE, config),
-      orderly_search_do_search(dat, name, FALSE, config))))
+  if (is.null(remote)) {
+    candidates <- local_report_metadata(name, draft, config)
+  } else {
+    if (draft != "never") {
+      stop("Can't use 'draft' along with 'remote'")
+    }
+    candidates <- remote_report_metadata(name, remote, config)
+  }
+  matches <- orderly_search_do_search(dat, name, candidates, config)
 
   if (dat$latest) {
     latest_id(matches)
@@ -166,39 +167,29 @@ orderly_search <- function(query, name, parameters = NULL, draft = FALSE,
 }
 
 
-orderly_search_do_search <- function(dat, name, draft, config) {
-  if (draft) {
-    where <- "draft"
-    search_parameters <- search_parameters_draft
-    search_tags <- search_tags_draft
-  } else {
-    where <- "archive"
-    search_parameters <- search_parameters_archive
-    search_tags <- search_tags_archive
-  }
-  versions <- orderly_list_dir(file.path(config$root, where, name), TRUE)
-
+orderly_search_do_search <- function(dat, name, candidates, config) {
   if (dat$use$parameter) {
-    parameters <- search_parameters(name, config)
+    parameters <- lapply(candidates$path, function(p)
+      readRDS(p)$meta$parameters)
   } else {
     parameters <- NULL
   }
   if (dat$use$tag) {
-    tags <- search_tags(name, config)
+    tags <- lapply(candidates$path, function(p) readRDS(p)$meta$tags)
   } else {
     tags <- NULL
   }
 
-  search1 <- function(v, expr, base) {
+  search1 <- function(i, expr, base) {
     env <- new.env(parent = base)
-    env$parameter <- parameters[[v]]
-    env$tag <- tags[[v]]
+    env$parameter <- parameters[[i]]
+    env$tag <- tags[[i]]
     eval(expr, env)
   }
 
   env <- orderly_search_env()
-  i <- vlapply(versions, search1, dat$expr, env)
-  names(i)[i]
+  i <- vlapply(seq_len(nrow(candidates)), search1, dat$expr, env)
+  candidates$id[i]
 }
 
 
@@ -220,61 +211,6 @@ orderly_search_env <- function() {
   }
 
   env
-}
-
-
-search_parameters_archive <- function(name, config) {
-  con <- orderly_db("destination", config)
-  on.exit(DBI::dbDisconnect(con))
-
-  sql <- c("SELECT parameters.*",
-           "  FROM parameters",
-           "  JOIN report_version",
-           "    ON report_version.id = parameters.report_version",
-           " WHERE report_version.report = $1")
-  res <- DBI::dbGetQuery(con, paste(sql, collapse = "\n"), name)
-
-  value <- as.list(res$value)
-  i <- res$type == "number"
-  value[i] <- as.numeric(res$value[i])
-  i <- res$type == "boolean"
-  value[i] <- as.logical(res$value[i])
-  names(value) <- res$name
-  split(value, res$report_version)
-}
-
-
-search_tags_archive <- function(name, config) {
-  con <- orderly_db("destination", config)
-  on.exit(DBI::dbDisconnect(con))
-
-  sql <- c("SELECT report_version_tag.*",
-           "  FROM report_version_tag",
-           "  JOIN report_version",
-           "    ON report_version.id = report_version_tag.report_version",
-           " WHERE report_version.report = $1")
-  res <- DBI::dbGetQuery(con, paste(sql, collapse = "\n"), name)
-  split(res$tag, res$report_version)
-}
-
-
-search_x_draft <- function(name, config, extract) {
-  path <- file.path(config$root, "draft", name)
-  versions <- orderly_list_dir(path, TRUE)
-  f <- function(p) {
-    extract(readRDS(path_orderly_run_rds(p)))
-  }
-  set_names(lapply(file.path(path, versions), f), versions)
-}
-
-
-search_parameters_draft <- function(name, config) {
-  search_x_draft(name, config, function(x) x$meta$parameters)
-}
-
-
-search_tags_draft <- function(name, config) {
-  search_x_draft(name, config, function(x) x$meta$tags)
 }
 
 
@@ -474,4 +410,39 @@ query_check_draft <- function(draft, as) {
     match_value(draft, c("always", "newer", "never"))
   }
   draft
+}
+
+
+local_report_metadata <- function(name, draft, config) {
+  if (draft == "never") {
+    candidates_draft <- NULL
+  } else {
+    p_draft <- file.path(path_draft(config$root), name)
+    ids <- orderly_list_dir(p_draft, TRUE)
+    candidates_draft <- data_frame(
+      id = ids,
+      type = rep("draft", length(ids)),
+      path = path_orderly_run_rds(file.path(p_draft, ids)))
+  }
+
+  if (draft == "always") {
+    candidates_archive <- NULL
+  } else {
+    p_archive <- file.path(path_archive(config$root), name)
+    ids <- orderly_list_dir(p_archive, TRUE)
+    candidates_archive <- data_frame(
+      id = ids,
+      type = rep("archive", length(ids)),
+      path = path_orderly_run_rds(file.path(p_archive, ids)))
+  }
+
+  rbind(candidates_draft, candidates_archive)
+}
+
+
+remote_report_metadata <- function(name, remote, config) {
+  remote <- get_remote(remote, config)
+  candidates <- remote_report_update_metadata(name, remote, config)
+  candidates$type <- "remote"
+  candidates[c("id", "type", "path")]
 }

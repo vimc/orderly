@@ -92,11 +92,10 @@ orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
 ##' @param id The identifier (for \code{orderly_pull_archive}).  The default is
 ##'   to use the latest report.
 orderly_pull_archive <- function(name, id = "latest", root = NULL,
-                                 locate = TRUE, remote = NULL) {
+                                 locate = TRUE, remote = NULL,
+                                 parameters = NULL) {
   config <- orderly_config_get(root, locate)
   config <- check_orderly_archive_version(config)
-
-  browser()
 
   remote <- get_remote(remote, config)
 
@@ -108,11 +107,8 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
 
   if (id == "latest") {
     id <- latest_id(v)
-  } else if (grepl("^latest\(", id)) {
-    ## Options here:
-    ##
-    ## * Simplest is to just keep going through the list and grab
-    stop("Query interface not supported")
+  } else if (id_is_query(id)) {
+    id <- orderly_search(id, name, parameters, root = root, remote = remote)
   }
 
   if (!(id %in% v)) {
