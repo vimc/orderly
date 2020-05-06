@@ -1,3 +1,7 @@
+# orderly 1.1.34
+
+* `orderly::orderly_run_remote()` takes an instance argument to allow users to specify the source DB (VIMC-3698)
+
 # orderly 1.1.32
 
 * New function `orderly::orderly_push_archive()` which allows pushing of an archive to a remote.  The `orderly::orderly_remote_path` remote supports this, though care should be taken with what you push! (VIMC-3784)
