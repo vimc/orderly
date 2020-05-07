@@ -49,6 +49,14 @@
 ##'   for this orderly repository is used - by default that is the
 ##'   first listed remote.
 ##'
+##' @param parameters Parameters to pass through when doing depenency
+##'   resolution.  If you are using a query for \code{id} that
+##'   involves a parameter (e.g., \code{latest(parameter:x == p)}) you
+##'   will need to pass in the parameters here.  Similarly, if you are
+##'   pulling a report that uses query dependencies that reference
+##'   parameters you need to pass them here (the same parameter set
+##'   will be passed through to all dependencies).
+##'
 ##' @inheritParams orderly_list
 ##' @export
 ##'
@@ -64,7 +72,7 @@
 ##'
 ##' @example man-roxygen/example-remote.R
 orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
-                                      remote = NULL) {
+                                      remote = NULL, parameters = NULL) {
   loc <- orderly_develop_location(name, root, locate)
   name <- loc$name
   config <- loc$config
@@ -79,7 +87,7 @@ orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
     for (i in seq_len(nrow(depends))) {
       if (!isTRUE(depends$draft[[i]])) {
         orderly_pull_archive(depends$name[[i]], depends$id[[i]], config,
-                             FALSE, remote)
+                             FALSE, remote, parameters)
       }
     }
   }
@@ -92,18 +100,23 @@ orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
 ##' @param id The identifier (for \code{orderly_pull_archive}).  The default is
 ##'   to use the latest report.
 orderly_pull_archive <- function(name, id = "latest", root = NULL,
-                                 locate = TRUE, remote = NULL) {
+                                 locate = TRUE, remote = NULL,
+                                 parameters = NULL) {
   config <- orderly_config_get(root, locate)
   config <- check_orderly_archive_version(config)
+
   remote <- get_remote(remote, config)
 
   v <- remote_report_versions(name, config, FALSE, remote)
   if (length(v) == 0L) {
-    stop("Unknown report")
+    stop(sprintf("No versions of '%s' were found at '%s'",
+                 name, remote_name(remote)), call. = FALSE)
   }
 
   if (id == "latest") {
     id <- latest_id(v)
+  } else if (id_is_query(id)) {
+    id <- orderly_search(id, name, parameters, root = root, remote = remote)
   }
 
   if (!(id %in% v)) {
@@ -422,7 +435,7 @@ remote_report_versions <- function(name, config = NULL, locate = TRUE,
 
 
 remote_name <- function(remote) {
-  remote$name
+  remote$name %||% "(unknown)"
 }
 
 
@@ -466,4 +479,20 @@ orderly_push_resolve_dependencies <- function(path, remote, config) {
                            locate = FALSE, remote = remote)
     }
   }
+}
+
+
+## Where will this really be used?  I have it just in query_search at
+## the moment, and it is written just to support that, but are there
+## other times where we want this?  Probably working with dependency
+## graphs too.
+remote_report_update_metadata <- function(name, remote, config) {
+  ids <- remote$list_versions(name)
+  path_cache <- file.path(path_remote_cache(config$root), name)
+  dir.create(path_cache, FALSE, TRUE)
+  msg <- setdiff(ids, dir(path_cache))
+  for (i in msg) {
+    file_copy(remote$metadata(name, i), file.path(path_cache, i))
+  }
+  data_frame(id = ids, path = file.path(path_cache, ids))
 }

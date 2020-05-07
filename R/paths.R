@@ -22,6 +22,11 @@ path_archive <- function(root, name = NULL) {
 }
 
 
+path_remote_cache <- function(root) {
+  file.path(root, ".orderly", "remote", "cache")
+}
+
+
 path_archive_broken <- function() {
   "archive_broken"
 }

@@ -53,7 +53,7 @@ test_that("pull report: error not found", {
 
   expect_error(
     orderly_pull_archive("example", new_report_id(), path2, remote = remote),
-    "Unknown report")
+    "No versions of 'example' were found at")
 })
 
 
@@ -235,4 +235,71 @@ test_that("Fail to push if not supported", {
   expect_error(
     orderly_push_archive("multifile-artefact", "latest", ours, remote = remote),
     "'push' is not supported by this remote")
+})
+
+
+test_that("fetch remote metadata", {
+  dat <- prepare_orderly_remote_example()
+  base <- normalizePath(file.path(dat$path_remote, "archive"))
+
+  expect_equal(
+    dat$remote$metadata("example", dat$id1),
+    file.path(base, "example", dat$id1, "orderly_run.rds"))
+  expect_equal(
+    dat$remote$metadata("name", "version"),
+    file.path(base, "name", "version", "orderly_run.rds"))
+})
+
+
+test_that("pull archive using query", {
+  dat <- prepare_orderly_query_example()
+  remote <- orderly_remote_path(dat$root)
+
+  root <- prepare_orderly_example("demo")
+  orderly_pull_archive("other", "latest(parameter:nmin < 0.25)", root = root,
+                       remote = remote)
+  expect_equal(
+    orderly_list_archive(root),
+    data_frame(name = "other", id = dat$ids[[2]]))
+})
+
+
+test_that("pull archive using query and parameters", {
+  dat <- prepare_orderly_query_example()
+  remote <- orderly_remote_path(dat$root)
+
+  root <- prepare_orderly_example("demo")
+  expect_error(
+    orderly_pull_archive("other", "latest(parameter:nmin < n)", root = root,
+                         remote = remote),
+    "Query parameter 'n' not found in supplied parameters")
+
+  orderly_pull_archive("other", "latest(parameter:nmin < n)", root = root,
+                       remote = remote, parameters = list(n = 0.25))
+  expect_equal(
+    orderly_list_archive(root),
+    data_frame(name = "other", id = dat$ids[[2]]))
+})
+
+
+test_that("pull dependencies that use a query", {
+  dat <- prepare_orderly_query_example()
+  remote <- orderly_remote_path(dat$root)
+
+  root <- prepare_orderly_example("demo")
+
+  p <- file.path(root, "src", "use_dependency", "orderly.yml")
+  txt <- readLines(p)
+  writeLines(sub("latest$", "latest(parameter:nmin < n)", txt), p)
+
+  expect_error(
+    orderly_pull_dependencies("use_dependency", root = root, remote = remote),
+    "Query parameter 'n' not found in supplied parameters")
+
+  orderly_pull_dependencies("use_dependency", root = root, remote = remote,
+                            parameters = list(n = 0.25))
+
+  expect_equal(
+    orderly_list_archive(root),
+    data_frame(name = "other", id = dat$ids[[2]]))
 })

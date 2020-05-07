@@ -398,3 +398,41 @@ test_that("skip failed drafts on search", {
     orderly_search("parameter:nmin > 0.15", "other", root = root, draft = TRUE),
     ids[2])
 })
+
+
+test_that("run query on remote", {
+  skip_on_cran()
+
+  dat <- prepare_orderly_query_example()
+  remote <- orderly_remote_path(dat$root)
+
+  root <- prepare_orderly_example("demo")
+
+  res <- orderly_search("latest(parameter:nmin > 0.15)", "other",
+                        remote = remote, root = root)
+  expect_equal(res, dat$ids[[3]])
+
+  res <- orderly_search("parameter:nmin > 0.15", "other",
+                        remote = remote, root = root)
+  expect_equal(res, dat$ids[2:3])
+})
+
+
+test_that("run query on remote", {
+  skip_on_cran()
+  dat <- prepare_orderly_query_example()
+  remote <- orderly_remote_path(dat$root)
+  root <- prepare_orderly_example("demo")
+  expect_error(
+    orderly_search("latest(parameter:nmin > 0.15)", "other",
+                   draft = TRUE, remote = remote, root = root),
+    "Can't use 'draft' along with 'remote'")
+  expect_error(
+    orderly_search("latest(parameter:nmin > 0.15)", "other",
+                   draft = "always", remote = remote, root = root),
+    "Can't use 'draft' along with 'remote'")
+  expect_error(
+    orderly_search("latest(parameter:nmin > 0.15)", "other",
+                   draft = "newer", remote = remote, root = root),
+    "Can't use 'draft' along with 'remote'")
+})

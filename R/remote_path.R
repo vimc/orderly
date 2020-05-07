@@ -56,6 +56,10 @@ orderly_remote_path_ <- R6::R6Class(
       d$id[d$name == name]
     },
 
+    metadata = function(name, id) {
+      path_orderly_run_rds(file.path(path_archive(self$config$root), name, id))
+    },
+
     pull = function(name, id) {
       src <- file.path(path_archive(self$config$root), name, id)
       dest <- tempfile()

@@ -20,3 +20,4 @@
 ^\.hadolint\.yaml$
 ^buildkite$
 ^build$
+^ignore$

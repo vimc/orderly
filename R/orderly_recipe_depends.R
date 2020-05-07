@@ -95,8 +95,9 @@ recipe_resolve_dependencies <- function(self, use_draft, parameters, remote) {
 
 resolve_dependencies_local <- function(id, name, config, parameters,
                                        use_draft) {
-  is_latest <- grepl("^latest(\\(|$)", id)
-  if (grepl("^latest\\s*\\(", id)) {
+  is_query <- id_is_query(id)
+  is_latest <- is_query || id == "latest"
+  if (is_query) {
     query <- id
     id <- orderly_search(query, name, parameters, draft = use_draft,
                          root = config, locate = FALSE)
@@ -114,7 +115,7 @@ resolve_dependencies_local <- function(id, name, config, parameters,
 
 
 resolve_dependencies_remote <- function(id, name, config, remote) {
-  if (grepl("^latest\\s*\\(", id)) {
+  if (id_is_query(id)) {
     stop("Can't (yet) use query dependencies with remotes",
          call. = FALSE)
   }
