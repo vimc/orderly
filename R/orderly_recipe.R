@@ -33,15 +33,14 @@ orderly_recipe <- R6::R6Class(
     views = NULL,
 
     name = NULL,
+    path = NULL,
 
     ## TODO(VIMC-3611): refactor this out into a container class
-    id = NULL,
-    workdir = NULL,
-    git = NULL,
-    path = NULL,
-    owd = NULL,
-    inputs = NULL,
-    batch_id = NULL,
+    ## id = NULL,
+    ## workdir = NULL,
+    ## git = NULL,
+    ## owd = NULL,
+    ## batch_id = NULL,
 
     initialize = function(name, config, develop = FALSE, path = NULL) {
       assert_is(config, "orderly_config")
@@ -68,6 +67,17 @@ orderly_recipe <- R6::R6Class(
         self$path,
         recipe_validate(self, develop, "orderly.yml"))
       invisible(self)
+    },
+
+    inputs = function(path = ".", check = TRUE) {
+      inputs <- withr::with_path(path, recipe_file_inputs(self))
+      if (check) {
+        ## TODO: this is just here for compatibility with tests etc,
+        ## but this can and should be done in the recipe read, though
+        ## that requires resolving the directory dependencies too.
+        recipe_check_unique_inputs2(inputs, self$depends)
+      }
+      inputs
     },
 
     resolve_dependencies = function(use_draft = FALSE, parameters = NULL,
@@ -547,4 +557,21 @@ string_or_filename <- function(x, path, name) {
     query <- x
   }
   list(query = query, query_file = file)
+}
+
+
+recipe_check_unique_inputs2 <- function(inputs, depends) {
+  tmp <- rbind(
+    inputs[c("filename", "file_purpose")],
+    data_frame(filename = depends$as,
+               file_purpose = rep("depends", NROW(depends))))
+  err <- tmp[tmp$filename %in% tmp$filename[duplicated(tmp$filename)], ]
+  if (nrow(err) > 0L) {
+    err <- split(err$file_purpose, err$filename)
+    details <- sprintf("\n  - %s: %s",
+                       names(err), vcapply(err, paste, collapse = ", "))
+    stop(sprintf("Orderly configuration implies duplicate files:%s",
+                 paste(details, collapse = "")),
+         call. = FALSE)
+  }
 }

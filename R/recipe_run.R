@@ -532,7 +532,11 @@ recipe_exists_artefacts <- function(info, id) {
 
 recipe_unexpected_artefacts <- function(info, id) {
   artefacts <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
-  resources <- info$inputs$filename
+  if (is.function(info$inputs)) {
+    resources <- info$inputs(check = FALSE)$filename
+  } else {
+    resources <- info$inputs$filename
+  }
   dependencies <- info$depends$as
   expected <- c(artefacts, resources, dependencies)
 
@@ -754,6 +758,13 @@ recipe_check_hashes <- function(pre, post, name1, name2) {
 }
 
 
+recipe_copy_script <- function(info, src) {
+  dir_create(dirname(info$script))
+  file_copy(file.path(src, info$script), info$script)
+  info
+}
+
+
 recipe_copy_readme <- function(info, src) {
   if (!is.null(info$readme)) {
     dir_create(dirname(info$readme))
@@ -778,6 +789,7 @@ recipe_copy_sources <- function(info, src) {
 }
 
 
+## TODO: move this into the read!
 recipe_copy_resources <- function(info, src) {
   if (length(info$resources) > 0L) {
     resources <- info$resources
@@ -813,6 +825,8 @@ recipe_copy_global <- function(info, config) {
   info
 }
 
+
+## TODO: return something else here
 recipe_copy_depends <- function(info) {
   if (!is.null(info$depends)) {
     dep_src <- file.path(info$depends$path, info$depends$filename)

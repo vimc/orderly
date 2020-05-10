@@ -1,0 +1,324 @@
+orderly_run2 <- function(name = NULL, parameters = NULL, envir = NULL,
+                         root = NULL, locate = TRUE, echo = TRUE,
+                         instance = NULL, use_draft = FALSE, remote = NULL,
+                         tags = NULL) {
+  ## NOTE: Deliberately leaving off batch_id, id_file, fetch and ref for now
+  loc <- orderly_develop_location(name, root, locate)
+  envir <- orderly_environment(envir)
+  config <- check_orderly_archive_version(loc$config)
+  recipe <- orderly_recipe$new(loc$name, loc$config)
+  version <- orderly_version$new(recipe)
+  version$run(parameters, instance, envir, echo)
+  version$id
+}
+
+## First pass - get this basically working
+## Second pass - group into meanful stages
+orderly_version <- R6::R6Class(
+  "orderly_version",
+
+  ## Start public for now
+  public = list(
+    id = NULL,
+    workdir = NULL,
+    owd = NULL,
+    git = NULL,
+    inputs = NULL,
+    batch_id = NULL,
+    ## Added by me:
+    config = NULL,
+    recipe = NULL,
+    envir = NULL,
+    data = NULL,
+    changelog = NULL,
+    parameters = NULL,
+    instance = NULL,
+    preflight_info = NULL,
+    postflight_info = NULL,
+    time = NULL,
+
+    initialize = function(recipe) {
+      self$recipe <- recipe
+      self$config <- recipe$config
+    },
+
+    ## TODO: I think that tag comes in here too?
+    ## TODO: batch_id here? or elsewhere?
+    run = function(parameters = NULL, instance = NULL, envir = NULL,
+                   echo = TRUE) {
+      self$envir <- orderly_environment(envir)
+      self$create()
+      self$create_workdir()
+      ## self$load_changelog(message)
+
+      self$preflight()
+
+      withr::with_dir(self$workdir, {
+        self$prepare_environment(parameters, instance)
+        source(self$recipe$script, local = self$envir, # nolint
+               echo = echo, max.deparse.length = Inf)
+      })
+
+      self$postflight()
+
+      self$write_orderly_run_rds()
+    },
+
+    create = function() {
+      self$id <- new_report_id()
+      orderly_log("name", self$recipe$name)
+      orderly_log("id", self$id)
+    },
+
+    ## This needs to be a private function as it assumes we're in the
+    ## correct directory...
+    copy_files = function() {
+      src <- file.path(path_src(self$config$root), self$recipe$name)
+      recipe <- self$recipe
+
+      file_copy(file.path(src, "orderly.yml"), "orderly.yml")
+      recipe_copy_script(recipe, src)
+      recipe_copy_readme(recipe, src)
+      recipe_copy_sources(recipe, src)
+      recipe_copy_global(recipe, self$config)
+      ## TODO: remove mutability here:
+      recipe_copy_resources(recipe, src) # do as part of read
+      recipe_copy_depends(recipe) # not sure
+
+      self$inputs <- recipe$inputs()
+
+      recipe
+    },
+
+    create_workdir = function() {
+      workdir <- file.path(path_draft(self$config$root),
+                           self$recipe$name, self$id)
+      if (file.exists(workdir)) {
+        stop("'workdir' must not exist")
+      }
+      dir_create(workdir)
+      self$workdir <- workdir
+      withr::with_dir(self$workdir, self$copy_files())
+    },
+
+    load_changelog = function(message) {
+      self$changelog <- changelog_load(
+        recipe$name, recipe$id, recipe$changelog$contents, message, self$config)
+    },
+
+    prepare_environment_parameters = function(parameters) {
+      parameters <- recipe_parameters(self$recipe, parameters)
+      if (!is.null(parameters)) {
+        list2env(parameters, self$envir)
+        recipe_substitute(self$recipe, parameters)
+      }
+    },
+
+    prepare_environment_secrets = function() {
+      if (!is.null(self$recipe$secrets)) {
+        secrets <- resolve_secrets(self$recipe$secrets, self$config)
+        list2env(secrets, self$envir)
+      }
+    },
+
+    prepare_environment_environment = function() {
+      if (!is.null(self$recipe$environment)) {
+        env_vars <- lapply(names(self$recipe$environment), function(name) {
+          sys_getenv(self$recipe$environment[[name]],
+                     sprintf("orderly.yml:environment:%s", name))
+        })
+        names(env_vars) <- names(self$recipe$environment)
+        list2env(env_vars, self$envir)
+      }
+    },
+
+    prepare_environment_data = function() {
+      if (length(self$recipe$data) > 0 || !is.null(self$recipe$connection)) {
+        con <- orderly_db("source", self$config, instance = self$instance)
+        on.exit(lapply(con, DBI::dbDisconnect))
+        self$data <- list()
+
+        self$data$instance <- lapply(con, attr, "instance", exact = TRUE)
+
+        views <- self$recipe$views
+        for (v in names(views)) {
+          orderly_log("view", sprintf("%s : %s", views[[v]]$database, v))
+          sql <- temporary_view(v, views[[v]]$query)
+          DBI::dbExecute(con[[views[[v]]$database]], sql)
+        }
+
+        data <- list()
+        for (v in names(self$recipe$data)) {
+          database <- self$recipe$data[[v]]$database
+          query <- self$recipe$data[[v]]$query
+          withCallingHandlers(
+            data[[v]] <- DBI::dbGetQuery(con[[database]], query),
+            error = function(e)
+              orderly_log("data", sprintf("%s => %s: <error>", database, v)))
+          orderly_log("data",
+                      sprintf("%s => %s: %s x %s",
+                              database, v, nrow(data[[v]]), ncol(data[[v]])))
+        }
+
+        if (!is.null(self$recipe$connection)) {
+          for (i in names(self$recipe$connection)) {
+            data[[i]] <- con[[self$recipe$connection[[i]]]]
+          }
+          ## Ensure that only unexported connections are closed when
+          ## we exit this method
+          con <- con[setdiff(list_to_character(self$recipe$connection, FALSE),
+                             names(self$config$database))]
+        }
+
+        if (length(data) > 0L) {
+          list2env(data, self$envir)
+          self$data$data <- data
+        }
+      }
+    },
+
+    prepare_environment = function(parameters, instance, ...) {
+      self$parameters <- parameters
+      self$instance <- instance
+      self$prepare_environment_parameters(parameters)
+      self$prepare_environment_secrets()
+      self$prepare_environment_environment()
+      self$prepare_environment_data()
+
+      for (p in self$recipe$packages) {
+        library(p, character.only = TRUE) # nolint
+      }
+      for (s in self$recipe$sources) {
+        source(s, self$envir) # nolint
+      }
+    },
+
+    preflight = function() {
+      self$preflight_info <- list(
+        n_dev = length(grDevices::dev.list()),
+        n_sink = sink.number(),
+        git = git_info(self$config$root),
+        random_seed = random_seed(),
+        time = Sys.time())
+      orderly_log("start", as.character(self$preflight_info$time))
+    },
+
+    postflight = function() {
+      time <- Sys.time()
+      elapsed <- time - self$preflight_info$time
+      self$time <- list(start = self$preflight_info$time,
+                        end = time,
+                        elapsed = time - self$preflight_info$time)
+      orderly_log("end", as.character(time))
+      orderly_log("elapsed", sprintf("Ran report in %s", format(elapsed)))
+      recipe_check_device_stack(self$preflight_info$n_dev)
+      recipe_check_sink_stack(self$preflight_info$n_sink)
+      recipe_check_connections(self$recipe)
+
+      hash_artefacts <-
+        withr::with_dir(self$workdir, recipe_check_artefacts(self$recipe))
+      ## Ensure that inputs were not modified when the report was run:
+
+      ## TODO: Move this bit of processing into the recipe I think
+      artefacts <- self$recipe$artefacts
+      artefacts <- data_frame(
+        format = list_to_character(artefacts[, "format"], FALSE),
+        description = list_to_character(artefacts[, "description"], FALSE),
+        order = seq_len(nrow(artefacts)))
+      n <- lengths(self$recipe$artefacts[, "filenames"])
+      ## TODO: workdir here is terrible
+      file_info_artefacts <- data_frame(
+        order = rep(seq_along(n), n),
+        filename = names(hash_artefacts),
+        file_hash = unname(hash_artefacts),
+        file_size = file_size(file.path(self$workdir, names(hash_artefacts))))
+
+      ## TODO: make this less weird
+      recipe_check_hashes(
+        self$inputs,
+        withr::with_dir(self$workdir, self$recipe$inputs()))
+
+      if (!is.null(self$recipe$depends)) {
+        stop("Check that depends weren't modified either...")
+        ## Then also do some faffinb about with collecting depends for
+        ## metadata
+      }
+
+      con_rds <- orderly_db("rds", self$config, FALSE)
+      con_csv <- orderly_db("csv", self$config, FALSE)
+      hash_data_csv <- con_csv$mset(self$data$data)
+      hash_data_rds <- con_rds$mset(self$data$data)
+      ## All the information about data - it's a little more complicated
+      ## than the other types of inputs because there are *two* sizes at
+      ## present.  We should probably drop the csv one tbh and render to
+      ## csv as required?
+      data_info <- data_frame(
+        name = names(self$data$data),
+        database = vcapply(self$recipe$data, "[[", "database",
+                           USE.NAMES = FALSE),
+        query = vcapply(self$recipe$data, "[[", "query", USE.NAMES = FALSE),
+        hash = unname(hash_data_rds),
+        size_csv = file_size(con_csv$filename(hash_data_rds)),
+        size_rds = file_size(con_rds$filename(hash_data_csv)))
+
+
+      self$postflight_info <- list(
+        artefacts = artefacts,
+        file_info_artefacts = file_info_artefacts,
+        data_info = data_info)
+    },
+
+    metadata = function() {
+      recipe <- self$recipe
+
+      ## TODO: should this be done in recipe?
+      if (length(recipe$fields) == 0L) {
+        extra_fields <- NULL
+      } else {
+        extra_fields <- as_data_frame(recipe$fields)
+      }
+
+      ## TODO: should this be done in recipe?
+      if (is.null(recipe$views)) {
+        views <- NULL
+      } else {
+        views <- data_frame(
+          name = names(recipe$views),
+          database = vcapply(recipe$views, "[[", "database", USE.NAMES = FALSE),
+          query = vcapply(recipe$views, "[[", "query", USE.NAMES = FALSE))
+      }
+
+      list(id = self$id,
+           name = recipe$name,
+           parameters = self$parameters,
+           date = as.character(Sys.time()),
+           displayname = recipe$displayname %||% NA_character_,
+           description = recipe$description %||% NA_character_,
+           extra_fields = extra_fields,
+           connection = !is.null(recipe$connection),
+           packages = recipe$packages,
+           random_seed = self$preflight_info$random_seed,
+           instance = self$data$instance,
+           file_info_inputs = self$inputs,
+           ## TODO: migration to fix this double handling of artefacts?
+           file_info_artefacts = self$postflight_info$file_info_artefacts,
+           global_resources = recipe$global_resources,
+           artefacts = self$postflight_info$artefacts,
+           # depends = depends,
+           elapsed = as.numeric(self$time$elapsed, "secs"),
+           # changelog = recipe$changelog$contents,
+           tags = recipe$tags,
+           git = self$preflight_info$git,
+           batch_id = recipe$batch_id,
+           data = self$postflight_info$data_info)
+    },
+
+    write_orderly_run_rds = function() {
+      session <- session_info()
+      session$meta <- self$metadata()
+      ## NOTE: git is here twice for some reason
+      session$git <- session$meta$git
+      session$archive_version <- cache$current_archive_version
+      saveRDS(session, path_orderly_run_rds(self$workdir))
+    }
+  ))

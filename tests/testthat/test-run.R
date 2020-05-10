@@ -1,5 +1,25 @@
 context("run")
 
+test_that("minimal", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+
+  envir <- orderly_environment(NULL)
+  id <- orderly_run2("example", envir = envir, root = path, echo = FALSE)
+  expect_is(id, "character")
+  expect_match(id, "^[0-9]{8}-[0-9]{6}-[[:xdigit:]]{8}$")
+  expect_equal(ls(envir), "dat")
+  expect_is(envir$dat, "data.frame")
+
+  p <- orderly_commit(id, root = path)
+  expect_true(file.exists(p))
+  expect_true(same_path(p, file.path(path, "archive", "example", id)))
+  expect_setequal(
+    dir(p),
+    c("orderly.yml", "orderly_run.rds", "script.R", "mygraph.png"))
+})
+
+
 ## Same as in read; we generate a report and then break it
 test_that("minimal", {
   path <- prepare_orderly_example("minimal")

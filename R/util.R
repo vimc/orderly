@@ -598,6 +598,15 @@ handle_missing_packages <- function(missing_packages, force = FALSE) {
   }
 }
 
+
+check_missing_packages <- function(required) {
+  missing_packages <- setdiff(required, .packages(TRUE))
+  if (length(missing_packages) > 0) {
+    handle_missing_packages(missing_packages)
+  }
+}
+
+
 install_missing_packages <- function(missing_packages) {
   ## collapse vector to packages to string "c('pckg_1','pckg_2')"
   vector_packages <- sprintf("install.packages(c(%s))",
@@ -900,4 +909,9 @@ with_retry <- function(callback, n = 10, backoff = 1, match = NULL) {
   }
   stop(sprintf("Failed to run command after %d attempts: %s", n,
                result$value$message), call. = FALSE)
+}
+
+
+normalize_path <- function(...) {
+  normalizePath(..., mustWork = TRUE)
 }
