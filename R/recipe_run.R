@@ -133,7 +133,7 @@
 ##'
 ##' # These parameters can be used in SQL queries or in the report
 ##' # code.
-orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
+orderly_run_old <- function(name = NULL, parameters = NULL, envir = NULL,
                         root = NULL, locate = TRUE, echo = TRUE,
                         id_file = NULL, fetch = FALSE, ref = NULL,
                         message = NULL, instance = NULL, use_draft = FALSE,

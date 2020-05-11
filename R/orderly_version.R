@@ -1,4 +1,4 @@
-orderly_run2 <- function(name = NULL, parameters = NULL, envir = NULL,
+orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
                          root = NULL, locate = TRUE, echo = TRUE,
                          instance = NULL, use_draft = FALSE, remote = NULL,
                          tags = NULL) {
@@ -160,19 +160,21 @@ orderly_version <- R6::R6Class(
                               database, v, nrow(data[[v]]), ncol(data[[v]])))
         }
 
-        if (!is.null(self$recipe$connection)) {
-          for (i in names(self$recipe$connection)) {
-            data[[i]] <- con[[self$recipe$connection[[i]]]]
-          }
-          ## Ensure that only unexported connections are closed when
-          ## we exit this method
-          con <- con[setdiff(list_to_character(self$recipe$connection, FALSE),
-                             names(self$config$database))]
-        }
-
         if (length(data) > 0L) {
           list2env(data, self$envir)
           self$data$data <- data
+        }
+
+        if (!is.null(self$recipe$connection)) {
+          self$data$con <- list()
+          for (i in names(self$recipe$connection)) {
+            self$data$con[[i]] <- con[[self$recipe$connection[[i]]]]
+          }
+          list2env(self$data$con, self$envir)
+          ## Ensure that only unexported connections are closed when
+          ## we exit this method (happens above in the on.exit()!)
+          con <- con[setdiff(list_to_character(self$recipe$connection, FALSE),
+                             names(self$config$database))]
         }
       }
     },
