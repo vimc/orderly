@@ -7,6 +7,8 @@ orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
   envir <- orderly_environment(envir)
   config <- check_orderly_archive_version(loc$config)
   recipe <- orderly_recipe$new(loc$name, loc$config)
+  ## TODO: not clear that this in the best place
+  recipe$resolve_dependencies(use_draft, parameters, remote)
   version <- orderly_version$new(recipe)
   version$run(parameters, instance, envir, echo)
   version$id
@@ -53,6 +55,11 @@ orderly_version <- R6::R6Class(
 
       self$preflight()
 
+      ## TODO: this is not great, and needs changing!
+      self$recipe$id <- self$id
+      recipe_current_run_set(self$recipe)
+      on.exit(recipe_current_run_clear(), add = TRUE)
+
       withr::with_dir(self$workdir, {
         self$prepare_environment(parameters, instance)
         source(self$recipe$script, local = self$envir, # nolint
@@ -81,9 +88,9 @@ orderly_version <- R6::R6Class(
       recipe_copy_readme(recipe, src)
       recipe_copy_sources(recipe, src)
       recipe_copy_global(recipe, self$config)
-      ## TODO: remove mutability here:
+      ## TODO: remove mutability for resources!
       recipe_copy_resources(recipe, src) # do as part of read
-      recipe_copy_depends(recipe) # not sure
+      recipe_copy_depends(recipe)
 
       self$inputs <- recipe$inputs()
 
@@ -240,10 +247,15 @@ orderly_version <- R6::R6Class(
         self$inputs,
         withr::with_dir(self$workdir, self$recipe$inputs()))
 
-      if (!is.null(self$recipe$depends)) {
-        stop("Check that depends weren't modified either...")
-        ## Then also do some faffinb about with collecting depends for
-        ## metadata
+      depends <- self$recipe$depends
+      if (!is.null(depends)) {
+        pre <- data_frame(filename = depends$as, file_hash = depends$hash)
+        post <- withr::with_dir(
+          self$workdir,
+          file_info(pre$filename)[c("filename", "file_hash")])
+        recipe_check_hashes(pre, post)
+        depends <- depends[c("name", "id", "filename", "as", "hash",
+                             "id_requested", "is_latest", "is_pinned")]
       }
 
       con_rds <- orderly_db("rds", self$config, FALSE)
@@ -262,7 +274,6 @@ orderly_version <- R6::R6Class(
         hash = unname(hash_data_rds),
         size_csv = file_size(con_csv$filename(hash_data_rds)),
         size_rds = file_size(con_rds$filename(hash_data_csv)))
-
 
       self$postflight_info <- list(
         artefacts = artefacts,
@@ -306,7 +317,7 @@ orderly_version <- R6::R6Class(
            file_info_artefacts = self$postflight_info$file_info_artefacts,
            global_resources = recipe$global_resources,
            artefacts = self$postflight_info$artefacts,
-           # depends = depends,
+           depends = self$recipe$depends,
            elapsed = as.numeric(self$time$elapsed, "secs"),
            # changelog = recipe$changelog$contents,
            tags = recipe$tags,

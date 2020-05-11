@@ -36,7 +36,7 @@ orderly_recipe <- R6::R6Class(
     path = NULL,
 
     ## TODO(VIMC-3611): refactor this out into a container class
-    ## id = NULL,
+    id = NULL,
     ## workdir = NULL,
     ## git = NULL,
     ## owd = NULL,

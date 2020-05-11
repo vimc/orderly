@@ -233,10 +233,10 @@ test_that("no data", {
   writeLines(yml, file.path(path_example, "orderly.yml"))
   writeLines(script, file.path(path_example, "script.R"))
 
-  data <- orderly_data("example",
-                       envir = new.env(parent = .GlobalEnv),
-                       root = path)
-  expect_equal(ls(data, all.names = TRUE), character(0))
+  ## data <- orderly_data("example",
+  ##                      envir = new.env(parent = .GlobalEnv),
+  ##                      root = path)
+  ## expect_equal(ls(data, all.names = TRUE), character(0))
 
   id <- orderly_run("example", root = path, echo = FALSE)
   p <- file.path(path_draft(path), "example", id, "data.rds")
@@ -254,10 +254,10 @@ test_that("use artefact", {
   path_orig <- file.path(path_draft(path), "example", id1, "data.rds")
   expect_true(file.exists(path_orig))
 
-  data <- orderly_data("depend",
-                       envir = new.env(parent = .GlobalEnv),
-                       root = path, use_draft = TRUE)
-  expect_identical(ls(data), character(0))
+  ## data <- orderly_data("depend",
+  ##                      envir = new.env(parent = .GlobalEnv),
+  ##                      root = path, use_draft = TRUE)
+  ## expect_identical(ls(data), character(0))
   id2 <- orderly_run("depend", root = path, echo = FALSE, use_draft = TRUE)
   path_previous <- file.path(path_draft(path), "depend", id2, "previous.rds")
   expect_true(file.exists(path_previous))

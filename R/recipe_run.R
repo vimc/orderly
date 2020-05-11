@@ -830,10 +830,7 @@ recipe_copy_global <- function(info, config) {
 recipe_copy_depends <- function(info) {
   if (!is.null(info$depends)) {
     dep_src <- file.path(info$depends$path, info$depends$filename)
-    dep_dst <- file.path(info$workdir, info$depends$as)
-    info$depends$id_requested <- info$depends$id
-    info$depends$id <- basename(info$depends$path)
-
+    dep_dst <- info$depends$as
     str <- sprintf("%s@%s:%s -> %s",
                    info$depends$name,
                    info$depends$id,
