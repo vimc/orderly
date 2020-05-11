@@ -31,20 +31,25 @@ orderly_workflow_get <- function(name, config) {
   filename <- path_orderly_workflow_dir(config$root, name)
   assert_file_exists(basename(filename), workdir = dirname(filename),
                      name = "workflow configuration")
-  workflow$new(filename)
+  workflow$new(name, filename, config)
 }
 
 workflow <- R6::R6Class(
   "workflow",
 
   public = list(
+    workflow_name = NULL,
     steps = NULL,
     workflow_id = NULL,
+    config = NULL,
 
-    initialize = function(workflow_path) {
+    initialize = function(workflow_name, workflow_path, config) {
+      self$workflow_name <- workflow_name
       self$workflow_id <- ids::random_id()
+      self$config <- config
       raw <- yaml_read(workflow_path)
       self$steps <- parse_steps(raw)
+      validate_steps(self$steps, self$config, workflow_name)
     },
 
     run = function() {
@@ -57,4 +62,15 @@ workflow <- R6::R6Class(
 
 parse_steps <- function(yml) {
   unname(unlist(yml$steps))
+}
+
+validate_steps <- function(steps, config, workflow_name) {
+  reports <- basename(list_dirs(path_src(config$root)))
+  for (step in steps) {
+    if (!(step %in% reports)) {
+      stop(sprintf("Cannot run workflow '%s' as report '%s' does not exist.",
+                   workflow_name, step))
+    }
+  }
+  invisible(TRUE)
 }

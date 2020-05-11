@@ -1,16 +1,23 @@
 context("workflow")
 
 test_that("workflow can be run", {
-  path <- orderly_example("demo")
+  path <- prepare_orderly_example("demo")
   expect_type(orderly_workflow("my_workflow", root = path), "character")
 })
 
 test_that("orderly_workflow throws an error if it cannot locate workflow", {
-  path <- orderly_example("demo")
+  path <- prepare_orderly_example("demo")
   expect_error(
     orderly_workflow("missing_workflow", root = path),
     "workflow configuration does not exist: 'missing_workflow.yml'",
     fixed = TRUE)
+})
+
+test_that("orderly_workflow throws error if report does not exist", {
+  path <- prepare_orderly_example("workflow", testing = TRUE)
+  expect_error(
+    orderly_workflow("missing_report", path),
+    "Cannot run workflow 'missing_report' as report 'missing' does not exist.")
 })
 
 test_that("steps can be parsed", {
