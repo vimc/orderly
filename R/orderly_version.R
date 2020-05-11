@@ -1,7 +1,7 @@
 orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
-                         root = NULL, locate = TRUE, echo = TRUE,
-                         instance = NULL, use_draft = FALSE, remote = NULL,
-                         tags = NULL) {
+                        root = NULL, locate = TRUE, echo = TRUE,
+                        message = NULL, instance = NULL, use_draft = FALSE,
+                        remote = NULL, tags = NULL) {
   ## NOTE: Deliberately leaving off batch_id, id_file, fetch and ref for now
   loc <- orderly_develop_location(name, root, locate)
   envir <- orderly_environment(envir)
@@ -10,7 +10,7 @@ orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
   ## TODO: not clear that this in the best place
   recipe$resolve_dependencies(use_draft, parameters, remote)
   version <- orderly_version$new(recipe)
-  version$run(parameters, instance, envir, echo)
+  version$run(parameters, instance, envir, message, echo)
   version$id
 }
 
@@ -47,11 +47,11 @@ orderly_version <- R6::R6Class(
     ## TODO: I think that tag comes in here too?
     ## TODO: batch_id here? or elsewhere?
     run = function(parameters = NULL, instance = NULL, envir = NULL,
-                   echo = TRUE) {
+                   message = NULL, echo = TRUE) {
       self$envir <- orderly_environment(envir)
       self$create()
       self$create_workdir()
-      ## self$load_changelog(message)
+      self$load_changelog(message)
 
       self$preflight()
 
@@ -109,8 +109,9 @@ orderly_version <- R6::R6Class(
     },
 
     load_changelog = function(message) {
+      recipe <- self$recipe
       self$changelog <- changelog_load(
-        recipe$name, recipe$id, recipe$changelog$contents, message, self$config)
+        recipe$name, self$id, recipe$changelog$contents, message, self$config)
     },
 
     prepare_environment_parameters = function(parameters) {
@@ -245,7 +246,8 @@ orderly_version <- R6::R6Class(
       ## TODO: make this less weird
       recipe_check_hashes(
         self$inputs,
-        withr::with_dir(self$workdir, self$recipe$inputs()))
+        withr::with_dir(self$workdir, self$recipe$inputs()),
+        "input", "inputs")
 
       depends <- self$recipe$depends
       if (!is.null(depends)) {
@@ -253,7 +255,7 @@ orderly_version <- R6::R6Class(
         post <- withr::with_dir(
           self$workdir,
           file_info(pre$filename)[c("filename", "file_hash")])
-        recipe_check_hashes(pre, post)
+        recipe_check_hashes(pre, post, "dependency", "dependencies")
         depends <- depends[c("name", "id", "filename", "as", "hash",
                              "id_requested", "is_latest", "is_pinned")]
       }
@@ -319,7 +321,7 @@ orderly_version <- R6::R6Class(
            artefacts = self$postflight_info$artefacts,
            depends = self$recipe$depends,
            elapsed = as.numeric(self$time$elapsed, "secs"),
-           # changelog = recipe$changelog$contents,
+           changelog = self$changelog,
            tags = recipe$tags,
            git = self$preflight_info$git,
            batch_id = recipe$batch_id,

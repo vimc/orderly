@@ -394,12 +394,11 @@ test_that("run with message", {
 
 test_that("no unexpected artefact", {
   path <- prepare_orderly_example("minimal")
-  tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
   # we're not expecting an 'unexpected' message at this point
   # grab all messages...
   messages <- capture_messages(orderly_run("example", root = path,
-                                           id_file = tmp, echo = FALSE))
+                                           echo = FALSE))
   # ...make sure none of the messages contain "unexpected"
   expect_false(any(grep("unexpected", messages)))
 })
@@ -420,7 +419,6 @@ test_that("non-existent package", {
   orderly_log_off()
   on.exit(orderly_log_on())
   path <- prepare_orderly_example("minimal")
-  tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
   yml_path <- file.path(path_example, "orderly.yml")
 
@@ -428,8 +426,7 @@ test_that("non-existent package", {
   write(sprintf("packages: %s", "non_existent_package"),
         file = yml_path, append = TRUE)
   # has orderly detected that the package does not exist>
-  expect_error(orderly_run("example", root = path, id_file = tmp,
-                           echo = FALSE),
+  expect_error(orderly_run("example", root = path, echo = FALSE),
                "Missing packages: 'non_existent_package'")
 })
 
@@ -438,7 +435,6 @@ test_that("multiple non-existent packages", {
   orderly_log_off()
   on.exit(orderly_log_on())
   path <- prepare_orderly_example("minimal")
-  tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
   yml_path <- file.path(path_example, "orderly.yml")
 
@@ -448,8 +444,7 @@ test_that("multiple non-existent packages", {
   write(sprintf("  - %s", "non_existent_package_2"),
         file = yml_path, append = TRUE)
   # has orderly detected that the package does not exist>
-  expect_error(orderly_run("example", root = path, id_file = tmp,
-                           echo = FALSE),
+  expect_error(orderly_run("example", root = path, echo = FALSE),
                paste("Missing packages:",
                      "'non_existent_package', 'non_existent_package_2'"))
 })
@@ -482,7 +477,6 @@ test_that("use multiple versions of an artefact", {
 
 test_that("required field OK", {
   path <- prepare_orderly_example("minimal")
-  tmp <- tempfile()
   # we need to use an orderly config with required fields set so copy it over
   # this must have exactly two required fields
   file.copy("example_config.yml", file.path(path, "orderly_config.yml"),
@@ -500,14 +494,13 @@ test_that("required field OK", {
   minimal_yml <- c(minimal_yml, sprintf("%s: %s", req_fields[2], "character"))
   writeLines(minimal_yml, yml_path)
 
-  id <- orderly_run("example", root = path, id_file = tmp, echo = FALSE)
+  id <- orderly_run("example", root = path, echo = FALSE)
   p <- file.path(path_draft(path), "example", id, "mygraph.png")
   expect_true(file.exists(p))
 })
 
 test_that("missing required field", {
   path <- prepare_orderly_example("minimal")
-  tmp <- tempfile()
   # we need to use an orderly config with required fields set so copy it over
   file.copy("example_config.yml", file.path(path, "orderly_config.yml"),
             overwrite = TRUE)
@@ -530,8 +523,7 @@ test_that("missing required field", {
     # we are expecting an error message here
     if (length(missing_required) > 0) {
       err_msg <- sprintf("Fields missing from .*: '%s'", missing_required)
-      expect_error(orderly_run("example", root = path, id_file = tmp,
-                               echo = FALSE),
+      expect_error(orderly_run("example", root = path, echo = FALSE),
                    regexp = err_msg)
     }
   }
@@ -539,7 +531,6 @@ test_that("missing required field", {
 
 test_that("required field wrong type", {
   path <- prepare_orderly_example("minimal")
-  tmp <- tempfile()
   # we need to use an orderly config with required fields set so copy it over
   # this must have exactly two required fields
   file.copy("example_config.yml", file.path(path, "orderly_config.yml"),
@@ -559,8 +550,7 @@ test_that("required field wrong type", {
 
   # first required field wont give an error, the second will
   err_msg <- sprintf("'.*orderly.yml:%s' must be character", req_fields[2])
-  expect_error(orderly_run("example", root = path, id_file = tmp,
-                           echo = FALSE),
+  expect_error(orderly_run("example", root = path, echo = FALSE),
                regexp = err_msg)
 })
 
