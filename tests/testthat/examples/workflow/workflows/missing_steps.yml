@@ -1,4 +1,3 @@
-steps:
+stps:
   - name: "example"
   - name: "missing"
-  - name: "missing2"

@@ -48,8 +48,8 @@ workflow <- R6::R6Class(
       self$workflow_id <- ids::random_id()
       self$config <- config
       raw <- yaml_read(workflow_path)
-      self$steps <- parse_steps(raw)
-      validate_steps(self$steps, self$config, workflow_name)
+      self$steps <- validate_workflow(raw, self$config, self$workflow_name,
+                                      workflow_path)
     },
 
     run = function() {
@@ -64,13 +64,17 @@ parse_steps <- function(yml) {
   unname(unlist(yml$steps))
 }
 
-validate_steps <- function(steps, config, workflow_name) {
-  reports <- orderly_list(config)
-  for (step in steps) {
-    if (!(step %in% reports)) {
-      stop(sprintf("Cannot run workflow '%s' as report '%s' does not exist.",
-                   workflow_name, step))
-    }
+validate_workflow <- function(raw_yml, config, workflow_name, workflow_path) {
+  check_fields(raw_yml, workflow_path, "steps", NULL)
+  for (step in raw_yml$steps) {
+    check_fields(step, sprintf("%s:steps", workflow_path), "name", NULL)
   }
-  invisible(TRUE)
+  reports <- orderly_list(config)
+  steps <- parse_steps(raw_yml)
+  msg <- setdiff(steps, reports)
+  if (length(msg)) {
+    stop(sprintf("Cannot run workflow '%s' as reports missing: %s",
+                 workflow_name, paste(squote(msg), collapse = ", ")))
+  }
+  steps
 }
