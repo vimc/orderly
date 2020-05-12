@@ -26,20 +26,17 @@ test_that("orderly_workflow throws error if steps do not exist", {
   path <- prepare_orderly_example("workflow", testing = TRUE)
   expect_error(
     orderly_workflow("missing_steps", path),
-    "Fields missing from [\\w/]+/workflows/missing_steps.yml: steps",
-    perl = TRUE)
+    "Fields missing from .+/workflows/missing_steps.yml: steps")
 })
 
 test_that("orderly_workflow throws error if steps are misconfigured", {
   path <- prepare_orderly_example("workflow", testing = TRUE)
   expect_error(
     orderly_workflow("missing_name", path),
-    "Fields missing from [\\w/]+/workflows/missing_name.yml:steps: name",
-    perl = TRUE)
+    "Fields missing from .+/workflows/missing_name.yml:steps: name")
   expect_error(
     orderly_workflow("broken_steps", path),
-    "Unknown fields in [\\w/]+/workflows/broken_steps.yml:steps: field",
-    perl = TRUE)
+    "Unknown fields in .+/workflows/broken_steps.yml:steps: field")
 })
 
 test_that("steps can be parsed", {
