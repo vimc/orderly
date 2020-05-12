@@ -1,14 +1,25 @@
 orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
                         root = NULL, locate = TRUE, echo = TRUE,
                         message = NULL, instance = NULL, use_draft = FALSE,
-                        remote = NULL, tags = NULL,
-                        # These belong elsewhere I feel
-                        id_file = NULL, batch_id = NULL) {
+                        remote = NULL, tags = NULL) {
   version <- orderly_version$new(name, root, locate)
   version$run(parameters, instance, envir, message, tags, echo,
+              use_draft, remote)
+  version$id
+}
+
+
+orderly_run2 <- function(name = NULL, parameters = NULL, envir = NULL,
+                        root = NULL, locate = TRUE, echo = TRUE,
+                        message = NULL, instance = NULL, use_draft = FALSE,
+                        remote = NULL, tags = NULL,
+                        # These belong elsewhere I feel
+                        id_file = NULL, batch_id = NULL,
+                        fetch = FALSE, ref = NULL) {
+  version <- orderly_version$new(name, root, locate)
+  version$run2(parameters, instance, envir, message, tags, echo,
               use_draft, remote,
-              ##
-              id_file, batch_id)
+              id_file, batch_id, ref, fetch)
   version$id
 }
 
@@ -49,23 +60,37 @@ orderly_version <- R6::R6Class(
     ## Here's the all-in-one
     run = function(parameters = NULL, instance = NULL, envir = NULL,
                    message = NULL, tags = NULL, echo = TRUE,
+                   use_draft = FALSE, remote = NULL) {
+      self$run_read(parameters, instance, envir, tags, use_draft,
+                    remote)
+      self$run_prepare(message)
+      self$run_execute(echo)
+      self$run_cleanup()
+    },
+
+    run2 = function(parameters = NULL, instance = NULL, envir = NULL,
+                   message = NULL, tags = NULL, echo = TRUE,
                    use_draft = FALSE, remote = NULL,
                    ## These might move around a bit
-                   id_file = NULL, batch_id = NULL) {
-      self$run_read(parameters, instance, envir, tags, use_draft,
-                    remote, batch_id)
-      self$run_prepare(message, id_file)
+                   id_file = NULL, batch_id = NULL,
+                   ref = NULL, fetch = FALSE) {
+      git_restore <- self$git_checkout(ref, fetch)
+      tryCatch({
+        self$run_read(parameters, instance, envir, tags, use_draft,
+                      remote)
+        self$run_prepare(message, id_file)
+      }, finally = git_restore())
+      self$batch_id <- batch_id
       self$run_execute(echo)
       self$run_cleanup()
     },
 
     run_read = function(parameters, instance, envir, tags,
-                        use_draft, remote, batch_id) {
+                        use_draft, remote) {
       loc <- orderly_develop_location(self$name, self$config, FALSE)
       self$recipe <- orderly_recipe$new(loc$name, loc$config)
       self$instance <- instance
       self$envir <- orderly_environment(envir)
-      self$batch_id <- batch_id
       self$parameters <- recipe_parameters(self$recipe, parameters)
       self$recipe$resolve_dependencies(use_draft, parameters, remote)
       self$tags <- union(self$recipe$tags,
@@ -99,6 +124,17 @@ orderly_version <- R6::R6Class(
     run_cleanup = function() {
       self$postflight()
       self$write_orderly_run_rds()
+    },
+
+    git_checkout = function(ref, fetch) {
+      if (is.null(ref)) {
+        return(function() {})
+      }
+      if (fetch) {
+        git_fetch(self$config$root)
+      }
+      prev <- git_detach_head_at_ref(ref, self$config$root)
+      function() git_checkout_branch(prev, TRUE, self$config$root)
     },
 
     create = function(id_file) {

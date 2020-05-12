@@ -187,9 +187,9 @@ main_do_run <- function(x) {
         "Can't use --pull with --ref; perhaps you meant --fetch ?")
     }
   }
-  id <- orderly_run(name, parameters, root = config, id_file = id_file,
-                    instance = instance,
-                    ref = ref, fetch = fetch, message = message)
+  id <- orderly_run2(name, parameters, root = config, id_file = id_file,
+                     instance = instance,
+                     ref = ref, fetch = fetch, message = message)
   if (commit) {
     orderly_commit(id, name, config)
     path_rds <- path_orderly_run_rds(
