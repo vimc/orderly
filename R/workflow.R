@@ -20,11 +20,9 @@ orderly_workflow <- function(name, root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
   workflow <- orderly_workflow_get(name, config)
 
-  ids <- workflow$run()
+  workflow$run()
 
   ## TODO: Write to DB after run
-
-  ids
 }
 
 orderly_workflow_get <- function(name, config) {
