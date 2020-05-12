@@ -10,7 +10,7 @@ orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
   ## TODO: not clear that this in the best place
   recipe$resolve_dependencies(use_draft, parameters, remote)
   version <- orderly_version$new(recipe)
-  version$run(parameters, instance, envir, message, echo)
+  version$run(parameters, instance, envir, message, tags, echo)
   version$id
 }
 
@@ -33,6 +33,7 @@ orderly_version <- R6::R6Class(
     envir = NULL,
     data = NULL,
     changelog = NULL,
+    tags = NULL,
     parameters = NULL,
     instance = NULL,
     preflight_info = NULL,
@@ -47,11 +48,15 @@ orderly_version <- R6::R6Class(
     ## TODO: I think that tag comes in here too?
     ## TODO: batch_id here? or elsewhere?
     run = function(parameters = NULL, instance = NULL, envir = NULL,
-                   message = NULL, echo = TRUE) {
+                   message = NULL, tags = NULL, echo = TRUE) {
       self$envir <- orderly_environment(envir)
       self$create()
       self$create_workdir()
+
+      ## TODO: inteface here should be tidied up?
       self$load_changelog(message)
+      self$tags <- union(self$recipe$tags,
+                         recipe_validate_tags(tags, self$config, NULL))
 
       self$preflight()
 
@@ -322,7 +327,7 @@ orderly_version <- R6::R6Class(
            depends = self$recipe$depends,
            elapsed = as.numeric(self$time$elapsed, "secs"),
            changelog = self$changelog,
-           tags = recipe$tags,
+           tags = self$tags,
            git = self$preflight_info$git,
            batch_id = recipe$batch_id,
            data = self$postflight_info$data_info)
