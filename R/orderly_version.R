@@ -46,6 +46,7 @@ orderly_version <- R6::R6Class(
       self$name <- name
     },
 
+    ## Here's the all-in-one
     run = function(parameters = NULL, instance = NULL, envir = NULL,
                    message = NULL, tags = NULL, echo = TRUE,
                    use_draft = FALSE, remote = NULL,
@@ -58,6 +59,7 @@ orderly_version <- R6::R6Class(
       self$recipe <- recipe
       self$config <- recipe$config
       self$parameters <- recipe_parameters(recipe, parameters)
+      self$instance <- instance
 
       ## TODO: not clear that this in the best place, and should be
       ## done *after* the parameters are dealt with
@@ -75,19 +77,31 @@ orderly_version <- R6::R6Class(
 
       self$preflight()
 
+      self$run_execute(echo)
+      self$run_cleanup()
+    },
+
+    run_read = function(...) {
+    },
+
+    run_prepare = function(...) {
+    },
+
+    run_execute = function(echo = TRUE) {
       ## TODO: this is not great, and needs changing!
       self$recipe$id <- self$id
       recipe_current_run_set(self$recipe)
       on.exit(recipe_current_run_clear(), add = TRUE)
 
       withr::with_dir(self$workdir, {
-        self$prepare_environment(instance)
+        self$prepare_environment()
         source(self$recipe$script, local = self$envir, # nolint
                echo = echo, max.deparse.length = Inf)
       })
+    },
 
+    run_cleanup = function() {
       self$postflight()
-
       self$write_orderly_run_rds()
     },
 
@@ -210,8 +224,7 @@ orderly_version <- R6::R6Class(
       }
     },
 
-    prepare_environment = function(instance) {
-      self$instance <- instance
+    prepare_environment = function() {
       self$prepare_environment_parameters()
       self$prepare_environment_secrets()
       self$prepare_environment_environment()
