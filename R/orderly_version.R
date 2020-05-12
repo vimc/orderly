@@ -1,8 +1,10 @@
 orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
                         root = NULL, locate = TRUE, echo = TRUE,
                         message = NULL, instance = NULL, use_draft = FALSE,
-                        remote = NULL, tags = NULL) {
-  ## NOTE: Deliberately leaving off batch_id, id_file, fetch and ref for now
+                        remote = NULL, tags = NULL,
+                        # These belong elsewhere I feel
+                        id_file = NULL, batch_id = NULL,
+                        fetch = NULL, ref = NULL) {
   loc <- orderly_develop_location(name, root, locate)
   envir <- orderly_environment(envir)
   config <- check_orderly_archive_version(loc$config)
@@ -10,9 +12,11 @@ orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
   ## TODO: not clear that this in the best place
   recipe$resolve_dependencies(use_draft, parameters, remote)
   version <- orderly_version$new(recipe)
-  version$run(parameters, instance, envir, message, tags, echo)
+  version$run(parameters, instance, envir, message, tags, echo,
+              id_file, batch_id, fetch, ref)
   version$id
 }
+
 
 ## First pass - get this basically working
 ## Second pass - group into meanful stages
@@ -48,10 +52,13 @@ orderly_version <- R6::R6Class(
     ## TODO: I think that tag comes in here too?
     ## TODO: batch_id here? or elsewhere?
     run = function(parameters = NULL, instance = NULL, envir = NULL,
-                   message = NULL, tags = NULL, echo = TRUE) {
+                   message = NULL, tags = NULL, echo = TRUE,
+                   ## These might move around a bit
+                   id_file = NULL, batch_id = NULL, fetch = NULL, ref = NULL) {
       self$envir <- orderly_environment(envir)
-      self$create()
-      self$create_workdir()
+      self$batch_id <- batch_id
+      self$create(id_file)
+      self$create_workdir(ref, fetch)
 
       ## TODO: inteface here should be tidied up?
       self$load_changelog(message)
@@ -76,10 +83,14 @@ orderly_version <- R6::R6Class(
       self$write_orderly_run_rds()
     },
 
-    create = function() {
+    create = function(id_file) {
       self$id <- new_report_id()
       orderly_log("name", self$recipe$name)
       orderly_log("id", self$id)
+      if (!is.null(id_file)) {
+        orderly_log("id_file", id_file)
+        writelines_atomic(self$id, id_file)
+      }
     },
 
     ## This needs to be a private function as it assumes we're in the
@@ -102,7 +113,15 @@ orderly_version <- R6::R6Class(
       recipe
     },
 
-    create_workdir = function() {
+    create_workdir = function(ref, fetch) {
+      if (!is.null(ref)) {
+        if (fetch) {
+          git_fetch(config$root)
+        }
+        prev <- git_detach_head_at_ref(ref, config$root)
+        on.exit(git_checkout_branch(prev, TRUE, config$root))
+      }
+
       workdir <- file.path(path_draft(self$config$root),
                            self$recipe$name, self$id)
       if (file.exists(workdir)) {
@@ -329,7 +348,7 @@ orderly_version <- R6::R6Class(
            changelog = self$changelog,
            tags = self$tags,
            git = self$preflight_info$git,
-           batch_id = recipe$batch_id,
+           batch_id = self$batch_id,
            data = self$postflight_info$data_info)
     },
 
