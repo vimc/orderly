@@ -2,7 +2,8 @@ context("workflow")
 
 test_that("workflow can be run", {
   path <- prepare_orderly_example("demo")
-  expect_type(orderly_workflow("my_workflow", root = path), "character")
+  expect_error(orderly_workflow("my_workflow", root = path),
+               "Workflow running not yet implemented")
 })
 
 test_that("orderly_workflow throws an error if it cannot locate workflow", {

@@ -55,7 +55,7 @@ workflow <- R6::R6Class(
     run = function() {
       ## TODO: Implement run
       orderly_log("workflow", paste0("Running workflow ", self$workflow_id))
-      ids::random_id()
+      stop("Workflow running not yet implemented")
     }
   )
 )
@@ -65,7 +65,7 @@ parse_steps <- function(yml) {
 }
 
 validate_steps <- function(steps, config, workflow_name) {
-  reports <- basename(list_dirs(path_src(config$root)))
+  reports <- orderly_list(config)
   for (step in steps) {
     if (!(step %in% reports)) {
       stop(sprintf("Cannot run workflow '%s' as report '%s' does not exist.",
