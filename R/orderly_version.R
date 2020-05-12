@@ -5,13 +5,8 @@ orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
                         # These belong elsewhere I feel
                         id_file = NULL, batch_id = NULL,
                         fetch = NULL, ref = NULL) {
-  loc <- orderly_develop_location(name, root, locate)
-  envir <- orderly_environment(envir)
-  config <- check_orderly_archive_version(loc$config)
-  recipe <- orderly_recipe$new(loc$name, loc$config)
-  ## TODO: not clear that this in the best place
-  recipe$resolve_dependencies(use_draft, parameters, remote)
-  version <- orderly_version$new(recipe)
+  version <- orderly_version$new(name, parameters, root, locate,
+                                 use_draft, remote)
   version$run(parameters, instance, envir, message, tags, echo,
               id_file, batch_id, fetch, ref)
   version$id
@@ -44,13 +39,20 @@ orderly_version <- R6::R6Class(
     postflight_info = NULL,
     time = NULL,
 
-    initialize = function(recipe) {
+    initialize = function(name, parameters, root, locate, use_draft, remote) {
+      config <- orderly_config_get(root, locate)
+      loc <- orderly_develop_location(name, config, FALSE)
+
+      config <- check_orderly_archive_version(loc$config)
+      recipe <- orderly_recipe$new(loc$name, loc$config)
+      ## TODO: not clear that this in the best place
+      recipe$resolve_dependencies(use_draft, parameters, remote)
+
       self$recipe <- recipe
       self$config <- recipe$config
+      self$parameters <- parameters
     },
 
-    ## TODO: I think that tag comes in here too?
-    ## TODO: batch_id here? or elsewhere?
     run = function(parameters = NULL, instance = NULL, envir = NULL,
                    message = NULL, tags = NULL, echo = TRUE,
                    ## These might move around a bit
@@ -211,10 +213,9 @@ orderly_version <- R6::R6Class(
       }
     },
 
-    prepare_environment = function(parameters, instance, ...) {
-      self$parameters <- parameters
+    prepare_environment = function(instance, ...) {
       self$instance <- instance
-      self$prepare_environment_parameters(parameters)
+      self$prepare_environment_parameters(self$parameters)
       self$prepare_environment_secrets()
       self$prepare_environment_environment()
       self$prepare_environment_data()
