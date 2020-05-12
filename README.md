@@ -114,6 +114,12 @@ drat:::add("vimc")
 install.packages("orderly")
 ```
 
+## RStudio addins
+
+There are [addins](https://github.com/vimc/orderly.rstudio) avaialble to help with development workflows.
+
+See docs at [orderly.rstudio](https://github.com/vimc/orderly.rstudio#setup) for setup and usage instructions.
+
 ## License
 
 MIT © Imperial College of Science, Technology and Medicine
