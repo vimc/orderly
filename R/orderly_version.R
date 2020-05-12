@@ -52,39 +52,35 @@ orderly_version <- R6::R6Class(
                    use_draft = FALSE, remote = NULL,
                    ## These might move around a bit
                    id_file = NULL, batch_id = NULL) {
-      loc <- orderly_develop_location(self$name, self$config, FALSE)
-
-      recipe <- orderly_recipe$new(loc$name, loc$config)
-
-      self$recipe <- recipe
-      self$config <- recipe$config
-      self$parameters <- recipe_parameters(recipe, parameters)
-      self$instance <- instance
-
-      ## TODO: not clear that this in the best place, and should be
-      ## done *after* the parameters are dealt with
-      recipe$resolve_dependencies(use_draft, parameters, remote)
-
-      self$envir <- orderly_environment(envir)
-      self$batch_id <- batch_id
-      self$create(id_file)
-      self$create_workdir()
-
-      ## TODO: inteface here should be tidied up?
-      self$load_changelog(message)
-      self$tags <- union(self$recipe$tags,
-                         recipe_validate_tags(tags, self$config, NULL))
-
-      self$preflight()
-
+      self$run_read(parameters, instance, envir, tags, use_draft,
+                    remote, batch_id)
+      self$run_prepare(message, id_file)
       self$run_execute(echo)
       self$run_cleanup()
     },
 
-    run_read = function(...) {
+    run_read = function(parameters, instance, envir, tags,
+                        use_draft, remote, batch_id) {
+      loc <- orderly_develop_location(self$name, self$config, FALSE)
+      self$recipe <- orderly_recipe$new(loc$name, loc$config)
+      self$instance <- instance
+      self$envir <- orderly_environment(envir)
+      self$batch_id <- batch_id
+      self$parameters <- recipe_parameters(self$recipe, parameters)
+      self$recipe$resolve_dependencies(use_draft, parameters, remote)
+      self$tags <- union(self$recipe$tags,
+                         recipe_validate_tags(tags, self$config, NULL))
     },
 
-    run_prepare = function(...) {
+    run_prepare = function(message = NULL, id_file = NULL) {
+      self$create(id_file)
+      self$create_workdir()
+      ## This feels more like something to do in the read section, but
+      ## we need the id for this to work properly.
+      self$changelog <- changelog_load(
+        self$recipe$name, self$id, self$recipe$changelog$contents,
+        message, self$config)
+      self$preflight()
     },
 
     run_execute = function(echo = TRUE) {
@@ -144,12 +140,6 @@ orderly_version <- R6::R6Class(
       dir_create(workdir)
       self$workdir <- workdir
       withr::with_dir(self$workdir, self$copy_files())
-    },
-
-    load_changelog = function(message) {
-      recipe <- self$recipe
-      self$changelog <- changelog_load(
-        recipe$name, self$id, recipe$changelog$contents, message, self$config)
     },
 
     prepare_environment_parameters = function() {
