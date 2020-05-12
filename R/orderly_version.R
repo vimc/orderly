@@ -246,9 +246,11 @@ orderly_version <- R6::R6Class(
                         elapsed = time - self$preflight_info$time)
       orderly_log("end", as.character(time))
       orderly_log("elapsed", sprintf("Ran report in %s", format(elapsed)))
-      recipe_check_device_stack(self$preflight_info$n_dev)
-      recipe_check_sink_stack(self$preflight_info$n_sink)
-      recipe_check_connections(self$recipe)
+      withr::with_dir(self$workdir, {
+        recipe_check_device_stack(self$preflight_info$n_dev)
+        recipe_check_sink_stack(self$preflight_info$n_sink)
+        recipe_check_connections(self$recipe)
+      })
 
       hash_artefacts <-
         withr::with_dir(self$workdir, recipe_check_artefacts(self$recipe))
