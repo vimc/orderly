@@ -3,12 +3,12 @@ orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
                         message = NULL, instance = NULL, use_draft = FALSE,
                         remote = NULL, tags = NULL,
                         # These belong elsewhere I feel
-                        id_file = NULL, batch_id = NULL,
-                        fetch = NULL, ref = NULL) {
-  version <- orderly_version$new(name, parameters, root, locate,
-                                 use_draft, remote)
+                        id_file = NULL, batch_id = NULL) {
+  version <- orderly_version$new(name, root, locate)
   version$run(parameters, instance, envir, message, tags, echo,
-              id_file, batch_id, fetch, ref)
+              use_draft, remote,
+              ##
+              id_file, batch_id)
   version$id
 }
 
@@ -20,6 +20,9 @@ orderly_version <- R6::R6Class(
 
   ## Start public for now
   public = list(
+    config = NULL,
+    name = NULL,
+
     id = NULL,
     workdir = NULL,
     owd = NULL,
@@ -27,7 +30,6 @@ orderly_version <- R6::R6Class(
     inputs = NULL,
     batch_id = NULL,
     ## Added by me:
-    config = NULL,
     recipe = NULL,
     envir = NULL,
     data = NULL,
@@ -39,28 +41,32 @@ orderly_version <- R6::R6Class(
     postflight_info = NULL,
     time = NULL,
 
-    initialize = function(name, parameters, root, locate, use_draft, remote) {
-      config <- orderly_config_get(root, locate)
-      loc <- orderly_develop_location(name, config, FALSE)
-
-      config <- check_orderly_archive_version(loc$config)
-      recipe <- orderly_recipe$new(loc$name, loc$config)
-      ## TODO: not clear that this in the best place
-      recipe$resolve_dependencies(use_draft, parameters, remote)
-
-      self$recipe <- recipe
-      self$config <- recipe$config
-      self$parameters <- parameters
+    initialize = function(name, root, locate) {
+      self$config <- orderly_config_get(root, locate)
+      self$name <- name
     },
 
     run = function(parameters = NULL, instance = NULL, envir = NULL,
                    message = NULL, tags = NULL, echo = TRUE,
+                   use_draft = FALSE, remote = NULL,
                    ## These might move around a bit
-                   id_file = NULL, batch_id = NULL, fetch = NULL, ref = NULL) {
+                   id_file = NULL, batch_id = NULL) {
+      loc <- orderly_develop_location(self$name, self$config, FALSE)
+
+      recipe <- orderly_recipe$new(loc$name, loc$config)
+
+      self$recipe <- recipe
+      self$config <- recipe$config
+      self$parameters <- recipe_parameters(recipe, parameters)
+
+      ## TODO: not clear that this in the best place, and should be
+      ## done *after* the parameters are dealt with
+      recipe$resolve_dependencies(use_draft, parameters, remote)
+
       self$envir <- orderly_environment(envir)
       self$batch_id <- batch_id
       self$create(id_file)
-      self$create_workdir(ref, fetch)
+      self$create_workdir()
 
       ## TODO: inteface here should be tidied up?
       self$load_changelog(message)
@@ -75,7 +81,7 @@ orderly_version <- R6::R6Class(
       on.exit(recipe_current_run_clear(), add = TRUE)
 
       withr::with_dir(self$workdir, {
-        self$prepare_environment(parameters, instance)
+        self$prepare_environment(instance)
         source(self$recipe$script, local = self$envir, # nolint
                echo = echo, max.deparse.length = Inf)
       })
@@ -115,15 +121,7 @@ orderly_version <- R6::R6Class(
       recipe
     },
 
-    create_workdir = function(ref, fetch) {
-      if (!is.null(ref)) {
-        if (fetch) {
-          git_fetch(config$root)
-        }
-        prev <- git_detach_head_at_ref(ref, config$root)
-        on.exit(git_checkout_branch(prev, TRUE, config$root))
-      }
-
+    create_workdir = function() {
       workdir <- file.path(path_draft(self$config$root),
                            self$recipe$name, self$id)
       if (file.exists(workdir)) {
@@ -140,11 +138,10 @@ orderly_version <- R6::R6Class(
         recipe$name, self$id, recipe$changelog$contents, message, self$config)
     },
 
-    prepare_environment_parameters = function(parameters) {
-      parameters <- recipe_parameters(self$recipe, parameters)
-      if (!is.null(parameters)) {
-        list2env(parameters, self$envir)
-        recipe_substitute(self$recipe, parameters)
+    prepare_environment_parameters = function() {
+      if (!is.null(self$parameters)) {
+        list2env(self$parameters, self$envir)
+        recipe_substitute(self$recipe, self$parameters)
       }
     },
 
@@ -213,9 +210,9 @@ orderly_version <- R6::R6Class(
       }
     },
 
-    prepare_environment = function(instance, ...) {
+    prepare_environment = function(instance) {
       self$instance <- instance
-      self$prepare_environment_parameters(self$parameters)
+      self$prepare_environment_parameters()
       self$prepare_environment_secrets()
       self$prepare_environment_environment()
       self$prepare_environment_data()
