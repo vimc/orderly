@@ -29,5 +29,5 @@ path <- orderly::orderly_example("demo")
 
 # To run most reports, provide the report name (and the path if
 # not running in the working directory, as is the case here):
-id <- orderly::orderly_workflow("my_workflow", root = path)
+#id <- orderly::orderly_workflow("my_workflow", root = path)
 }

@@ -14,7 +14,7 @@
 ##'
 ##' # To run most reports, provide the report name (and the path if
 ##' # not running in the working directory, as is the case here):
-##' id <- orderly::orderly_workflow("my_workflow", root = path)
+##' #id <- orderly::orderly_workflow("my_workflow", root = path)
 orderly_workflow <- function(name, root = NULL, locate = TRUE) {
   ## Locate file
   config <- orderly_config_get(root, locate)
