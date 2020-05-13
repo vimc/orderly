@@ -29,6 +29,6 @@ orderly_batch <- function(name = NULL, parameters = NULL, ...) {
   }
   batch_id <- ids::random_id()
   vcapply(df2list(parameters), function(parameter_set) {
-    orderly_run(name, parameters = parameter_set, ..., batch_id = batch_id)
+    orderly_run2(name, parameters = parameter_set, ..., batch_id = batch_id)
   })
 }
