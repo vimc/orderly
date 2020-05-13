@@ -43,12 +43,12 @@ orderly_version <- R6::R6Class(
     },
 
     ## And the one for use non-interactively
-    run2 = function(parameters = NULL, instance = NULL, envir = NULL,
-                    message = NULL, tags = NULL, echo = TRUE,
-                    use_draft = FALSE, remote = NULL,
-                    ## These might move around a bit
-                    id_file = NULL, batch_id = NULL,
-                    ref = NULL, fetch = FALSE, capture_log = FALSE) {
+    run_internal = function(parameters = NULL, instance = NULL, envir = NULL,
+                            message = NULL, tags = NULL, echo = TRUE,
+                            use_draft = FALSE, remote = NULL,
+                            ## These might move around a bit
+                            id_file = NULL, batch_id = NULL,
+                            ref = NULL, fetch = FALSE, capture_log = FALSE) {
       logfile <- tempfile()
       ## TODO: this does not properly capture errors.
       conditional_capture_log(capture_log, logfile, {

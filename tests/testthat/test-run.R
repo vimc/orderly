@@ -260,7 +260,8 @@ test_that("database is not loaded unless needed", {
 test_that("id file", {
   path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
-  id <- orderly_run2("example", root = path, id_file = tmp, echo = FALSE)
+  id <- orderly_run_internal("example", root = path, id_file = tmp,
+                             echo = FALSE)
   expect_true(file.exists(tmp))
   expect_equal(readLines(tmp), id)
 })
@@ -907,8 +908,8 @@ test_that("orderly_run can capture messages", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
-  id <- orderly_run2("example", root = path, echo = FALSE,
-                     capture_log = TRUE, commit = TRUE)
+  id <- orderly_run_internal("example", root = path, echo = FALSE,
+                             capture_log = TRUE, commit = TRUE)
 
   archive_logs <- file.path(path, "archive", "example", id, "orderly.log")
   expect_true(file.exists(archive_logs))
@@ -923,8 +924,8 @@ test_that("logs from failed runs can still be written to file", {
 
   append_lines('stop("some error")',
                file.path(path, "src", "example", "script.R"))
-  expect_error(orderly_run2("example", root = path, echo = FALSE,
-                            capture_log = TRUE),
+  expect_error(orderly_run_internal("example", root = path, echo = FALSE,
+                                    capture_log = TRUE),
                "some error")
   id <- dir(file.path(path, "draft", "example"))
 

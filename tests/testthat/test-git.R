@@ -134,8 +134,8 @@ test_that("run in detached head", {
   testthat::skip_on_cran()
   path <- unzip_git_demo()
 
-  orderly_run2("other", list(nmin = 0), root = path, ref = "other",
-               echo = FALSE)
+  orderly_run_internal("other", list(nmin = 0), root = path, ref = "other",
+                       echo = FALSE)
 
   expect_equal(orderly_list(path), "minimal")
   d <- orderly_list_drafts(path)
@@ -189,13 +189,13 @@ test_that("fetch before run", {
   sha1 <- git_ref_to_sha("HEAD", path1)
   sha2 <- git_ref_to_sha("HEAD", path2)
 
-  id1 <- orderly_run2("minimal", root = path2, echo = FALSE,
-                      ref = "origin/master")
+  id1 <- orderly_run_internal("minimal", root = path2, echo = FALSE,
+                              ref = "origin/master")
   expect_equal(git_ref_to_sha("HEAD", path2), sha2)
   expect_equal(git_ref_to_sha("origin/master", path2), sha2)
 
-  id2 <- orderly_run2("minimal", root = path2, echo = FALSE,
-                      ref = "origin/master", fetch = TRUE)
+  id2 <- orderly_run_internal("minimal", root = path2, echo = FALSE,
+                              ref = "origin/master", fetch = TRUE)
 
   expect_equal(git_ref_to_sha("HEAD", path2), sha2)
   expect_equal(git_ref_to_sha("origin/master", path2), sha1)

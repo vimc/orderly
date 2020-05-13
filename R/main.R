@@ -185,10 +185,10 @@ main_do_run <- function(x) {
         "Can't use --pull with --ref; perhaps you meant --fetch ?")
     }
   }
-  id <- orderly_run2(name, parameters, root = config, id_file = id_file,
-                     instance = instance,
-                     ref = ref, fetch = fetch, message = message,
-                     commit = commit, capture_log = !print_log)
+  id <- orderly_run_internal(name, parameters, root = config,
+                             id_file = id_file, instance = instance,
+                             ref = ref, fetch = fetch, message = message,
+                             commit = commit, capture_log = !print_log)
   message("id:", id)
 }
 
