@@ -170,9 +170,6 @@ orderly_version <- R6::R6Class(
     create_workdir = function() {
       workdir <- file.path(path_draft(self$config$root),
                            self$recipe$name, self$id)
-      if (file.exists(workdir)) {
-        stop("'workdir' must not exist")
-      }
       dir_create(workdir)
       self$workdir <- workdir
       withr::with_dir(self$workdir, self$copy_files())
