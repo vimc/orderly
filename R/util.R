@@ -910,8 +910,3 @@ with_retry <- function(callback, n = 10, backoff = 1, match = NULL) {
   stop(sprintf("Failed to run command after %d attempts: %s", n,
                result$value$message), call. = FALSE)
 }
-
-
-normalize_path <- function(...) {
-  normalizePath(..., mustWork = TRUE)
-}
