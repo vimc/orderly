@@ -251,6 +251,11 @@ orderly_version <- R6::R6Class(
     },
 
     prepare_environment = function() {
+      missing_packages <- setdiff(self$recipe$packages, .packages(TRUE))
+      if (length(missing_packages) > 0) {
+        handle_missing_packages(missing_packages)
+      }
+
       self$prepare_environment_parameters()
       self$prepare_environment_secrets()
       self$prepare_environment_environment()
