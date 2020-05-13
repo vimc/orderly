@@ -407,7 +407,6 @@ recipe_check_hashes <- function(pre, post, name1, name2) {
 recipe_copy_script <- function(info, src) {
   dir_create(dirname(info$script))
   file_copy(file.path(src, info$script), info$script)
-  info
 }
 
 
@@ -416,22 +415,15 @@ recipe_copy_readme <- function(info, src) {
     dir_create(dirname(info$readme))
     file_copy(file.path(src, info$readme), names(info$readme))
   }
-  info
 }
 
 
-## TODO (VIMC-20??): we need to organise where these files are coming
-## from in the read section, so if a source is actually global we
-## don't copy it here - but this should be done as a check during
-## read.  We also need to ensure that source files are not listed as
-## resources too, I think.
 recipe_copy_sources <- function(info, src) {
   if (length(info$sources) > 0L) {
     dir_create(dirname(info$sources))
     orderly_log("sources", info$sources)
     file_copy(file.path(src, info$sources), info$sources)
   }
-  info
 }
 
 
@@ -441,7 +433,6 @@ recipe_copy_resources <- function(info, src) {
     orderly_log("resource", info$resources)
     file_copy(file.path(src, info$resources), info$resources)
   }
-  info
 }
 
 
@@ -456,11 +447,9 @@ recipe_copy_global <- function(info, config) {
                 sprintf("%s -> %s",
                         info$global_resources, names(info$global_resources)))
   }
-  info
 }
 
 
-## TODO: return something else here
 recipe_copy_depends <- function(info) {
   if (!is.null(info$depends)) {
     dep_src <- file.path(info$depends$path, info$depends$filename)
@@ -474,7 +463,6 @@ recipe_copy_depends <- function(info) {
     dir_create(dirname(dep_dst))
     file_copy(dep_src, dep_dst)
   }
-  info
 }
 
 
