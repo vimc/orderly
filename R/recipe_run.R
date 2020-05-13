@@ -5,17 +5,6 @@
 ##' successfully run you can use \code{\link{orderly_commit}} to move
 ##' it to the \code{archive} directory.
 ##'
-##' If \code{ref} is provided then before running a report orderly
-##' will try to check out (as a detached \code{HEAD}) \code{ref},
-##' interpreted as a git reference.  This can be a commit, tag, or a
-##' branch name (including remote).  The working directory must be
-##' clean according to \code{git status} and this \emph{will} require
-##' some careful use of \code{.gitignore} to exclude \code{draft},
-##' \code{archive}, \code{data} and \code{orderly.sqlite} (see
-##' \code{\link{orderly_use_gitignore}} to help automate this).  The
-##' git tree will revert back to the original branch at completion (or
-##' failure to complete) the report.
-##'
 ##' Parameters are passed to the report as a named list, for example
 ##'
 ##' \code{
@@ -50,11 +39,6 @@
 ##'   evaluate the report script; by default a new environment will be
 ##'   made with the global environment as the parent.
 ##'
-##' @param ref A git reference to use for this run (see Details)
-##'
-##' @param fetch Logical, indicating if git should be fetched before
-##'   checking out the reference \code{ref}.
-##'
 ##' @param message An optional character string containing a message
 ##'   explaining why the report was run
 ##'
@@ -71,16 +55,6 @@
 ##'
 ##' @param echo Print the result of running the R code to the console
 ##'
-##' @param id_file Write the identifier into a file
-##'
-##' @param use_draft Should draft reports be used for dependencies?
-##'   This should be used only in development.  Valid values are
-##'   logical (\code{TRUE}, \code{FALSE}) or use the string
-##'   \code{newer} to use draft reports where they are newer than
-##'   archive reports.  For consistency, \code{always} and
-##'   \code{never} are equivalent to \code{TRUE} and \code{FALSE},
-##'   respectively.
-##'
 ##' @param remote Remote to use to resolve dependencies.  Use this in
 ##'   order to run a report with the same dependencies as are
 ##'   available on a remote server, particularly when using \code{id =
@@ -96,10 +70,6 @@
 ##'   Tags added here will be \emph{in addition} to any tags listed in
 ##'   the \code{tags:} field in \code{orderly.yml} and must be present
 ##'   in \code{orderly_config.yml}.
-##'
-##' @param batch_id ID of batch report run created by
-##'   \code{\link{orderly_batch}}. Gets written into \code{orderly_run.rds} as
-##'   metadata, not expected to be passed by user.
 ##'
 ##' @seealso \code{\link{orderly_log}} for controlling display of log
 ##'   messages (not just R output)
