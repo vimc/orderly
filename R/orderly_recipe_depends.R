@@ -90,8 +90,6 @@ recipe_resolve_dependencies <- function(self, use_draft, parameters, remote) {
   }
 
   depends <- rbind_df(depends_split)
-
-  ## Could do this above, but this works ok at least for now:
   depends$id_requested <- depends$id
   depends$id <- basename(depends$path)
 
