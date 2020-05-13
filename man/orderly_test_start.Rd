@@ -49,6 +49,14 @@ databases where instances are listed in
 where instances are not given.  See the "orderly" vignette for
 further information.}
 
+\item{use_draft}{Should draft reports be used for dependencies?
+This should be used only in development.  Valid values are
+logical (\code{TRUE}, \code{FALSE}) or use the string
+\code{newer} to use draft reports where they are newer than
+archive reports.  For consistency, \code{always} and
+\code{never} are equivalent to \code{TRUE} and \code{FALSE},
+respectively.}
+
 \item{remote}{Remote to use to resolve dependencies.  Use this in
 order to run a report with the same dependencies as are
 available on a remote server, particularly when using \code{id =

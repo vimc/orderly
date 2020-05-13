@@ -71,6 +71,14 @@
 ##'   the \code{tags:} field in \code{orderly.yml} and must be present
 ##'   in \code{orderly_config.yml}.
 ##'
+##' @param use_draft Should draft reports be used for dependencies?
+##'   This should be used only in development.  Valid values are
+##'   logical (\code{TRUE}, \code{FALSE}) or use the string
+##'   \code{newer} to use draft reports where they are newer than
+##'   archive reports.  For consistency, \code{always} and
+##'   \code{never} are equivalent to \code{TRUE} and \code{FALSE},
+##'   respectively.
+##'
 ##' @seealso \code{\link{orderly_log}} for controlling display of log
 ##'   messages (not just R output)
 ##'
