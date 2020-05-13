@@ -56,7 +56,9 @@ latest report in \emph{your} archive but the \code{remote =
 ID of workflow run
 }
 \description{
-WIP - skeleton implementation
+This runs & commits each of the reports configured in the workflow in turn.
+Note that if one report fails to be run or to be commited this will
+continue and attempt to run the remaining reports.
 }
 \examples{
 path <- orderly::orderly_example("demo")

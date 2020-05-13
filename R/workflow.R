@@ -1,6 +1,8 @@
 ##' Run a workflow.
 ##'
-##' WIP - skeleton implementation
+##' This runs & commits each of the reports configured in the workflow in turn.
+##' Note that if one report fails to be run or to be commited this will
+##' continue and attempt to run the remaining reports.
 ##'
 ##' @param name Name of workflow to run
 ##'
