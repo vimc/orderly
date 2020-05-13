@@ -445,20 +445,8 @@ recipe_copy_sources <- function(info, src) {
 }
 
 
-## TODO: move this into the read!
 recipe_copy_resources <- function(info, src) {
   if (length(info$resources) > 0L) {
-    resources <- info$resources
-    i <- is_directory(file.path(src, resources))
-    if (any(i)) {
-      resources <- as.list(resources)
-      resources[i] <- lapply(resources[i], function(p)
-        file.path(p, dir(file.path(src, p),
-                         recursive = TRUE, all.files = TRUE)))
-      resources <- unlist(resources)
-    }
-    info$resources <- resources
-
     dir_create(dirname(info$resources))
     orderly_log("resource", info$resources)
     file_copy(file.path(src, info$resources), info$resources)

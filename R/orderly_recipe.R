@@ -266,6 +266,13 @@ recipe_validate_resources <- function(resources, config, filename) {
     resources <- resources[!i]
   }
 
+  if (any(is_dir)) {
+    resources <- as.list(resources)
+    resources[is_dir] <- lapply(resources[is_dir], function(p)
+      file.path(p, dir(p, recursive = TRUE, all.files = TRUE)))
+    resources <- unlist(resources)
+  }
+
   resources
 }
 

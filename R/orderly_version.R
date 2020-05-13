@@ -158,8 +158,7 @@ orderly_version <- R6::R6Class(
       recipe_copy_readme(recipe, src)
       recipe_copy_sources(recipe, src)
       recipe_copy_global(recipe, self$config)
-      ## TODO: remove mutability for resources!
-      recipe_copy_resources(recipe, src) # do as part of read
+      recipe_copy_resources(recipe, src)
       recipe_copy_depends(recipe)
 
       self$inputs <- recipe$inputs()
