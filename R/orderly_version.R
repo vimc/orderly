@@ -172,7 +172,7 @@ orderly_version <- R6::R6Class(
 
     git_checkout = function(ref, fetch) {
       if (is.null(ref)) {
-        return(function() {})
+        return(function() NULL)
       }
       if (fetch) {
         git_fetch(self$config$root)

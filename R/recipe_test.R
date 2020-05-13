@@ -67,7 +67,6 @@ orderly_test_start <- function(name, parameters = NULL, envir = parent.frame(),
   }
 
   cache$test[[normalizePath(version$workdir)]] <- version
-  ## recipe_current_run_set(version)
 
   msg <- c("orderly has prepared your files at the path",
            "",
