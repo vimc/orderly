@@ -51,7 +51,7 @@ orderly_version <- R6::R6Class(
                             id_file = NULL, batch_id = NULL,
                             ref = NULL, fetch = FALSE, capture_log = FALSE) {
       logfile <- tempfile()
-      ## TODO: this does not properly capture errors.
+      ## TODO (VIMC-3841): this does not properly capture errors.
       conditional_capture_log(capture_log, logfile, {
         git_restore <- self$git_checkout(ref, fetch)
         tryCatch({
@@ -140,6 +140,8 @@ orderly_version <- R6::R6Class(
       post_success(readRDS(path_rds), self$config)
     },
 
+    ## Below here is pretty much just a translation of the previous
+    ## approach and is likely to get reorganised later.
     set_current = function(test = FALSE) {
       d <- list(id = self$id,
                 name = self$name,
@@ -168,8 +170,6 @@ orderly_version <- R6::R6Class(
       }
     },
 
-    ## This needs to be a private function as it assumes we're in the
-    ## correct directory...
     copy_files = function() {
       src <- file.path(path_src(self$config$root), self$recipe$name)
       recipe <- self$recipe
@@ -309,23 +309,19 @@ orderly_version <- R6::R6Class(
 
       hash_artefacts <-
         withr::with_dir(self$workdir, recipe_check_artefacts(self$recipe))
-      ## Ensure that inputs were not modified when the report was run:
 
-      ## TODO: Move this bit of processing into the recipe I think
       artefacts <- self$recipe$artefacts
       artefacts <- data_frame(
         format = list_to_character(artefacts[, "format"], FALSE),
         description = list_to_character(artefacts[, "description"], FALSE),
         order = seq_len(nrow(artefacts)))
       n <- lengths(self$recipe$artefacts[, "filenames"])
-      ## TODO: workdir here is terrible
       file_info_artefacts <- data_frame(
         order = rep(seq_along(n), n),
         filename = names(hash_artefacts),
         file_hash = unname(hash_artefacts),
         file_size = file_size(file.path(self$workdir, names(hash_artefacts))))
 
-      ## TODO: make this less weird
       recipe_check_hashes(
         self$inputs,
         withr::with_dir(self$workdir, self$recipe$inputs()),
@@ -383,14 +379,12 @@ orderly_version <- R6::R6Class(
     metadata = function() {
       recipe <- self$recipe
 
-      ## TODO: should this be done in recipe?
       if (length(recipe$fields) == 0L) {
         extra_fields <- NULL
       } else {
         extra_fields <- as_data_frame(recipe$fields)
       }
 
-      ## TODO: should this be done in recipe?
       if (is.null(recipe$views)) {
         views <- NULL
       } else {
@@ -412,7 +406,8 @@ orderly_version <- R6::R6Class(
            random_seed = self$preflight_info$random_seed,
            instance = self$data$instance,
            file_info_inputs = self$inputs,
-           ## TODO: migration to fix this double handling of artefacts?
+           ## TODO (VIMC-3843): migration to fix this double handling
+           ## of artefacts
            file_info_artefacts = self$postflight_info$file_info_artefacts,
            global_resources = recipe$global_resources,
            artefacts = self$postflight_info$artefacts,
