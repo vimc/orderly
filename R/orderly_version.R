@@ -49,6 +49,7 @@ orderly_version <- R6::R6Class(
     config = NULL,
     name = NULL,
 
+    env = NULL,
     id = NULL,
     workdir = NULL,
     owd = NULL,
@@ -69,6 +70,7 @@ orderly_version <- R6::R6Class(
 
     initialize = function(name, root, locate) {
       self$config <- orderly_config_get(root, locate)
+      self$env <- orderly_envir_read(self$config$root)
       self$name <- name
     },
 
@@ -85,11 +87,11 @@ orderly_version <- R6::R6Class(
 
     ## And the one for use non-interactively
     run2 = function(parameters = NULL, instance = NULL, envir = NULL,
-                   message = NULL, tags = NULL, echo = TRUE,
-                   use_draft = FALSE, remote = NULL,
-                   ## These might move around a bit
-                   id_file = NULL, batch_id = NULL,
-                   ref = NULL, fetch = FALSE, capture_log = FALSE) {
+                    message = NULL, tags = NULL, echo = TRUE,
+                    use_draft = FALSE, remote = NULL,
+                    ## These might move around a bit
+                    id_file = NULL, batch_id = NULL,
+                    ref = NULL, fetch = FALSE, capture_log = FALSE) {
       logfile <- tempfile()
       ## TODO: this does not properly capture errors.
       conditional_capture_log(capture_log, logfile, {
@@ -108,10 +110,27 @@ orderly_version <- R6::R6Class(
       })
     },
 
+    develop_start = function(parameters = NULL, instance = NULL, envir = NULL,
+                             use_draft = FALSE, remote = NULL) {
+      self$run_read(parameters, instance, envir, NULL,
+                    use_draft, remote, TRUE)
+      self$workdir <- self$recipe$path
+      withr::with_envvar(self$env, {
+        withr::with_dir(self$workdir, {
+          recipe_copy_global(self$recipe, self$config)
+          recipe_copy_depends(self$recipe)
+          self$prepare_environment()
+        })
+      })
+      sys_setenv(self$env)
+    },
+
     run_read = function(parameters, instance, envir, tags,
-                        use_draft, remote) {
+                        use_draft, remote, develop = FALSE) {
       loc <- orderly_develop_location(self$name, self$config, FALSE)
-      self$recipe <- orderly_recipe$new(loc$name, loc$config)
+      self$recipe <- orderly_recipe$new(loc$name, loc$config,
+                                        develop = develop)
+      orderly_log("name", self$recipe$name)
       self$instance <- instance
       self$envir <- orderly_environment(envir)
       self$parameters <- recipe_parameters(self$recipe, parameters)
@@ -137,7 +156,7 @@ orderly_version <- R6::R6Class(
       recipe_current_run_set(self$recipe)
       on.exit(recipe_current_run_clear(), add = TRUE)
 
-      withr::with_envvar(orderly_envir_read(self$config$root), {
+      withr::with_envvar(self$env, {
         withr::with_dir(self$workdir, {
           self$prepare_environment()
           source(self$recipe$script, local = self$envir, # nolint
@@ -164,7 +183,6 @@ orderly_version <- R6::R6Class(
 
     create = function(id_file) {
       self$id <- new_report_id()
-      orderly_log("name", self$recipe$name)
       orderly_log("id", self$id)
       if (!is.null(id_file)) {
         orderly_log("id_file", id_file)
@@ -438,10 +456,9 @@ orderly_version <- R6::R6Class(
     },
 
     write_orderly_run_rds = function() {
-      ## TODO: Needing to get the env again is weird
-      session <- withr::with_envvar(
-        orderly_envir_read(self$config$root),
-        session_info())
+      ## TODO: Needing to get the env again is weird - get this during
+      ## postflight?
+      session <- withr::with_envvar(self$env, session_info())
       session$meta <- self$metadata()
       ## NOTE: git is here twice for some reason
       session$git <- session$meta$git
