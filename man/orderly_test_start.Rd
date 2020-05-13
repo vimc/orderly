@@ -3,7 +3,6 @@
 \name{orderly_test_start}
 \alias{orderly_test_start}
 \alias{orderly_test_check}
-\alias{orderly_data}
 \title{Prepare a directory for orderly to use}
 \usage{
 orderly_test_start(
@@ -18,16 +17,6 @@ orderly_test_start(
 )
 
 orderly_test_check(path = NULL)
-
-orderly_data(
-  name,
-  parameters = NULL,
-  envir = NULL,
-  root = NULL,
-  locate = TRUE,
-  instance = NULL,
-  use_draft = FALSE
-)
 }
 \arguments{
 \item{name}{Name of the report to run (see
@@ -60,14 +49,6 @@ databases where instances are listed in
 where instances are not given.  See the "orderly" vignette for
 further information.}
 
-\item{use_draft}{Should draft reports be used for dependencies?
-This should be used only in development.  Valid values are
-logical (\code{TRUE}, \code{FALSE}) or use the string
-\code{newer} to use draft reports where they are newer than
-archive reports.  For consistency, \code{always} and
-\code{never} are equivalent to \code{TRUE} and \code{FALSE},
-respectively.}
-
 \item{remote}{Remote to use to resolve dependencies.  Use this in
 order to run a report with the same dependencies as are
 available on a remote server, particularly when using \code{id =
@@ -88,8 +69,7 @@ For interactive testing of orderly code.  This runs through and
 sets everything up as orderly would (creates a new working
 directory and copies files into it, pulls data from the database,
 copies over any dependent reports) but then rather than running
-the report hands back to the user. The \code{orderly_data}
-function returns an environment with the extracted data.
+the report hands back to the user.
 }
 \details{
 Previous versions of orderly changed into the created directory
@@ -130,13 +110,4 @@ dev.off()
 
 # We now confirm that the artefact has been created:
 orderly::orderly_test_check(p)
-# The function orderly_data does all the preparation work that
-# orderly_run does, but does not run the report; instead it
-# returns the created environment with all the data and parameters
-# set.
-path <- orderly::orderly_example("demo")
-env <- orderly::orderly_data("other", list(nmin = 0.2), root = path)
-ls(env)
-env$nmin
-env$extract
 }

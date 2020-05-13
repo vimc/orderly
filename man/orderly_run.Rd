@@ -11,15 +11,11 @@ orderly_run(
   root = NULL,
   locate = TRUE,
   echo = TRUE,
-  id_file = NULL,
-  fetch = FALSE,
-  ref = NULL,
   message = NULL,
   instance = NULL,
   use_draft = FALSE,
   remote = NULL,
-  tags = NULL,
-  batch_id = NULL
+  tags = NULL
 )
 }
 \arguments{
@@ -48,13 +44,6 @@ parents until it finds an \code{orderly_config.yml} file.}
 
 \item{echo}{Print the result of running the R code to the console}
 
-\item{id_file}{Write the identifier into a file}
-
-\item{fetch}{Logical, indicating if git should be fetched before
-checking out the reference \code{ref}.}
-
-\item{ref}{A git reference to use for this run (see Details)}
-
 \item{message}{An optional character string containing a message
 explaining why the report was run}
 
@@ -66,14 +55,6 @@ databases where instances are listed in
 \code{orderly_config.yml}, and will be ignored by all database
 where instances are not given.  See the "orderly" vignette for
 further information.}
-
-\item{use_draft}{Should draft reports be used for dependencies?
-This should be used only in development.  Valid values are
-logical (\code{TRUE}, \code{FALSE}) or use the string
-\code{newer} to use draft reports where they are newer than
-archive reports.  For consistency, \code{always} and
-\code{never} are equivalent to \code{TRUE} and \code{FALSE},
-respectively.}
 
 \item{remote}{Remote to use to resolve dependencies.  Use this in
 order to run a report with the same dependencies as are
@@ -90,10 +71,6 @@ are immutable and cannot be removed once the report is run.
 Tags added here will be \emph{in addition} to any tags listed in
 the \code{tags:} field in \code{orderly.yml} and must be present
 in \code{orderly_config.yml}.}
-
-\item{batch_id}{ID of batch report run created by
-\code{\link{orderly_batch}}. Gets written into \code{orderly_run.rds} as
-metadata, not expected to be passed by user.}
 }
 \value{
 The id of the newly created report
@@ -107,17 +84,6 @@ successfully run you can use \code{\link{orderly_commit}} to move
 it to the \code{archive} directory.
 }
 \details{
-If \code{ref} is provided then before running a report orderly
-will try to check out (as a detached \code{HEAD}) \code{ref},
-interpreted as a git reference.  This can be a commit, tag, or a
-branch name (including remote).  The working directory must be
-clean according to \code{git status} and this \emph{will} require
-some careful use of \code{.gitignore} to exclude \code{draft},
-\code{archive}, \code{data} and \code{orderly.sqlite} (see
-\code{\link{orderly_use_gitignore}} to help automate this).  The
-git tree will revert back to the original branch at completion (or
-failure to complete) the report.
-
 Parameters are passed to the report as a named list, for example
 
 \code{
