@@ -5,29 +5,30 @@ orderly_version <- R6::R6Class(
   public = list(
     config = NULL,
     name = NULL,
-
-    env = NULL,
-    id = NULL,
-    workdir = NULL,
-    owd = NULL,
-    git = NULL,
-    inputs = NULL,
-    batch_id = NULL,
-    ## Added by me:
     recipe = NULL,
+
+    id = NULL,
+    batch_id = NULL,
+    workdir = NULL,
+
+    envvar = NULL,
+    git = NULL,
+
     envir = NULL,
     data = NULL,
     changelog = NULL,
     tags = NULL,
     parameters = NULL,
     instance = NULL,
+    inputs = NULL,
+
     preflight_info = NULL,
     postflight_info = NULL,
     time = NULL,
 
     initialize = function(name, root, locate) {
       self$config <- orderly_config_get(root, locate)
-      self$env <- orderly_envir_read(self$config$root)
+      self$envvar <- orderly_envir_read(self$config$root)
       self$name <- name
     },
 
@@ -67,21 +68,24 @@ orderly_version <- R6::R6Class(
       })
     },
 
+    ## Implementation for orderly_develop_start
     develop_start = function(parameters = NULL, instance = NULL, envir = NULL,
                              use_draft = FALSE, remote = NULL) {
       self$run_read(parameters, instance, envir, NULL,
                     use_draft, remote, TRUE)
       self$workdir <- self$recipe$path
-      withr::with_envvar(self$env, {
+      withr::with_envvar(self$envvar, {
         withr::with_dir(self$workdir, {
           recipe_copy_global(self$recipe, self$config)
           recipe_copy_depends(self$recipe)
           self$prepare_environment()
         })
       })
-      sys_setenv(self$env)
+      sys_setenv(self$envvar)
     },
 
+    ## The next bit are the basic "phases" - we'll probably tweak
+    ## these over time to find the right gaps
     run_read = function(parameters, instance, envir, tags,
                         use_draft, remote, develop = FALSE) {
       loc <- orderly_develop_location(self$name, self$config, FALSE)
@@ -111,7 +115,7 @@ orderly_version <- R6::R6Class(
       self$set_current()
       on.exit(recipe_current_run_clear(), add = TRUE)
 
-      withr::with_envvar(self$env, {
+      withr::with_envvar(self$envvar, {
         withr::with_dir(self$workdir, {
           self$prepare_environment()
           source(self$recipe$script, local = self$envir, # nolint
@@ -123,6 +127,17 @@ orderly_version <- R6::R6Class(
     run_cleanup = function() {
       self$postflight()
       self$write_orderly_run_rds()
+    },
+
+    commit = function(capture_log, ...) {
+      logfile <- file.path(path_draft(self$config$root),
+                           self$name, self$id, "orderly.log")
+      conditional_capture_log(
+        capture_log, logfile,
+        orderly_commit(self$id, root = self$config, locate = FALSE, ...))
+      path_rds <- path_orderly_run_rds(
+        file.path(self$config$root, "archive", self$name, self$id))
+      post_success(readRDS(path_rds), self$config)
     },
 
     set_current = function(test = FALSE) {
@@ -412,9 +427,7 @@ orderly_version <- R6::R6Class(
     },
 
     write_orderly_run_rds = function() {
-      ## TODO: Needing to get the env again is weird - get this during
-      ## postflight?
-      session <- withr::with_envvar(self$env, session_info())
+      session <- withr::with_envvar(self$envvar, session_info())
       session$meta <- self$metadata()
       ## NOTE: git is here twice for some reason
       session$git <- session$meta$git
