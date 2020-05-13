@@ -13,13 +13,21 @@ orderly_run2 <- function(name = NULL, parameters = NULL, envir = NULL,
                         root = NULL, locate = TRUE, echo = TRUE,
                         message = NULL, instance = NULL, use_draft = FALSE,
                         remote = NULL, tags = NULL,
-                        # These belong elsewhere I feel
+                        # specific to run2
                         id_file = NULL, batch_id = NULL,
-                        fetch = FALSE, ref = NULL) {
+                        fetch = FALSE, ref = NULL,
+                        capture_log = FALSE, commit = FALSE) {
   version <- orderly_version$new(name, root, locate)
   version$run2(parameters, instance, envir, message, tags, echo,
               use_draft, remote,
-              id_file, batch_id, ref, fetch)
+              id_file, batch_id, ref, fetch, capture_log)
+  if (commit) {
+    logfile <- file.path(path_draft(version$config$root),
+                         version$name, version$id, "orderly.log")
+    conditional_capture_log(
+      capture_log, logfile,
+      orderly_commit(version$id, root = version$config))
+  }
   version$id
 }
 
@@ -68,21 +76,29 @@ orderly_version <- R6::R6Class(
       self$run_cleanup()
     },
 
+    ## And the one for use non-interactively
     run2 = function(parameters = NULL, instance = NULL, envir = NULL,
                    message = NULL, tags = NULL, echo = TRUE,
                    use_draft = FALSE, remote = NULL,
                    ## These might move around a bit
                    id_file = NULL, batch_id = NULL,
-                   ref = NULL, fetch = FALSE) {
-      git_restore <- self$git_checkout(ref, fetch)
-      tryCatch({
-        self$run_read(parameters, instance, envir, tags, use_draft,
-                      remote)
-        self$run_prepare(message, id_file)
-      }, finally = git_restore())
-      self$batch_id <- batch_id
-      self$run_execute(echo)
-      self$run_cleanup()
+                   ref = NULL, fetch = FALSE, capture_log = FALSE) {
+      logfile <- tempfile()
+      ## TODO: this does not properly capture errors.
+      conditional_capture_log(capture_log, logfile, {
+        git_restore <- self$git_checkout(ref, fetch)
+        tryCatch({
+          self$run_read(parameters, instance, envir, tags, use_draft,
+                        remote)
+          self$run_prepare(message, id_file)
+        }, finally = git_restore())
+        if (capture_log) {
+          on.exit(file_copy(logfile, file.path(self$workdir, "orderly.log")))
+        }
+        self$batch_id <- batch_id
+        self$run_execute(echo)
+        self$run_cleanup()
+      })
     },
 
     run_read = function(parameters, instance, envir, tags,
@@ -411,7 +427,7 @@ orderly_version <- R6::R6Class(
            git = self$preflight_info$git,
            batch_id = self$batch_id,
            data = self$postflight_info$data_info,
-           views = self$postflight_info$view_info)
+           view = self$postflight_info$view_info)
     },
 
     write_orderly_run_rds = function() {
