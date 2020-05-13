@@ -11,16 +11,21 @@ test_that("workflow can be run", {
     output <- evaluate_promise(orderly_workflow("my_workflow", root = path))
   })
 
-  expect_true("[ workflow   ]  Running workflow 'my_workflow' with ID 'workflowid'\n" %in% output$messages)
-  expect_true("[ workflow   ]  Running report 'minimal'\n" %in% output$messages)
-  expect_true("[ workflow   ]  Finished running report 'minimal'\n" %in% output$messages)
-  expect_true("[ workflow   ]  Committing report 'minimal'\n" %in% output$messages)
-  expect_true("[ workflow   ]  Finished committing report 'minimal'\n" %in% output$messages)
-  expect_true("[ workflow   ]  Running report 'global'\n" %in% output$messages)
-  expect_true("[ workflow   ]  Finished running report 'global'\n" %in% output$messages)
-  expect_true("[ workflow   ]  Committing report 'global'\n" %in% output$messages)
-  expect_true("[ workflow   ]  Finished committing report 'global'\n" %in% output$messages)
-  expect_true("[ workflow   ]  Completed running workflow 'my_workflow' with ID 'workflowid'\n" %in% output$messages)
+  expect_output <- function(message) {
+    expect_true(message %in% output$messages)
+  }
+  expect_output(
+    "[ workflow   ]  Running workflow 'my_workflow' with ID 'workflowid'\n")
+  expect_output("[ workflow   ]  Running report 'minimal'\n")
+  expect_output("[ workflow   ]  Finished running report 'minimal'\n")
+  expect_output("[ workflow   ]  Committing report 'minimal'\n")
+  expect_output("[ workflow   ]  Finished committing report 'minimal'\n")
+  expect_output("[ workflow   ]  Running report 'global'\n")
+  expect_output("[ workflow   ]  Finished running report 'global'\n")
+  expect_output("[ workflow   ]  Committing report 'global'\n")
+  expect_output("[ workflow   ]  Finished committing report 'global\n")
+  expect_output(paste0("[ workflow   ]  Completed running workflow",
+                       "'my_workflow' with ID 'workflowid'\n"))
 
   expect_equal(output$result, c("report_id_1", "report_id_2"))
 
@@ -47,9 +52,14 @@ test_that("workflow returns completed IDs if a report fails", {
   })
 
   expect_true("[ workflow   ]  Running report 'minimal'\n" %in% output$messages)
-  expect_true("[ error      ]  Running report 'minimal' failed with message \ngot an error\n" %in% output$messages)
+  expect_true(paste0("[ error      ]  Running report 'minimal' ",
+                     "failed with message \ngot an error\n")
+              %in% output$messages)
   expect_true("[ workflow   ]  Running report 'global'\n" %in% output$messages)
-  expect_true("[ workflow   ]  Completed running workflow 'my_workflow' with ID 'workflowid'\n with 1 failure(s)\n" %in% output$messages)
+  expect_true(paste0(
+    "[ workflow   ]  Completed running workflow ",
+    "'my_workflow' with ID 'workflowid'\n with 1 failure(s)\n")
+    %in% output$messages)
 
   expect_equal(output$result, "report_id_2")
 
