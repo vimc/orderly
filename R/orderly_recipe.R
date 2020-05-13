@@ -35,13 +35,6 @@ orderly_recipe <- R6::R6Class(
     name = NULL,
     path = NULL,
 
-    ## TODO(VIMC-3611): refactor this out into a container class
-    id = NULL,
-    ## workdir = NULL,
-    ## git = NULL,
-    ## owd = NULL,
-    ## batch_id = NULL,
-
     initialize = function(name, config, develop = FALSE, path = NULL) {
       assert_is(config, "orderly_config")
 
