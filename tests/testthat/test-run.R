@@ -58,22 +58,6 @@ test_that("minimal", {
   recipe_commit(p, config)
 })
 
-test_that("orderly_data", {
-  skip("orderly_data")
-  path <- prepare_orderly_example("minimal")
-  on.exit(unlink(path, recursive = TRUE))
-
-  d <- orderly_data("example", root = path)
-  expect_is(d, "environment")
-  expect_is(d$dat, "data.frame")
-
-  e1 <- new.env(parent = baseenv())
-  e <- orderly_data("example", root = path, envir = e1)
-  expect_identical(e, e1)
-
-  expect_identical(e$dat, d$dat)
-})
-
 test_that("fail to create artefact", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
@@ -172,30 +156,6 @@ test_that("leave connection open", {
 })
 
 
-test_that("connection", {
-  skip("orderly_data")
-  path <- prepare_orderly_example("minimal")
-  on.exit(unlink(path, recursive = TRUE))
-
-  path_example <- file.path(path, "src", "example")
-  yml <- file.path(path_example, "orderly.yml")
-  txt <- readLines(yml)
-  dat <- list(connection = list(con = "source"))
-  writeLines(c(txt, yaml::as.yaml(dat)), yml)
-
-  config <- orderly_config$new(path)
-  info <- orderly_recipe$new("example", config)
-  expect_identical(info$connection, list("con" = "source"))
-
-  data <- orderly_data("example",
-                       envir = new.env(parent = .GlobalEnv),
-                       root = path)
-  expect_is(data$con, "SQLiteConnection")
-  expect_is(DBI::dbReadTable(data$con, "data"), "data.frame")
-  DBI::dbDisconnect(data$con)
-})
-
-
 test_that("connection is saved to db", {
   skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
@@ -233,11 +193,6 @@ test_that("no data", {
   writeLines(yml, file.path(path_example, "orderly.yml"))
   writeLines(script, file.path(path_example, "script.R"))
 
-  ## data <- orderly_data("example",
-  ##                      envir = new.env(parent = .GlobalEnv),
-  ##                      root = path)
-  ## expect_equal(ls(data, all.names = TRUE), character(0))
-
   id <- orderly_run("example", root = path, echo = FALSE)
   p <- file.path(path_draft(path), "example", id, "data.rds")
   expect_true(file.exists(p))
@@ -254,10 +209,6 @@ test_that("use artefact", {
   path_orig <- file.path(path_draft(path), "example", id1, "data.rds")
   expect_true(file.exists(path_orig))
 
-  ## data <- orderly_data("depend",
-  ##                      envir = new.env(parent = .GlobalEnv),
-  ##                      root = path, use_draft = TRUE)
-  ## expect_identical(ls(data), character(0))
   id2 <- orderly_run("depend", root = path, echo = FALSE, use_draft = TRUE)
   path_previous <- file.path(path_draft(path), "depend", id2, "previous.rds")
   expect_true(file.exists(path_previous))
@@ -337,7 +288,6 @@ test_that("database is not loaded unless needed", {
     vars,
     prepare_orderly_example("nodb", testing = TRUE))
 
-  expect_identical(as.list(orderly_data("example", root = path)), list())
   id <- orderly_run("example", root = path, echo = FALSE)
   expect_true(
     file.exists(file.path(path, "draft", "example", id, "mygraph.png")))

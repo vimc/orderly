@@ -2,8 +2,7 @@
 ##' sets everything up as orderly would (creates a new working
 ##' directory and copies files into it, pulls data from the database,
 ##' copies over any dependent reports) but then rather than running
-##' the report hands back to the user. The \code{orderly_data}
-##' function returns an environment with the extracted data.
+##' the report hands back to the user.
 ##'
 ##' Previous versions of orderly changed into the created directory
 ##' when using \code{orderly::orderly_test_start}, which allowed
@@ -110,27 +109,4 @@ orderly_test_check <- function(path = NULL) {
   h[is.na(h)] <- "<missing>"
   orderly_log("artefact", sprintf("%s: %s", artefacts, h))
   invisible(all(found))
-}
-
-
-##' @export
-##' @rdname orderly_test_start
-##' @examples
-##' # The function orderly_data does all the preparation work that
-##' # orderly_run does, but does not run the report; instead it
-##' # returns the created environment with all the data and parameters
-##' # set.
-##' path <- orderly::orderly_example("demo")
-##' env <- orderly::orderly_data("other", list(nmin = 0.2), root = path)
-##' ls(env)
-##' env$nmin
-##' env$extract
-orderly_data <- function(name, parameters = NULL, envir = NULL,
-                         root = NULL, locate = TRUE, instance = NULL,
-                         use_draft = FALSE) {
-  config <- orderly_config_get(root, locate)
-  info <- orderly_recipe$new(name, config)
-  info$resolve_dependencies(use_draft, parameters)
-  envir <- orderly_environment(envir)
-  recipe_data(config, info, parameters, envir, instance)$dest
 }
