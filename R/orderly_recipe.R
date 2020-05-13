@@ -69,15 +69,8 @@ orderly_recipe <- R6::R6Class(
       invisible(self)
     },
 
-    inputs = function(path = ".", check = TRUE) {
-      inputs <- withr::with_path(path, recipe_file_inputs(self))
-      if (check) {
-        ## TODO: this is just here for compatibility with tests etc,
-        ## but this can and should be done in the recipe read, though
-        ## that requires resolving the directory dependencies too.
-        recipe_check_unique_inputs2(inputs, self$depends)
-      }
-      inputs
+    inputs = function(path = ".") {
+      withr::with_path(path, recipe_file_inputs(self))
     },
 
     resolve_dependencies = function(use_draft = FALSE, parameters = NULL,
@@ -207,6 +200,8 @@ recipe_validate <- function(self, develop, filename) {
   self$resources <- c(self$resources,
                       attr(self$data, "resources"),
                       attr(self$views, "resources"))
+
+  recipe_check_unique_inputs(recipe_file_inputs(self), self$depends)
 }
 
 
@@ -567,7 +562,7 @@ string_or_filename <- function(x, path, name) {
 }
 
 
-recipe_check_unique_inputs2 <- function(inputs, depends) {
+recipe_check_unique_inputs <- function(inputs, depends) {
   tmp <- rbind(
     inputs[c("filename", "file_purpose")],
     data_frame(filename = depends$as,
@@ -581,4 +576,15 @@ recipe_check_unique_inputs2 <- function(inputs, depends) {
                  paste(details, collapse = "")),
          call. = FALSE)
   }
+}
+
+
+recipe_file_inputs <- function(info) {
+  file_in_data(
+    orderly_yml = file_info("orderly.yml"),
+    script = file_info(info$script),
+    readme = file_info(names(info$readme)),
+    source = file_info(info$sources),
+    resource = file_info(info$resources),
+    global = file_info(names(info$global_resources)))
 }

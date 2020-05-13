@@ -244,7 +244,7 @@ recipe_exists_artefacts <- function(info, id) {
 
 recipe_unexpected_artefacts <- function(info, id) {
   artefacts <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
-  resources <- info$inputs(check = FALSE)$filename
+  resources <- info$inputs()$filename
   dependencies <- info$depends$as
   expected <- c(artefacts, resources, dependencies)
 
@@ -315,8 +315,17 @@ orderly_environment <- function(envir) {
 }
 
 
-recipe_current_run_set <- function(info) {
-  cache$current <- info
+recipe_current_run_set <- function(info, path, test) {
+  if (test) {
+    ## We take the opportunity here to filter out any no-longer-existing
+    ## test reports.
+    if (length(cache$test) > 0) {
+      cache$test <- cache$test[file.exists(names(cache$test))]
+    }
+    cache$test[[normalizePath(path)]] <- info
+  } else {
+    cache$current <- info
+  }
 }
 
 
@@ -377,17 +386,6 @@ orderly_run_info <- function(path = NULL) {
     stop("Not currently running an orderly report")
   }
   info
-}
-
-
-recipe_file_inputs <- function(info) {
-  file_in_data(
-    orderly_yml = file_info("orderly.yml"),
-    script = file_info(info$script),
-    readme = file_info(names(info$readme)),
-    source = file_info(info$sources),
-    resource = file_info(info$resources),
-    global = file_info(names(info$global_resources)))
 }
 
 

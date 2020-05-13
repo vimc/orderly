@@ -59,14 +59,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = parent.frame(),
   version$run_read(parameters, instance, envir, NULL, use_draft, remote)
   version$run_prepare()
   withr::with_dir(version$workdir, version$prepare_environment())
-
-  ## We take the opportunity here to filter out any no-longer-existing
-  ## test reports.
-  if (length(cache$test) > 0) {
-    cache$test <- cache$test[file.exists(names(cache$test))]
-  }
-
-  cache$test[[normalizePath(version$workdir)]] <- version
+  version$set_current(test = TRUE)
 
   msg <- c("orderly has prepared your files at the path",
            "",
@@ -101,7 +94,10 @@ orderly_test_check <- function(path = NULL) {
   if (is.null(info)) {
     stop(sprintf("Not running in test mode (for path %s)", path))
   }
-  found <- withr::with_dir(path, recipe_exists_artefacts(info$recipe))
+  config <- orderly_config_get(info$root, FALSE)
+  recipe <- orderly_recipe$new(info$name, config, TRUE, path)
+
+  found <- withr::with_dir(path, recipe_exists_artefacts(recipe))
   msg <- sprintf("%7s: %s", ifelse(found, "found", "missing"), names(found))
   artefacts <- names(found)
   h <- withr::with_dir(path, hash_artefacts(artefacts))

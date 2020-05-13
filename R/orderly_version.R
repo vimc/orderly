@@ -108,9 +108,7 @@ orderly_version <- R6::R6Class(
     },
 
     run_execute = function(echo = TRUE) {
-      ## TODO: this is not great, and needs changing!
-      self$recipe$id <- self$id
-      recipe_current_run_set(self$recipe)
+      self$set_current()
       on.exit(recipe_current_run_clear(), add = TRUE)
 
       withr::with_envvar(self$env, {
@@ -125,6 +123,14 @@ orderly_version <- R6::R6Class(
     run_cleanup = function() {
       self$postflight()
       self$write_orderly_run_rds()
+    },
+
+    set_current = function(test = FALSE) {
+      d <- list(id = self$id,
+                name = self$name,
+                root = self$config$root,
+                depends = self$recipe$depends)
+      recipe_current_run_set(d, self$workdir, test)
     },
 
     git_checkout = function(ref, fetch) {
