@@ -36,6 +36,7 @@ test_that("leave device open", {
              file.path(path, "src/example/script.R"))
   expect_error(orderly_run("example", root = path, echo = FALSE),
                "Report left 1 device open")
+  expect_false(file.exists("mygraph.png"))
 })
 
 test_that("close too many devices", {
@@ -259,7 +260,7 @@ test_that("database is not loaded unless needed", {
 test_that("id file", {
   path <- prepare_orderly_example("minimal")
   tmp <- tempfile()
-  id <- orderly_run("example", root = path, id_file = tmp, echo = FALSE)
+  id <- orderly_run2("example", root = path, id_file = tmp, echo = FALSE)
   expect_true(file.exists(tmp))
   expect_equal(readLines(tmp), id)
 })
@@ -906,17 +907,10 @@ test_that("orderly_run can capture messages", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
-  config <- orderly_config_get(path, TRUE)
-  config$add_run_option("capture_log", TRUE)
-  id <- orderly_run("example", root = config, echo = FALSE)
+  id <- orderly_run2("example", root = path, echo = FALSE,
+                     capture_log = TRUE, commit = TRUE)
 
-  draft_logs <- file.path(path, "draft", "example", id, "orderly.log")
-  expect_true(file.exists(draft_logs))
-  log <- readLines(draft_logs)
-  expect_true("[ name       ]  example" %in% log)
-
-  path <- orderly_commit(id, root = config)
-  archive_logs <- file.path(path, "orderly.log")
+  archive_logs <- file.path(path, "archive", "example", id, "orderly.log")
   expect_true(file.exists(archive_logs))
   log <- readLines(archive_logs)
   expect_true("[ name       ]  example" %in% log)
@@ -927,11 +921,10 @@ test_that("logs from failed runs can still be written to file", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
-  config <- orderly_config_get(path, TRUE)
-  config$add_run_option("capture_log", TRUE)
   append_lines('stop("some error")',
                file.path(path, "src", "example", "script.R"))
-  expect_error(orderly_run("example", root = config, echo = FALSE),
+  expect_error(orderly_run2("example", root = path, echo = FALSE,
+                            capture_log = TRUE),
                "some error")
   id <- dir(file.path(path, "draft", "example"))
 

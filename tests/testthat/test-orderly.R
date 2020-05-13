@@ -78,9 +78,9 @@ test_that("orderly_run_info is usable from test_start", {
     orderly_run_info(),
     "Not currently running an orderly report")
   info <- orderly_run_info(p)
-  expect_equal(info$depends$id, id1)
-  expect_is(info$depends$time, "POSIXt")
-  expect_true(info$depends$is_latest)
+  expect_equal(info$recipe$depends$id, id1)
+  expect_is(info$recipe$depends$time, "POSIXt")
+  expect_true(info$recipe$depends$is_latest)
 })
 
 
@@ -105,9 +105,9 @@ test_that("orderly_run_info: is_latest detects latest version", {
   writeLines(txt2, p)
   info2 <- f()
 
-  expect_true(info0$depends$is_latest)
-  expect_false(info1$depends$is_latest)
-  expect_true(info2$depends$is_latest)
+  expect_true(info0$recipe$depends$is_latest)
+  expect_false(info1$recipe$depends$is_latest)
+  expect_true(info2$recipe$depends$is_latest)
 })
 
 
