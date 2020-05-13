@@ -933,3 +933,14 @@ test_that("logs from failed runs can still be written to file", {
   log <- readLines(draft_logs)
   expect_true("[ name       ]  example" %in% log)
 })
+
+
+test_that("run errors if given extra parameters", {
+  path <- prepare_orderly_example("demo")
+  expect_error(
+    orderly_run("minimal", list(a = 1), root = path),
+    "Extra parameters: 'a'")
+  expect_error(
+    orderly_run("other", list(nmin = 1, a = 1), root = path),
+    "Extra parameters: 'a'")
+})
