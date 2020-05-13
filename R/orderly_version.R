@@ -21,12 +21,17 @@ orderly_run2 <- function(name = NULL, parameters = NULL, envir = NULL,
   version$run2(parameters, instance, envir, message, tags, echo,
               use_draft, remote,
               id_file, batch_id, ref, fetch, capture_log)
+
+  ## TODO: Tidy this mess up:
   if (commit) {
     logfile <- file.path(path_draft(version$config$root),
                          version$name, version$id, "orderly.log")
     conditional_capture_log(
       capture_log, logfile,
       orderly_commit(version$id, root = version$config))
+    path_rds <- path_orderly_run_rds(
+      file.path(version$config$root, "archive", version$name, version$id))
+    post_success(readRDS(path_rds), version$config)
   }
   version$id
 }
