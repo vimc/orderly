@@ -20,44 +20,6 @@ test_that("minimal", {
 })
 
 
-## Same as in read; we generate a report and then break it
-test_that("minimal", {
-  skip("This test is a mess")
-  path <- prepare_orderly_example("minimal")
-  on.exit(unlink(path, recursive = TRUE))
-
-  config <- orderly_config$new(path)
-  info <- orderly_recipe$new("example", config)
-  data <- recipe_data(config, info, NULL, new.env(parent = .GlobalEnv),
-                      instance = NULL)
-  expect_is(data$dest$dat, "data.frame")
-
-  expect_error(
-    recipe_data(config, info, list(a = 1), new.env(parent = .GlobalEnv)),
-    "Extra parameters: 'a'")
-  expect_error(
-    recipe_data(config, info, NULL, NULL),
-    "Invalid input for 'dest'")
-
-  info$workdir <- tempfile()
-  dir.create(info$workdir)
-  expect_error(recipe_prepare_workdir(info),
-               "'workdir' must not exist")
-  unlink(info$workdir, recursive = TRUE)
-
-  envir <- orderly_environment(NULL)
-  info <- recipe_prepare(config, "example")
-  res <- recipe_run(info, NULL, envir, config, echo = FALSE)
-  p <- file.path(path_draft(config$root), res$name, res$id)
-  files <- dir(p)
-  expect_true(file.exists(file.path(p, "orderly.yml")))
-  expect_true(file.exists(file.path(p, "orderly_run.rds")))
-  expect_true(file.exists(file.path(p, "script.R")))
-  expect_true(file.exists(file.path(p, "mygraph.png")))
-
-  recipe_commit(p, config)
-})
-
 test_that("fail to create artefact", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
