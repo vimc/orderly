@@ -391,24 +391,6 @@ recipe_file_inputs <- function(info) {
 }
 
 
-recipe_check_file_inputs <- function(info) {
-  pre <- info$inputs
-  post <- recipe_file_inputs(info)
-  recipe_check_hashes(pre, post, "input", "inputs")
-}
-
-
-recipe_check_depends <- function(info) {
-  pre <- info$depends
-  if (!is.null(info$depends)) {
-    pre <- data_frame(filename = info$depends$as,
-                      file_hash = info$depends$hash)
-    post <- file_info(info$depends$as)[c("filename", "file_hash")]
-    recipe_check_hashes(pre, post, "dependency", "dependencies")
-  }
-}
-
-
 recipe_check_hashes <- function(pre, post, name1, name2) {
   if (identical(pre, post)) {
     return(NULL)
@@ -515,23 +497,6 @@ recipe_copy_depends <- function(info) {
     file_copy(dep_src, dep_dst)
   }
   info
-}
-
-
-recipe_check_unique_inputs <- function(info) {
-  tmp <- rbind(
-    info$inputs[c("filename", "file_purpose")],
-    data_frame(filename = info$depends$as,
-               file_purpose = rep("depends", NROW(info$depends))))
-  err <- tmp[tmp$filename %in% tmp$filename[duplicated(tmp$filename)], ]
-  if (nrow(err) > 0L) {
-    err <- split(err$file_purpose, err$filename)
-    details <- sprintf("\n  - %s: %s",
-                       names(err), vcapply(err, paste, collapse = ", "))
-    stop(sprintf("Orderly configuration implies duplicate files:%s",
-                 paste(details, collapse = "")),
-         call. = FALSE)
-  }
 }
 
 
