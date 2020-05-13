@@ -4,10 +4,22 @@
 \alias{orderly_workflow}
 \title{Run a workflow.}
 \usage{
-orderly_workflow(name, root = NULL, locate = TRUE)
+orderly_workflow(
+  name,
+  envir = NULL,
+  root = NULL,
+  locate = TRUE,
+  message = NULL,
+  instance = NULL,
+  remote = NULL
+)
 }
 \arguments{
 \item{name}{Name of workflow to run}
+
+\item{envir}{The parent of the environment that will be used to
+evaluate the report script; by default a new environment will be
+made with the global environment as the parent.}
 
 \item{root}{The path to an orderly root directory, or \code{NULL}
 (the default) to search for one from the current working
@@ -17,6 +29,28 @@ directory if \code{locate} is \code{TRUE}.}
 searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
+
+\item{message}{An optional character string containing a message
+explaining why the report was run}
+
+\item{instance}{Select instance of the source database to be used,
+where multiple instances are configured.  Use a single
+\emph{unnamed} character string to indicate an instance to
+match.  If given, then this name must be present in all
+databases where instances are listed in
+\code{orderly_config.yml}, and will be ignored by all database
+where instances are not given.  See the "orderly" vignette for
+further information.}
+
+\item{remote}{Remote to use to resolve dependencies.  Use this in
+order to run a report with the same dependencies as are
+available on a remote server, particularly when using \code{id =
+"latest"}.  Note that this is not the same as running
+\code{\link{orderly_pull_dependencies}}, then \code{orderly_run}
+with \code{remote = NULL}, as the pull/run approach will use the
+latest report in \emph{your} archive but the \code{remote =
+"remote"} approach will use the latest approach in the
+\emph{remote} archive (which might be less recent).}
 }
 \value{
 ID of workflow run
@@ -29,5 +63,5 @@ path <- orderly::orderly_example("demo")
 
 # To run most reports, provide the report name (and the path if
 # not running in the working directory, as is the case here):
-#id <- orderly::orderly_workflow("my_workflow", root = path)
+ids <- orderly::orderly_workflow("my_workflow", root = path)
 }
