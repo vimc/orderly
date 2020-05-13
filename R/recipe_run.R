@@ -244,11 +244,7 @@ recipe_exists_artefacts <- function(info, id) {
 
 recipe_unexpected_artefacts <- function(info, id) {
   artefacts <- unlist(info$artefacts[, "filenames"], use.names = FALSE)
-  if (is.function(info$inputs)) {
-    resources <- info$inputs(check = FALSE)$filename
-  } else {
-    resources <- info$inputs$filename
-  }
+  resources <- info$inputs(check = FALSE)$filename
   dependencies <- info$depends$as
   expected <- c(artefacts, resources, dependencies)
 
