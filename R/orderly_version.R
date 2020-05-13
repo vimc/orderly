@@ -114,10 +114,12 @@ orderly_version <- R6::R6Class(
       recipe_current_run_set(self$recipe)
       on.exit(recipe_current_run_clear(), add = TRUE)
 
-      withr::with_dir(self$workdir, {
-        self$prepare_environment()
-        source(self$recipe$script, local = self$envir, # nolint
-               echo = echo, max.deparse.length = Inf)
+      withr::with_envvar(orderly_envir_read(self$config$root), {
+        withr::with_dir(self$workdir, {
+          self$prepare_environment()
+          source(self$recipe$script, local = self$envir, # nolint
+                 echo = echo, max.deparse.length = Inf)
+        })
       })
     },
 
@@ -397,7 +399,10 @@ orderly_version <- R6::R6Class(
     },
 
     write_orderly_run_rds = function() {
-      session <- session_info()
+      ## TODO: Needing to get the env again is weird
+      session <- withr::with_envvar(
+        orderly_envir_read(self$config$root),
+        session_info())
       session$meta <- self$metadata()
       ## NOTE: git is here twice for some reason
       session$git <- session$meta$git
