@@ -16,8 +16,10 @@ orderly_run2 <- function(name = NULL, parameters = NULL, envir = NULL,
                         # specific to run2
                         id_file = NULL, batch_id = NULL,
                         fetch = FALSE, ref = NULL,
-                        capture_log = FALSE, commit = FALSE) {
+                        capture_log = NULL, commit = FALSE) {
   version <- orderly_version$new(name, root, locate)
+  capture_log <- capture_log %||%
+    version$config$get_run_option("capture_log") %||% FALSE
   version$run2(parameters, instance, envir, message, tags, echo,
               use_draft, remote,
               id_file, batch_id, ref, fetch, capture_log)
