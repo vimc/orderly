@@ -330,27 +330,42 @@ orderly_version <- R6::R6Class(
                              "id_requested", "is_latest", "is_pinned")]
       }
 
-      con_rds <- orderly_db("rds", self$config, FALSE)
-      con_csv <- orderly_db("csv", self$config, FALSE)
-      hash_data_csv <- con_csv$mset(self$data$data)
-      hash_data_rds <- con_rds$mset(self$data$data)
       ## All the information about data - it's a little more complicated
       ## than the other types of inputs because there are *two* sizes at
       ## present.  We should probably drop the csv one tbh and render to
       ## csv as required?
-      data_info <- data_frame(
-        name = names(self$data$data),
-        database = vcapply(self$recipe$data, "[[", "database",
-                           USE.NAMES = FALSE),
-        query = vcapply(self$recipe$data, "[[", "query", USE.NAMES = FALSE),
-        hash = unname(hash_data_rds),
-        size_csv = file_size(con_csv$filename(hash_data_rds)),
-        size_rds = file_size(con_rds$filename(hash_data_csv)))
+      if (is.null(self$recipe$data)) {
+        data_info <- NULL
+      } else {
+        con_rds <- orderly_db("rds", self$config, FALSE)
+        con_csv <- orderly_db("csv", self$config, FALSE)
+        hash_data_csv <- con_csv$mset(self$data$data)
+        hash_data_rds <- con_rds$mset(self$data$data)
+        data_info <- data_frame(
+          name = names(self$recipe$data),
+          database = vcapply(self$recipe$data, "[[", "database",
+                             USE.NAMES = FALSE),
+          query = vcapply(self$recipe$data, "[[", "query", USE.NAMES = FALSE),
+          hash = unname(hash_data_rds),
+          size_csv = file_size(con_csv$filename(hash_data_rds)),
+          size_rds = file_size(con_rds$filename(hash_data_csv)))
+      }
+
+      if (is.null(self$recipe$views)) {
+        view_info <- view_info <- NULL
+      } else {
+        view_info <- data_frame(
+          name = names(self$recipe$views),
+          database = vcapply(self$recipe$views, "[[", "database",
+                             USE.NAMES = FALSE),
+          query = vcapply(self$recipe$views, "[[", "query", USE.NAMES = FALSE))
+      }
 
       self$postflight_info <- list(
         artefacts = artefacts,
         file_info_artefacts = file_info_artefacts,
-        data_info = data_info)
+        data_info = data_info,
+        view_info = view_info)
     },
 
     metadata = function() {
@@ -395,7 +410,8 @@ orderly_version <- R6::R6Class(
            tags = self$tags,
            git = self$preflight_info$git,
            batch_id = self$batch_id,
-           data = self$postflight_info$data_info)
+           data = self$postflight_info$data_info,
+           views = self$postflight_info$view_info)
     },
 
     write_orderly_run_rds = function() {
