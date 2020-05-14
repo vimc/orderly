@@ -58,14 +58,14 @@ workflow <- R6::R6Class(
                    remote = NULL) {
       orderly_log("workflow", sprintf("Running workflow '%s' with ID '%s'",
                                       self$workflow_name, self$workflow_id))
-      output <- lapply(self$steps, run_single, envir, self$config, message,
-                       instance, remote)
+      output <- lapply(self$steps, workflow_run_single, envir, self$config,
+                       message, instance, remote)
       run_ids <- vcapply(output, "[[", "value")
-      out_message <- sprintf("Completed running workflow '%s' with ID '%s'\n",
+      out_message <- sprintf("Completed running workflow '%s' with ID '%s'",
                              self$workflow_name, self$workflow_id)
       no_failed <- length(self$steps) - length(run_ids)
       if (no_failed > 0) {
-        out_message <- sprintf("%s with %s failure(s)", out_message, no_failed)
+        out_message <- c(out_message, sprintf("with %s failure(s)", no_failed))
       }
       orderly_log("workflow", out_message)
       run_ids
@@ -92,7 +92,7 @@ validate_workflow <- function(raw_yml, config, workflow_name, workflow_path) {
   steps
 }
 
-run_single <- function(report, envir, root, message, instance, remote) {
+workflow_run_single <- function(report, envir, root, message, instance, remote) {
   tryCatch({
     orderly_log("workflow", sprintf("Running report '%s'", report))
     id <- orderly_run(report, envir = envir, root = root, message = message,
