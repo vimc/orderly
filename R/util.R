@@ -598,6 +598,15 @@ handle_missing_packages <- function(missing_packages, force = FALSE) {
   }
 }
 
+
+check_missing_packages <- function(required) {
+  missing_packages <- setdiff(required, .packages(TRUE))
+  if (length(missing_packages) > 0) {
+    handle_missing_packages(missing_packages)
+  }
+}
+
+
 install_missing_packages <- function(missing_packages) {
   ## collapse vector to packages to string "c('pckg_1','pckg_2')"
   vector_packages <- sprintf("install.packages(c(%s))",
@@ -894,7 +903,7 @@ with_retry <- function(callback, n = 10, backoff = 1, match = NULL) {
     if (!is.null(match) && !grepl(match, result$value$message)) {
       stop(result$value)
     }
-    sleep <- runif(1, 0, 2^(i - 1) * backoff) # nolint
+    sleep <- stats::runif(1, 0, 2^(i - 1) * backoff) # nolint
     message(sprintf("Command failed; trying again in %f seconds", sleep))
     Sys.sleep(sleep)
   }

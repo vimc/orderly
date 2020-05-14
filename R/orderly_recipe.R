@@ -33,15 +33,7 @@ orderly_recipe <- R6::R6Class(
     views = NULL,
 
     name = NULL,
-
-    ## TODO(VIMC-3611): refactor this out into a container class
-    id = NULL,
-    workdir = NULL,
-    git = NULL,
     path = NULL,
-    owd = NULL,
-    inputs = NULL,
-    batch_id = NULL,
 
     initialize = function(name, config, develop = FALSE, path = NULL) {
       assert_is(config, "orderly_config")
@@ -68,6 +60,10 @@ orderly_recipe <- R6::R6Class(
         self$path,
         recipe_validate(self, develop, "orderly.yml"))
       invisible(self)
+    },
+
+    inputs = function(path = ".") {
+      withr::with_path(path, recipe_file_inputs(self))
     },
 
     resolve_dependencies = function(use_draft = FALSE, parameters = NULL,
@@ -197,6 +193,8 @@ recipe_validate <- function(self, develop, filename) {
   self$resources <- c(self$resources,
                       attr(self$data, "resources"),
                       attr(self$views, "resources"))
+
+  recipe_check_unique_inputs(recipe_file_inputs(self), self$depends)
 }
 
 
@@ -254,6 +252,13 @@ recipe_validate_resources <- function(resources, config, filename) {
       "warning",
       sprintf("'%s' should not be listed as a resource", resources[i]))
     resources <- resources[!i]
+  }
+
+  if (any(is_dir)) {
+    resources <- as.list(resources)
+    resources[is_dir] <- lapply(resources[is_dir], function(p)
+      file.path(p, dir(p, recursive = TRUE, all.files = TRUE)))
+    resources <- unlist(resources)
   }
 
   resources
@@ -547,4 +552,32 @@ string_or_filename <- function(x, path, name) {
     query <- x
   }
   list(query = query, query_file = file)
+}
+
+
+recipe_check_unique_inputs <- function(inputs, depends) {
+  tmp <- rbind(
+    inputs[c("filename", "file_purpose")],
+    data_frame(filename = depends$as,
+               file_purpose = rep("depends", NROW(depends))))
+  err <- tmp[tmp$filename %in% tmp$filename[duplicated(tmp$filename)], ]
+  if (nrow(err) > 0L) {
+    err <- split(err$file_purpose, err$filename)
+    details <- sprintf("\n  - %s: %s",
+                       names(err), vcapply(err, paste, collapse = ", "))
+    stop(sprintf("Orderly configuration implies duplicate files:%s",
+                 paste(details, collapse = "")),
+         call. = FALSE)
+  }
+}
+
+
+recipe_file_inputs <- function(info) {
+  file_in_data(
+    orderly_yml = file_info("orderly.yml"),
+    script = file_info(info$script),
+    readme = file_info(names(info$readme)),
+    source = file_info(info$sources),
+    resource = file_info(info$resources),
+    global = file_info(names(info$global_resources)))
 }

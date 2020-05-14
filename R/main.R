@@ -175,8 +175,6 @@ main_do_run <- function(x) {
   if (print_log) {
     sink(stderr(), type = "output")
     on.exit(sink(NULL, type = "output"))
-  } else {
-    config$add_run_option("capture_log", TRUE)
   }
 
   if (pull) {
@@ -187,16 +185,10 @@ main_do_run <- function(x) {
         "Can't use --pull with --ref; perhaps you meant --fetch ?")
     }
   }
-  id <- orderly_run(name, parameters, root = config, id_file = id_file,
-                    instance = instance,
-                    ref = ref, fetch = fetch, message = message)
-  if (commit) {
-    orderly_commit(id, name, config)
-    path_rds <- path_orderly_run_rds(
-      file.path(config$root, "archive", name, id))
-    post_success(readRDS(path_rds), config)
-  }
-
+  id <- orderly_run_internal(name, parameters, root = config,
+                             id_file = id_file, instance = instance,
+                             ref = ref, fetch = fetch, message = message,
+                             commit = commit, capture_log = !print_log)
   message("id:", id)
 }
 

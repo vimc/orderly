@@ -1,0 +1,475 @@
+orderly_version <- R6::R6Class(
+  "orderly_version",
+
+  private = list(
+    config = NULL,
+    name = NULL,
+    recipe = NULL,
+
+    id = NULL,
+    batch_id = NULL,
+    workdir = NULL,
+
+    envvar = NULL,
+    git = NULL,
+
+    envir = NULL,
+    data = NULL,
+    changelog = NULL,
+    tags = NULL,
+    parameters = NULL,
+    instance = NULL,
+    inputs = NULL,
+
+    preflight_info = NULL,
+    postflight_info = NULL,
+    time = NULL,
+
+    git_checkout = function(ref, fetch) {
+      if (is.null(ref)) {
+        return(function() NULL)
+      }
+      if (fetch) {
+        git_fetch(private$config$root)
+      }
+      prev <- git_detach_head_at_ref(ref, private$config$root)
+      function() git_checkout_branch(prev, TRUE, private$config$root)
+    },
+
+    create = function(id_file) {
+      private$id <- new_report_id()
+      orderly_log("id", private$id)
+      if (!is.null(id_file)) {
+        orderly_log("id_file", id_file)
+        writelines_atomic(private$id, id_file)
+      }
+    },
+
+    copy_files = function() {
+      src <- file.path(path_src(private$config$root), private$recipe$name)
+      recipe <- private$recipe
+
+      file_copy(file.path(src, "orderly.yml"), "orderly.yml")
+      recipe_copy_script(recipe, src)
+      recipe_copy_readme(recipe, src)
+      recipe_copy_sources(recipe, src)
+      recipe_copy_global(recipe, private$config)
+      recipe_copy_resources(recipe, src)
+      recipe_copy_depends(recipe)
+
+      private$inputs <- recipe$inputs()
+
+      recipe
+    },
+
+    create_workdir = function() {
+      workdir <- file.path(path_draft(private$config$root),
+                           private$recipe$name, private$id)
+      dir_create(workdir)
+      private$workdir <- workdir
+      withr::with_dir(private$workdir, private$copy_files())
+    },
+
+    prepare_environment_parameters = function() {
+      if (!is.null(private$parameters)) {
+        list2env(private$parameters, private$envir)
+        recipe_substitute(private$recipe, private$parameters)
+      }
+    },
+
+    prepare_environment_secrets = function() {
+      if (!is.null(private$recipe$secrets)) {
+        secrets <- resolve_secrets(private$recipe$secrets, private$config)
+        list2env(secrets, private$envir)
+      }
+    },
+
+    prepare_environment_environment = function() {
+      if (!is.null(private$recipe$environment)) {
+        env_vars <- lapply(names(private$recipe$environment), function(name) {
+          sys_getenv(private$recipe$environment[[name]],
+                     sprintf("orderly.yml:environment:%s", name))
+        })
+        names(env_vars) <- names(private$recipe$environment)
+        list2env(env_vars, private$envir)
+      }
+    },
+
+    prepare_environment_data = function() {
+      uses_db <- length(private$recipe$data) > 0 ||
+        !is.null(private$recipe$connection)
+      if (uses_db) {
+        con <- orderly_db("source", private$config,
+                          instance = private$instance)
+        on.exit(lapply(con, DBI::dbDisconnect))
+        private$data <- list()
+
+        private$data$instance <- lapply(con, attr, "instance", exact = TRUE)
+
+        views <- private$recipe$views
+        for (v in names(views)) {
+          orderly_log("view", sprintf("%s : %s", views[[v]]$database, v))
+          sql <- temporary_view(v, views[[v]]$query)
+          DBI::dbExecute(con[[views[[v]]$database]], sql)
+        }
+
+        data <- list()
+        for (v in names(private$recipe$data)) {
+          database <- private$recipe$data[[v]]$database
+          query <- private$recipe$data[[v]]$query
+          withCallingHandlers(
+            data[[v]] <- DBI::dbGetQuery(con[[database]], query),
+            error = function(e)
+              orderly_log("data", sprintf("%s => %s: <error>", database, v)))
+          orderly_log("data",
+                      sprintf("%s => %s: %s x %s",
+                              database, v, nrow(data[[v]]), ncol(data[[v]])))
+        }
+
+        if (length(data) > 0L) {
+          list2env(data, private$envir)
+          private$data$data <- data
+        }
+
+        if (!is.null(private$recipe$connection)) {
+          private$data$con <- list()
+          for (i in names(private$recipe$connection)) {
+            private$data$con[[i]] <- con[[private$recipe$connection[[i]]]]
+          }
+          list2env(private$data$con, private$envir)
+          ## Ensure that only unexported connections are closed when
+          ## we exit this method (happens above in the on.exit()!)
+          keep <- setdiff(
+            list_to_character(private$recipe$connection, FALSE),
+            names(private$config$database))
+          con <- con[keep]
+        }
+      }
+    },
+
+    prepare_environment = function() {
+      withr::with_envvar(private$envvar, {
+        withr::with_dir(private$workdir, {
+          check_missing_packages(private$recipe$packages)
+
+          private$prepare_environment_parameters()
+          private$prepare_environment_secrets()
+          private$prepare_environment_environment()
+          private$prepare_environment_data()
+
+          for (p in private$recipe$packages) {
+            library(p, character.only = TRUE) # nolint
+          }
+          for (s in private$recipe$sources) {
+            source(s, private$envir) # nolint
+          }
+        })
+      })
+    },
+
+    preflight = function() {
+      private$preflight_info <- list(
+        n_dev = length(grDevices::dev.list()),
+        n_sink = sink.number(),
+        git = git_info(private$config$root),
+        random_seed = random_seed(),
+        time = Sys.time())
+      orderly_log("start", as.character(private$preflight_info$time))
+    },
+
+    postflight = function() {
+      time <- Sys.time()
+      elapsed <- time - private$preflight_info$time
+      private$time <- list(start = private$preflight_info$time,
+                           end = time,
+                           elapsed = time - private$preflight_info$time)
+      orderly_log("end", as.character(time))
+      orderly_log("elapsed", sprintf("Ran report in %s", format(elapsed)))
+      withr::with_dir(private$workdir, {
+        recipe_check_device_stack(private$preflight_info$n_dev)
+        recipe_check_sink_stack(private$preflight_info$n_sink)
+        recipe_check_connections(private$recipe)
+      })
+
+      hash_artefacts <-
+        withr::with_dir(private$workdir,
+                        recipe_check_artefacts(private$recipe))
+
+      artefacts <- private$recipe$artefacts
+      artefacts <- data_frame(
+        format = list_to_character(artefacts[, "format"], FALSE),
+        description = list_to_character(artefacts[, "description"], FALSE),
+        order = seq_len(nrow(artefacts)))
+      n <- lengths(private$recipe$artefacts[, "filenames"])
+      file_info_artefacts <- data_frame(
+        order = rep(seq_along(n), n),
+        filename = names(hash_artefacts),
+        file_hash = unname(hash_artefacts),
+        file_size = file_size(file.path(private$workdir,
+                                        names(hash_artefacts))))
+
+      recipe_check_hashes(
+        private$inputs,
+        withr::with_dir(private$workdir, private$recipe$inputs()),
+        "input", "inputs")
+
+      depends <- private$recipe$depends
+      if (!is.null(depends)) {
+        pre <- data_frame(filename = depends$as, file_hash = depends$hash)
+        post <- withr::with_dir(
+          private$workdir,
+          file_info(pre$filename)[c("filename", "file_hash")])
+        recipe_check_hashes(pre, post, "dependency", "dependencies")
+        depends <- depends[c("name", "id", "filename", "as", "hash",
+                             "id_requested", "is_latest", "is_pinned")]
+      }
+
+      ## All the information about data - it's a little more complicated
+      ## than the other types of inputs because there are *two* sizes at
+      ## present.  We should probably drop the csv one tbh and render to
+      ## csv as required?
+      if (is.null(private$recipe$data)) {
+        data_info <- NULL
+      } else {
+        con_rds <- orderly_db("rds", private$config, FALSE)
+        con_csv <- orderly_db("csv", private$config, FALSE)
+        hash_data_csv <- con_csv$mset(private$data$data)
+        hash_data_rds <- con_rds$mset(private$data$data)
+        data_info <- data_frame(
+          name = names(private$recipe$data),
+          database = vcapply(private$recipe$data, "[[", "database",
+                             USE.NAMES = FALSE),
+          query = vcapply(private$recipe$data, "[[", "query",
+                          USE.NAMES = FALSE),
+          hash = unname(hash_data_rds),
+          size_csv = file_size(con_csv$filename(hash_data_rds)),
+          size_rds = file_size(con_rds$filename(hash_data_csv)))
+      }
+
+      if (is.null(private$recipe$views)) {
+        view_info <- view_info <- NULL
+      } else {
+        view_info <- data_frame(
+          name = names(private$recipe$views),
+          database = vcapply(private$recipe$views, "[[", "database",
+                             USE.NAMES = FALSE),
+          query = vcapply(private$recipe$views, "[[", "query",
+                          USE.NAMES = FALSE))
+      }
+
+      private$postflight_info <- list(
+        artefacts = artefacts,
+        file_info_artefacts = file_info_artefacts,
+        data_info = data_info,
+        view_info = view_info)
+    },
+
+    metadata = function() {
+      recipe <- private$recipe
+
+      if (length(recipe$fields) == 0L) {
+        extra_fields <- NULL
+      } else {
+        extra_fields <- as_data_frame(recipe$fields)
+      }
+
+      if (is.null(recipe$views)) {
+        views <- NULL
+      } else {
+        views <- data_frame(
+          name = names(recipe$views),
+          database = vcapply(recipe$views, "[[", "database",
+                             USE.NAMES = FALSE),
+          query = vcapply(recipe$views, "[[", "query", USE.NAMES = FALSE))
+      }
+
+      list(id = private$id,
+           name = recipe$name,
+           parameters = private$parameters,
+           date = as.character(Sys.time()),
+           displayname = recipe$displayname %||% NA_character_,
+           description = recipe$description %||% NA_character_,
+           extra_fields = extra_fields,
+           connection = !is.null(recipe$connection),
+           packages = recipe$packages,
+           random_seed = private$preflight_info$random_seed,
+           instance = private$data$instance,
+           file_info_inputs = private$inputs,
+           ## TODO (VIMC-3843): migration to fix this double handling
+           ## of artefacts
+           file_info_artefacts = private$postflight_info$file_info_artefacts,
+           global_resources = recipe$global_resources,
+           artefacts = private$postflight_info$artefacts,
+           depends = private$recipe$depends,
+           elapsed = as.numeric(private$time$elapsed, "secs"),
+           changelog = private$changelog,
+           tags = private$tags,
+           git = private$preflight_info$git,
+           batch_id = private$batch_id,
+           data = private$postflight_info$data_info,
+           view = private$postflight_info$view_info)
+    },
+
+    write_orderly_run_rds = function() {
+      session <- withr::with_envvar(private$envvar, session_info())
+      session$meta <- private$metadata()
+      ## NOTE: git is here twice for some reason
+      session$git <- session$meta$git
+      session$archive_version <- cache$current_archive_version
+      saveRDS(session, path_orderly_run_rds(private$workdir))
+    }
+  ),
+
+  public = list(
+    initialize = function(name, root, locate) {
+      private$config <- orderly_config_get(root, locate)
+      private$envvar <- orderly_envir_read(private$config$root)
+      private$name <- name
+    },
+
+    ## Run a report, as for orderly_run (user-facing)
+    run = function(parameters = NULL, instance = NULL, envir = NULL,
+                   message = NULL, tags = NULL, echo = TRUE,
+                   use_draft = FALSE, remote = NULL) {
+      self$run_read(parameters, instance, envir, tags, use_draft,
+                    remote)
+      self$run_prepare(message)
+      self$run_execute(echo)
+      self$run_cleanup()
+      private$id
+    },
+
+    ## Run a report as for orderly_run_internal (orderly-internal facing)
+    run_internal = function(parameters = NULL, instance = NULL, envir = NULL,
+                            message = NULL, tags = NULL, echo = TRUE,
+                            use_draft = FALSE, remote = NULL,
+                            ## These might move around a bit
+                            id_file = NULL, batch_id = NULL,
+                            ref = NULL, fetch = FALSE, capture_log = FALSE) {
+      logfile <- tempfile()
+      capture_log <- capture_log %||%
+        private$config$get_run_option("capture_log") %||% FALSE
+      ## TODO (VIMC-3841): this does not properly capture errors.
+      conditional_capture_log(capture_log, logfile, {
+        git_restore <- private$git_checkout(ref, fetch)
+        tryCatch({
+          self$run_read(parameters, instance, envir, tags, use_draft,
+                        remote)
+          self$run_prepare(message, id_file)
+        }, finally = git_restore())
+        if (capture_log) {
+          on.exit(file_copy(logfile,
+                            file.path(private$workdir, "orderly.log")))
+        }
+        private$batch_id <- batch_id
+        self$run_execute(echo)
+        self$run_cleanup()
+      })
+      private$id
+    },
+
+    ## Start an in-src development of a report (orderly_develop_start)
+    develop_start = function(parameters = NULL, instance = NULL, envir = NULL,
+                             use_draft = FALSE, remote = NULL) {
+      self$run_read(parameters, instance, envir, NULL,
+                    use_draft, remote, TRUE)
+      private$workdir <- private$recipe$path
+      withr::with_envvar(private$envvar, {
+        withr::with_dir(private$workdir, {
+          recipe_copy_global(private$recipe, private$config)
+          recipe_copy_depends(private$recipe)
+        })
+      })
+      private$prepare_environment()
+      sys_setenv(private$envvar)
+      private$workdir
+    },
+
+    ## Start an in-draft development of a report (orderly_test_start,
+    ## possibly to be deprecated)
+    test_start = function(parameters = NULL, instance = NULL, envir = NULL,
+                          use_draft = FALSE, remote = NULL) {
+      self$run_read(parameters, instance, envir, NULL, use_draft, remote)
+      self$run_prepare()
+      private$prepare_environment()
+      self$set_current(test = TRUE)
+      private$workdir
+    },
+
+    ## The next bit are the basic "phases" - we'll probably tweak
+    ## these over time to find the right gaps
+
+    ## Read phase of running a report - read orderly.yml, check
+    ## parameters, tags and dependencies
+    run_read = function(parameters, instance, envir, tags,
+                        use_draft, remote, develop = FALSE) {
+      loc <- orderly_develop_location(private$name, private$config, FALSE)
+      private$recipe <- orderly_recipe$new(loc$name, loc$config,
+                                           develop = develop)
+      orderly_log("name", private$recipe$name)
+      private$instance <- instance
+      private$envir <- orderly_environment(envir)
+      private$parameters <- recipe_parameters(private$recipe, parameters)
+      private$tags <- union(private$recipe$tags,
+                            recipe_validate_tags(tags, private$config, NULL))
+      private$recipe$resolve_dependencies(use_draft, parameters, remote)
+    },
+
+    ## Prepare phase of a report - create id, load changelog and
+    ## prepare files in in the draft directory
+    run_prepare = function(message = NULL, id_file = NULL) {
+      private$create(id_file)
+      private$create_workdir()
+      ## This feels more like something to do in the read section, but
+      ## we need the id for this to work properly.
+      private$changelog <- changelog_load(
+        private$recipe$name, private$id, private$recipe$changelog$contents,
+        message, private$config)
+      private$preflight()
+    },
+
+    ## Execute phase of running a report (load packages, sources and
+    ## run the script) - it's possible that prepare_environment
+    ## belongs in run_prepare though?
+    run_execute = function(echo = TRUE) {
+      self$set_current()
+      on.exit(recipe_current_run_clear(), add = TRUE)
+
+      private$prepare_environment()
+      withr::with_envvar(private$envvar, {
+        withr::with_dir(private$workdir, {
+          source(private$recipe$script, local = private$envir, # nolint
+                 echo = echo, max.deparse.length = Inf)
+        })
+      })
+    },
+
+    ## Cleanup phase of running (verify artefacts and write out metadata)
+    run_cleanup = function() {
+      private$postflight()
+      private$write_orderly_run_rds()
+    },
+
+    ## Commit a report, including reporting back via slack/teams
+    commit = function(capture_log, ...) {
+      logfile <- file.path(path_draft(private$config$root),
+                           private$name, private$id, "orderly.log")
+      conditional_capture_log(
+        capture_log, logfile,
+        orderly_commit(private$id, root = private$config, locate = FALSE, ...))
+      path_rds <- path_orderly_run_rds(
+        file.path(private$config$root, "archive", private$name, private$id))
+      post_success(readRDS(path_rds), private$config)
+    },
+
+    ## Register data associated with the currently running (or tested)
+    ## report.  This can be retrieved by orderly_run_info() - not yet
+    ## implemented for orderly_develop_start see #223/VIMC-3848)
+    set_current = function(test = FALSE) {
+      d <- list(id = private$id,
+                name = private$name,
+                root = private$config$root,
+                depends = private$recipe$depends)
+      recipe_current_run_set(d, private$workdir, test)
+    }
+  ))
