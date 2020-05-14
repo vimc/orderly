@@ -118,7 +118,6 @@ orderly_run <- function(name = NULL, parameters = NULL, envir = NULL,
   version <- orderly_version$new(name, root, locate)
   version$run(parameters, instance, envir, message, tags, echo,
               use_draft, remote)
-  version$id
 }
 
 
@@ -132,15 +131,13 @@ orderly_run_internal <- function(name = NULL, parameters = NULL, envir = NULL,
                                  fetch = FALSE, ref = NULL,
                                  capture_log = NULL, commit = FALSE) {
   version <- orderly_version$new(name, root, locate)
-  capture_log <- capture_log %||%
-    version$config$get_run_option("capture_log") %||% FALSE
-  version$run_internal(parameters, instance, envir, message, tags, echo,
-                       use_draft, remote,
-                       id_file, batch_id, ref, fetch, capture_log)
+  id <- version$run_internal(parameters, instance, envir, message, tags, echo,
+                             use_draft, remote,
+                             id_file, batch_id, ref, fetch, capture_log)
   if (commit) {
     version$commit(capture_log)
   }
-  version$id
+  id
 }
 
 

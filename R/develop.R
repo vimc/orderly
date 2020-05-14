@@ -82,8 +82,9 @@ orderly_develop_start <- function(name = NULL, parameters = NULL,
                                   root = NULL, locate = TRUE, instance = NULL,
                                   use_draft = FALSE, remote = NULL) {
   version <- orderly_version$new(name, root, locate)
-  version$develop_start(parameters, instance, envir, use_draft, remote)
-  invisible(version$workdir)
+  workdir <- version$develop_start(parameters, instance, envir, use_draft,
+                                   remote)
+  invisible(workdir)
 }
 
 

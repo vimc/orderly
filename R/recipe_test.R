@@ -56,20 +56,17 @@ orderly_test_start <- function(name, parameters = NULL, envir = parent.frame(),
                                use_draft = FALSE, remote = NULL) {
   ## TODO: deprecate
   version <- orderly_version$new(name, root, locate)
-  version$run_read(parameters, instance, envir, NULL, use_draft, remote)
-  version$run_prepare()
-  withr::with_dir(version$workdir, version$prepare_environment())
-  version$set_current(test = TRUE)
+  workdir <- version$test_start(parameters, instance, envir, use_draft, remote)
 
   msg <- c("orderly has prepared your files at the path",
            "",
-           sprintf("  %s", version$workdir),
+           sprintf("  %s", workdir),
            "",
            "but unfortunately due to CRAN policies we cannot change the",
            "directory to that path.  In order to continue testing your",
            "report interactively, please run",
            "",
-           sprintf('    setwd("%s")', clean_path(version$workdir)),
+           sprintf('    setwd("%s")', clean_path(workdir)),
            "",
            "you will be responsible for getting back to your previous working",
            "directory after this, which you can do with",
@@ -80,7 +77,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = parent.frame(),
            "more details")
   message(paste(msg, collapse = "\n"))
 
-  version$workdir
+  workdir
 }
 
 
