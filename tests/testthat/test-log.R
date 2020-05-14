@@ -44,4 +44,6 @@ test_that("warning colourtion", {
 
   expect_equal(orderly_log_style("depends"), "highlight")
   expect_equal(orderly_log_style("anythingelse"), "highlight")
+
+  expect_equal(orderly_log_style("workflow"), "workflow")
 })

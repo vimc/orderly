@@ -119,5 +119,6 @@ orderly_log_style <- function(topic) {
          error = "alert",
          unexpected = "alert",
          rollback = "alert",
+         workflow = "workflow",
          "highlight")
 }
