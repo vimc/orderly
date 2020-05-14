@@ -60,9 +60,7 @@ workflow <- R6::R6Class(
                                       self$workflow_name, self$workflow_id))
       output <- lapply(self$steps, run_single, envir, self$config, message,
                        instance, remote)
-      run_ids <- unlist(lapply(output, function(out) {
-        out$value
-      }))
+      run_ids <- vcapply(output, "[[", "value")
       out_message <- sprintf("Completed running workflow '%s' with ID '%s'\n",
                              self$workflow_name, self$workflow_id)
       no_failed <- length(self$steps) - length(run_ids)
