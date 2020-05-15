@@ -12,20 +12,14 @@ test_that("workflow can be run", {
   })
 
   expect_output <- function(message) {
-    expect_true(message %in% output$messages)
+    expect_true(any(grepl(message, output$messages)))
   }
-  expect_output(
-    "[ workflow   ]  Running workflow 'my_workflow' with ID 'workflowid'\n")
-  expect_output("[ workflow   ]  Running report 'minimal'\n")
-  expect_output("[ workflow   ]  Finished running report 'minimal'\n")
-  expect_output("[ workflow   ]  Committing report 'minimal'\n")
-  expect_output("[ workflow   ]  Finished committing report 'minimal'\n")
-  expect_output("[ workflow   ]  Running report 'global'\n")
-  expect_output("[ workflow   ]  Finished running report 'global'\n")
-  expect_output("[ workflow   ]  Committing report 'global'\n")
-  expect_output("[ workflow   ]  Finished committing report 'global\n")
-  expect_output(paste0("[ workflow   ]  Completed running workflow",
-                       "'my_workflow' with ID 'workflowid'\n"))
+  expect_output("Running workflow 'my_workflow' with ID 'workflowid'")
+  expect_output("Running report 'minimal'")
+  expect_output("Completed running & committing report 'minimal'")
+  expect_output("Running report 'global'")
+  expect_output("Completed running & committing report 'global'")
+  expect_output("Completed running workflow 'my_workflow' with ID 'workflowid'")
 
   expect_equal(output$result, c("report_id_1", "report_id_2"))
 
@@ -39,7 +33,7 @@ test_that("workflow returns completed IDs if a report fails", {
   path <- prepare_orderly_example("demo")
 
   ## Ensure one of the reports fails
-  p <- file.path(path, "src", "minimal", "script.R")
+  p <- file.path(path, "src", "global", "script.R")
   txt <- c(readLines(p), "stop('got an error')")
   writeLines(txt, p)
 
@@ -48,29 +42,21 @@ test_that("workflow returns completed IDs if a report fails", {
   with_mock(
     "orderly:::new_report_id" = mock_new_report_id,
     "ids::random_id" = mock_random_id, {
-      output <- evaluate_promise(orderly_workflow("my_workflow", root = path))
+      expect_error(orderly_workflow("my_workflow", root = path), "got an error")
   })
 
-  expect_true("[ workflow   ]  Running report 'minimal'\n" %in% output$messages)
-  expect_true(paste0("[ error      ]  Running report 'minimal' ",
-                     "failed with message \ngot an error\n")
-              %in% output$messages)
-  expect_true("[ workflow   ]  Running report 'global'\n" %in% output$messages)
-  expect_true(paste0(
-    "[ workflow   ]  Completed running workflow ",
-    "'my_workflow' with ID 'workflowid'\n with 1 failure(s)\n")
-    %in% output$messages)
-
-  expect_equal(output$result, "report_id_2")
-
-  expect_false(file.exists(file.path(path, "archive", "minimal")))
+  ## First report still gets run
   expect_true(file.exists(path_orderly_run_rds(
-    file.path(path, "archive", "global", output$result[1]))))
+    file.path(path, "archive", "minimal", "report_id_1"))))
+  expect_false(file.exists(file.path(path, "archive", "global")))
 })
 
 test_that("envir, message, instance, remote get passed to orderly_run", {
   path <- prepare_orderly_example("demo")
-  mock_orderly_run <- mockery::mock("report_id_1", "report_id_2")
+  ## Mock out calls to orderly_run so we can check interactions
+  minimal_run <- orderly_run("minimal", root = path)
+  global_run <- orderly_run("global", root = path)
+  mock_orderly_run <- mockery::mock(minimal_run, global_run)
   with_mock("orderly::orderly_run" = mock_orderly_run, {
     orderly_workflow("my_workflow", root = path, envir = "envir",
                      message = "message", instance = "instance",
