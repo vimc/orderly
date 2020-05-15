@@ -81,28 +81,10 @@ orderly_develop_start <- function(name = NULL, parameters = NULL,
                                   envir = parent.frame(),
                                   root = NULL, locate = TRUE, instance = NULL,
                                   use_draft = FALSE, remote = NULL) {
-  loc <- orderly_develop_location(name, root, locate)
-  envir <- orderly_environment(envir)
-
-  orderly_log("name", loc$name)
-
-  info <- orderly_recipe$new(loc$name, loc$config, develop = TRUE)
-  info$resolve_dependencies(use_draft, parameters, remote)
-
-  info$workdir <- loc$path
-
-  env <- orderly_envir_read(loc$config$root)
-  withr::with_dir(info$workdir, {
-    withr::with_envvar(env, {
-      info <- recipe_copy_global(info, loc$config)
-    info <- recipe_copy_depends(info)
-      orderly_prepare_data(loc$config, info, parameters, envir, instance)
-    })
-  })
-
-  sys_setenv(env)
-
-  invisible(loc$path)
+  version <- orderly_version$new(name, root, locate)
+  workdir <- version$develop_start(parameters, instance, envir, use_draft,
+                                   remote)
+  invisible(workdir)
 }
 
 

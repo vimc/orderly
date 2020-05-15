@@ -2,9 +2,8 @@ context("globals")
 
 test_that("global", {
   path <- prepare_orderly_example("global", testing = TRUE)
-  tmp <- tempfile()
   expect_error(
-    orderly_run("example", root = path, id_file = tmp, echo = FALSE),
+    orderly_run("example", root = path, echo = FALSE),
     NA # expect no errors
   )
 })
@@ -33,9 +32,8 @@ test_that("missing global file", {
 
   expected_error <- "Global resources in '.+/global' does not exist: 'none.csv'"
 
-  tmp <- tempfile()
   expect_error(
-    orderly_run("example", root = path, id_file = tmp, echo = FALSE),
+    orderly_run("example", root = path, echo = FALSE),
                 expected_error)
 })
 
@@ -43,8 +41,7 @@ test_that("missing global file", {
 test_that("global resources end up in db", {
   skip_on_cran_windows()
   path <- prepare_orderly_example("global", testing = TRUE)
-  tmp <- tempfile()
-  id <- orderly_run("example", root = path, id_file = tmp, echo = FALSE)
+  id <- orderly_run("example", root = path, echo = FALSE)
   orderly_commit(id, root = path)
   con <- orderly_db("destination", root = path)
   d <- DBI::dbReadTable(con, "file_input")

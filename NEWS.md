@@ -1,3 +1,8 @@
+# orderly 1.2.0
+
+* `orderly::orderly_data()` has been removed as do not believe anyone was using it, and it is superceeded by `orderly::orderly_develop_start()` (VIMC-3611)
+* Some internally used arguments have been removed from `orderly::orderly_run` (`id_file`, `batch_id`, `ref` and `fetch`). These were not intended for direct use by users (VIMC-3539)
+
 # orderly 1.1.35
 
 * `orderly::orderly_pull_dependencies()` works where the dependencies use query ids, and `orderly::orderly_pull_archive()` accepts query ids (rather than just `latest`) as an argument (VIMC-3789)
