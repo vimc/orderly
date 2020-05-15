@@ -54,10 +54,8 @@ test_that("workflow returns completed IDs if a report fails", {
 test_that("envir, message, instance, remote get passed to orderly_run", {
   path <- prepare_orderly_example("demo")
   ## Mock out calls to orderly_run so we can check interactions
-  minimal_run <- orderly_run("minimal", root = path)
-  global_run <- orderly_run("global", root = path)
-  mock_orderly_run <- mockery::mock(minimal_run, global_run)
-  with_mock("orderly::orderly_run" = mock_orderly_run, {
+  mock_orderly_run <- mockery::mock("id1", "id2")
+  with_mock("orderly::orderly_run_internal" = mock_orderly_run, {
     orderly_workflow("my_workflow", root = path, envir = "envir",
                      message = "message", instance = "instance",
                      remote = "remote")
