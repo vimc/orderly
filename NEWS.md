@@ -1,4 +1,4 @@
-# orderly 1.2.1
+# orderly 1.2.2
 
 * New function `orderly::orderly_workflow` allows users to run a "workflow" - a list of reports which to be run in order. Workflows are configured via a yml file in `workflows/` directory.
 
