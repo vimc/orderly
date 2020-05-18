@@ -435,6 +435,25 @@ test_that("add batch info to db", {
     data_frame(report_version = ids, report_batch = rep(batch_id, 3)))
 })
 
+test_that("add workflow info to db", {
+  path <- prepare_orderly_example("demo")
+
+  mock_random_id <- mockery::mock("workflow_id", "report_id1", "report_id2")
+  with_mock("ids::random_id" = mock_random_id, {
+    ids <- orderly_workflow("my_workflow", root = path)
+  })
+
+  con <- orderly_db("destination", path)
+  on.exit(DBI::dbDisconnect(con))
+  expect_equal(
+    DBI::dbReadTable(con, "workflow"),
+    data_frame(id = "workflow_id",
+               name = "my_workflow"))
+  expect_equal(
+    DBI::dbReadTable(con, "report_version_workflow"),
+    data_frame(report_version = ids, workflow_id = rep("workflow_id", 2)))
+})
+
 
 ## Regression test for vimc-3652
 test_that("trailing slash in report name is tolerated", {

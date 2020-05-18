@@ -20,13 +20,9 @@
 ##' ids <- orderly::orderly_workflow("my_workflow", root = path)
 orderly_workflow <- function(name, envir = NULL, root = NULL, locate = TRUE,
                              message = NULL, instance = NULL, remote = NULL) {
-  ## Locate file
   config <- orderly_config_get(root, locate)
   workflow <- orderly_workflow_get(name, config)
-
   workflow$run(envir, message, instance, remote)
-
-  ## TODO: Write to DB after run
 }
 
 orderly_workflow_get <- function(name, config) {
@@ -65,7 +61,9 @@ workflow <- R6::R6Class(
         tryCatch({
           run_ids[i] <- orderly_run_internal(
             report, envir = envir, root = self$config, message = message,
-            instance = instance, remote = remote, commit = TRUE, echo = FALSE)
+            instance = instance, remote = remote, commit = TRUE, echo = FALSE,
+            workflow_info = list(id = self$workflow_id,
+                                 name = self$workflow_name))
           orderly_log("workflow",
                       sprintf("Completed running & committing report '%s'",
                               report))
