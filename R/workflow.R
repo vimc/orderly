@@ -1,10 +1,13 @@
 ##' Run a workflow.
 ##'
-##' WIP - skeleton implementation
+##' This runs & commits each of the reports configured in the workflow in turn.
+##' Note that if one report fails to be run or to be commited this will
+##' continue and attempt to run the remaining reports.
 ##'
 ##' @param name Name of workflow to run
 ##'
 ##' @inheritParams orderly_list
+##' @inheritParams orderly_run
 ##'
 ##' @return ID of workflow run
 ##' @export
@@ -14,13 +17,14 @@
 ##'
 ##' # To run most reports, provide the report name (and the path if
 ##' # not running in the working directory, as is the case here):
-##' #id <- orderly::orderly_workflow("my_workflow", root = path)
-orderly_workflow <- function(name, root = NULL, locate = TRUE) {
+##' ids <- orderly::orderly_workflow("my_workflow", root = path)
+orderly_workflow <- function(name, envir = NULL, root = NULL, locate = TRUE,
+                             message = NULL, instance = NULL, remote = NULL) {
   ## Locate file
   config <- orderly_config_get(root, locate)
   workflow <- orderly_workflow_get(name, config)
 
-  workflow$run()
+  workflow$run(envir, message, instance, remote)
 
   ## TODO: Write to DB after run
 }
@@ -50,10 +54,31 @@ workflow <- R6::R6Class(
                                       workflow_path)
     },
 
-    run = function() {
-      ## TODO: Implement run
-      orderly_log("workflow", paste0("Running workflow ", self$workflow_id))
-      stop("Workflow running not yet implemented")
+    run = function(envir = NULL, message = NULL, instance = NULL,
+                   remote = NULL) {
+      orderly_log("workflow", sprintf("Running workflow '%s' with ID '%s'",
+                                      self$workflow_name, self$workflow_id))
+      run_ids <- rep(NA, length(self$steps))
+      for (i in seq_along(run_ids)) {
+        report <- self$steps[i]
+        orderly_log("workflow", sprintf("Running report '%s'", report))
+        tryCatch({
+          run_ids[i] <- orderly_run_internal(
+            report, envir = envir, root = self$config, message = message,
+            instance = instance, remote = remote, commit = TRUE, echo = FALSE)
+          orderly_log("workflow",
+                      sprintf("Completed running & committing report '%s'",
+                              report))
+        },
+        error = function(e) {
+          orderly_log("error", sprintf("Running report '%s' failed", report))
+          stop(e)
+        })
+      }
+      orderly_log("workflow",
+                  sprintf("Completed running workflow '%s' with ID '%s'",
+                          self$workflow_name, self$workflow_id))
+      run_ids
     }
   )
 )

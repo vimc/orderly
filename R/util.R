@@ -875,6 +875,8 @@ orderly_style <- function(name) {
          alert = crayon::combine_styles(
            crayon::bold, crayon::make_style("hotpink")),
          fade = crayon::make_style("grey"),
+         workflow = crayon::combine_styles(
+           crayon::bold, crayon::make_style("orange2")),
          identity)
 }
 

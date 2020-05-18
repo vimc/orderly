@@ -21,3 +21,4 @@
 ^buildkite$
 ^build$
 ^ignore$
+^tests/testthat/tmp$

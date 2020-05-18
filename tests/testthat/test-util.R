@@ -830,6 +830,8 @@ test_that("palette", {
       expect_equal(orderly_style("fade")("x"),
                    crayon::make_style("grey")("x"))
       expect_equal(orderly_style("other")("x"), "x")
+      expect_equal(orderly_style("workflow")("x"),
+                   crayon::bold(crayon::make_style("orange2")("x")))
    })
 })
 
