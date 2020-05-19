@@ -423,6 +423,23 @@ report_data_import <- function(con, name, id, config) {
                       append = TRUE)
   }
 
+  if (!is.null(dat_rds$meta$workflow)) {
+    sql_batch <- "SELECT id FROM workflow WHERE id = $1"
+    if (nrow(DBI::dbGetQuery(con, sql_batch, dat_rds$meta$workflow$id)) == 0L) {
+      workflow <- data_frame(
+        id = dat_rds$meta$workflow$id,
+        name = dat_rds$meta$workflow$name
+      )
+      DBI::dbWriteTable(con, "workflow", workflow, append = TRUE)
+    }
+    report_version_workflow <- data_frame(
+      report_version = id,
+      workflow_id = dat_rds$meta$workflow$id
+    )
+    DBI::dbWriteTable(con, "report_version_workflow", report_version_workflow,
+                      append = TRUE)
+  }
+
   sql <- "UPDATE report SET latest = $1 WHERE name = $2"
   DBI::dbExecute(con, sql, list(id, name))
 }

@@ -241,3 +241,13 @@ report_version_batch:
   columns:
     - report_version: {fk: report_version.id}
     - report_batch: {fk: report_batch.id}
+
+workflow:
+  columns:
+    - id: {type: TEXT}
+    - name: {type: TEXT}
+
+report_version_workflow:
+  columns:
+    - report_version: {type: TEXT}
+    - workflow_id: {type: TEXT}
