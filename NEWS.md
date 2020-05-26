@@ -1,3 +1,7 @@
+# orderly 1.2.4
+
+* Error messages and stack traces are now preserved in `orderly.log` after a faied run; this primarily impacts the cli runner and then primarily when being run in parallel where the log is not printed to screen (VIMC-3841)
+
 # orderly 1.2.3
 
 * New function `orderly::orderly_workflow` allows users to run a "workflow" - a list of reports which to be run in order. Workflows are configured via a yml file in `workflows/` directory.
