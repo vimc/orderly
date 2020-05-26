@@ -770,3 +770,33 @@ test_that("workflow: print logs", {
   ## Logs have not been written to file
   expect_false(file.exists(log_file))
 })
+
+test_that("workflow: args passed to workflow", {
+
+  args <- c("--root", path, "workflow", "--instance", "inst",
+            "--message", "msg", "my_workflow")
+
+  res <- cli_args_process(args)
+  expect_equal(res$command, "workflow")
+  expect_equal(res$options$name, "my_workflow")
+  expect_false(res$options$print_log)
+  expect_false(res$options$pull)
+  expect_equal(res$options$instance, "inst")
+  expect_equal(res$options$message, "msg")
+  expect_equal(res$target, main_do_workflow)
+
+  mock_workflow <- mockery::mock("id")
+  with_mock("orderly::orderly_workflow" = mock_workflow,
+            tryCatch(res$target(res),
+                     error = function(e) {
+                       ## We don't care about error down from the call to
+                       ## run the workflow so just consume this here
+                       invisible(NULL)
+                     }))
+
+  args <- mockery::mock_args(mock_workflow)
+  ## orderly_workflow called once
+  expect_length(args, 1)
+  expect_equal(args[[1]]$instance, "inst")
+  expect_equal(args[[1]]$message, "msg")
+})
