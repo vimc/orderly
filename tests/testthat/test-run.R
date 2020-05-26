@@ -922,8 +922,13 @@ test_that("logs from failed runs can still be written to file", {
   path <- prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
-  append_lines('stop("some error")',
-               file.path(path, "src", "example", "script.R"))
+  append_lines(
+    c("f <- function() g()",
+      "g <- function() h()",
+      "h <- function() stop('some error')",
+      "f()"),
+    file.path(path, "src", "example", "script.R"))
+
   expect_error(orderly_run_internal("example", root = path, echo = FALSE,
                                     capture_log = TRUE),
                "some error")
@@ -933,6 +938,13 @@ test_that("logs from failed runs can still be written to file", {
   expect_true(file.exists(draft_logs))
   log <- readLines(draft_logs)
   expect_true("[ name       ]  example" %in% log)
+
+  ## Error is found
+  expect_match(log, "Error: some error", all = FALSE)
+
+  ## traceback preserved
+  expect_match(log, "f()", all = FALSE, fixed = TRUE)
+  expect_match(log, "g()", all = FALSE, fixed = TRUE)
 })
 
 

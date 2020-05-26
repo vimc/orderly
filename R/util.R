@@ -194,6 +194,20 @@ pasteq <- function(x, sep = ", ") {
 }
 
 
+## This is primarily used in orderly_version: We want to run a block
+## of code and capture all the errors etc.  In a future version it
+## might be nice to think about a more generic "evaluate and tell me
+## about it" wrapper.  For now, I am bodging in a little stack trace
+## because it's useful, but this _generally_ would be a nice thing to
+## have within an "eval safely" helper (like in rrq) but it's not
+## totally obvious how that will fit in here.  Trimming the trace to
+## show just the important bits does not seem well done here either
+## and can't be until we sort out the logging more formally, because
+## there's no real concept of what the "action" here is, and because
+## multiple actions are logged.  An ideal case would do something to
+## indicate that it's in the "run" phase and display only the
+## traceback from the script itself - but other errors needed from
+## things like commit and prepare.
 capture_log <- function(expr, filename) {
   mode <- if (file.exists(filename)) "a" else "w"
   con <- file(filename, mode)
@@ -202,9 +216,25 @@ capture_log <- function(expr, filename) {
     sink(NULL)
     close(con)
   })
-  handle_message <- function(e) cat(e$message, file = stdout())
-  suppressMessages(withCallingHandlers(force(expr), message = handle_message))
+  handle_message <- function(e) {
+    cat(e$message, file = stdout())
+  }
+  handle_error <- function(e) {
+    calls <- sys.calls()
+    str <- utils::limitedLabels(calls[seq_len(length(calls) - 2L)])
+    lab <- format(seq_along(str))
+    str <- gsub("\n", sprintf("\n%s", strrep(" ", nchar(lab)[[1]] + 2)), str)
+    trace <- paste(sprintf("%s: %s\n", lab, str), collapse = "")
+    cat(sprintf("Error: %s\nTraceback:\n%s", e$message, trace),
+        file = stdout())
+  }
+
+  suppressMessages(withCallingHandlers(
+    force(expr),
+    message = handle_message,
+    error = handle_error))
 }
+
 
 conditional_capture_log <- function(capture, filename, expr) {
   if (isTRUE(capture)) {

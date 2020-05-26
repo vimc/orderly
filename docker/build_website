@@ -9,8 +9,8 @@ HERE=$(dirname $0)
 ORDERLY_BASE="$TAG_SHA"
 ORDERLY_DEV="${PACKAGE_ORG}/${PACKAGE_NAME}-dev:${GIT_SHA}"
 
-USER_UID=`id -u`
-USER_GID=`id -g`
+USER_UID=$(id -u)
+USER_GID=$(id -g)
 USER_STR="${USER_UID}:${USER_GID}"
 
 DB_CONTAINER=orderly-db
