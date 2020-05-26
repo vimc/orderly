@@ -943,7 +943,8 @@ test_that("logs from failed runs can still be written to file", {
   expect_match(log, "Error: some error", all = FALSE)
 
   ## traceback preserved
-  expect_match(log, "script\\.R#[0-9]+: f\\(\\)", all = FALSE)
+  expect_match(log, "f()", all = FALSE, fixed = TRUE)
+  expect_match(log, "g()", all = FALSE, fixed = TRUE)
 })
 
 
