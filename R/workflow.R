@@ -54,16 +54,18 @@ workflow <- R6::R6Class(
                    remote = NULL) {
       orderly_log("workflow", sprintf("Running workflow '%s' with ID '%s'",
                                       self$workflow_name, self$workflow_id))
-      run_ids <- rep(NA, length(self$steps))
+      run_ids <- rep(list(list(name = NA, id = NA)), length(self$steps))
       for (i in seq_along(run_ids)) {
         report <- self$steps[i]
         orderly_log("workflow", sprintf("Running report '%s'", report))
         tryCatch({
-          run_ids[i] <- orderly_run_internal(
+          run_ids[[i]] <- list(
+            name = report,
+            id = orderly_run_internal(
             report, envir = envir, root = self$config, message = message,
             instance = instance, remote = remote, commit = TRUE, echo = FALSE,
             workflow_info = list(id = self$workflow_id,
-                                 name = self$workflow_name))
+                                 name = self$workflow_name)))
           orderly_log("workflow",
                       sprintf("Completed running & committing report '%s'",
                               report))
