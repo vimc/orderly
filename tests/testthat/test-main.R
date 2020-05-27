@@ -772,7 +772,7 @@ test_that("workflow: print logs", {
 })
 
 test_that("workflow: args passed to workflow", {
-
+  path <- unzip_git_demo()
   args <- c("--root", path, "workflow", "--instance", "inst",
             "--message", "msg", "my_workflow")
 
@@ -789,8 +789,7 @@ test_that("workflow: args passed to workflow", {
   with_mock("orderly::orderly_workflow" = mock_workflow,
             tryCatch(res$target(res),
                      error = function(e) {
-                       ## We don't care about error down from the call to
-                       ## run the workflow so just consume this here
+                       ## We don't care about error here so just consume it
                        invisible(NULL)
                      }))
 
