@@ -1,13 +1,13 @@
 ---
-title: "Workflows with orderly"
+title: "Work patterns with orderly"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Workflows with orderly}
+  %\VignetteIndexEntry{Work patterns with orderly}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-`orderly` is designed to support a number of flexible workflows, depending on the size and structure of the group using it.  This vignette describes several workflows, in roughly increasing complexity.
+`orderly` is designed to support a number of flexible work patterns, depending on the size and structure of the group using it. This vignette describes several work patterns, in roughly increasing complexity.
 
 The key issues to consider are
 
@@ -18,7 +18,7 @@ The key issues to consider are
 
 ## Individual researcher
 
-This is the simplest workflow, and the one that `orderly` has the fewest opinions about.  We imagine a single researcher using `orderly` to keep track of a set of analyses.  They would configure orderly with an empty `orderly_config.yml`, and would probably add `archive` to `.gitignore` (`drafts` should always be gitignored).
+This is the simplest pattern, and the one that `orderly` has the fewest opinions about.  We imagine a single researcher using `orderly` to keep track of a set of analyses.  They would configure orderly with an empty `orderly_config.yml`, and would probably add `archive` to `.gitignore` (`drafts` should always be gitignored).
 
 As the researcher develops reports, they create new directories in `src/` using `orderly::orderly_new()`, run the reports on their own system using `orderly::orderly_run()` and commit them into their `archive` using `orderly::orderly_commit()`.
 
@@ -133,7 +133,7 @@ Once this is done, both Alice and Bob can run reports *on* that server, for exam
 orderly::orderly_run_remote("internal-2017-population-TUV-MHL", remote = "science")
 ```
 
-![](workflows_run_remote.gif){width=700px}
+![](patterns_run_remote.gif){width=700px}
 
 this will print to screen the log, just as if it were running locally, though it is in fact running on a fresh R session remotely.  After being run, this report is available to everyone and can be pulled as above
 
@@ -197,7 +197,7 @@ Now, even if she has more recent copies of the dependencies locally, her report 
 
 ## Looking forward, a fully decentralised approach
 
-With some additional development on `orderly`, further workflows are possible, including a decentralised approach.  We might like to have a set of known "good" archives, or partially overlapping source trees, or archives that depend on data sources that come from other orderly archives that are not even present in their source tree.
+With some additional development on `orderly`, further work patterns are possible, including a decentralised approach.  We might like to have a set of known "good" archives, or partially overlapping source trees, or archives that depend on data sources that come from other orderly archives that are not even present in their source tree.
 
 To support this, we can have a network of orderly servers which can exchange sub-trees amongst each other.  In this fashion, we can imagine the following things being possible
 
