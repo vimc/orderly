@@ -1,3 +1,8 @@
+# orderly 1.2.5
+
+* `orderly::orderly_workflow` now returns name and ID of reports run
+* Add ability to run workflow from CLI
+
 # orderly 1.2.4
 
 * Error messages and stack traces are now preserved in `orderly.log` after a faied run; this primarily impacts the cli runner and then primarily when being run in parallel where the log is not printed to screen (VIMC-3841)
