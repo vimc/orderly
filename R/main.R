@@ -437,15 +437,8 @@ main_do_workflow <- function(x) {
     git_pull(config$root)
   }
 
-  run_reports <- orderly_workflow(name, root = config, instance = instance,
+  output <- orderly_workflow(name, root = config, instance = instance,
                                   message = message)
-  output <- vcapply(run_reports, function(report) {
-    path_rds <- path_orderly_run_rds(
-      file.path(config$root, "archive", report$name, report$id))
-    post_success(readRDS(path_rds), config)
-    paste0(report$name, ":", report$id)
-  })
-
   message("ids:", paste(output, collapse = ", "))
 }
 

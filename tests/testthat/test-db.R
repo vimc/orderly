@@ -449,11 +449,9 @@ test_that("add workflow info to db", {
     DBI::dbReadTable(con, "workflow"),
     data_frame(id = "workflow_id",
                name = "my_workflow"))
-  report_version <- data_frame(report_version = c(ids[[1]]$id, ids[[2]]$id),
-                               workflow_id = rep("workflow_id", 2))
   expect_equal(
     DBI::dbReadTable(con, "report_version_workflow"),
-    report_version)
+    data_frame(report_version = ids, workflow_id = rep("workflow_id", 2)))
 })
 
 

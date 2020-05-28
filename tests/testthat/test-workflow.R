@@ -21,23 +21,12 @@ test_that("workflow can be run", {
   expect_output("Completed running & committing report 'global'")
   expect_output("Completed running workflow 'my_workflow' with ID 'workflowid'")
 
-  expect_equal(output$result, list(
-    list(
-      name = "minimal",
-      id = "report_id_1"
-    ),
-    list(
-      name = "global",
-      id = "report_id_2"
-    )
-  ))
+  expect_equal(output$result, c("report_id_1", "report_id_2"))
 
   expect_true(file.exists(path_orderly_run_rds(
-    file.path(path, "archive", output$result[[1]]$name,
-              output$result[[1]]$id))))
+    file.path(path, "archive", "minimal", output$result[1]))))
   expect_true(file.exists(path_orderly_run_rds(
-    file.path(path, "archive", output$result[[2]]$name,
-              output$result[[2]]$id))))
+    file.path(path, "archive", "global", output$result[2]))))
 })
 
 test_that("workflow returns completed IDs if a report fails", {
