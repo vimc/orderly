@@ -1,7 +1,7 @@
 # orderly 1.2.5
 
 * `orderly::orderly_workflow` now returns name and ID of reports run
-* Add ability to run workflow from CLI
+* Add ability to run workflow from CLI (VIMC-3873)
 
 # orderly 1.2.4
 
