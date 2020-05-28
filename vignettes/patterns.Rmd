@@ -1,8 +1,8 @@
 ---
-title: "Work patterns with orderly"
+title: "Orderly patterns"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Work patterns with orderly}
+  %\VignetteIndexEntry{Orderly patterns}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -101,7 +101,7 @@ This is especially useful if `report-b` has many dependencies, or depends on par
 There are a number of features about the system here that might not be obvious at first, but that will aid collaboration.
 
 * Because each report exists in its own directory within `src/` we reduce the potential for conflicts.  In a collaborative analysis where multiple files are shared across analyses, it is easy to have conflicts.  `orderly` forces analyses into separate directories, which means most of the time it is trivial to merge even long-lived branches.  This is particularly important with relatively new users of git.
-* Because every report gets a unique identifier, it is straightforward to combine outputs that were run on different machines.  In the example above this is a centralised system (one canonical source, several destinations) but in theory more complicated distributed workflows are possible.
+* Because every report gets a unique identifier, it is straightforward to combine outputs that were run on different machines.  In the example above this is a centralised system (one canonical source, several destinations) but in theory more complicated distributed patterns are possible.
 * On the central server, the archive directory is an "append only" system; nothing is ever modified.  This seems wasteful at first as there can be lots of copies of a report, but disk space is cheaper than researcher time (and you can remove redundancy with `orderly::orderly_deduplicate`)
 
 ## Group of researchers, sharing via server
@@ -205,4 +205,4 @@ To support this, we can have a network of orderly servers which can exchange sub
 * Have orderly "runners" available on HPC platforms, making it easy to reliably run demanding tasks on larger infrastructure then incorporate them back into the "canonical" archive
 * Allow distributed teams of researchers with intermittent access to synchronise their own trees of outputs, eventually becoming consistent with each other
 
-All the lower-level support for these workflows is available, and implementing them in orderly is not necessarily hard - we just have not found the need for this ourselves yet.  If this is of interest please get in touch.
+All the lower-level support for these patterns is available, and implementing them in orderly is not necessarily hard - we just have not found the need for this ourselves yet.  If this is of interest please get in touch.
