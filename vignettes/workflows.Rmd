@@ -36,7 +36,7 @@ dir_tree <- function(path) {
 }
 ```
 
-Orderly supports running workflows - these are pre-configured lists of reports which are run in sequence as part of an analysis.
+Suppose you have a sequence of reports that you always want to run together. This might be a set of reports which you always want to run at the same time e.g. when new data comes in. Or a set of dependent reports where you want to ensure whenever one of the reports in the stack is changed the whole set of reports are re-run to create an up to date final output. Orderly workflows can help to make it easier to define and run these sets of reports together.
 
 ### Configure workflows
 
@@ -61,7 +61,7 @@ To run a workflow use `orderly::orderly_workflow`
 out <- orderly::orderly_workflow("my_workflow", root = path)
 ```
 
-This returns a list containing the name and ID of each of the reports run as part of the workflow
+This returns a list of the IDs of each of the reports run as part of the workflow
 ```{r}
 out
 ```
