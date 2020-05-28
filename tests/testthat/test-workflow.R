@@ -121,3 +121,33 @@ test_that("steps can be parsed", {
   )
   expect_equal(parse_steps(test_steps), c("step1", "step2", "step3"))
 })
+
+test_that("workflow can post success to slack/teams", {
+  path <- prepare_orderly_example("demo")
+  mock_new_report_id <- mockery::mock("report_id_1", "report_id_2")
+  mock_random_id <- mockery::mock("workflowid")
+  mock_post_success <- mockery::mock(TRUE, TRUE)
+
+  with_mock(
+    "orderly:::new_report_id" = mock_new_report_id,
+    "ids::random_id" = mock_random_id,
+    "orderly:::post_success" = mock_post_success, {
+      output <- evaluate_promise(orderly_workflow("my_workflow", root = path))
+    })
+
+  expect_equal(output$result, c("report_id_1", "report_id_2"))
+
+  minimal_rds <- path_orderly_run_rds(
+    file.path(path, "archive", "minimal", output$result[1]))
+  global_rds <- path_orderly_run_rds(
+    file.path(path, "archive", "global", output$result[2]))
+  expect_true(file.exists(minimal_rds))
+  expect_true(file.exists(global_rds))
+
+  args <- mockery::mock_args(mock_post_success)
+  expect_length(args, 2)
+  expect_equal(args[[1]][[1]], readRDS(minimal_rds))
+  expect_s3_class(args[[1]][[2]], "orderly_config")
+  expect_equal(args[[2]][[1]], readRDS(global_rds))
+  expect_s3_class(args[[2]][[2]], "orderly_config")
+})
