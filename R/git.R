@@ -101,6 +101,6 @@ git_branches_no_merged <- function(root = NULL, include_master = FALSE) {
     branches <- c(master, branches)
   }
   branches <- read.table(text = branches, stringsAsFactors = FALSE, sep = ",",
-                         col.names = c("branch", "last_commit"))
+                         col.names = c("name", "last_commit"))
   branches[branches$branch != "gh-pages", ]
 }
