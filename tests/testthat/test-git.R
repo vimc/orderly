@@ -244,12 +244,12 @@ test_that("can get unmerged branches from git", {
 
   branches <- git_branches_no_merged(path)
   expect_equal(nrow(branches), 2)
-  expect_equal(colnames(branches), c("branch", "last_commit"))
+  expect_equal(colnames(branches), c("name", "last_commit"))
   expect_equal(branches$branch, c("other", "new-branch"))
 
   branches <- git_branches_no_merged(path, include_master = TRUE)
   expect_equal(nrow(branches), 3)
-  expect_equal(colnames(branches), c("branch", "last_commit"))
+  expect_equal(colnames(branches), c("name", "last_commit"))
   expect_equal(branches$branch, c("master", "other", "new-branch"))
 })
 
