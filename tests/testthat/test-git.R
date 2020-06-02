@@ -245,12 +245,12 @@ test_that("can get unmerged branches from git", {
   branches <- git_branches_no_merged(path)
   expect_equal(nrow(branches), 2)
   expect_equal(colnames(branches), c("name", "last_commit"))
-  expect_equal(branches$branch, c("other", "new-branch"))
+  expect_equal(branches$name, c("other", "new-branch"))
 
   branches <- git_branches_no_merged(path, include_master = TRUE)
   expect_equal(nrow(branches), 3)
   expect_equal(colnames(branches), c("name", "last_commit"))
-  expect_equal(branches$branch, c("master", "other", "new-branch"))
+  expect_equal(branches$name, c("master", "other", "new-branch"))
 })
 
 
@@ -263,5 +263,5 @@ test_that("gh-pages branch is ignored in list of not merged branches", {
 
   branches <- git_branches_no_merged(path)
   expect_equal(nrow(branches), 1)
-  expect_true(!("gh-pages" %in% branches$branch))
+  expect_true(!("gh-pages" %in% branches$name))
 })
