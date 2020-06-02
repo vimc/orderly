@@ -1,6 +1,6 @@
 # orderly 1.2.7
 
-* Add function to get unmerged branches from orderly_runner (VIMC-3857)
+* Add function `git_branches_no_merged` to get unmerged branches from orderly_runner (VIMC-3857)
 
 # orderly 1.2.5
 
