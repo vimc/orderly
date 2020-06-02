@@ -85,6 +85,22 @@ git_fetch <- function(root = NULL) {
 }
 
 git_pull <- function(root = NULL) {
-  orderly_log("git", "fetch")
+  orderly_log("git", "pull")
   git_run("pull", root = root, check = TRUE)
+}
+
+git_branches_no_merged <- function(root = NULL, include_master = FALSE) {
+  branches <- git_run(c("for-each-ref", "--sort=-committerdate",
+                        "--format='%(refname:short),%(committerdate)'",
+                        "--no-merged=master"), root = root, check = TRUE)$output
+  if (isTRUE(include_master)) {
+    master <- git_run(c("for-each-ref", "refs/heads/master",
+                        "--sort=-committerdate",
+                        "--format='%(refname:short),%(committerdate)'"),
+                      root = root, check = TRUE)$output
+    branches <- c(master, branches)
+  }
+  branches <- read.table(text = branches, stringsAsFactors = FALSE, sep = ",",
+                         col.names = c("branch", "last_commit"))
+  branches[branches$branch != "gh-pages", ]
 }

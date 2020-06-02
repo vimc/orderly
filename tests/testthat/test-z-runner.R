@@ -520,3 +520,19 @@ test_that("runner can set instance", {
   process_args <- mockery::mock_args(mock_process)[[2]][[4]]
   expect_false("--instance" %in% process_args)
 })
+
+test_that("can get git branch info from runner", {
+    testthat::skip_on_cran()
+    path <- prepare_orderly_git_example()
+    runner <- orderly_runner(path[["local"]])
+
+    branches <- runner$git_branches_no_merged()
+    expect_equal(nrow(branches), 2)
+    expect_equal(branches$branch, c("origin/other", "other"))
+    expect_equal(colnames(branches), c("branch", "last_commit"))
+
+    branches <- runner$git_branches_no_merged(include_master = TRUE)
+    expect_equal(nrow(branches), 3)
+    expect_equal(branches$branch, c("master", "origin/other", "other"))
+    expect_equal(colnames(branches), c("branch", "last_commit"))
+})

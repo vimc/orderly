@@ -233,3 +233,35 @@ test_that("git into db", {
   expect_equal(d$git_branch, "master")
   expect_equal(d$git_clean, 1)
 })
+
+
+test_that("can get unmerged branches from git", {
+  testthat::skip_on_cran()
+  path <- unzip_git_demo()
+  ## Create another branch for testing
+  prev <- git_checkout_branch("other", root = path)
+  prev <- git_checkout_branch("new-branch", root = path, create = TRUE)
+
+  branches <- git_branches_no_merged(path)
+  expect_equal(nrow(branches), 2)
+  expect_equal(colnames(branches), c("branch", "last_commit"))
+  expect_equal(branches$branch, c("other", "new-branch"))
+
+  branches <- git_branches_no_merged(path, include_master = TRUE)
+  expect_equal(nrow(branches), 3)
+  expect_equal(colnames(branches), c("branch", "last_commit"))
+  expect_equal(branches$branch, c("master", "other", "new-branch"))
+})
+
+
+test_that("gh-pages branch is ignored in list of not merged branches", {
+  testthat::skip_on_cran()
+  path <- unzip_git_demo()
+  ## Create another branch for testing
+  prev <- git_checkout_branch("other", root = path)
+  prev <- git_checkout_branch("gh-pages", root = path, create = TRUE)
+
+  branches <- git_branches_no_merged(path)
+  expect_equal(nrow(branches), 1)
+  expect_true(!("gh-pages" %in% branches$branch))
+})
