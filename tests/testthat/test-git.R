@@ -137,7 +137,7 @@ test_that("run in detached head", {
   orderly_run_internal("other", list(nmin = 0), root = path, ref = "other",
                        echo = FALSE)
 
-  expect_equal(orderly_list(path), "minimal")
+  expect_equal(orderly_list(path), c("global", "minimal"))
   d <- orderly_list_drafts(path)
   expect_equal(nrow(d), 1L)
   expect_equal(d$name, "other")

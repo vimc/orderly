@@ -184,9 +184,9 @@ demo_change_time <- function(id, time, path) {
 ## After building this we have two branches 'master' with
 build_git_demo <- function() {
   path <- prepare_orderly_example("demo", file.path(tempfile(), "demo"))
-
   dir.create(file.path(path, "extra"))
-  move <- setdiff(dir(file.path(path, "src"), pattern = "^[^.]+$"), "minimal")
+  move <- setdiff(dir(file.path(path, "src"), pattern = "^[^.]+$"),
+                  c("minimal", "global"))
   file.rename(file.path(path, "src", move),
               file.path(path, "extra", move))
 

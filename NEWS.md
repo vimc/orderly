@@ -1,3 +1,7 @@
+# orderly 1.2.5
+
+* Add ability to run workflow from CLI (VIMC-3873)
+
 # orderly 1.2.4
 
 * Error messages and stack traces are now preserved in `orderly.log` after a faied run; this primarily impacts the cli runner and then primarily when being run in parallel where the log is not printed to screen (VIMC-3841)
