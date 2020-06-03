@@ -237,31 +237,33 @@ test_that("git into db", {
 
 test_that("can get unmerged branches from git", {
   testthat::skip_on_cran()
-  path <- unzip_git_demo()
+  path <- prepare_orderly_git_example()
   ## Create another branch for testing
-  prev <- git_checkout_branch("other", root = path)
-  prev <- git_checkout_branch("new-branch", root = path, create = TRUE)
+  prev <- git_checkout_branch("other", root = path[["local"]])
+  prev <- git_checkout_branch("new-branch", root = path[["local"]],
+                              create = TRUE)
 
-  branches <- git_branches_no_merged(path)
+  branches <- git_branches_no_merged(path[["local"]])
+  expect_equal(nrow(branches), 1)
+  expect_equal(colnames(branches), c("name", "last_commit"))
+  ## Branch not on remote are not returned
+  expect_equal(branches$name, "other")
+
+  branches <- git_branches_no_merged(path[["local"]], include_master = TRUE)
   expect_equal(nrow(branches), 2)
   expect_equal(colnames(branches), c("name", "last_commit"))
-  expect_equal(branches$name, c("other", "new-branch"))
-
-  branches <- git_branches_no_merged(path, include_master = TRUE)
-  expect_equal(nrow(branches), 3)
-  expect_equal(colnames(branches), c("name", "last_commit"))
-  expect_equal(branches$name, c("master", "other", "new-branch"))
+  expect_equal(branches$name, c("master", "other"))
 })
 
 
 test_that("gh-pages branch is ignored in list of not merged branches", {
   testthat::skip_on_cran()
-  path <- unzip_git_demo()
+  path <- prepare_orderly_git_example()
   ## Create another branch for testing
-  prev <- git_checkout_branch("other", root = path)
-  prev <- git_checkout_branch("gh-pages", root = path, create = TRUE)
+  prev <- git_checkout_branch("other", root = path[["local"]])
+  prev <- git_checkout_branch("gh-pages", root = path[["local"]], create = TRUE)
 
-  branches <- git_branches_no_merged(path)
+  branches <- git_branches_no_merged(path[["local"]])
   expect_equal(nrow(branches), 1)
   expect_true(!("gh-pages" %in% branches$name))
 })

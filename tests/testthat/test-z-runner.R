@@ -527,12 +527,12 @@ test_that("can get git branch info from runner", {
     runner <- orderly_runner(path[["local"]])
 
     branches <- runner$git_branches_no_merged()
-    expect_equal(nrow(branches), 2)
-    expect_equal(branches$name, c("origin/other", "other"))
+    expect_equal(nrow(branches), 1)
+    expect_equal(branches$name, "other")
     expect_equal(colnames(branches), c("name", "last_commit"))
 
     branches <- runner$git_branches_no_merged(include_master = TRUE)
-    expect_equal(nrow(branches), 3)
-    expect_equal(branches$name, c("master", "origin/other", "other"))
+    expect_equal(nrow(branches), 2)
+    expect_equal(branches$name, c("master", "other"))
     expect_equal(colnames(branches), c("name", "last_commit"))
 })

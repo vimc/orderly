@@ -90,13 +90,14 @@ git_pull <- function(root = NULL) {
 }
 
 git_branches_no_merged <- function(root = NULL, include_master = FALSE) {
-  branches <- git_run(c("for-each-ref", "--sort=-committerdate",
-                        "--format='%(refname:short),%(committerdate)'",
-                        "--no-merged=master"), root = root, check = TRUE)$output
-  if (isTRUE(include_master)) {
-    master <- git_run(c("for-each-ref", "refs/heads/master",
+  branches <- git_run(c("for-each-ref", "refs/remotes/origin",
                         "--sort=-committerdate",
-                        "--format='%(refname:short),%(committerdate)'"),
+                        "--format='%(refname:lstrip=3),%(committerdate)'",
+                        "--no-merged=origin/master"),
+                      root = root, check = TRUE)$output
+  if (isTRUE(include_master)) {
+    master <- git_run(c("for-each-ref", "refs/remotes/origin/master",
+                        "--format='%(refname:lstrip=3),%(committerdate)'"),
                       root = root, check = TRUE)$output
     branches <- c(master, branches)
   }
