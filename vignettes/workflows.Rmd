@@ -70,4 +70,4 @@ out
 
 ### Additional arguments
 
-Like `orderly::orderly_run` `orderly::orderly_workflow` exposes arguments to use alternative source databases and to resolve dependencies from a remote machine. See `?orderly::orderly_workflow` for details.
+Like `orderly::orderly_run` `orderly::orderly_workflow` exposes arguments to use alternative source databases and to resolve dependencies from a remote machine. These include `instance` (to set source db instance to be used) and `remote` (to set remote machine to resolve dependencies from). See `?orderly::orderly_workflow` for details.
