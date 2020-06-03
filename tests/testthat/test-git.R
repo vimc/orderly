@@ -248,6 +248,8 @@ test_that("can get unmerged branches from git", {
   expect_equal(colnames(branches), c("name", "last_commit"))
   ## Branch not on remote are not returned
   expect_equal(branches$name, "other")
+  expect_match(branches$last_commit,
+               "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$")
 
   branches <- git_branches_no_merged(path[["local"]], include_master = TRUE)
   expect_equal(nrow(branches), 2)
