@@ -68,6 +68,6 @@ out
 
 `orderly_workflow` needs to know the root of the orderly reports directory to be used. You specify this explicitly via the `root` arg or use your working directory. If your working directory is somewhere within the reports repository then you can run `orderly::orderly_workflow("workflow_name", locate = TRUE)` which will search for the root directory from your current working directory. See `?orderly::orderly_workflow` for more details.
 
-### Running with remote
+### Additional arguments
 
-Like `orderly::orderly_run` `orderly::orderly_workflow` supports running with a remote db source or resolving dependencies from a remote machine. These can be used via the `instance` and `remote` args in the same way as `orderly::orderly_run`.
+Like `orderly::orderly_run` `orderly::orderly_workflow` exposes arguments to use alternative source databases and to resolve dependencies from a remote machine. See `?orderly::orderly_workflow` for details.
