@@ -1,208 +1,73 @@
 ---
-title: "Workflows with orderly"
+title: "Workflows"
+date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Workflows with orderly}
+  %\VignetteIndexEntry{Workflows}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-`orderly` is designed to support a number of flexible workflows, depending on the size and structure of the group using it.  This vignette describes several workflows, in roughly increasing complexity.
+``` {r echo = FALSE, results = "hide"}
+lang_output <- function(x, lang) {
+  writeLines(c(sprintf("```%s", lang), x, "```"))
+}
+r_output <- function(x) lang_output(x, "r")
+yaml_output <- function(x) lang_output(x, "yaml")
+path <- orderly:::prepare_orderly_example("demo")
+## Even simpler
+unlink(file.path(path, "archive"), recursive = TRUE)
+unlink(file.path(path, "draft"), recursive = TRUE)
+unlink(file.path(path, "data"), recursive = TRUE)
+unlink(file.path(path, "data"), recursive = TRUE)
+remove_files <- setdiff(list.files(file.path(path, "src"), full.names = TRUE), 
+                        file.path(path, "src", c("minimal", "global")))
+for (file in remove_files) {
+  unlink(file, recursive = TRUE)
+}
+unlink(file.path(path, "before.R"))
+unlink(file.path(path, "source.R"))
+unlink(file.path(path, "demo.yml"))
+unlink(file.path(path, "README.md"))
+unlink(file.path(path, "src", "README.md"))
 
-The key issues to consider are
-
-* how will report *sources* be shared?
-* how do the *inputs* (e.g., `orderly` resources) make it into the reports?
-* how will report *outputs* be shared?
-* whose outputs are considered the "canonical" version?
-
-## Individual researcher
-
-This is the simplest workflow, and the one that `orderly` has the fewest opinions about.  We imagine a single researcher using `orderly` to keep track of a set of analyses.  They would configure orderly with an empty `orderly_config.yml`, and would probably add `archive` to `.gitignore` (`drafts` should always be gitignored).
-
-As the researcher develops reports, they create new directories in `src/` using `orderly::orderly_new()`, run the reports on their own system using `orderly::orderly_run()` and commit them into their `archive` using `orderly::orderly_commit()`.
-
-The researcher needs to take care that the reports are run in a clean R session, as objects and packages in R's global execution environment are available to their reports.
-
-If the researcher wants to share a report with someone else, `orderly` has no opinion on this, and they are free to email a file, or share it in whatever manner they prefer.  The researcher may still quote the report id (e.g., `20200315-100734-10e3de8a`) as a way for them to easily be able to get back to the version of the report that they sent, along with all its source files and resources.
-
-Backup is the responsibility of the researcher; if the computer is backed up, or if the archive lives on a service like Dropbox or OneDrive, this may be sufficient.
-
-### Why not commit the archive to git?
-
-If your reports are very small, then this may work for you.  However, git becomes slow to use when many large files have been added to it, and most hosting platforms, including GitHub will prevent addition of files over a certain size and may complain about overall repositories reaching a certain size.  Cloning the source tree will become increasingly painful, and you may become wary of even *running* a report because of the impact it may have on the above problems.  In our opinion, you should store your archive outside of git and use an alternative method to back it up and distribute it.
-
-## Small group, sharing via shared disk
-
-As soon as more than one person is involved, things get more tricky.  We need to ensure that everybody has a view of the same set of archive reports, and over the same source tree, yet can work on their own work somewhat independently.
-
-The researchers use a common "source tree" which is under version control with git, and kept on GitHub.  Nobody may commit to master and all changes to master are introduced via a ["Pull Request"](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests) (other hosted source control platforms have equivalents, for example [GitLab merge requests](https://docs.gitlab.com/ee/user/project/merge_requests/)).  Everybody has this cloned locally, and the git repository does not include `archive` or `draft`.  With this setup it is easy to ensure that different members of the team are looking at the same source code, and `orderly` will track that as part of its metadata (git's branch, sha and status).
-
-However, we still must synchronise the reports that have been run.  Of course everyone can run their own copy of a report and build off of that but this poses several potential problems:
-
-* if the report is non-deterministic, the results will likely differ between runs
-* if the report depends on an external data source (a SQL database, web resource, etc) the results may differ
-* if underlying package versions have changed, the results may differ
-* if the report is long-running, this is time-consuming
-* everyone will end up with a different report id, so it is difficult to know that we're looking at the same "effective" report when results are shared
-
-What we want is that after a particular version of a report has been run, it is easy for other people to start depending on it.  To achieve this we need a method for getting the archive from one person's computer to another.
-
-For this discussion we will assume two researchers ["Alice" and "Bob"](https://en.wikipedia.org/wiki/Alice_and_Bob) rather than "Researcher A" and "Researcher B".
-
-Alice develops a report `report-a` on her computer by running `orderly::orderly_new("report-a")` and working with `orderly::orderly_develop_start()` and `orderly::orderly_run()` until she is happy with the results.  She then creates a pull request, and Bob approves it (probably after checking that the report runs on his machine too) and merges it.
-
-Now that this report has been merged into master we need to run a "canonical copy".  We do this on a third copy of the sources that are checked out somewhere accessible to *both* Alice and Bob; this might be using Dropbox or another file-sharing platform, or on a network drive visible to both users.
-
-Either Alice or Bob may now pull the new changes onto this new source copy, and run `orderly run report-a` on the command line.  Using the command-line version of `orderly` ensures that the report is run in a clean session, along with keeping a copy of the log alongside the outputs.
-
-Now we have both Alice and Bob able to get the *source* of `report-a` and our shared archive having a copy of it; how do we get it to Alice and Bob?  We need to edit the `orderly_config.yml` to tell it about this archive:
-
-```yaml
-remote:
-  default:
-    driver: orderly::orderly_remote_path
-    args:
-      path: $ORDERLY_PATH_DEFAULT_REMOTE
+dir_tree <- function(path) {
+  withr::with_dir(path, fs::dir_tree("."))
+}
 ```
 
-This tells `orderly` that we will use a file-based remote source (i.e., a shared copy of orderly) and that the path to this source is determined by the [Environment variable](https://en.wikipedia.org/wiki/Environment_variable) `ORDERLY_PATH_DEFAULT_REMOTE`.  Using an environment variable is necessary here as this path will certainly differ between Alice and Bob.
+Suppose you have a sequence of reports that you always want to run together. This might be a set of reports which you always want to run at the same time e.g. when new data comes in. Or a set of dependent reports where you want to ensure whenever one of the reports in the stack is changed the whole set of reports are re-run to create an up to date final output. Orderly workflows can help to make it easier to define and run these sets of reports together.
 
-To fill in the environment variable we create a file `orderly_envir.yml` (which should be added to `.gitignore`) containing the path to the shared source.  For Alice, this might look like
+### Configure workflows
 
-```yaml
-ORDERLY_PATH_DEFAULT_REMOTE: /Users/alice/Dropbox/our-project
+Workflows are defined through a yaml file in a `workflows` directory as `<workflow_name>.yml`
+
+``` {r comment = NA, echo = FALSE}
+dir_tree(path)
 ```
 
-and for Bob it might look like
-
-```yaml
-ORDERLY_PATH_DEFAULT_REMOTE: c:/Bob/Documents/Dropbox/our-project
+The workflow yaml contains a list of steps of reports to be run in order.
+``` {r results = "asis", echo = FALSE}
+yaml_output(readLines(file.path(path, "workflows", "my_workflow.yml")))
 ```
 
-With this done, Bob can get a copy of `report-a` by running
+At the moment workflows can only be run with default parameters for each report.
 
-```r
-orderly::orderly_pull_archive("report-a")
+### Running a workflow
+
+To run a workflow use `orderly::orderly_workflow`
+
+``` {r}
+out <- orderly::orderly_workflow("my_workflow", root = path)
 ```
 
-which will copy the latest version of the report from the shared archive into their personal archive.  A this point, Bob has *exactly* the copy of `report-a` that was run on the shared archive.  In the same way that Alice and Bob can exchange git sha hashes to ensure that they are on the same version of the source tree, they can now exchange report ids and ensure that they are looking at the same output.
-
-If you are working on a report that has a dependency (say `report-b`, which depends on `report-a`), you can automatically pull its dependencies by running
-
-```r
-orderly::orderly_pull_dependencies("report-b")
+This returns a list of the IDs of each of the reports run as part of the workflow
+```{r}
+out
 ```
 
-This is especially useful if `report-b` has many dependencies, or depends on particular versions of a report.
+`orderly_workflow` needs to know the root of the orderly reports directory to be used. You specify this explicitly via the `root` arg or use your working directory. If your working directory is somewhere within the reports repository then you can run `orderly::orderly_workflow("workflow_name", locate = TRUE)` which will search for the root directory from your current working directory. See `?orderly::orderly_workflow` for more details.
 
-### Some comments on collaboration
+### Additional arguments
 
-There are a number of features about the system here that might not be obvious at first, but that will aid collaboration.
-
-* Because each report exists in its own directory within `src/` we reduce the potential for conflicts.  In a collaborative analysis where multiple files are shared across analyses, it is easy to have conflicts.  `orderly` forces analyses into separate directories, which means most of the time it is trivial to merge even long-lived branches.  This is particularly important with relatively new users of git.
-* Because every report gets a unique identifier, it is straightforward to combine outputs that were run on different machines.  In the example above this is a centralised system (one canonical source, several destinations) but in theory more complicated distributed workflows are possible.
-* On the central server, the archive directory is an "append only" system; nothing is ever modified.  This seems wasteful at first as there can be lots of copies of a report, but disk space is cheaper than researcher time (and you can remove redundancy with `orderly::orderly_deduplicate`)
-
-## Group of researchers, sharing via server
-
-This is the model that we use within the [MRC Centre for Global Infectious Disease Analysis](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis), and it does require considerably more setup, but also more reliability and flexibility.
-
-As above, we use a single "source tree", kept on GitHub or similar.  However, someone in the group takes responsibility for setting up a copy of [OrderlyWeb](https://github.com/vimc/orderly-web), our open source, self-hosted orderly server.  The OrderlyWeb server software provides a number of things
-
-1. A persistent copy of R running `orderly` that can run reports as needed
-2. A web server that exposes a user-friendly web portal showing versions of orderly reports and an HTTP API (this application is written in [Kotlin](https://kotlinlang.org))
-3. A [reverse proxy](https://en.wikipedia.org/wiki/Reverse_proxy) used to secure the application with https
-
-This [diagram may help show how the pieces fit together](https://raw.githubusercontent.com/vimc/montagu-machine/master/docs/diagrams/OrderlyWeb%20architecture.png).
-
-If OrderlyWeb has been deployed onto `orderly.example.com`, then we might declare it in `orderly_config.yml`
-
-```yaml
-remote:
-  default:
-    driver: orderlyweb::orderlyweb_remote
-    args:
-      host: orderly.example.com
-      token: $GITHUB_TOKEN
-```
-
-Once this is done, both Alice and Bob can run reports *on* that server, for example
-
-```r
-orderly::orderly_run_remote("internal-2017-population-TUV-MHL", remote = "science")
-```
-
-![](workflows_run_remote.gif){width=700px}
-
-this will print to screen the log, just as if it were running locally, though it is in fact running on a fresh R session remotely.  After being run, this report is available to everyone and can be pulled as above
-
-```r
-orderly::orderly_pull_archive("report-a", remote = "default")
-```
-
-## Using staging environments
-
-This can be extended further with the use of "staging environments".  This extends the above (two) scenario so that we have multiple remote orderly archives.  These might be shared file archives, using `orderly::orderly_remote_path` or server hosted archives using `orderlyweb::orderlyweb_remote` or even a combination.
-
-We designate one of these remotes to be our production environment and the others to be staging.  In our work we have used the name pairs `production/science` and `real/testing`; the names used do not matter.
-
-The `orderly_config.yml` configuration might then look like:
-
-```yaml
-remote:
-  staging:
-    driver: orderlyweb::orderlyweb_remote
-    args:
-      host: orderly.example.com
-      port: 11443
-      token: $GITHUB_TOKEN
-  production:
-    driver: orderlyweb::orderlyweb_remote
-    args:
-      host: orderly.example.com
-      token: $GITHUB_TOKEN
-```
-
-Now, as part of the pull request review procedure, the reviewer will run the report on the staging environment, which means that it should work without error on the production environment if they have been set up the same way.
-
-```r
-orderly::orderly_run_remote("report-a", remote = "staging", ref = "origin/myfeature")
-```
-
-where `myfeature` is the name of the branch.  This report can now be inspected (a URL will be generated which may be emailed around), and after being merged, the report can be run on the production server with
-
-```r
-orderly::orderly_run_remote("report-a", remote = "production")
-```
-
-We would recommend that on the production server only `master` be used.  This can be enforced by adding `master_only: true` to the configuration as:
-
-```
-remote:
-  production:
-    driver: orderlyweb::orderlyweb_remote
-    master_only: true
-    args:
-      ...
-```
-
-## Dependency resolution
-
-As soon as there are multiple archives, resolving dependencies becomes more challenging.  If Alice has two reports that depend on each other, she might want to use the most recent versions on her machine, or the most recent versions *as seen by one of her remotes* as that is where the report will eventually be run.
-
-To allow this, when running `orderly::orderly_run`, Alice can provide the argument `remote`, indicating which of her remotes she would like to use for dependency resolution.
-
-Now, even if she has more recent copies of the dependencies locally, her report will use the same copies as would be used on the server she chooses.  Any local copies of remote reports will be downloaded to her computer before the report is run.
-
-## Looking forward, a fully decentralised approach
-
-With some additional development on `orderly`, further workflows are possible, including a decentralised approach.  We might like to have a set of known "good" archives, or partially overlapping source trees, or archives that depend on data sources that come from other orderly archives that are not even present in their source tree.
-
-To support this, we can have a network of orderly servers which can exchange sub-trees amongst each other.  In this fashion, we can imagine the following things being possible
-
-* Have common data processing tasks described in one orderly source tree, but used by several other sources trees
-* Have orderly "runners" available on HPC platforms, making it easy to reliably run demanding tasks on larger infrastructure then incorporate them back into the "canonical" archive
-* Allow distributed teams of researchers with intermittent access to synchronise their own trees of outputs, eventually becoming consistent with each other
-
-All the lower-level support for these workflows is available, and implementing them in orderly is not necessarily hard - we just have not found the need for this ourselves yet.  If this is of interest please get in touch.
+Like `orderly::orderly_run` `orderly::orderly_workflow` exposes arguments to use alternative source databases and to resolve dependencies from a remote machine. These include `instance` (to set source db instance to be used) and `remote` (to set remote machine to resolve dependencies from). See `?orderly::orderly_workflow` for details.
