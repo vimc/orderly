@@ -104,6 +104,8 @@ git_branches_no_merged <- function(root = NULL, include_master = FALSE) {
   branches <- read.table(text = branches, stringsAsFactors = FALSE, sep = ",",
                          col.names = c("name", "last_commit"))
   branches <- branches[branches$name != "gh-pages", ]
+  branches$last_commit_age <-
+    rep(as.integer(Sys.time()), nrow(branches)) - branches$last_commit
   times <- as.POSIXct(branches$last_commit, origin = "1970-01-01", tz = "UTC")
   branches$last_commit <- strftime(times)
   branches
