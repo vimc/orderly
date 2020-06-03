@@ -206,6 +206,10 @@ orderly_runner_ <- R6::R6Class(
       invisible(res)
     },
 
+    git_branches_no_merged = function(include_master = FALSE) {
+      git_branches_no_merged(self$path, include_master)
+    },
+
     cleanup = function(name = NULL, draft = TRUE, data = TRUE,
                        failed_only = FALSE) {
       orderly_cleanup(name = name, root = self$config, draft = draft,

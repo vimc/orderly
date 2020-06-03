@@ -1,3 +1,7 @@
+# orderly 1.2.7
+
+* Add function `git_branches_no_merged` to get unmerged branches from orderly_runner (VIMC-3857)
+
 # orderly 1.2.5
 
 * Add ability to run workflow from CLI (VIMC-3873)
