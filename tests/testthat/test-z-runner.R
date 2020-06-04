@@ -541,3 +541,26 @@ test_that("can get git branch info from runner", {
     expect_equal(colnames(branches),
                  c("name", "last_commit", "last_commit_age"))
 })
+
+test_that("can get git commit info from runner", {
+  testthat::skip_on_cran()
+  path <- prepare_orderly_git_example()
+  runner <- orderly_runner(path[["local"]])
+
+  commits <- runner$git_commits("master")
+  expect_equal(nrow(commits), 1)
+  expect_equal(colnames(commits), c("id", "date_time", "age"))
+  expect_type(commits$id, "character")
+  expect_match(commits$date_time,
+               "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$")
+  expect_type(commits$age, "integer")
+
+  other_commits <- runner$git_commits("other")
+  expect_equal(nrow(other_commits), 2)
+  expect_equal(colnames(other_commits), c("id", "date_time", "age"))
+  expect_type(other_commits$id, "character")
+  expect_match(other_commits$date_time,
+               "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$")
+  expect_equal(other_commits[2, ]$id, commits$id)
+  expect_equal(other_commits[2, ]$date_time, commits$date_time)
+})

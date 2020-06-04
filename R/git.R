@@ -104,9 +104,31 @@ git_branches_no_merged <- function(root = NULL, include_master = FALSE) {
   branches <- read.table(text = branches, stringsAsFactors = FALSE, sep = ",",
                          col.names = c("name", "last_commit"))
   branches <- branches[branches$name != "gh-pages", ]
-  branches$last_commit_age <-
-    rep(as.integer(Sys.time()), nrow(branches)) - branches$last_commit
-  times <- as.POSIXct(branches$last_commit, origin = "1970-01-01", tz = "UTC")
-  branches$last_commit <- strftime(times)
+  branches$last_commit_age <- calculate_age(branches$last_commit)
+  branches$last_commit <- convert_unix_to_iso_time(branches$last_commit)
   branches
+}
+
+## This gets last 25 commits from the remote
+git_commits <- function(branch, root = NULL) {
+  commits <- git_run(c("log", "--pretty='%h,%cd'",
+                       "--date=unix", "--max-count=25",
+                       sprintf("refs/remotes/origin/%s", branch)),
+                     root = root, check = TRUE)$output
+  commits <- read.table(text = text, stringsAsFactors = FALSE, sep = ",",
+                     col.names = c("id", "date_time"))
+  commits$age <- calculate_age(commits$date_time)
+  commits$date_time <- convert_unix_to_iso_time(commits$date_time)
+  ## ID can be parsed as an integer by read.table if by chance the id contains
+  ## only numbers
+  commits$id <- as.character(commits$id)
+  commits
+}
+
+calculate_age <- function(times) {
+  rep(as.integer(Sys.time()), length(times)) - times
+}
+
+convert_unix_to_iso_time <- function(times) {
+  strftime(as.POSIXct(times, origin = "1970-01-01", tz = "UTC"))
 }
