@@ -292,3 +292,48 @@ test_that("can get commit history for a branch", {
   ## Commit from master branch is not returned
   expect_true(commits$id != other_commits$id)
 })
+
+test_that("can get report list from git", {
+  testthat::skip_on_cran()
+  path <- prepare_orderly_git_example()
+
+  commits <- git_commits("master", path[["local"]])
+  expect_equal(nrow(commits), 1)
+  reports <- get_reports("master", commits$id, path[["local"]])
+  expect_equal(reports, c("global", "minimal"))
+
+  other_commits <- git_commits("other", path[["local"]])
+  expect_equal(nrow(other_commits), 1)
+  other_reports <- get_reports("other", other_commits$id, path[["local"]])
+  expect_equal(other_reports, c("other"))
+})
+
+test_that("report only shows when pushed to remote", {
+  testthat::skip_on_cran()
+  path <- prepare_orderly_git_example()
+
+  ## Make a change to other and test that it isn't listed in call to
+  ## git_commits
+  invisible(git_checkout_branch("other", root = path[["local"]]))
+  dir.create(file.path(path[["local"]], "src/new-report"))
+  invisible(file.copy(file.path(path[["local"]], "src/minimal"),
+                      file.path(path[["local"]], "src/new-report"),
+                      recursive = TRUE))
+  invisible(git_run(c("add", "."), root = path[["local"]]))
+  invisible(git_run(c("commit", "-m", "'add another report'"),
+                    root = path[["local"]]))
+
+  other_commits <- git_commits("other", path[["local"]])
+  expect_equal(nrow(other_commits), 1)
+  other_reports <- get_reports("other", other_commits$id, path[["local"]])
+  expect_equal(other_reports, c("other"))
+
+  ## Push to remote
+  invisible(git_run(c("push", "--set-upstream origin other"),
+                    root = path[["local"]]))
+
+  other_commits <- git_commits("other", path[["local"]])
+  expect_equal(nrow(other_commits), 2)
+  other_reports <- get_reports("other", other_commits$id[[1]], path[["local"]])
+  expect_equal(other_reports, c("new-report", "other"))
+})

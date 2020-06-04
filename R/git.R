@@ -139,3 +139,17 @@ calculate_age <- function(times) {
 convert_unix_to_iso_time <- function(times) {
   strftime(as.POSIXct(times, origin = "1970-01-01", tz = "UTC"))
 }
+
+get_reports <- function(branch, commit, root) {
+  if (branch == "master") {
+    ## Get all reports in commit if on master branch
+    args <- c("ls-tree", "--name-only", "-d", sprintf("%s:src/", commit))
+  } else {
+    ## Get only files which have changed from master copy
+    ## Note this could inclue files as well as directories.
+    ## How can we exclude them?
+    args <- c("diff-tree", "--name-only",
+              sprintf("refs/remotes/origin/master:src/..%s:src/", commit))
+  }
+  git_run(args, root = root, check = TRUE)$output
+}
