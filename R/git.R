@@ -118,7 +118,7 @@ git_commits <- function(branch, root = NULL) {
   } else {
     remote_branch <- sprintf("refs/remotes/origin/%s", branch)
     args <- c("log", "--pretty='%h,%cd'", "--date=unix", "--max-count=25",
-              sprintf("--cherry refs/remotes/origin/master...", remote_branch),
+              sprintf("--cherry refs/remotes/origin/master..%s", remote_branch),
               remote_branch)
   }
   commits <- git_run(args, root = root, check = TRUE)$output
