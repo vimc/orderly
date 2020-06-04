@@ -102,22 +102,22 @@ git_branches_no_merged <- function(root = NULL, include_master = FALSE) {
     branches <- c(master, branches)
   }
   branches <- utils::read.table(text = branches, stringsAsFactors = FALSE,
-                                sep = ",",
-                                col.names = c("name", "last_commit"))
+                                sep = ",", col.names = c("name", "last_commit"))
   branches <- branches[branches$name != "gh-pages", ]
   branches$last_commit_age <- calculate_age(branches$last_commit)
   branches$last_commit <- convert_unix_to_iso_time(branches$last_commit)
   branches
 }
 
-## This gets last 25 commits from the remote
+## This gets last 25 commits from master
+## if not master then gets the unmerged commits (limit 25)
 git_commits <- function(branch, root = NULL) {
   commits <- git_run(c("log", "--pretty='%h,%cd'",
                        "--date=unix", "--max-count=25",
                        sprintf("refs/remotes/origin/%s", branch)),
                      root = root, check = TRUE)$output
-  commits <- utils::read.table(text = text, stringsAsFactors = FALSE, sep = ",",
-                               col.names = c("id", "date_time"))
+  commits <- utils::read.table(text = commits, stringsAsFactors = FALSE,
+                               sep = ",", col.names = c("id", "date_time"))
   commits$age <- calculate_age(commits$date_time)
   commits$date_time <- convert_unix_to_iso_time(commits$date_time)
   ## ID can be parsed as an integer by read.table if by chance the id contains
