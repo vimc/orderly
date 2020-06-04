@@ -112,10 +112,16 @@ git_branches_no_merged <- function(root = NULL, include_master = FALSE) {
 ## This gets last 25 commits from master
 ## if not master then gets the unmerged commits (limit 25)
 git_commits <- function(branch, root = NULL) {
-  commits <- git_run(c("log", "--pretty='%h,%cd'",
-                       "--date=unix", "--max-count=25",
-                       sprintf("refs/remotes/origin/%s", branch)),
-                     root = root, check = TRUE)$output
+  if (branch == "master") {
+    args <- c("log", "--pretty='%h,%cd'", "--date=unix", "--max-count=25",
+              sprintf("refs/remotes/origin/%s", branch))
+  } else {
+    remote_branch <- sprintf("refs/remotes/origin/%s", branch)
+    args <- c("log", "--pretty='%h,%cd'", "--date=unix", "--max-count=25",
+              sprintf("--cherry refs/remotes/origin/master...", remote_branch),
+              remote_branch)
+  }
+  commits <- git_run(args, root = root, check = TRUE)$output
   commits <- utils::read.table(text = commits, stringsAsFactors = FALSE,
                                sep = ",", col.names = c("id", "date_time"))
   commits$age <- calculate_age(commits$date_time)

@@ -556,11 +556,11 @@ test_that("can get git commit info from runner", {
   expect_type(commits$age, "integer")
 
   other_commits <- runner$git_commits("other")
-  expect_equal(nrow(other_commits), 2)
+  expect_equal(nrow(other_commits), 1)
   expect_equal(colnames(other_commits), c("id", "date_time", "age"))
   expect_type(other_commits$id, "character")
   expect_match(other_commits$date_time,
                "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$")
-  expect_equal(other_commits[2, ]$id, commits$id)
-  expect_equal(other_commits[2, ]$date_time, commits$date_time)
+  ## Commit from master branch is not returned
+  expect_true(commits$id != other_commits$id)
 })
