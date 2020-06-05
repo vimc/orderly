@@ -1,3 +1,7 @@
+# orderly 1.2.8
+
+* Add function `git_commits` to list commits for a particular branch from orderly_runner (VIMC-3941)
+
 # orderly 1.2.7
 
 * Add function `git_branches_no_merged` to get unmerged branches from orderly_runner (VIMC-3857)

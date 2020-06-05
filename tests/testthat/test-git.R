@@ -270,3 +270,25 @@ test_that("gh-pages branch is ignored in list of not merged branches", {
   expect_equal(nrow(branches), 1)
   expect_true(!("gh-pages" %in% branches$name))
 })
+
+test_that("can get commit history for a branch", {
+  testthat::skip_on_cran()
+  path <- prepare_orderly_git_example()
+
+  commits <- git_commits("master", path[["local"]])
+  expect_equal(nrow(commits), 1)
+  expect_equal(colnames(commits), c("id", "date_time", "age"))
+  expect_type(commits$id, "character")
+  expect_match(commits$date_time,
+               "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$")
+  expect_type(commits$age, "integer")
+
+  other_commits <- git_commits("other", path[["local"]])
+  expect_equal(nrow(other_commits), 1)
+  expect_equal(colnames(other_commits), c("id", "date_time", "age"))
+  expect_type(other_commits$id, "character")
+  expect_match(other_commits$date_time,
+               "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$")
+  ## Commit from master branch is not returned
+  expect_true(commits$id != other_commits$id)
+})
