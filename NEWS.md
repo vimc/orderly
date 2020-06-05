@@ -1,4 +1,4 @@
-# orderly 1.2.8
+# orderly 1.2.9
 
 * Add function `get_reports` to list reports available for a particular branch and commit from orderly_runner (VIMC-3945)
 
