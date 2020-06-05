@@ -131,11 +131,3 @@ git_commits <- function(branch, root = NULL) {
   commits$id <- as.character(commits$id)
   commits
 }
-
-calculate_age <- function(times) {
-  rep(as.integer(Sys.time()), length(times)) - times
-}
-
-convert_unix_to_iso_time <- function(times) {
-  strftime(as.POSIXct(times, origin = "1970-01-01", tz = "UTC"))
-}

@@ -886,3 +886,11 @@ test_that("Can filter error messages", {
   expect_true(
     with_retry(g, n = 2, match = "Resource not ready", backoff = 0))
 })
+
+test_that("calculating age uses seconds", {
+  now <- Sys.time()
+  times <- c(as.integer(now - 10000), as.integer(now + 10000))
+  ## Stub Sys.time for easy of testing
+  mockery::stub(calculate_age, 'Sys.time', now)
+  expect_equal(calculate_age(times), c(10000, -10000))
+})
