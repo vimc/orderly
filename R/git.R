@@ -135,13 +135,22 @@ git_commits <- function(branch, root = NULL) {
 get_reports <- function(branch, commit, root) {
   if (branch == "master") {
     ## Get all reports in commit if on master branch
-    args <- c("ls-tree", "--name-only", "-d", sprintf("%s:src/", commit))
+    reports <- git_run(c("ls-tree", "--name-only", "-d",
+                         sprintf("%s:src/", commit)),
+                       root = root, check = TRUE)$output
   } else {
-    ## Get only files which have changed from master copy
-    ## Note this could inclue files as well as directories.
-    ## How can we exclude them?
-    args <- c("diff-tree", "--name-only",
-              sprintf("refs/remotes/origin/master:src/..%s:src/", commit))
+    ## Ideally we would use plumbing function diff-tree here instead of
+    ## diff but at time of writing this was not supporting ... syntax
+    ## As we have control over the output format this is probably safe to use
+    ## the porcelain version
+    reports <- git_run(
+      c("diff", "--name-only", "--relative=src/",
+      paste0("refs/remotes/origin/master...", commit),
+      "-- src/"),
+      root = root, check = TRUE)$output
+    ## We only want to return the reports which have changes i.e. the dirname
+    ## of any changed files
+    reports <- unique(first_dirname(reports))
   }
-  git_run(args, root = root, check = TRUE)$output
+  reports
 }

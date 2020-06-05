@@ -950,3 +950,15 @@ calculate_age <- function(times) {
 convert_unix_to_iso_time <- function(times) {
   strftime(as.POSIXct(times, origin = "1970-01-01", tz = "UTC"))
 }
+
+first_dirname <- function(paths) {
+  first_dir <- function(path) {
+    if (basename(path) == path) {
+      dir <- path
+    } else {
+      dir <- first_dirname(dirname(path))
+    }
+    dir
+  }
+  vcapply(paths, first_dir, USE.NAMES = FALSE)
+}

@@ -894,3 +894,9 @@ test_that("calculating age uses seconds", {
   mockery::stub(calculate_age, "Sys.time", now)
   expect_equal(calculate_age(times), c(10000, -10000))
 })
+
+test_that("first_dirname gets the first dir part of the filename", {
+  expect_equal(
+    first_dirname(c("test/file/name.txt", "test", ".", "testing/file.txt")),
+    c("test", "test", ".", "testing"))
+})
