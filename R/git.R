@@ -132,14 +132,6 @@ git_commits <- function(branch, root = NULL) {
   commits
 }
 
-calculate_age <- function(times) {
-  rep(as.integer(Sys.time()), length(times)) - times
-}
-
-convert_unix_to_iso_time <- function(times) {
-  strftime(as.POSIXct(times, origin = "1970-01-01", tz = "UTC"))
-}
-
 get_reports <- function(branch, commit, root) {
   if (branch == "master") {
     ## Get all reports in commit if on master branch
