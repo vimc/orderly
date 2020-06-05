@@ -344,7 +344,7 @@ test_that("get_reports only shows one sided changes", {
 
   ## At the moment we have
   ##
-  ## master  (A)-(B)
+  ## master  (A)-(B)        #nolint
   ##          \
   ## other    (X)
   ## Where B is a commit without a report in it
@@ -352,7 +352,7 @@ test_that("get_reports only shows one sided changes", {
   ## We want to test divergent branches where both branches contain a report
   ## which doesn't exist on the other branch.
   ## Create something like
-  ## master  (A)-(B)-(C)
+  ## master  (A)-(B)-(C)    #nolint
   ##          \
   ## other    (X)
   ##
