@@ -96,54 +96,69 @@ orderly_version <- R6::R6Class(
       }
     },
 
-    prepare_environment_data = function() {
+
+    data_fetch = function() {
       uses_db <- length(private$recipe$data) > 0 ||
         !is.null(private$recipe$connection)
-      if (uses_db) {
-        con <- orderly_db("source", private$config,
-                          instance = private$instance)
-        on.exit(lapply(con, DBI::dbDisconnect))
-        private$data <- list()
+      if (!uses_db) {
+        return(NULL)
+      }
 
-        private$data$instance <- lapply(con, attr, "instance", exact = TRUE)
+      ret <- list()
 
-        views <- private$recipe$views
-        for (v in names(views)) {
-          orderly_log("view", sprintf("%s : %s", views[[v]]$database, v))
-          sql <- temporary_view(v, views[[v]]$query)
-          DBI::dbExecute(con[[views[[v]]$database]], sql)
+      con <- orderly_db("source", private$config,
+                        instance = private$instance)
+      on.exit(lapply(con, DBI::dbDisconnect))
+
+      ret$instance <- lapply(con, attr, "instance", exact = TRUE)
+
+      views <- private$recipe$views
+      for (v in names(views)) {
+        orderly_log("view", sprintf("%s : %s", views[[v]]$database, v))
+        sql <- temporary_view(v, views[[v]]$query)
+        DBI::dbExecute(con[[views[[v]]$database]], sql)
+      }
+
+      data <- list()
+      for (v in names(private$recipe$data)) {
+        database <- private$recipe$data[[v]]$database
+        query <- private$recipe$data[[v]]$query
+        withCallingHandlers(
+          data[[v]] <- DBI::dbGetQuery(con[[database]], query),
+          error = function(e)
+            orderly_log("data", sprintf("%s => %s: <error>", database, v)))
+        orderly_log("data",
+                    sprintf("%s => %s: %s x %s",
+                            database, v, nrow(data[[v]]), ncol(data[[v]])))
+      }
+
+      if (length(data) > 0L) {
+        ret$data <- data
+      }
+
+      if (!is.null(private$recipe$connection)) {
+        ret$con <- list()
+        for (i in names(private$recipe$connection)) {
+          ret$con[[i]] <- con[[private$recipe$connection[[i]]]]
         }
+        ## Ensure that only unexported connections are closed when
+        ## we exit this method (happens above in the on.exit()!)
+        keep <- setdiff(
+          list_to_character(private$recipe$connection, FALSE),
+          names(private$config$database))
+        con <- con[keep]
+      }
 
-        data <- list()
-        for (v in names(private$recipe$data)) {
-          database <- private$recipe$data[[v]]$database
-          query <- private$recipe$data[[v]]$query
-          withCallingHandlers(
-            data[[v]] <- DBI::dbGetQuery(con[[database]], query),
-            error = function(e)
-              orderly_log("data", sprintf("%s => %s: <error>", database, v)))
-          orderly_log("data",
-                      sprintf("%s => %s: %s x %s",
-                              database, v, nrow(data[[v]]), ncol(data[[v]])))
+      ret
+    },
+
+    prepare_environment_data = function() {
+      if (!is.null(private$data)) {
+        if (length(private$data$data) > 0L) {
+          list2env(private$data$data, private$envir)
         }
-
-        if (length(data) > 0L) {
-          list2env(data, private$envir)
-          private$data$data <- data
-        }
-
-        if (!is.null(private$recipe$connection)) {
-          private$data$con <- list()
-          for (i in names(private$recipe$connection)) {
-            private$data$con[[i]] <- con[[private$recipe$connection[[i]]]]
-          }
+        if (length(private$data$con) > 0L) {
           list2env(private$data$con, private$envir)
-          ## Ensure that only unexported connections are closed when
-          ## we exit this method (happens above in the on.exit()!)
-          keep <- setdiff(
-            list_to_character(private$recipe$connection, FALSE),
-            names(private$config$database))
-          con <- con[keep]
         }
       }
     },
@@ -152,6 +167,8 @@ orderly_version <- R6::R6Class(
       withr::with_envvar(private$envvar, {
         withr::with_dir(private$workdir, {
           check_missing_packages(private$recipe$packages)
+
+          private$data <- private$data_fetch()
 
           private$prepare_environment_parameters()
           private$prepare_environment_secrets()
@@ -406,13 +423,16 @@ orderly_version <- R6::R6Class(
       use_draft <- FALSE
       self$run_read(parameters, instance, envir, tags, use_draft, remote)
       self$run_prepare()
+
+      private$data <- private$data_fetch()
+
       withr::with_envvar(private$envvar, {
         withr::with_dir(private$workdir, {
           check_missing_packages(private$recipe$packages)
           private$prepare_environment_parameters()
           private$prepare_environment_secrets()
           private$prepare_environment_environment()
-          private$prepare_environment_data()
+          ## private$prepare_environment_data()
         })
       })
 
@@ -476,10 +496,7 @@ orderly_version <- R6::R6Class(
 
       private$prepare_environment_parameters()
       private$prepare_environment_environment()
-      ## TODO: This gets refactored along with prepare_environment_data
-      if (length(private$data$data) > 0L) {
-        list2env(private$data$data, private$envir)
-      }
+      private$prepare_environment_data()
 
       for (p in private$recipe$packages) {
         library(p, character.only = TRUE) # nolint
