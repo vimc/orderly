@@ -1,3 +1,7 @@
+# orderly 1.2.10
+
+* Add function `get_report_parameters` to list parameters for a report at a particular commit id (VIMC-3953)
+
 # orderly 1.2.9
 
 * Add function `get_reports` to list reports available for a particular branch and commit from orderly_runner (VIMC-3945)
