@@ -22,3 +22,24 @@ test_that("pack task", {
   expect_equal(orderly_list_archive(path2),
                data_frame(name = "example", id = res$id))
 })
+
+
+test_that("pack a task that requires parameters", {
+  path_src <- prepare_orderly_example("demo")
+  path_tasks <- tempfile()
+  path_workdir <- tempfile()
+
+  res <- orderly_task_pack(path_tasks, "other", parameters = list(nmin = 0.5),
+                           root = path_src)
+  info <- orderly_task_info(res$path)
+  expect_equal(info$parameters, list(nmin = 0.5))
+  expect_true(all(info$data$data$extract$number >= 0.5))
+
+  zip <- orderly_task_run(res$path, path_workdir, echo = FALSE)
+  orderly_task_import(zip, root = path_src)
+
+  dat <- readRDS(path_orderly_run_rds(
+    file.path(path_src, "archive", "other", res$id)))
+  expect_match(dat$meta$data$query, "number > 0.5", fixed = TRUE)
+  expect_equal(dat$meta$parameters, list(nmin = 0.5))
+})

@@ -541,6 +541,7 @@ orderly_version <- R6::R6Class(
       private$changelog <- changelog_load(
         private$recipe$name, private$id, private$recipe$changelog$contents,
         message, private$config)
+      recipe_substitute(private$recipe, private$parameters)
       private$preflight()
     },
 
