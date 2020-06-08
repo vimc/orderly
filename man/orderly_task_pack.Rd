@@ -145,7 +145,7 @@ zip
 orderly::orderly_task_list(workdir)
 
 # We can import this into the orderly tree
-orderly::orderly_task_import(zip, root = path)
+orderly::orderly_task_import(zip$path, root = path)
 
 # This has now been included in your orderly archive and the
 # workdir can be safely deleted
