@@ -16,6 +16,8 @@ orderly_version <- R6::R6Class(
 
     envir = NULL,
     data = NULL,
+    secrets = NULL,
+    environment = NULL,
     changelog = NULL,
     tags = NULL,
     parameters = NULL,
@@ -71,33 +73,30 @@ orderly_version <- R6::R6Class(
       withr::with_dir(private$workdir, private$copy_files())
     },
 
-    prepare_environment_parameters = function() {
-      if (!is.null(private$parameters)) {
-        list2env(private$parameters, private$envir)
-        recipe_substitute(private$recipe, private$parameters)
-      }
+    ## Fetch external resources
+    fetch = function() {
+      private$fetch_environment()
+      private$fetch_secrets()
+      private$fetch_data()
     },
 
-    prepare_environment_secrets = function() {
-      if (!is.null(private$recipe$secrets)) {
-        secrets <- resolve_secrets(private$recipe$secrets, private$config)
-        list2env(secrets, private$envir)
-      }
-    },
-
-    prepare_environment_environment = function() {
+    fetch_environment = function() {
       if (!is.null(private$recipe$environment)) {
         env_vars <- lapply(names(private$recipe$environment), function(name) {
           sys_getenv(private$recipe$environment[[name]],
                      sprintf("orderly.yml:environment:%s", name))
         })
         names(env_vars) <- names(private$recipe$environment)
-        list2env(env_vars, private$envir)
+        private$environment <- env_vars
       }
     },
 
+    fetch_secrets = function() {
+      private$secrets <-
+        resolve_secrets(private$recipe$secrets, private$config)
+    },
 
-    data_fetch = function() {
+    fetch_data = function() {
       uses_db <- length(private$recipe$data) > 0 ||
         !is.null(private$recipe$connection)
       if (!uses_db) {
@@ -149,7 +148,26 @@ orderly_version <- R6::R6Class(
         con <- con[keep]
       }
 
-      ret
+      private$data <- ret
+    },
+
+    prepare_environment_parameters = function() {
+      if (!is.null(private$parameters)) {
+        list2env(private$parameters, private$envir)
+        recipe_substitute(private$recipe, private$parameters)
+      }
+    },
+
+    prepare_environment_secrets = function() {
+      if (!is.null(private$secrets)) {
+        list2env(private$secrets, private$envir)
+      }
+    },
+
+    prepare_environment_environment = function() {
+      if (!is.null(private$environment)) {
+        list2env(private$environment, private$envir)
+      }
     },
 
     prepare_environment_data = function() {
@@ -167,8 +185,6 @@ orderly_version <- R6::R6Class(
       withr::with_envvar(private$envvar, {
         withr::with_dir(private$workdir, {
           check_missing_packages(private$recipe$packages)
-
-          private$data <- private$data_fetch()
 
           private$prepare_environment_parameters()
           private$prepare_environment_secrets()
@@ -353,6 +369,7 @@ orderly_version <- R6::R6Class(
       self$run_read(parameters, instance, envir, tags, use_draft,
                     remote)
       self$run_prepare(message)
+      private$fetch()
       self$run_execute(echo)
       self$run_cleanup()
       private$id
@@ -401,6 +418,7 @@ orderly_version <- R6::R6Class(
           recipe_copy_depends(private$recipe)
         })
       })
+      private$fetch()
       private$prepare_environment()
       sys_setenv(private$envvar)
       private$workdir
@@ -412,6 +430,7 @@ orderly_version <- R6::R6Class(
                           use_draft = FALSE, remote = NULL) {
       self$run_read(parameters, instance, envir, NULL, use_draft, remote)
       self$run_prepare()
+      private$fetch()
       private$prepare_environment()
       self$set_current(test = TRUE)
       private$workdir
@@ -424,15 +443,10 @@ orderly_version <- R6::R6Class(
       self$run_read(parameters, instance, envir, tags, use_draft, remote)
       self$run_prepare()
 
-      private$data <- private$data_fetch()
-
       withr::with_envvar(private$envvar, {
         withr::with_dir(private$workdir, {
           check_missing_packages(private$recipe$packages)
-          private$prepare_environment_parameters()
-          private$prepare_environment_secrets()
-          private$prepare_environment_environment()
-          ## private$prepare_environment_data()
+          private$fetch()
         })
       })
 
@@ -494,22 +508,7 @@ orderly_version <- R6::R6Class(
       private$preflight()
       private$preflight_info["git"] <- info$preflight_info["git"]
 
-      private$prepare_environment_parameters()
-      private$prepare_environment_environment()
-      private$prepare_environment_data()
-
-      for (p in private$recipe$packages) {
-        library(p, character.only = TRUE) # nolint
-      }
-      for (s in private$recipe$sources) {
-        source(s, private$envir) # nolint
-      }
-      withr::with_envvar(private$envvar, {
-        withr::with_dir(private$workdir, {
-          source(private$recipe$script, local = private$envir, # nolint
-                 echo = echo, max.deparse.length = Inf)
-        })
-      })
+      self$run_execute(echo)
       self$run_cleanup()
     },
 
@@ -546,8 +545,7 @@ orderly_version <- R6::R6Class(
     },
 
     ## Execute phase of running a report (load packages, sources and
-    ## run the script) - it's possible that prepare_environment
-    ## belongs in run_prepare though?
+    ## run the script)
     run_execute = function(echo = TRUE) {
       self$set_current()
       on.exit(recipe_current_run_clear(), add = TRUE)
