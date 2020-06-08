@@ -82,9 +82,11 @@ orderly_version <- R6::R6Class(
 
     fetch_environment = function() {
       if (!is.null(private$recipe$environment)) {
-        env_vars <- lapply(names(private$recipe$environment), function(name) {
-          sys_getenv(private$recipe$environment[[name]],
-                     sprintf("orderly.yml:environment:%s", name))
+        withr::with_envvar(private$envvar, {
+          env_vars <- lapply(names(private$recipe$environment), function(name)
+            sys_getenv(private$recipe$environment[[name]],
+                       sprintf("orderly.yml:environment:%s", name))
+            )
         })
         names(env_vars) <- names(private$recipe$environment)
         private$environment <- env_vars
