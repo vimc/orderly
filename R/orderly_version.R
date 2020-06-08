@@ -75,18 +75,18 @@ orderly_version <- R6::R6Class(
 
     ## Fetch external resources
     fetch = function() {
-      private$fetch_environment()
-      private$fetch_secrets()
-      private$fetch_data()
+      withr::with_envvar(private$envvar, {
+        private$fetch_environment()
+        private$fetch_secrets()
+        private$fetch_data()
+      })
     },
 
     fetch_environment = function() {
       if (!is.null(private$recipe$environment)) {
-        withr::with_envvar(private$envvar, {
-          env_vars <- lapply(names(private$recipe$environment), function(name)
-            sys_getenv(private$recipe$environment[[name]],
-                       sprintf("orderly.yml:environment:%s", name))
-            )
+        env_vars <- lapply(names(private$recipe$environment), function(name) {
+          sys_getenv(private$recipe$environment[[name]],
+                     sprintf("orderly.yml:environment:%s", name))
         })
         names(env_vars) <- names(private$recipe$environment)
         private$environment <- env_vars
@@ -415,11 +415,9 @@ orderly_version <- R6::R6Class(
       self$run_read(parameters, instance, envir, NULL,
                     use_draft, remote, TRUE)
       private$workdir <- private$recipe$path
-      withr::with_envvar(private$envvar, {
-        withr::with_dir(private$workdir, {
-          recipe_copy_global(private$recipe, private$config)
-          recipe_copy_depends(private$recipe)
-        })
+      withr::with_dir(private$workdir, {
+        recipe_copy_global(private$recipe, private$config)
+        recipe_copy_depends(private$recipe)
       })
       private$fetch()
       private$prepare_environment()
@@ -446,12 +444,8 @@ orderly_version <- R6::R6Class(
       self$run_read(parameters, instance, envir, tags, use_draft, remote)
       self$run_prepare()
 
-      withr::with_envvar(private$envvar, {
-        withr::with_dir(private$workdir, {
-          check_missing_packages(private$recipe$packages)
-          private$fetch()
-        })
-      })
+      check_missing_packages(private$recipe$packages)
+      private$fetch()
 
       if (file.exists(dest)) {
         assert_is_directory(dest)
