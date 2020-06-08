@@ -132,6 +132,7 @@ git_commits <- function(branch, root = NULL) {
   commits
 }
 
+
 get_reports <- function(branch, commit, root) {
   if (branch == "master") {
     ## Get all reports in commit if on master branch
