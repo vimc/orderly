@@ -400,6 +400,98 @@ orderly_version <- R6::R6Class(
       private$workdir
     },
 
+    task_pack = function(parameters = NULL, instance = NULL, remote = NULL,
+                         tags = NULL) {
+      envir <- NULL
+      use_draft <- FALSE
+      self$run_read(parameters, instance, envir, tags, use_draft, remote)
+      self$run_prepare()
+      withr::with_envvar(private$envvar, {
+        withr::with_dir(private$workdir, {
+          check_missing_packages(private$recipe$packages)
+          private$prepare_environment_parameters()
+          private$prepare_environment_secrets()
+          private$prepare_environment_environment()
+          private$prepare_environment_data()
+        })
+      })
+
+      path <- private$workdir
+      dest <- file.path(path_task_incoming(private$config$root), private$id)
+      path_meta <- file.path(dest, "meta")
+      path_pack <- file.path(dest, "pack")
+      dir_create(path_meta)
+
+      files <- list.files(private$workdir, recursive = TRUE,
+                          all.files = TRUE, no.. = TRUE)
+      manifest <- file_info(files, private$workdir)
+
+      ## Collect every 'reasonable' data member of the class
+      info <- as.list(private)
+      info <- info[!vlapply(info, function(x) is.function(x) || R6::is.R6(x))]
+      ## This needs dropping too
+      info$workdir <- NULL
+
+      if (length(private$recipe$packages) > 0L) {
+        browser()
+      }
+
+      ## TODO: Sign the manifest
+      saveRDS(private$config, file.path(path_meta, "config.rds"))
+      saveRDS(manifest, file.path(path_meta, "manifest.rds"))
+      saveRDS(info, file.path(path_meta, "info.rds"))
+      saveRDS(session_info(), file.path(path_meta, "session.rds"))
+      file.rename(private$workdir, path_pack)
+      zip <- zip_dir(dest)
+
+      unlink(path_pack, recursive = TRUE)
+
+      orderly_log("task pack", private$id)
+      list(id = private$id, path = zip)
+    },
+
+    ## There's a lot of duplication of setup information here; the
+    ## canonical source of data etc.
+    task_run = function(recipe, info, echo = TRUE, envir = NULL) {
+      ## TODO: validate that recipe is consistent etc?
+      ## TODO: check we've not already run!
+
+      private$recipe <- recipe
+      private$envir <- orderly_environment(envir)
+      private$workdir <- recipe$path
+      for (v in names(info)) {
+        private[[v]] <- info[[v]]
+      }
+
+      ## Refetch the preflight info here: we want to keep git but
+      ## replace everything else I think.  We might save the random
+      ## seed but that is not actually supposed to work across R
+      ## versions.
+      private$preflight()
+      private$preflight_info["git"] <- info$preflight_info["git"]
+
+      private$prepare_environment_parameters()
+      private$prepare_environment_environment()
+      ## TODO: This gets refactored along with prepare_environment_data
+      if (length(private$data$data) > 0L) {
+        list2env(private$data$data, private$envir)
+      }
+
+      for (p in private$recipe$packages) {
+        library(p, character.only = TRUE) # nolint
+      }
+      for (s in private$recipe$sources) {
+        source(s, private$envir) # nolint
+      }
+      withr::with_envvar(private$envvar, {
+        withr::with_dir(private$workdir, {
+          source(private$recipe$script, local = private$envir, # nolint
+                 echo = echo, max.deparse.length = Inf)
+        })
+      })
+      self$run_cleanup()
+    },
+
     ## The next bit are the basic "phases" - we'll probably tweak
     ## these over time to find the right gaps
 
