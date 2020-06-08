@@ -470,10 +470,6 @@ orderly_version <- R6::R6Class(
       ## This needs dropping too
       info$workdir <- NULL
 
-      if (length(private$recipe$packages) > 0L) {
-        browser()
-      }
-
       ## TODO: Sign the manifest
       saveRDS(private$config, file.path(path_meta, "config.rds"))
       saveRDS(manifest, file.path(path_meta, "manifest.rds"))
