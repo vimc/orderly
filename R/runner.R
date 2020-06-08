@@ -214,6 +214,10 @@ orderly_runner_ <- R6::R6Class(
       git_commits(branch, self$path)
     },
 
+    get_reports = function(branch, commit) {
+      get_reports(branch, commit, self$path)
+    },
+
     cleanup = function(name = NULL, draft = TRUE, data = TRUE,
                        failed_only = FALSE) {
       orderly_cleanup(name = name, root = self$config, draft = draft,

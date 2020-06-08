@@ -118,7 +118,7 @@ git_commits <- function(branch, root = NULL) {
   } else {
     remote_branch <- sprintf("refs/remotes/origin/%s", branch)
     args <- c("log", "--pretty='%h,%cd'", "--date=unix", "--max-count=25",
-              sprintf("--cherry refs/remotes/origin/master...", remote_branch),
+              paste0("--cherry refs/remotes/origin/master...", remote_branch),
               remote_branch)
   }
   commits <- git_run(args, root = root, check = TRUE)$output
@@ -130,4 +130,28 @@ git_commits <- function(branch, root = NULL) {
   ## only numbers
   commits$id <- as.character(commits$id)
   commits
+}
+
+
+get_reports <- function(branch, commit, root) {
+  if (branch == "master") {
+    ## Get all reports in commit if on master branch
+    reports <- git_run(c("ls-tree", "--name-only", "-d",
+                         sprintf("%s:src/", commit)),
+                       root = root, check = TRUE)$output
+  } else {
+    ## Ideally we would use plumbing function diff-tree here instead of
+    ## diff but at time of writing this was not supporting ... syntax
+    ## As we have control over the output format this is probably safe to use
+    ## the porcelain version
+    reports <- git_run(
+      c("diff", "--name-only", "--relative=src/",
+      paste0("refs/remotes/origin/master...", commit),
+      "-- src/"),
+      root = root, check = TRUE)$output
+    ## We only want to return the reports which have changes i.e. the dirname
+    ## of any changed files
+    reports <- unique(first_dirname(reports))
+  }
+  reports
 }

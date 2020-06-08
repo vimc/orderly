@@ -564,3 +564,19 @@ test_that("can get git commit info from runner", {
   ## Commit from master branch is not returned
   expect_true(commits$id != other_commits$id)
 })
+
+test_that("can get report list from runner", {
+  testthat::skip_on_cran()
+  path <- prepare_orderly_git_example()
+  runner <- orderly_runner(path[["local"]])
+
+  commits <- runner$git_commits("master")
+  expect_equal(nrow(commits), 1)
+  reports <- runner$get_reports("master", commits$id)
+  expect_equal(reports, c("global", "minimal"))
+
+  other_commits <- git_commits("other", path[["local"]])
+  expect_equal(nrow(other_commits), 1)
+  other_reports <- get_reports("other", other_commits$id, path[["local"]])
+  expect_equal(other_reports, c("other"))
+})
