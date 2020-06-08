@@ -1,9 +1,9 @@
-orderly_task_pack <- function(name = NULL, parameters = NULL,
+orderly_task_pack <- function(dest, name = NULL, parameters = NULL,
                               envir = NULL, root = NULL, locate = NULL,
                               message = NULL, instance = NULL,
                               remote = NULL, tags = NULL) {
   version <- orderly_version$new(name, root, locate)
-  version$task_pack(parameters, instance, envir, remote = NULL)
+  version$task_pack(dest, parameters, instance, envir, remote = NULL)
 }
 
 

@@ -22,16 +22,6 @@ path_archive <- function(root, name = NULL) {
 }
 
 
-path_task_incoming <- function(root) {
-  file.path(file.path(root, "task", "incoming"))
-}
-
-
-path_task_complete <- function(root) {
-  file.path(file.path(root, "task", "complete"))
-}
-
-
 path_remote_cache <- function(root) {
   file.path(root, ".orderly", "remote", "cache")
 }

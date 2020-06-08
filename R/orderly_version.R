@@ -400,8 +400,8 @@ orderly_version <- R6::R6Class(
       private$workdir
     },
 
-    task_pack = function(parameters = NULL, instance = NULL, remote = NULL,
-                         tags = NULL) {
+    task_pack = function(dest, parameters = NULL, instance = NULL,
+                         remote = NULL, tags = NULL) {
       envir <- NULL
       use_draft <- FALSE
       self$run_read(parameters, instance, envir, tags, use_draft, remote)
@@ -416,10 +416,14 @@ orderly_version <- R6::R6Class(
         })
       })
 
+      if (file.exists(dest)) {
+        assert_is_directory(dest)
+      }
+
       path <- private$workdir
-      dest <- file.path(path_task_incoming(private$config$root), private$id)
-      path_meta <- file.path(dest, "meta")
-      path_pack <- file.path(dest, "pack")
+      dest_id <- file.path(dest, private$id)
+      path_meta <- file.path(dest_id, "meta")
+      path_pack <- file.path(dest_id, "pack")
       dir_create(path_meta)
 
       files <- list.files(private$workdir, recursive = TRUE,
@@ -442,9 +446,9 @@ orderly_version <- R6::R6Class(
       saveRDS(info, file.path(path_meta, "info.rds"))
       saveRDS(session_info(), file.path(path_meta, "session.rds"))
       file.rename(private$workdir, path_pack)
-      zip <- zip_dir(dest)
+      zip <- zip_dir(dest_id)
 
-      unlink(path_pack, recursive = TRUE)
+      unlink(dest_id, recursive = TRUE)
 
       orderly_log("task pack", private$id)
       list(id = private$id, path = zip)
