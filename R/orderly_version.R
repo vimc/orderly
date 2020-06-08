@@ -400,6 +400,7 @@ orderly_version <- R6::R6Class(
         }
         private$batch_id <- batch_id
         private$workflow_info <- workflow_info
+        private$fetch()
         self$run_execute(echo)
         self$run_cleanup()
       })
