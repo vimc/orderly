@@ -113,3 +113,34 @@ test_that("can't run a task twice", {
   expect_error(orderly_task_run(res$path, path_tasks, echo = FALSE),
                sprintf("Task '%s' has already been run", res$id))
 })
+
+
+test_that("Can't import a task twice", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+
+  path_tasks <- tempfile()
+
+  res <- orderly_task_pack(path_tasks, "example", root = path)
+  expect_equal(dir(path_tasks), basename(res$path))
+  expect_equal(basename(res$path), paste0(res$id, ".zip"))
+
+  zip <- orderly_task_run(res$path, path_tasks, echo = FALSE)
+  orderly_task_import(zip$path, root = path)
+  expect_error(
+    orderly_task_import(zip$path, root = path),
+    sprintf("example:%s already exists", res$id))
+})
+
+
+test_that("Can't extract a task onto itself", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+  path_tasks <- tempfile()
+  res <- orderly_task_pack(path_tasks, "example", root = path)
+  dir.create(file.path(path_tasks, res$id))
+  expect_error(
+    orderly_task_run(res$path, path_tasks, echo = FALSE),
+    sprintf("Can't unpack task '%s' here; it has already been extracted",
+            res$id))
+})
