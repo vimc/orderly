@@ -9,22 +9,23 @@ orderly_task_pack <- function(dest, name = NULL, parameters = NULL,
 
 orderly_task_run <- function(path, workdir = tempfile(), echo = TRUE,
                              envir = NULL) {
-  if (file.exists(workdir)) {
-    ## TODO: ensure workdir is empty
-    browser()
+  dir_create(workdir)
+
+  info <- orderly_task_info(path)
+  id <- info$id
+  if (file.exists(file.path(workdir, id))) {
+    stop("Can't unpack task here; it has already been extracted")
   }
 
-  dir_create(workdir)
   zip::unzip(path, exdir = workdir)
   ## TODO: validate the archive:
   ## - contains expected files
   ## - manifest is correct
   ## - check signature
   ## - return name/id/paths etc
-  id <- dir(workdir)
+
   path_pack <- file.path(workdir, id, "pack")
   path_meta <- file.path(workdir, id, "meta")
-  info <- readRDS(file.path(workdir, id, "meta", "info.rds"))
 
   config <- readRDS(file.path(path_meta, "config.rds"))
   config$root <- path_meta
@@ -71,11 +72,30 @@ orderly_task_import <- function(path, root = NULL, locate = NULL) {
 }
 
 
-## Then we need something for interacting with these:
-## orderly_task_list -> tasks and their status
-## orderly_task_path -> given an id give the path to zip
-## orderly_task_run -> given a path to an zip run it
-## orderly_task_import -> given a path to a completed task import it
+orderly_task_list <- function(path) {
+  f <- function(p) {
+    info <- orderly_task_info(p)
+    expected <- sprintf("%s/pack/orderly_run.rds", info$id)
+    complete <- expected %in% zip::zip_list(p)$filename
+    status <- if (complete) "complete" else "incomplete"
+    data_frame(id = info$id,
+               status = status,
+               name = info$name,
+               parameters = I(list(info$parameters)),
+               time = info$preflight_info$time)
+  }
+
+  files <- orderly_task_list_files(path)
+  do.call("rbind", lapply(files, f))
+}
+
+
+orderly_task_list_files <- function(path) {
+  assert_is_directory(path)
+  sort(dir(path, full.names = TRUE,
+           pattern = "[0-9]{8}-[0-9]{6}-[[:xdigit:]]{8}\\.zip$"))
+}
+
 
 orderly_task_info <- function(path) {
   tmp <- tempfile()

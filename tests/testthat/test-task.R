@@ -24,6 +24,31 @@ test_that("pack task", {
 })
 
 
+test_that("can run a task in place if wanted", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+
+  path_tasks <- tempfile()
+
+  res <- orderly_task_pack(path_tasks, "example", root = path)
+  expect_equal(dir(path_tasks), basename(res$path))
+  expect_equal(basename(res$path), paste0(res$id, ".zip"))
+
+  l1 <- orderly_task_list(path_tasks)
+  expect_equal(l1$id, res$id)
+  expect_equal(l1$status, "incomplete")
+  expect_equal(l1$name, "example")
+  expect_equal(l1$parameters, I(list(NULL)))
+
+  zip <- orderly_task_run(res$path, path_tasks, echo = FALSE)
+  expect_true(same_path(zip, res$path))
+
+  l2 <- orderly_task_list(path_tasks)
+  l1$status <- "complete"
+  expect_equal(l1, l2)
+})
+
+
 test_that("pack a task that requires parameters", {
   path_src <- prepare_orderly_example("demo")
   path_tasks <- tempfile()
