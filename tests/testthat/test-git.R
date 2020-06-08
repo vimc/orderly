@@ -379,3 +379,45 @@ test_that("get_reports only shows one sided changes", {
   other_reports <- get_reports("other", other_commits$id, path[["local"]])
   expect_equal(other_reports, "other")
 })
+
+test_that("can get parameters from a report", {
+  testthat::skip_on_cran()
+  path <- prepare_orderly_git_example()
+
+  ## Write some parameters lines to the upstream yml and commit it
+  origin_yml <- file.path(path[["origin"]], "src", "minimal", "orderly.yml")
+  yml <- readLines(origin_yml)
+  text <- c(yml, c(
+    "parameters:",
+    "  a: ~",
+    "  b:",
+    "    default: test",
+    "  c:",
+    "    default: 2"
+  ))
+  writeLines(text, origin_yml)
+  invisible(git_run(c("add", "."), root = path[["origin"]]))
+  invisible(git_run(c("commit", "-m", "'add parameters'"),
+                    root = path[["origin"]]))
+  invisible(git_fetch(path[["local"]]))
+
+  commits <- git_commits("master", path[["local"]])
+  expect_equal(nrow(commits), 3)
+  params <- get_report_parameters("minimal", commits$id[1], path[["local"]])
+  expect_equal(params, list(
+    a = NULL,
+    b = list(
+      default = "test"
+    ),
+    c = list(
+      default = 2
+    )
+  ))
+  params <- get_report_parameters("global", commits$id[1], path[["local"]])
+  expect_equal(params, NULL)
+
+  other_commits <- git_commits("other", path[["local"]])
+  expect_equal(nrow(other_commits), 1)
+  params <- get_report_parameters("other", other_commits$id, path[["local"]])
+  expect_equal(params, list(nmin = NULL))
+})

@@ -155,3 +155,11 @@ get_reports <- function(branch, commit, root) {
   }
   reports
 }
+
+get_report_parameters <- function(report, commit, root) {
+  yml <- git_run(
+    c("show", paste0(commit, file.path(":src", report, "orderly.yml"))),
+    root = root, check = TRUE)$output
+  report_cfg <- yaml_load(yml)
+  report_cfg$parameters
+}

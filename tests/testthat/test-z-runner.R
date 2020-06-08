@@ -580,3 +580,19 @@ test_that("can get report list from runner", {
   other_reports <- get_reports("other", other_commits$id, path[["local"]])
   expect_equal(other_reports, c("other"))
 })
+
+test_that("can get parameters list from runner", {
+  testthat::skip_on_cran()
+  path <- prepare_orderly_git_example()
+  runner <- orderly_runner(path[["local"]])
+
+  commits <- runner$git_commits("master")
+  expect_equal(nrow(commits), 1)
+  params <- runner$get_report_parameters("minimal", commits$id)
+  expect_equal(params, NULL)
+
+  other_commits <- git_commits("other", path[["local"]])
+  expect_equal(nrow(other_commits), 1)
+  params <- runner$get_report_parameters("other", other_commits$id)
+  expect_equal(params, list(nmin = NULL))
+})
