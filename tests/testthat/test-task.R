@@ -16,8 +16,8 @@ test_that("pack task", {
 
   workdir <- tempfile()
   zip <- orderly_task_run(res$path, workdir, echo = FALSE)
-  expect_equal(dir(workdir), basename(zip))
-  orderly_task_import(zip, root = path2)
+  expect_equal(dir(workdir), basename(zip$path))
+  orderly_task_import(zip$path, root = path2)
 
   expect_equal(orderly_list_archive(path2),
                data_frame(name = "example", id = res$id))
@@ -41,7 +41,7 @@ test_that("can run a task in place if wanted", {
   expect_equal(l1$parameters, I(list(NULL)))
 
   zip <- orderly_task_run(res$path, path_tasks, echo = FALSE)
-  expect_true(same_path(zip, res$path))
+  expect_true(same_path(zip$path, res$path))
 
   l2 <- orderly_task_list(path_tasks)
   l1$status <- "complete"
@@ -61,7 +61,7 @@ test_that("pack a task that requires parameters", {
   expect_true(all(info$data$data$extract$number >= 0.5))
 
   zip <- orderly_task_run(res$path, path_workdir, echo = FALSE)
-  orderly_task_import(zip, root = path_src)
+  orderly_task_import(zip$path, root = path_src)
 
   dat <- readRDS(path_orderly_run_rds(
     file.path(path_src, "archive", "other", res$id)))

@@ -41,7 +41,7 @@ orderly_task_run <- function(path, workdir = tempfile(), echo = TRUE,
 
   zip <- zip_dir(file.path(workdir, id))
   unlink(file.path(workdir, id), recursive = TRUE)
-  zip
+  list(id = id, path = zip)
 }
 
 orderly_task_import <- function(path, root = NULL, locate = NULL) {
