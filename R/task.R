@@ -14,10 +14,16 @@ orderly_task_run <- function(path, workdir = tempfile(), echo = TRUE,
   info <- orderly_task_info(path)
   id <- info$id
   if (file.exists(file.path(workdir, id))) {
-    stop("Can't unpack task here; it has already been extracted")
+    stop(sprintf(
+      "Can't unpack task '%s' here; it has already been extracted", id))
+  }
+
+  if (orderly_task_complete(path)) {
+    stop(sprintf("Task '%s' has already been run", id))
   }
 
   zip::unzip(path, exdir = workdir)
+
   ## TODO: validate the archive:
   ## - contains expected files
   ## - manifest is correct
@@ -75,9 +81,7 @@ orderly_task_import <- function(path, root = NULL, locate = NULL) {
 orderly_task_list <- function(path) {
   f <- function(p) {
     info <- orderly_task_info(p)
-    expected <- sprintf("%s/pack/orderly_run.rds", info$id)
-    complete <- expected %in% zip::zip_list(p)$filename
-    status <- if (complete) "complete" else "incomplete"
+    status <- orderly_task_status(p)
     data_frame(id = info$id,
                status = status,
                name = info$name,
@@ -94,6 +98,17 @@ orderly_task_list_files <- function(path) {
   assert_is_directory(path)
   sort(dir(path, full.names = TRUE,
            pattern = "[0-9]{8}-[0-9]{6}-[[:xdigit:]]{8}\\.zip$"))
+}
+
+
+orderly_task_status <- function(path) {
+  if (orderly_task_complete(path)) "complete" else "incomplete"
+}
+
+
+orderly_task_complete <- function(path) {
+  re <- "^[0-9]{8}-[0-9]{6}-[[:xdigit:]]{8}/pack/orderly_run.rds$"
+  any(grepl(re, zip::zip_list(path)$filename))
 }
 
 
