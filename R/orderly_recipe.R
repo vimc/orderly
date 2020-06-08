@@ -71,7 +71,6 @@ orderly_recipe <- R6::R6Class(
       withr::with_dir(
         self$path,
         recipe_resolve_dependencies(self, use_draft, parameters, remote))
-      invisible(self)
     }
   ))
 

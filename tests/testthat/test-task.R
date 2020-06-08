@@ -144,3 +144,29 @@ test_that("Can't extract a task onto itself", {
     sprintf("Can't unpack task '%s' here; it has already been extracted",
             res$id))
 })
+
+
+test_that("can run a task with dependencies", {
+  path <- orderly::orderly_example("demo")
+  orderly::orderly_run_internal("other", parameters = list(nmin = 0),
+                                root = path, commit = TRUE, echo = FALSE)
+
+  path_tasks <- tempfile()
+  path_work <- tempfile()
+
+  res1 <- orderly_task_pack(path_tasks, "use_dependency", root = path)
+  expect_true(
+    file.path(res1$id, "pack/incoming.csv") %in%
+    zip::zip_list(res1$path)$filename)
+
+  res2 <- orderly_task_run(res1$path, path_work, echo = FALSE)
+
+  ## We can run this and import into the db:
+  orderly_task_import(res2$path, root = path)
+
+  con <- orderly_db("destination", root = path)
+  on.exit(DBI::dbDisconnect(con))
+  depends <- DBI::dbReadTable(con, "depends")
+  expect_equal(depends$report_version, res2$id)
+  expect_equal(depends$as, "incoming.csv")
+})

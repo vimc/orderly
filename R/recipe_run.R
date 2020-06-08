@@ -448,15 +448,15 @@ recipe_copy_global <- function(info, config) {
 }
 
 
-recipe_copy_depends <- function(info) {
-  if (!is.null(info$depends)) {
-    dep_src <- file.path(info$depends$path, info$depends$filename)
-    dep_dst <- info$depends$as
+recipe_copy_depends <- function(depends) {
+  if (!is.null(depends)) {
+    dep_src <- file.path(depends$path, depends$filename)
+    dep_dst <- depends$as
     str <- sprintf("%s@%s:%s -> %s",
-                   info$depends$name,
-                   info$depends$id,
-                   info$depends$filename,
-                   info$depends$as)
+                   depends$name,
+                   depends$id,
+                   depends$filename,
+                   depends$as)
     orderly_log("depends", str)
     dir_create(dirname(dep_dst))
     file_copy(dep_src, dep_dst)

@@ -18,6 +18,7 @@ orderly_version <- R6::R6Class(
     data = NULL,
     secrets = NULL,
     environment = NULL,
+    depends = NULL,
     changelog = NULL,
     tags = NULL,
     parameters = NULL,
@@ -58,7 +59,7 @@ orderly_version <- R6::R6Class(
       recipe_copy_sources(recipe, src)
       recipe_copy_global(recipe, private$config)
       recipe_copy_resources(recipe, src)
-      recipe_copy_depends(recipe)
+      recipe_copy_depends(private$depends)
 
       private$inputs <- recipe$inputs()
 
@@ -249,7 +250,7 @@ orderly_version <- R6::R6Class(
         withr::with_dir(private$workdir, private$recipe$inputs()),
         "input", "inputs")
 
-      depends <- private$recipe$depends
+      depends <- private$depends
       if (!is.null(depends)) {
         pre <- data_frame(filename = depends$as, file_hash = depends$hash)
         post <- withr::with_dir(
@@ -336,7 +337,7 @@ orderly_version <- R6::R6Class(
            file_info_artefacts = private$postflight_info$file_info_artefacts,
            global_resources = recipe$global_resources,
            artefacts = private$postflight_info$artefacts,
-           depends = private$recipe$depends,
+           depends = private$depends,
            elapsed = as.numeric(private$time$elapsed, "secs"),
            changelog = private$changelog,
            tags = private$tags,
@@ -417,7 +418,7 @@ orderly_version <- R6::R6Class(
       private$workdir <- private$recipe$path
       withr::with_dir(private$workdir, {
         recipe_copy_global(private$recipe, private$config)
-        recipe_copy_depends(private$recipe)
+        recipe_copy_depends(private$depends)
       })
       private$fetch()
       private$prepare_environment()
@@ -521,7 +522,8 @@ orderly_version <- R6::R6Class(
       private$parameters <- recipe_parameters(private$recipe, parameters)
       private$tags <- union(private$recipe$tags,
                             recipe_validate_tags(tags, private$config, NULL))
-      private$recipe$resolve_dependencies(use_draft, parameters, remote)
+      private$depends <-
+        private$recipe$resolve_dependencies(use_draft, parameters, remote)
     },
 
     ## Prepare phase of a report - create id, load changelog and
@@ -578,7 +580,7 @@ orderly_version <- R6::R6Class(
       d <- list(id = private$id,
                 name = private$name,
                 root = private$config$root,
-                depends = private$recipe$depends)
+                depends = private$depends)
       recipe_current_run_set(d, private$workdir, test)
     }
   ))
