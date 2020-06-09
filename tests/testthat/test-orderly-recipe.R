@@ -231,14 +231,13 @@ test_that("use_draft = newer ignores fails drafts", {
   config <- orderly_config$new(path)
 
   info <- orderly_recipe$new("depend", config)
-  info$resolve_dependencies(use_draft = "newer")
+  depends <- info$resolve_dependencies(use_draft = "newer")
 
-  expect_equal(basename(info$depends$path), id2)
+  expect_equal(basename(depends$path), id2)
   unlink(file.path(path, "draft", "example", id2, "orderly_run.rds"))
 
-  info <- orderly_recipe$new("depend", config)
-  info$resolve_dependencies(use_draft = "newer")
-  expect_equal(basename(info$depends$path), id1)
+  depends <- info$resolve_dependencies(use_draft = "newer")
+  expect_equal(basename(depends$path), id1)
 })
 
 
@@ -579,13 +578,13 @@ test_that("Can resolve dependencies remotely", {
     info$resolve_dependencies(TRUE, NULL, "default"),
     "Can't use 'use_draft' with remote")
 
-  info$resolve_dependencies(FALSE, NULL, "default")
+  depends <- info$resolve_dependencies(FALSE, NULL, "default")
   expect_equal(nrow(orderly_list_archive(dat$path_local)), 1)
 
   cmp <- orderly_recipe$new("depend", config)
   expect_equal(
-    cmp$resolve_dependencies(FALSE, NULL, NULL)$depends,
-    info$depends)
+    cmp$resolve_dependencies(FALSE, NULL, NULL),
+    depends)
 })
 
 
