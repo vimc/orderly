@@ -471,7 +471,7 @@ orderly_version <- R6::R6Class(
       info <- info[!vlapply(info, function(x) is.function(x) || R6::is.R6(x))]
       info$workdir <- NULL
 
-      ## TODO: Sign the manifest
+      ## TODO(VIMC-3975): Sign the manifest
       saveRDS(private$config, file.path(path_meta, "config.rds"))
       saveRDS(manifest, file.path(path_meta, "manifest.rds"))
       saveRDS(info, file.path(path_meta, "info.rds"))
@@ -485,12 +485,7 @@ orderly_version <- R6::R6Class(
       list(id = private$id, path = zip)
     },
 
-    ## There's a lot of duplication of setup information here; the
-    ## canonical source of data etc.
     task_run = function(recipe, info, echo = TRUE, envir = NULL) {
-      ## TODO: validate that recipe is consistent etc?
-      ## TODO: check we've not already run!
-
       private$recipe <- recipe
       private$envir <- orderly_environment(envir)
       private$workdir <- recipe$path
