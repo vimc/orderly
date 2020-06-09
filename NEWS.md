@@ -1,3 +1,7 @@
+# orderly 1.2.11
+
+* Added a new "task" concept, for creating a bundle from orderly designed to run elsewhere (e.g., on a HPC) using new functions `orderly::orderly_task_pack`, `orderly::orderly_task_run` and `orderly::orderly_task_import`. This interface will be expanded and the interface may change somewhat (VIMC-3825)
+
 # orderly 1.2.10
 
 * Add function `get_report_parameters` to list parameters for a report at a particular commit id (VIMC-3953)
