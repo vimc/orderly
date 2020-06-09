@@ -170,3 +170,22 @@ test_that("can run a task with dependencies", {
   expect_equal(depends$report_version, res2$id)
   expect_equal(depends$as, "incoming.csv")
 })
+
+
+test_that("can run a task with global file dependencies", {
+  path <- orderly::orderly_example("demo")
+  path_tasks <- tempfile()
+  path_work <- tempfile()
+
+  res1 <- orderly_task_pack(path_tasks, "global", root = path)
+  expect_true(
+    file.path(res1$id, "pack/data.csv") %in% zip::zip_list(res1$path)$filename)
+
+  res2 <- orderly_task_run(res1$path, path_work, echo = FALSE)
+  orderly_task_import(res2$path, root = path)
+
+  con <- orderly_db("destination", root = path)
+  on.exit(DBI::dbDisconnect(con))
+  fig <- DBI::dbReadTable(con, "file_input_global")
+  expect_equal(fig$filename, "data.csv")
+})

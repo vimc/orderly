@@ -286,13 +286,18 @@ recipe_validate_global_resources <- function(global_resources, config,
   }
   global_resources <- list_to_character(global_resources)
 
-  global_path <- file.path(config$root, config$global_resources)
-  assert_file_exists(
-    global_resources, check_case = TRUE, workdir = global_path,
-    name = sprintf("Global resources in '%s'", global_path))
+  ## This check is made optional for the case where we're reading in a
+  ## task, whre the root may not exist and the global resources are
+  ## already in place.
+  if (!is.null(config$root)) {
+    global_path <- file.path(config$root, config$global_resources)
+    assert_file_exists(
+      global_resources, check_case = TRUE, workdir = global_path,
+      name = sprintf("Global resources in '%s'", global_path))
 
-  if (any(is_directory(file.path(global_path, global_resources)))) {
-    stop("global resources cannot yet be directories")
+    if (any(is_directory(file.path(global_path, global_resources)))) {
+      stop("global resources cannot yet be directories")
+    }
   }
 
   global_resources

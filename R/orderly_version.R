@@ -462,10 +462,11 @@ orderly_version <- R6::R6Class(
                           all.files = TRUE, no.. = TRUE)
       manifest <- file_info(files, private$workdir)
 
-      ## Collect every 'reasonable' data member of the class
+      ## Collect every 'reasonable' data member of the class (we don't
+      ## want methods or any reference objects, nor the workdir which
+      ## will be invalid)
       info <- as.list(private)
       info <- info[!vlapply(info, function(x) is.function(x) || R6::is.R6(x))]
-      ## This needs dropping too
       info$workdir <- NULL
 
       ## TODO: Sign the manifest

@@ -111,7 +111,7 @@ orderly_task_run <- function(path, workdir = tempfile(), echo = TRUE,
   path_meta <- file.path(workdir, id, "meta")
 
   config <- readRDS(file.path(path_meta, "config.rds"))
-  config$root <- path_meta
+  config$root <- NULL
   recipe <- orderly_recipe$new(info$name, config, FALSE, path_pack)
   version <- orderly_version$new(info$name, config, FALSE)
   version$task_run(recipe, info, echo, envir)
