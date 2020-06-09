@@ -73,7 +73,7 @@
 ##' unlink(workdir, recursive = TRUE)
 ##' orderly::orderly_list_archive(path)
 orderly_task_pack <- function(path, name, parameters = NULL,
-                              envir = NULL, root = NULL, locate = NULL,
+                              envir = NULL, root = NULL, locate = TRUE,
                               message = NULL, instance = NULL,
                               remote = NULL, tags = NULL) {
   version <- orderly_version$new(name, root, locate)
@@ -129,7 +129,7 @@ orderly_task_run <- function(path, workdir = tempfile(), echo = TRUE,
 
 ##' @rdname orderly_task_pack
 ##' @export
-orderly_task_import <- function(path, root = NULL, locate = NULL) {
+orderly_task_import <- function(path, root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
 
   tmp <- tempfile()
