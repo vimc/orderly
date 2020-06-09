@@ -2,7 +2,7 @@
 title: "orderly tasks"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{tasks}
+  %\VignetteIndexEntry{orderly tasks}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
