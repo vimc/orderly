@@ -137,8 +137,9 @@ orderly_task_import <- function(path, root = NULL, locate = TRUE) {
 
   name <- info$name
   id <- info$id
+  contents <- zip::zip_list(path)$filename
 
-  if (!(sprintf("%s/pack/orderly_run.rds", id) %in% zip::zip_list(path))) {
+  if (!(sprintf("%s/pack/orderly_run.rds", id) %in% contents)) {
     stop("This does not look like a complete task (one that has been run)")
   }
 
