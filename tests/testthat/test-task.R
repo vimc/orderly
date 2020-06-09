@@ -166,8 +166,8 @@ test_that("Can't extract a task onto itself", {
 
 test_that("can run a task with dependencies", {
   path <- orderly::orderly_example("demo")
-  orderly::orderly_run_internal("other", parameters = list(nmin = 0),
-                                root = path, commit = TRUE, echo = FALSE)
+  orderly_run_internal("other", parameters = list(nmin = 0),
+                       root = path, commit = TRUE, echo = FALSE)
 
   path_tasks <- tempfile()
   path_work <- tempfile()
