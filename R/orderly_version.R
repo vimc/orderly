@@ -136,6 +136,24 @@ orderly_version <- R6::R6Class(
 
       if (length(data) > 0L) {
         ret$data <- data
+
+        ## All the information about data - it's a little more complicated
+        ## than the other types of inputs because there are *two* sizes at
+        ## present.  We should probably drop the csv one tbh and render to
+        ## csv as required?
+        con_rds <- orderly_db("rds", private$config, FALSE)
+        con_csv <- orderly_db("csv", private$config, FALSE)
+        hash_data_csv <- con_csv$mset(data)
+        hash_data_rds <- con_rds$mset(data)
+        ret$info <- data_frame(
+          name = names(data),
+          database = vcapply(private$recipe$data, "[[", "database",
+                             USE.NAMES = FALSE),
+          query = vcapply(private$recipe$data, "[[", "query",
+                          USE.NAMES = FALSE),
+          hash = unname(hash_data_rds),
+          size_csv = file_size(con_csv$filename(hash_data_rds)),
+          size_rds = file_size(con_rds$filename(hash_data_csv)))
       }
 
       if (!is.null(private$recipe$connection)) {
@@ -261,27 +279,7 @@ orderly_version <- R6::R6Class(
                              "id_requested", "is_latest", "is_pinned")]
       }
 
-      ## All the information about data - it's a little more complicated
-      ## than the other types of inputs because there are *two* sizes at
-      ## present.  We should probably drop the csv one tbh and render to
-      ## csv as required?
-      if (is.null(private$recipe$data)) {
-        data_info <- NULL
-      } else {
-        con_rds <- orderly_db("rds", private$config, FALSE)
-        con_csv <- orderly_db("csv", private$config, FALSE)
-        hash_data_csv <- con_csv$mset(private$data$data)
-        hash_data_rds <- con_rds$mset(private$data$data)
-        data_info <- data_frame(
-          name = names(private$recipe$data),
-          database = vcapply(private$recipe$data, "[[", "database",
-                             USE.NAMES = FALSE),
-          query = vcapply(private$recipe$data, "[[", "query",
-                          USE.NAMES = FALSE),
-          hash = unname(hash_data_rds),
-          size_csv = file_size(con_csv$filename(hash_data_rds)),
-          size_rds = file_size(con_rds$filename(hash_data_csv)))
-      }
+      data_info <- private$data$info
 
       if (is.null(private$recipe$views)) {
         view_info <- view_info <- NULL

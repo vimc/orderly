@@ -21,6 +21,24 @@ test_that("pack task", {
 
   expect_equal(orderly_list_archive(path2),
                data_frame(name = "example", id = res$id))
+
+  ## Check that the data gets properly dealt with through this
+  ## process:
+  con <- orderly_db("destination", root = path2)
+  on.exit(DBI::dbDisconnect(con))
+
+  db_rds <- orderly_db("rds", root = path2)
+  db_rds$list()
+
+  rvd <- DBI::dbReadTable(con, "report_version_data")
+  expect_equal(nrow(rvd), 1)
+  expect_equal(rvd$report_version, res$id)
+  expect_equal(rvd$database, "source")
+  expect_equal(rvd$query, "SELECT name, number FROM thing")
+  expect_equal(rvd$hash, db_rds$list())
+  d <- db_rds$get(rvd$hash)
+  expect_is(d, "data.frame")
+  expect_equal(names(d), c("name", "number"))
 })
 
 
