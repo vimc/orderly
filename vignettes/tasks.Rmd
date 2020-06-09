@@ -9,7 +9,7 @@ vignette: >
 
 If you have an orderly report that takes a very long time, or needs to run in parallel, you might need to send it to run on another computer.  There are a number of ways of achieving this - the simplest might be to clone the source tree to another computer, run the tasks there and use one of [a number of possible approaches to sync the outputs between computers](patterns.html).  However, there will be cases where that is not ideal, and you want to move around much less data around.
 
-This vignette describes a way of parcelling together all dependenecies of an orderly task into a zip file that can be distributed to another machine (e.g., via scp, rsync or a shared file system), run there, and returned.  It does not provide a transparent approach to using high-perfomance computing with orderly as we feel that the specific circumstances are too varied to support this directly.
+This vignette describes a way of parcelling together all dependencies of an orderly task into a zip file that can be distributed to another machine (e.g., via scp, rsync or a shared file system), run there, and returned.  It does not provide a transparent approach to using high-performance computing with orderly as we feel that the specific circumstances are too varied to support this directly.
 
 ## Overview
 
@@ -54,7 +54,7 @@ task <- orderly::orderly_task_pack(path_tasks, "use_dependency", root = path)
 task
 ```
 
-`orderly_task_pack` has created a zip file.  The format of this file is internal to orderly (it will likely change and will at somepoint become resistant to tampering), but contains:
+`orderly_task_pack` has created a zip file.  The format of this file is internal to orderly (it will likely change and will at some point become resistant to tampering), but contains:
 
 ```{r}
 zip::zip_list(task$path)

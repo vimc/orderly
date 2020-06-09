@@ -13,7 +13,7 @@ orderly_task_pack(
   parameters = NULL,
   envir = NULL,
   root = NULL,
-  locate = NULL,
+  locate = TRUE,
   message = NULL,
   instance = NULL,
   remote = NULL,
@@ -22,7 +22,7 @@ orderly_task_pack(
 
 orderly_task_run(path, workdir = tempfile(), echo = TRUE, envir = NULL)
 
-orderly_task_import(path, root = NULL, locate = NULL)
+orderly_task_import(path, root = NULL, locate = TRUE)
 
 orderly_task_list(path)
 }
@@ -103,7 +103,7 @@ saved in this directory as \code{<id>.zip}.}
 }
 \value{
 For \code{orderly_task_pack} and \code{orderly_task_run},
-  a list with elements \code{path} (the pth to the packed task)
+  a list with elements \code{path} (the path to the packed task)
   and \code{id} (its orderly id).  For \code{orderly_task_list} a
   data.frame with key information about the tasks (id, name,
   parameters, status, time).  The function

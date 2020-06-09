@@ -34,7 +34,7 @@
 ##' @inheritParams orderly_run
 ##'
 ##' @return For \code{orderly_task_pack} and \code{orderly_task_run},
-##'   a list with elements \code{path} (the pth to the packed task)
+##'   a list with elements \code{path} (the path to the packed task)
 ##'   and \code{id} (its orderly id).  For \code{orderly_task_list} a
 ##'   data.frame with key information about the tasks (id, name,
 ##'   parameters, status, time).  The function

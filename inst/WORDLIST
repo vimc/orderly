@@ -44,6 +44,8 @@ orderly's
 parameterised
 postgres
 rds
+rsync
+scp
 sha
 sql
 src
