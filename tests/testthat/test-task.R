@@ -207,3 +207,12 @@ test_that("can run a task with global file dependencies", {
   fig <- DBI::dbReadTable(con, "file_input_global")
   expect_equal(fig$filename, "data.csv")
 })
+
+
+test_that("can't cope with connections", {
+  path <- orderly::orderly_example("demo")
+  path_tasks <- tempfile()
+  expect_error(
+    orderly_task_pack(path_tasks, "connection", root = path)
+    "Cannot use 'connection': with a task")
+})

@@ -441,6 +441,10 @@ orderly_version <- R6::R6Class(
       envir <- NULL
       use_draft <- FALSE
       self$run_read(parameters, instance, envir, tags, use_draft, remote)
+      if (!is.null(private$recipe$connection)) {
+        stop("Cannot use 'connection:' with a task")
+      }
+
       self$run_prepare()
 
       check_missing_packages(private$recipe$packages)
