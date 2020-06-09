@@ -424,8 +424,8 @@ test_that("can get parameters from a report", {
 
 test_that("get_report_parameters handles errors", {
   expect_error(
-    get_report_parameters("report1", "commit1", "."),
-    "Failed to get report parameters for report report1 and commit commit1:")
+    get_report_parameters("rep1", "commit1", "."),
+    "Failed to get report parameters for report 'rep1' and commit 'commit1':")
 
   mockery::stub(get_report_parameters, "git_run", list(
     success = FALSE,
@@ -433,9 +433,9 @@ test_that("get_report_parameters handles errors", {
     output = NULL
   ))
   expect_error(
-    get_report_parameters("report1", "commit1", "."),
+    get_report_parameters("rep1", "commit1", "."),
     paste0(
-      "Failed to get report parameters for report report1 and commit commit1:",
+      "Failed to get report parameters for report 'rep1' and commit 'commit1':",
       "\nNon zero exit code from git"))
 
   mockery::stub(get_report_parameters, "git_run", list(
@@ -446,6 +446,6 @@ test_that("get_report_parameters handles errors", {
   expect_error(
     get_report_parameters("report1", "commit1", "."),
     paste0(
-      "Failed to parse yml for report report1 and commit commit1:",
+      "Failed to parse yml for report 'report1' and commit 'commit1':",
       "\nParser error: "))
 })

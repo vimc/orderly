@@ -167,13 +167,13 @@ get_report_parameters <- function(report, commit, root) {
   },
   error = function(e) {
     stop(sprintf(
-      "Failed to get report parameters for report %s and commit %s:\n%s",
+      "Failed to get report parameters for report '%s' and commit '%s':\n%s",
       report, commit, e$message))
   })
   tryCatch(
     report_cfg <- yaml_load(yml$output),
     error = function(e) {
-      stop(sprintf("Failed to parse yml for report %s and commit %s:\n%s",
+      stop(sprintf("Failed to parse yml for report '%s' and commit '%s':\n%s",
            report, commit, e$message))
     }
   )
