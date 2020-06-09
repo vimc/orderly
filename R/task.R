@@ -105,11 +105,7 @@ orderly_task_run <- function(path, workdir = tempfile(), echo = TRUE,
 
   zip::unzip(path, exdir = workdir)
 
-  ## TODO: validate the archive:
-  ## - contains expected files
-  ## - manifest is correct
-  ## - check signature
-  ## - return name/id/paths etc
+  ## TODO(VIMC-3975): validate the archive before run
 
   path_pack <- file.path(workdir, id, "pack")
   path_meta <- file.path(workdir, id, "meta")
@@ -132,7 +128,7 @@ orderly_task_run <- function(path, workdir = tempfile(), echo = TRUE,
 orderly_task_import <- function(path, root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
 
-  ## TODO: validate the archive
+  ## TODO(VIMC-3975): validate the archive before import
   info <- orderly_task_info(path)
 
   tmp <- tempfile()
@@ -146,8 +142,6 @@ orderly_task_import <- function(path, root = NULL, locate = TRUE) {
     stop("This does not look like a complete task (one that has been run)")
   }
 
-  ## TODO: validate that this pack was created by us?
-
   dest <- file.path(path_archive(config$root), name, id)
   label <- sprintf("%s:%s", name, id)
   if (file.exists(dest)) {
@@ -156,7 +150,7 @@ orderly_task_import <- function(path, root = NULL, locate = TRUE) {
 
   path_pack <- file.path(tmp, id, "pack")
 
-  ## TODO: In the highly unlikely possibility that we upgraded orderly
+  ## NOTE: In the highly unlikely possibility that we upgraded orderly
   ## between exporting and running the task:
   migrate_single(path_pack, config)
 
