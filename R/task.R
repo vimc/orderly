@@ -132,15 +132,19 @@ orderly_task_run <- function(path, workdir = tempfile(), echo = TRUE,
 orderly_task_import <- function(path, root = NULL, locate = TRUE) {
   config <- orderly_config_get(root, locate)
 
+  ## TODO: validate the archive
+  info <- orderly_task_info(path)
+
   tmp <- tempfile()
   dir.create(tmp)
   zip::unzip(path, exdir = tmp)
 
-  ## TODO: validate the archive
-  info <- orderly_task_info(path)
-
   name <- info$name
   id <- info$id
+
+  if (!(sprintf("%s/pack/orderly_run.rds", id) %in% zip::zip_list(path))) {
+    stop("This does not look like a complete task (one that has been run)")
+  }
 
   ## TODO: validate that this pack was created by us?
 
@@ -204,7 +208,11 @@ orderly_task_info <- function(path) {
   dir_create(tmp)
   on.exit(unlink(tmp))
   id <- sub("\\.zip$", "", basename(path))
-  zip::unzip(path, sprintf("%s/meta/info.rds", id),
-             junkpaths = TRUE, exdir = tmp)
+  tryCatch(
+    zip::unzip(path, sprintf("%s/meta/info.rds", id),
+               junkpaths = TRUE, exdir = tmp),
+    error = function(e)
+      stop(sprintf("Failed to extract task info from '%s'\n(%s)",
+                   path, e$message), call. = FALSE))
   readRDS(file.path(tmp, "info.rds"))
 }

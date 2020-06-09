@@ -213,6 +213,27 @@ test_that("can't cope with connections", {
   path <- orderly::orderly_example("demo")
   path_tasks <- tempfile()
   expect_error(
-    orderly_task_pack(path_tasks, "connection", root = path)
-    "Cannot use 'connection': with a task")
+    orderly_task_pack(path_tasks, "connection", root = path),
+    "Cannot use 'connection:' with a task")
+})
+
+
+test_that("can't import an unrun task", {
+  path <- orderly::orderly_example("minimal")
+  path_tasks <- tempfile()
+  res <- orderly_task_pack(path_tasks, "example", root = path)
+  expect_error(
+    orderly_task_import(res$path, root = path),
+    "This does not look like a complete task (one that has been run)",
+    fixed = TRUE)
+})
+
+
+test_that("sensible error when given junk input", {
+  path <- orderly::orderly_example("minimal")
+  tmp <- tempfile()
+  file.create(tmp)
+  expect_error(
+    orderly_task_import(tmp, root = path),
+    "Failed to extract task info from '.*'")
 })
