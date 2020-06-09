@@ -9,7 +9,7 @@
 \usage{
 orderly_task_pack(
   path,
-  name = NULL,
+  name,
   parameters = NULL,
   envir = NULL,
   root = NULL,
@@ -46,11 +46,9 @@ orderly_task_list(path)
 
 }}
 
-\item{name}{Name of the report to run (see
+\item{name}{Name of the report to pack (see
 \code{\link{orderly_list}}).  A leading \code{src/} will be
-removed if provided, allowing easier use of autocomplete.
-Alternatively, the default of \code{NULL} is useful if you have
-already set the working directory to be the source directory.}
+removed if provided, allowing easier use of autocomplete.}
 
 \item{parameters}{Parameters passed to the report. A named list of
 parameters declared in the \code{orderly.yml}.  Each parameter

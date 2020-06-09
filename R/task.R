@@ -27,6 +27,10 @@
 ##'
 ##' }
 ##'
+##' @param name Name of the report to pack (see
+##'   \code{\link{orderly_list}}).  A leading \code{src/} will be
+##'   removed if provided, allowing easier use of autocomplete.
+##'
 ##' @inheritParams orderly_run
 ##'
 ##' @return For \code{orderly_task_pack} and \code{orderly_task_run},
@@ -68,7 +72,7 @@
 ##' # workdir can be safely deleted
 ##' unlink(workdir, recursive = TRUE)
 ##' orderly::orderly_list_archive(path)
-orderly_task_pack <- function(path, name = NULL, parameters = NULL,
+orderly_task_pack <- function(path, name, parameters = NULL,
                               envir = NULL, root = NULL, locate = NULL,
                               message = NULL, instance = NULL,
                               remote = NULL, tags = NULL) {
