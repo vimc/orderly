@@ -155,3 +155,27 @@ get_reports <- function(branch, commit, root) {
   }
   reports
 }
+
+get_report_parameters <- function(report, commit, root) {
+  tryCatch({
+    yml <- git_run(
+      c("show", paste0(commit, file.path(":src", report, "orderly.yml"))),
+      root = root, check = TRUE)
+    if (!isTRUE(yml$success)) {
+      stop("Non zero exit code from git")
+    }
+  },
+  error = function(e) {
+    stop(sprintf(
+      "Failed to get report parameters for report '%s' and commit '%s':\n%s",
+      report, commit, e$message))
+  })
+  tryCatch(
+    report_cfg <- yaml_load(yml$output),
+    error = function(e) {
+      stop(sprintf("Failed to parse yml for report '%s' and commit '%s':\n%s",
+           report, commit, e$message))
+    }
+  )
+  report_cfg$parameters
+}
