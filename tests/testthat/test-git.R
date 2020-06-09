@@ -421,3 +421,31 @@ test_that("can get parameters from a report", {
   params <- get_report_parameters("other", other_commits$id, path[["local"]])
   expect_equal(params, list(nmin = NULL))
 })
+
+test_that("get_report_parameters handles errors", {
+  expect_error(
+    get_report_parameters("report1", "commit1", "."),
+    "Failed to get report parameters for report report1 and commit commit1:")
+
+  mockery::stub(get_report_parameters, "git_run", list(
+    success = FALSE,
+    code = 1,
+    output = NULL
+  ))
+  expect_error(
+    get_report_parameters("report1", "commit1", "."),
+    paste0(
+      "Failed to get report parameters for report report1 and commit commit1:",
+      "\nNon zero exit code from git"))
+
+  mockery::stub(get_report_parameters, "git_run", list(
+    success = TRUE,
+    code = 0,
+    output = "[invalid_yml"
+  ))
+  expect_error(
+    get_report_parameters("report1", "commit1", "."),
+    paste0(
+      "Failed to parse yml for report report1 and commit commit1:",
+      "\nParser error: "))
+})
