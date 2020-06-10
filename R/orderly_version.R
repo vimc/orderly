@@ -436,13 +436,13 @@ orderly_version <- R6::R6Class(
       private$workdir
     },
 
-    task_pack = function(dest, parameters = NULL, instance = NULL,
+    bundle_pack = function(dest, parameters = NULL, instance = NULL,
                          remote = NULL, tags = NULL) {
       envir <- NULL
       use_draft <- FALSE
       self$run_read(parameters, instance, envir, tags, use_draft, remote)
       if (!is.null(private$recipe$connection)) {
-        stop("Cannot use 'connection:' with a task")
+        stop("Cannot use 'connection:' with a bundle")
       }
 
       self$run_prepare()
@@ -481,11 +481,11 @@ orderly_version <- R6::R6Class(
 
       unlink(dest_id, recursive = TRUE)
 
-      orderly_log("task pack", private$id)
+      orderly_log("bundle pack", private$id)
       list(id = private$id, path = zip)
     },
 
-    task_run = function(recipe, info, echo = TRUE, envir = NULL) {
+    bundle_run = function(recipe, info, echo = TRUE, envir = NULL) {
       private$recipe <- recipe
       private$envir <- orderly_environment(envir)
       private$workdir <- recipe$path

@@ -1,6 +1,6 @@
 # orderly 1.2.11
 
-* Added a new "task" concept, for creating a bundle from orderly designed to run elsewhere (e.g., on a HPC) using new functions `orderly::orderly_task_pack`, `orderly::orderly_task_run` and `orderly::orderly_task_import`. This interface will be expanded and the interface may change somewhat (VIMC-3825)
+* Added a new "bundle" concept, for collecting together all requirements for a report from orderly that can be run elsewhere (e.g., on a HPC) using new functions `orderly::orderly_bundle_pack`, `orderly::orderly_bundle_run` and `orderly::orderly_bundle_import`. This interface will be expanded and the interface may change somewhat (VIMC-3825)
 
 # orderly 1.2.10
 
