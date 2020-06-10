@@ -71,8 +71,8 @@ test_that("pack a bundle that requires parameters", {
   path_bundles <- tempfile()
   path_workdir <- tempfile()
 
-  res <- orderly_bundle_pack(path_bundles, "other", parameters = list(nmin = 0.5),
-                           root = path_src)
+  res <- orderly_bundle_pack(
+    path_bundles, "other", parameters = list(nmin = 0.5), root = path_src)
   info <- orderly_bundle_info(res$path)
   expect_equal(info$parameters, list(nmin = 0.5))
   expect_true(all(info$data$data$extract$number >= 0.5))
@@ -96,10 +96,10 @@ test_that("list a directory of bundles", {
 
   ## If we export a number at once, we should avoid collisions, but
   ## this will be slow enough on almost any computer to avoid that:
-  res1 <- orderly_bundle_pack(path_bundles, "other", parameters = list(nmin = 0),
-                            root = path)
-  res2 <- orderly_bundle_pack(path_bundles, "other", parameters = list(nmin = 0.5),
-                            root = path)
+  res1 <- orderly_bundle_pack(
+    path_bundles, "other", parameters = list(nmin = 0), root = path)
+  res2 <- orderly_bundle_pack(
+    path_bundles, "other", parameters = list(nmin = 0.5), root = path)
 
   info1 <- orderly_bundle_list(path_bundles)
   expect_equal(info1$id, c(res1$id, res2$id))
