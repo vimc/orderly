@@ -17,7 +17,7 @@ In order to use orderly bundles we make some assumptions and conventions.
 
 First, we assume that you will be running your exported report on another machine (otherwise you would have access to the orderly tree) and that your report takes really quite a long time.
 
-Second, we assume you have your own way of getting the bundled reports _to_ your other machine and the completed bundles back again --- the expect that the details here will be specific to your needs and situation and that the overhead of doing this will be trivial compared with the cost of running the report.
+Second, we assume you have your own way of getting the bundled reports _to_ your other machine and the completed bundles back again --- we expect that the details here will be specific to your needs and situation and that the overhead of doing this will be trivial compared with the cost of running the report.
 
 Third, we assume that you will deal with all issues around queuing, locking and fault tolerance.  From orderly's point of view work will be exported from orderly and at this point you're in control - we expect it to come back computed at some point, though we do not enforce that.
 
@@ -61,7 +61,7 @@ bundle
 zip::zip_list(bundle$path)
 ```
 
-The subdirectory `pack` contains the report working directory, all code and dependencies, etc, while `info` contains additional information required to run the report.  In particular the `incoming.csv` file contains the dependency imported from `other`
+The subdirectory `pack` contains the report working directory, all code and dependencies, etc, while `meta` contains additional information required to run the report.  In particular the `incoming.csv` file in the `pack` directory contains the dependency imported from `other`.
 
 Then copy this zip file somewhere else to run it (details vary based on your system, and moving the file is not _necessary_ to run it, though it will be the most likely situation).
 

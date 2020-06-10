@@ -28,7 +28,6 @@ test_that("pack bundle", {
   on.exit(DBI::dbDisconnect(con))
 
   db_rds <- orderly_db("rds", root = path2)
-  db_rds$list()
 
   rvd <- DBI::dbReadTable(con, "report_version_data")
   expect_equal(nrow(rvd), 1)
