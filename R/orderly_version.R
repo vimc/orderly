@@ -16,6 +16,9 @@ orderly_version <- R6::R6Class(
 
     envir = NULL,
     data = NULL,
+    secrets = NULL,
+    environment = NULL,
+    depends = NULL,
     changelog = NULL,
     tags = NULL,
     parameters = NULL,
@@ -56,7 +59,7 @@ orderly_version <- R6::R6Class(
       recipe_copy_sources(recipe, src)
       recipe_copy_global(recipe, private$config)
       recipe_copy_resources(recipe, src)
-      recipe_copy_depends(recipe)
+      recipe_copy_depends(private$depends)
 
       private$inputs <- recipe$inputs()
 
@@ -71,6 +74,104 @@ orderly_version <- R6::R6Class(
       withr::with_dir(private$workdir, private$copy_files())
     },
 
+    ## Fetch external resources
+    fetch = function() {
+      withr::with_envvar(private$envvar, {
+        private$fetch_environment()
+        private$fetch_secrets()
+        private$fetch_data()
+      })
+    },
+
+    fetch_environment = function() {
+      if (!is.null(private$recipe$environment)) {
+        env_vars <- lapply(names(private$recipe$environment), function(name) {
+          sys_getenv(private$recipe$environment[[name]],
+                     sprintf("orderly.yml:environment:%s", name))
+        })
+        names(env_vars) <- names(private$recipe$environment)
+        private$environment <- env_vars
+      }
+    },
+
+    fetch_secrets = function() {
+      private$secrets <-
+        resolve_secrets(private$recipe$secrets, private$config)
+    },
+
+    fetch_data = function() {
+      uses_db <- length(private$recipe$data) > 0 ||
+        !is.null(private$recipe$connection)
+      if (!uses_db) {
+        return(NULL)
+      }
+
+      ret <- list()
+
+      con <- orderly_db("source", private$config,
+                        instance = private$instance)
+      on.exit(lapply(con, DBI::dbDisconnect))
+
+      ret$instance <- lapply(con, attr, "instance", exact = TRUE)
+
+      views <- private$recipe$views
+      for (v in names(views)) {
+        orderly_log("view", sprintf("%s : %s", views[[v]]$database, v))
+        sql <- temporary_view(v, views[[v]]$query)
+        DBI::dbExecute(con[[views[[v]]$database]], sql)
+      }
+
+      data <- list()
+      for (v in names(private$recipe$data)) {
+        database <- private$recipe$data[[v]]$database
+        query <- private$recipe$data[[v]]$query
+        withCallingHandlers(
+          data[[v]] <- DBI::dbGetQuery(con[[database]], query),
+          error = function(e)
+            orderly_log("data", sprintf("%s => %s: <error>", database, v)))
+        orderly_log("data",
+                    sprintf("%s => %s: %s x %s",
+                            database, v, nrow(data[[v]]), ncol(data[[v]])))
+      }
+
+      if (length(data) > 0L) {
+        ret$data <- data
+
+        ## All the information about data - it's a little more complicated
+        ## than the other types of inputs because there are *two* sizes at
+        ## present.  We should probably drop the csv one tbh and render to
+        ## csv as required?
+        con_rds <- orderly_db("rds", private$config, FALSE)
+        con_csv <- orderly_db("csv", private$config, FALSE)
+        hash_data_csv <- con_csv$mset(data)
+        hash_data_rds <- con_rds$mset(data)
+        ret$info <- data_frame(
+          name = names(data),
+          database = vcapply(private$recipe$data, "[[", "database",
+                             USE.NAMES = FALSE),
+          query = vcapply(private$recipe$data, "[[", "query",
+                          USE.NAMES = FALSE),
+          hash = unname(hash_data_rds),
+          size_csv = file_size(con_csv$filename(hash_data_rds)),
+          size_rds = file_size(con_rds$filename(hash_data_csv)))
+      }
+
+      if (!is.null(private$recipe$connection)) {
+        ret$con <- list()
+        for (i in names(private$recipe$connection)) {
+          ret$con[[i]] <- con[[private$recipe$connection[[i]]]]
+        }
+        ## Ensure that only unexported connections are closed when
+        ## we exit this method (happens above in the on.exit()!)
+        keep <- setdiff(
+          list_to_character(private$recipe$connection, FALSE),
+          names(private$config$database))
+        con <- con[keep]
+      }
+
+      private$data <- ret
+    },
+
     prepare_environment_parameters = function() {
       if (!is.null(private$parameters)) {
         list2env(private$parameters, private$envir)
@@ -79,71 +180,24 @@ orderly_version <- R6::R6Class(
     },
 
     prepare_environment_secrets = function() {
-      if (!is.null(private$recipe$secrets)) {
-        secrets <- resolve_secrets(private$recipe$secrets, private$config)
-        list2env(secrets, private$envir)
+      if (!is.null(private$secrets)) {
+        list2env(private$secrets, private$envir)
       }
     },
 
     prepare_environment_environment = function() {
-      if (!is.null(private$recipe$environment)) {
-        env_vars <- lapply(names(private$recipe$environment), function(name) {
-          sys_getenv(private$recipe$environment[[name]],
-                     sprintf("orderly.yml:environment:%s", name))
-        })
-        names(env_vars) <- names(private$recipe$environment)
-        list2env(env_vars, private$envir)
+      if (!is.null(private$environment)) {
+        list2env(private$environment, private$envir)
       }
     },
 
     prepare_environment_data = function() {
-      uses_db <- length(private$recipe$data) > 0 ||
-        !is.null(private$recipe$connection)
-      if (uses_db) {
-        con <- orderly_db("source", private$config,
-                          instance = private$instance)
-        on.exit(lapply(con, DBI::dbDisconnect))
-        private$data <- list()
-
-        private$data$instance <- lapply(con, attr, "instance", exact = TRUE)
-
-        views <- private$recipe$views
-        for (v in names(views)) {
-          orderly_log("view", sprintf("%s : %s", views[[v]]$database, v))
-          sql <- temporary_view(v, views[[v]]$query)
-          DBI::dbExecute(con[[views[[v]]$database]], sql)
+      if (!is.null(private$data)) {
+        if (length(private$data$data) > 0L) {
+          list2env(private$data$data, private$envir)
         }
-
-        data <- list()
-        for (v in names(private$recipe$data)) {
-          database <- private$recipe$data[[v]]$database
-          query <- private$recipe$data[[v]]$query
-          withCallingHandlers(
-            data[[v]] <- DBI::dbGetQuery(con[[database]], query),
-            error = function(e)
-              orderly_log("data", sprintf("%s => %s: <error>", database, v)))
-          orderly_log("data",
-                      sprintf("%s => %s: %s x %s",
-                              database, v, nrow(data[[v]]), ncol(data[[v]])))
-        }
-
-        if (length(data) > 0L) {
-          list2env(data, private$envir)
-          private$data$data <- data
-        }
-
-        if (!is.null(private$recipe$connection)) {
-          private$data$con <- list()
-          for (i in names(private$recipe$connection)) {
-            private$data$con[[i]] <- con[[private$recipe$connection[[i]]]]
-          }
+        if (length(private$data$con) > 0L) {
           list2env(private$data$con, private$envir)
-          ## Ensure that only unexported connections are closed when
-          ## we exit this method (happens above in the on.exit()!)
-          keep <- setdiff(
-            list_to_character(private$recipe$connection, FALSE),
-            names(private$config$database))
-          con <- con[keep]
         }
       }
     },
@@ -214,7 +268,7 @@ orderly_version <- R6::R6Class(
         withr::with_dir(private$workdir, private$recipe$inputs()),
         "input", "inputs")
 
-      depends <- private$recipe$depends
+      depends <- private$depends
       if (!is.null(depends)) {
         pre <- data_frame(filename = depends$as, file_hash = depends$hash)
         post <- withr::with_dir(
@@ -225,27 +279,7 @@ orderly_version <- R6::R6Class(
                              "id_requested", "is_latest", "is_pinned")]
       }
 
-      ## All the information about data - it's a little more complicated
-      ## than the other types of inputs because there are *two* sizes at
-      ## present.  We should probably drop the csv one tbh and render to
-      ## csv as required?
-      if (is.null(private$recipe$data)) {
-        data_info <- NULL
-      } else {
-        con_rds <- orderly_db("rds", private$config, FALSE)
-        con_csv <- orderly_db("csv", private$config, FALSE)
-        hash_data_csv <- con_csv$mset(private$data$data)
-        hash_data_rds <- con_rds$mset(private$data$data)
-        data_info <- data_frame(
-          name = names(private$recipe$data),
-          database = vcapply(private$recipe$data, "[[", "database",
-                             USE.NAMES = FALSE),
-          query = vcapply(private$recipe$data, "[[", "query",
-                          USE.NAMES = FALSE),
-          hash = unname(hash_data_rds),
-          size_csv = file_size(con_csv$filename(hash_data_rds)),
-          size_rds = file_size(con_rds$filename(hash_data_csv)))
-      }
+      data_info <- private$data$info
 
       if (is.null(private$recipe$views)) {
         view_info <- view_info <- NULL
@@ -301,7 +335,7 @@ orderly_version <- R6::R6Class(
            file_info_artefacts = private$postflight_info$file_info_artefacts,
            global_resources = recipe$global_resources,
            artefacts = private$postflight_info$artefacts,
-           depends = private$recipe$depends,
+           depends = private$depends,
            elapsed = as.numeric(private$time$elapsed, "secs"),
            changelog = private$changelog,
            tags = private$tags,
@@ -336,6 +370,7 @@ orderly_version <- R6::R6Class(
       self$run_read(parameters, instance, envir, tags, use_draft,
                     remote)
       self$run_prepare(message)
+      private$fetch()
       self$run_execute(echo)
       self$run_cleanup()
       private$id
@@ -366,6 +401,7 @@ orderly_version <- R6::R6Class(
         }
         private$batch_id <- batch_id
         private$workflow_info <- workflow_info
+        private$fetch()
         self$run_execute(echo)
         self$run_cleanup()
       })
@@ -378,12 +414,11 @@ orderly_version <- R6::R6Class(
       self$run_read(parameters, instance, envir, NULL,
                     use_draft, remote, TRUE)
       private$workdir <- private$recipe$path
-      withr::with_envvar(private$envvar, {
-        withr::with_dir(private$workdir, {
-          recipe_copy_global(private$recipe, private$config)
-          recipe_copy_depends(private$recipe)
-        })
+      withr::with_dir(private$workdir, {
+        recipe_copy_global(private$recipe, private$config)
+        recipe_copy_depends(private$depends)
       })
+      private$fetch()
       private$prepare_environment()
       sys_setenv(private$envvar)
       private$workdir
@@ -395,9 +430,78 @@ orderly_version <- R6::R6Class(
                           use_draft = FALSE, remote = NULL) {
       self$run_read(parameters, instance, envir, NULL, use_draft, remote)
       self$run_prepare()
+      private$fetch()
       private$prepare_environment()
       self$set_current(test = TRUE)
       private$workdir
+    },
+
+    bundle_pack = function(dest, parameters = NULL, instance = NULL,
+                         remote = NULL, tags = NULL) {
+      envir <- NULL
+      use_draft <- FALSE
+      self$run_read(parameters, instance, envir, tags, use_draft, remote)
+      if (!is.null(private$recipe$connection)) {
+        stop("Cannot use 'connection:' with a bundle")
+      }
+
+      self$run_prepare()
+
+      check_missing_packages(private$recipe$packages)
+      private$fetch()
+
+      if (file.exists(dest)) {
+        assert_is_directory(dest)
+      }
+
+      path <- private$workdir
+      dest_id <- file.path(dest, private$id)
+      path_meta <- file.path(dest_id, "meta")
+      path_pack <- file.path(dest_id, "pack")
+      dir_create(path_meta)
+
+      files <- list.files(private$workdir, recursive = TRUE,
+                          all.files = TRUE, no.. = TRUE)
+      manifest <- file_info(files, private$workdir)
+
+      ## Collect every 'reasonable' data member of the class (we don't
+      ## want methods or any reference objects, nor the workdir which
+      ## will be invalid)
+      info <- as.list(private)
+      info <- info[!vlapply(info, function(x) is.function(x) || R6::is.R6(x))]
+      info$workdir <- NULL
+
+      ## TODO(VIMC-3975): Sign the manifest
+      saveRDS(private$config, file.path(path_meta, "config.rds"))
+      saveRDS(manifest, file.path(path_meta, "manifest.rds"))
+      saveRDS(info, file.path(path_meta, "info.rds"))
+      saveRDS(session_info(), file.path(path_meta, "session.rds"))
+      file.rename(private$workdir, path_pack)
+      zip <- zip_dir(dest_id)
+
+      unlink(dest_id, recursive = TRUE)
+
+      orderly_log("bundle pack", private$id)
+      list(id = private$id, path = zip)
+    },
+
+    bundle_run = function(recipe, info, echo = TRUE, envir = NULL) {
+      private$recipe <- recipe
+      private$envir <- orderly_environment(envir)
+      private$workdir <- recipe$path
+      for (v in names(info)) {
+        private[[v]] <- info[[v]]
+      }
+
+      ## Refetch the preflight info here: we want to keep git but
+      ## replace everything else I think.  We might save the random
+      ## seed but that is not actually supposed to work across R
+      ## versions.
+      private$preflight()
+      private$preflight_info["git"] <- info$preflight_info["git"]
+
+      self$run_execute(echo)
+      self$run_cleanup()
     },
 
     ## The next bit are the basic "phases" - we'll probably tweak
@@ -416,7 +520,8 @@ orderly_version <- R6::R6Class(
       private$parameters <- recipe_parameters(private$recipe, parameters)
       private$tags <- union(private$recipe$tags,
                             recipe_validate_tags(tags, private$config, NULL))
-      private$recipe$resolve_dependencies(use_draft, parameters, remote)
+      private$depends <-
+        private$recipe$resolve_dependencies(use_draft, parameters, remote)
     },
 
     ## Prepare phase of a report - create id, load changelog and
@@ -429,12 +534,12 @@ orderly_version <- R6::R6Class(
       private$changelog <- changelog_load(
         private$recipe$name, private$id, private$recipe$changelog$contents,
         message, private$config)
+      recipe_substitute(private$recipe, private$parameters)
       private$preflight()
     },
 
     ## Execute phase of running a report (load packages, sources and
-    ## run the script) - it's possible that prepare_environment
-    ## belongs in run_prepare though?
+    ## run the script)
     run_execute = function(echo = TRUE) {
       self$set_current()
       on.exit(recipe_current_run_clear(), add = TRUE)
@@ -473,7 +578,7 @@ orderly_version <- R6::R6Class(
       d <- list(id = private$id,
                 name = private$name,
                 root = private$config$root,
-                depends = private$recipe$depends)
+                depends = private$depends)
       recipe_current_run_set(d, private$workdir, test)
     }
   ))

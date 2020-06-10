@@ -801,7 +801,7 @@ local({
 dir_tree(path)
 ```
 
-The new task has an `orderly.yml` containing
+The new report has an `orderly.yml` containing
 
 ``` {r results = "asis", echo = FALSE}
 yaml_output(readLines(file.path(path_new, "orderly.yml")))

@@ -1,0 +1,104 @@
+---
+title: "orderly bundles"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{orderly bundles}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+If you have an orderly report that takes a very long time, or needs to run in parallel, you might need to send it to run on another computer.  There are a number of ways of achieving this - the simplest might be to clone the source tree to another computer, run the reports there and use one of [a number of possible approaches to sync the outputs between computers](patterns.html).  However, there will be cases where that is not ideal, and you want to move around much less data around.
+
+This vignette describes a way of parcelling together all dependencies of an orderly report into a zip file (a "**bundle**") that can be distributed to another machine (e.g., via scp, rsync or a shared file system), run there, and returned.  It does not provide a transparent approach to using high-performance computing with orderly as we feel that the specific circumstances are too varied to support this directly.
+
+## Overview
+
+In order to use orderly bundles we make some assumptions and conventions.
+
+First, we assume that you will be running your exported report on another machine (otherwise you would have access to the orderly tree) and that your report takes really quite a long time.
+
+Second, we assume you have your own way of getting the bundled reports _to_ your other machine and the completed bundles back again --- we expect that the details here will be specific to your needs and situation and that the overhead of doing this will be trivial compared with the cost of running the report.
+
+Third, we assume that you will deal with all issues around queuing, locking and fault tolerance.  From orderly's point of view work will be exported from orderly and at this point you're in control - we expect it to come back computed at some point, though we do not enforce that.
+
+Fourth, that the machine running the report can be trusted to _actually run the report_ - if you have set up an orderly server that is safe from interactively run reports, don't allow importing from anyone's laptops if you want to preserve this.
+
+Fifth, that you trust your remote machine with your data, and that the remote machine trusts your orderly archive enough to run arbitrary code on it.
+
+## The process
+
+We will use the orderly demo example, and pack up the `use_dependency` report.
+
+```{r}
+path <- orderly::orderly_example("demo")
+```
+
+The `use_dependency` report has a dependency, which we run
+
+```{r}
+id <- orderly::orderly_run("other", parameters = list(nmin = 0),
+                           echo = FALSE, root = path)
+orderly::orderly_commit(id, root = path)
+```
+
+We need a place that we'll put the bundles:
+
+```{r}
+path_bundles <- tempfile()
+```
+
+Now, we can pack up `use_dependency` to run
+
+```{r}
+bundle <- orderly::orderly_bundle_pack(path_bundles, "use_dependency",
+                                       root = path)
+bundle
+```
+
+`orderly_bundle_pack` has created a zip file.  The format of this file is internal to orderly (it will likely change and will at some point become resistant to tampering), but contains:
+
+```{r}
+zip::zip_list(bundle$path)
+```
+
+The subdirectory `pack` contains the report working directory, all code and dependencies, etc, while `meta` contains additional information required to run the report.  In particular the `incoming.csv` file in the `pack` directory contains the dependency imported from `other`.
+
+Then copy this zip file somewhere else to run it (details vary based on your system, and moving the file is not _necessary_ to run it, though it will be the most likely situation).
+
+Once the files have been moved we can run it with:
+
+```{r}
+workdir <- tempfile()
+res <- orderly::orderly_bundle_run(bundle$path, workdir)
+```
+
+With the `workdir` being a directory that you want the report to be run in. This can be the same as the path the incoming zip file is found, if you want, but this will make it harder to know what has been run already or not.
+
+This creates _another_ zip file, but this time contains the results of running the report.
+
+The result can be imported into order by using `orderly::orderly_bundle_import` with the path to the zip file:
+
+```{r}
+orderly::orderly_bundle_import(res$path, root = path)
+```
+
+The copy of `use_dependency` is now in the archive and can be used like any other orderly report
+
+```{r}
+orderly::orderly_list_archive(path)
+orderly::orderly_graph("other", root = path)
+```
+
+## Limitations
+
+* We do not yet verify that the incoming bundle comes from a trusted source, nor that the completed bundle was run on a trusted system, nor that the bundle pack was not modified en route.  We will add a signing and verifying step in future that will address these issues.
+
+* We do not support encryption of the bundle, but may do so in a future version.
+
+* Secrets will be copied in clear text if included.
+
+* We do not check that the package versions on the remote machine are suitable, though metadata is included to support this in future.
+
+* We do not support reading from databases using the `connection:` field while the report is running (reading data _before_ is fine). In future we may relax this so that the remote report interacts with the database. Practically this means that bundled reports cannot use the `connection:` field, and all data will be packaged into the bundle, and so may be large.
+
+* As discussed above in [the overview section](#overview), orderly does not deal with the movement of bundles between machines, nor queuing of these bundles.

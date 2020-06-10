@@ -201,8 +201,8 @@ With some additional development on `orderly`, further work patterns are possibl
 
 To support this, we can have a network of orderly servers which can exchange sub-trees amongst each other.  In this fashion, we can imagine the following things being possible
 
-* Have common data processing tasks described in one orderly source tree, but used by several other sources trees
-* Have orderly "runners" available on HPC platforms, making it easy to reliably run demanding tasks on larger infrastructure then incorporate them back into the "canonical" archive
+* Have common data processing "reports" described in one orderly source tree, but used by reports in several other sources trees
+* Have orderly "runners" available on HPC platforms, making it easy to reliably run demanding reports on larger infrastructure then incorporate them back into the "canonical" archive (see [orderly bundles](bundles.html) for one approach to this)
 * Allow distributed teams of researchers with intermittent access to synchronise their own trees of outputs, eventually becoming consistent with each other
 
 All the lower-level support for these patterns is available, and implementing them in orderly is not necessarily hard - we just have not found the need for this ourselves yet.  If this is of interest please get in touch.

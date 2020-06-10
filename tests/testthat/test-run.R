@@ -57,6 +57,7 @@ test_that("close too many devices", {
 })
 
 test_that("sink imbalance", {
+  skip_on_cran()
   skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
   config <- orderly_config$new(path)
@@ -75,7 +76,7 @@ test_that("sink imbalance", {
     "Report left 1 sink open")
 
   p <- tempfile()
-  sink(p, split = TRUE)
+  sink(p, split = FALSE)
   writeLines(c("sink()", txt), path_script)
   withr::with_options(
     list(orderly.nolog = TRUE),

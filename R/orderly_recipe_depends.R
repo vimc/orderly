@@ -93,7 +93,7 @@ recipe_resolve_dependencies <- function(self, use_draft, parameters, remote) {
   depends$id_requested <- depends$id
   depends$id <- basename(depends$path)
 
-  self$depends <- depends
+  depends
 }
 
 

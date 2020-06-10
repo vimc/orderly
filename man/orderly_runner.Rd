@@ -16,7 +16,7 @@ disallows branch changes (based on the
 \code{master_only} setting of the relevant server block.}
 
 \item{backup_period}{Period (in seconds) between DB backups.  This
-is a guide only as backups cannot happen while a task is running
+is a guide only as backups cannot happen while a report is running
 - if more than this many seconds have elapsed when the runner is
 in its idle loop a backup of the db will be performed.  This
 creates a copy of orderly's destination database in
