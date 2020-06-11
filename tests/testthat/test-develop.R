@@ -22,7 +22,7 @@ test_that("orderly_develop_location", {
   skip_on_cran_windows()
   path <- prepare_orderly_example("demo")
 
-  cfg <- orderly_config$new(path)
+  cfg <- orderly_config_$new(path)
   name <- "minimal"
   cmp1 <- list(config = cfg,
                name = name,
@@ -104,7 +104,7 @@ test_that("status reports resources", {
   name <- "use_resource"
   p <- file.path(path, "src", name)
 
-  info <- orderly_recipe$new(name, orderly_config$new(path))
+  info <- orderly_recipe$new(name, orderly_config_$new(path))
 
   cmp <- data_frame(
     filename = c("orderly.yml", "script.R", "meta/data.csv", "README.md",

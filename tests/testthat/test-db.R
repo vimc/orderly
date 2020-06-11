@@ -113,7 +113,7 @@ test_that("dialects", {
   expect_false(isTRUE(all.equal(s, p)))
 
   path <- prepare_orderly_example("minimal")
-  config <- orderly_config$new(path)
+  config <- orderly_config_$new(path)
   con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
   on.exit(DBI::dbDisconnect(con))
   expect_error(report_db_init_create(con, config, "postgres"),

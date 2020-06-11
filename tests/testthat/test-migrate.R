@@ -57,7 +57,7 @@ test_that("failed migrations are rolled back", {
     list(changed = TRUE, data = data)
   }
 
-  config <- orderly_config$new(path)
+  config <- orderly_config_$new(path)
   expect_error(migrate_apply(path, "0.3.3", fun, config, FALSE, FALSE),
                "some sort of migration failure")
   cmp <- hash_files(list.files(path, recursive = TRUE, full.names = TRUE))
@@ -83,7 +83,7 @@ test_that("failed migrations can be skipped", {
   }
 
   patch_orderly_config(path)
-  config <- orderly_config$new(path)
+  config <- orderly_config_$new(path)
   migrate_apply(path, "0.3.3", fun, config, FALSE, TRUE)
 
   id <- "20170805-220525-1dc8fb81"
@@ -115,7 +115,7 @@ test_that("failed migrations warned in dry run", {
   }
 
   patch_orderly_config(path)
-  config <- orderly_config$new(path)
+  config <- orderly_config_$new(path)
   expect_message(
     migrate_apply(path, "0.3.3", fun, config, TRUE, TRUE),
     "this report would be moved to")
@@ -140,7 +140,7 @@ test_that("migrate_plan default is used", {
   on.exit(options(oo))
 
   path <- unpack_reference("0.3.2")
-  config <- orderly_config$new(path)
+  config <- orderly_config_$new(path)
   expect_equal(migrate_plan(config$archive_version), available_migrations())
   expect_equal(migrate_plan(config$archive_version, to = "0.0.1"),
                set_names(character(), character()))
@@ -211,7 +211,7 @@ test_that("don't migrate new orderly", {
   path <- prepare_orderly_example("minimal")
   p <- path_orderly_archive_version(path)
   unlink(p)
-  check_orderly_archive_version(orderly_config$new(path))
+  check_orderly_archive_version(orderly_config_$new(path))
   expect_true(file.exists(p))
   expect_equal(read_orderly_archive_version(path),
                as.character(cache$current_archive_version))

@@ -301,6 +301,7 @@ orderly_runner_ <- R6::R6Class(
     },
 
     .run_next = function() {
+      browser()
       dat <- self$data$next_queued()
       if (is.null(dat)) {
         return(FALSE)

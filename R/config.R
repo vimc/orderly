@@ -3,7 +3,7 @@ orderly_locate_config <- function() {
   if (is.null(root)) {
     stop("Reached root without finding 'orderly_config.yml'")
   }
-  orderly_config$new(root)
+  orderly_config_$new(root)
 }
 
 
@@ -13,14 +13,14 @@ orderly_config_get <- function(x, locate = FALSE) {
   } else if (is.null(x) && locate) {
     orderly_locate_config()
   } else if (is.character(x)) {
-    orderly_config$new(x)
+    orderly_config_$new(x)
   } else {
     stop("Invalid input")
   }
 }
 
 
-orderly_config <- R6::R6Class(
+orderly_config_ <- R6::R6Class(
   "orderly_config",
 
   public = list(
