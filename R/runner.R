@@ -68,7 +68,7 @@ orderly_runner_ <- R6::R6Class(
 
     initialize = function(path, allow_ref, backup_period) {
       self$path <- path
-      self$config <- orderly_config_get(path)
+      self$config <- orderly_config(path)
       self$has_git <- runner_has_git(path)
       if (!self$has_git) {
         message("Not enabling git features as this is not version controlled")

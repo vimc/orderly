@@ -358,7 +358,7 @@ orderly_version <- R6::R6Class(
 
   public = list(
     initialize = function(name, root, locate) {
-      private$config <- orderly_config_get(root, locate)
+      private$config <- orderly_config(root, locate)
       private$envvar <- orderly_envir_read(private$config$root)
       private$name <- name
     },

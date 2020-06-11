@@ -126,7 +126,7 @@ orderly_bundle_run <- function(path, workdir = tempfile(), echo = TRUE,
 ##' @rdname orderly_bundle_pack
 ##' @export
 orderly_bundle_import <- function(path, root = NULL, locate = TRUE) {
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
 
   ## TODO(VIMC-3975): validate the archive before import
   info <- orderly_bundle_info(path)

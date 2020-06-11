@@ -1,5 +1,5 @@
 legacy_orderly_publish <- function(name, id, value = TRUE, root = NULL) {
-  config <- orderly_config_get(root)
+  config <- orderly_config(root)
   path <- file.path(config$root, "archive", name, id)
   yaml_write(list(published = value),
              file.path(path, "orderly_published.yml"))

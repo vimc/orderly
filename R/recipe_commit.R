@@ -38,7 +38,7 @@
 ##' orderly::orderly_list_archive(root = path)
 orderly_commit <- function(id, name = NULL, root = NULL, locate = TRUE,
                            retry_n = 5, retry_backoff = 1) {
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
   config <- check_orderly_archive_version(config)
   if (is.null(name)) {
     name <- orderly_find_name(id, config, draft = TRUE, must_work = TRUE)
@@ -57,7 +57,7 @@ orderly_commit <- function(id, name = NULL, root = NULL, locate = TRUE,
 }
 
 recipe_commit <- function(workdir, config, retry_n = 1, retry_backoff = 1) {
-  config <- orderly_config_get(config)
+  config <- orderly_config(config)
   name <- basename(dirname(workdir))
   id <- basename(workdir)
   orderly_log("commit", sprintf("%s/%s", name, id))

@@ -66,7 +66,7 @@
 ##' DBI::dbReadTable(db, "report_version")
 orderly_db <- function(type, root = NULL, locate = TRUE, validate = TRUE,
                        instance = NULL) {
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
   if (type == "rds") {
     con <- file_store_rds(path_rds(config$root))
   } else if (type == "csv") {
@@ -174,7 +174,7 @@ orderly_rebuild <- function(root = NULL, locate = TRUE, verbose = TRUE,
   oo <- options(orderly.nowarnings = TRUE)
   on.exit(options(oo))
 
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
 
   if (length(migrate_plan(config$archive_version, to = NULL)) > 0L) {
     orderly_log("migrate", "archive")
@@ -204,7 +204,7 @@ orderly_rebuild <- function(root = NULL, locate = TRUE, verbose = TRUE,
 ## > preventing other database connections from reading or writing to
 ## > the source database while the backup is underway.
 orderly_backup <- function(config = NULL, locate = TRUE, suffix = NULL) {
-  config <- orderly_config_get(config, locate)
+  config <- orderly_config(config, locate)
   if (config$destination$driver[[1]] == "RSQLite") {
     curr <- orderly_db_args(config$destination, config)$args$dbname
 

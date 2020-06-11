@@ -165,7 +165,7 @@ main_do_run <- function(x) {
   ## * error while preparing (e.g., package not found)
   ## * error while running report
   ## * error checking artefacts
-  config <- orderly_config_get(x$options$root, TRUE)
+  config <- orderly_config(x$options$root, TRUE)
   name <- x$options$name
   commit <- !x$options$no_commit
   instance <- x$options$instance
@@ -360,7 +360,7 @@ main_do_batch <- function(x) {
   ## * error while preparing (e.g., package not found)
   ## * error while running report
   ## * error checking artefacts
-  config <- orderly_config_get(x$options$root, TRUE)
+  config <- orderly_config(x$options$root, TRUE)
   name <- x$options$name
   instance <- x$options$instance
   parameters <- x$options$parameters
@@ -419,7 +419,7 @@ main_do_workflow <- function(x) {
   ## * error while preparing (e.g., package not found)
   ## * error while running report
   ## * error checking artefacts
-  config <- orderly_config_get(x$options$root, TRUE)
+  config <- orderly_config(x$options$root, TRUE)
   name <- x$options$name
   instance <- x$options$instance
   print_log <- x$options$print_log

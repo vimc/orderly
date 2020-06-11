@@ -3,7 +3,7 @@ context("deduplicate")
 test_that("deduplicate demo", {
   skip_on_cran()
   path <- create_orderly_demo()
-  config <- orderly_config_get(path, locate)
+  config <- orderly_config(path, locate)
   x <- orderly_deduplicate_info(config)
 
   expect_true(all(x$untracked$internal))

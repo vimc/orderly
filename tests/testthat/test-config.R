@@ -1,5 +1,50 @@
 context("config")
 
+test_that("can retrieve config", {
+  path <- tempfile()
+  dir.create(path)
+
+  dat <- list(database =
+                list(source =
+                       list(driver = "RSQLite::SQLite",
+                            args = list(
+                              host = "OURHOST",
+                              port = "OURPORT",
+                              user = "OURUSER",
+                              dbname = "OURDBNAME",
+                              password = "$OURPASSWORD"))))
+  writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
+
+  ## Retrieve from path
+  cfg <- orderly_config(path)
+  expect_is(cfg, "orderly_config")
+
+  ## Return self if already a config
+  cfg2 <- orderly_config(cfg)
+  expect_is(cfg2, "orderly_config")
+  expect_identical(cfg, cfg2)
+
+  ## Can locate from working directory
+  dir.create(file.path(path, "src"))
+  withr::with_dir(file.path(path, "src"), {
+    cfg3 <- orderly_config(locate = TRUE)
+  })
+  expect_is(cfg3, "orderly_config")
+  expect_identical(cfg, cfg3)
+})
+
+
+test_that("get: invalid config", {
+  expect_error(orderly_config(1), "Invalid input")
+})
+
+
+test_that("get: fail descend", {
+  expect_error(withr::with_dir(tempdir(), orderly_config(NULL, TRUE)),
+               "Reached root")
+})
+
+
 test_that("read", {
   cfg <- orderly_config_$new("example")
   expect_is(cfg, "orderly_config")
@@ -46,16 +91,6 @@ test_that("not found", {
   dir.create(path)
   expect_error(orderly_config_$new(path),
                "Orderly configuration does not exist: 'orderly_config.yml'")
-})
-
-test_that("get: invalid config", {
-  expect_error(orderly_config_get(1), "Invalid input")
-})
-
-
-test_that("get: fail descend", {
-  expect_error(withr::with_dir(tempdir(), orderly_config_get(NULL, TRUE)),
-               "Reached root")
 })
 
 

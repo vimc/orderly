@@ -16,7 +16,7 @@ test_that("custom fields", {
 
   expect_true(DBI::dbExistsTable(con, "orderly_schema"))
 
-  config <- orderly_config_get(path)
+  config <- orderly_config(path)
   expect_error(report_db_init(con, config, TRUE),
                "Table 'orderly_schema' already exists")
 

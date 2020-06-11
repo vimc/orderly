@@ -102,7 +102,7 @@ orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
 orderly_pull_archive <- function(name, id = "latest", root = NULL,
                                  locate = TRUE, remote = NULL,
                                  parameters = NULL) {
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
   config <- check_orderly_archive_version(config)
 
   remote <- get_remote(remote, config)
@@ -160,7 +160,7 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
 ##' @export
 orderly_push_archive <- function(name, id = "latest", root = NULL,
                                  locate = TRUE, remote = NULL) {
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
   config <- check_orderly_archive_version(config)
   remote <- get_remote(remote, config)
   if (!is.function(remote$push)) {
@@ -245,7 +245,7 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
                                progress = TRUE,
                                root = NULL, locate = TRUE, instance = NULL,
                                remote = NULL) {
-  remote <- get_remote(remote, orderly_config_get(root, locate))
+  remote <- get_remote(remote, orderly_config(root, locate))
   invisible(remote$run(
     name, parameters = parameters, ref = ref,
     timeout = timeout, wait = wait, poll = poll,
@@ -303,7 +303,7 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
 ##' # Note that this has not affected the other orderly:
 ##' try(orderly::orderly_default_remote_get(root = path_remote))
 orderly_default_remote_set <- function(value, root = NULL, locate = TRUE) {
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
 
   if (is.null(value)) {
     remote <- NULL
@@ -319,7 +319,7 @@ orderly_default_remote_set <- function(value, root = NULL, locate = TRUE) {
 ##' @rdname orderly_default_remote
 ##' @export
 orderly_default_remote_get <- function(root = NULL, locate = TRUE) {
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
   if (!is.null(cache$default_remote[[config$root]])) {
     return(cache$default_remote[[config$root]])
   }
@@ -355,7 +355,7 @@ orderly_default_remote_get <- function(root = NULL, locate = TRUE) {
 ##' @export
 ##' @example man-roxygen/example-orderly-remote.R
 orderly_remote <- function(remote = NULL, root = NULL, locate = TRUE) {
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
   get_remote(remote, config)
 }
 
@@ -422,14 +422,14 @@ clear_remote_cache <- function() {
 
 ## Most of these functions can really shrink now?
 remote_report_names <- function(root = NULL, locate = TRUE, remote = NULL) {
-  remote <- get_remote(remote, orderly_config_get(root, locate))
+  remote <- get_remote(remote, orderly_config(root, locate))
   remote$list_reports()
 }
 
 
 remote_report_versions <- function(name, config = NULL, locate = TRUE,
                                    remote = NULL) {
-  remote <- get_remote(remote, orderly_config_get(config, locate))
+  remote <- get_remote(remote, orderly_config(config, locate))
   remote$list_versions(name)
 }
 

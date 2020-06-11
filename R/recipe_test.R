@@ -91,7 +91,7 @@ orderly_test_check <- function(path = NULL) {
   if (is.null(info)) {
     stop(sprintf("Not running in test mode (for path %s)", path))
   }
-  config <- orderly_config_get(info$root, FALSE)
+  config <- orderly_config(info$root, FALSE)
   recipe <- orderly_recipe$new(info$name, config, TRUE, path)
 
   found <- withr::with_dir(path, recipe_exists_artefacts(recipe))

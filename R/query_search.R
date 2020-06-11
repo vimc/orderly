@@ -147,7 +147,7 @@
 ##'                         "other", root = root)
 orderly_search <- function(query, name, parameters = NULL, draft = FALSE,
                            root = NULL, locate = TRUE, remote = NULL) {
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
   assert_scalar_character(name)
   parameters <- query_check_parameters(parameters)
   draft <- query_check_draft(draft)

@@ -96,7 +96,7 @@ orderly_use_package <- function(packages, name = NULL, root= NULL,
 ##' @rdname orderly_use
 orderly_use_gitignore <- function(root = NULL, locate = TRUE,
                                   show = TRUE, edit = TRUE, prompt = TRUE) {
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
   root <- config$root
 
   ## Do we check that the project here already has git?  We can do

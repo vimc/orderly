@@ -1,3 +1,27 @@
+##' Retrieve orderly config object.
+##'
+##' @inheritParams orderly_list
+##'
+##' @return An R6 object representing the orderly config.
+##' @export
+##'
+##' @examples
+##' # The orderly demo, with lots of potential reports:
+##' path <- orderly::orderly_example("demo")
+##'
+##' orderly::orderly_config(path)
+orderly_config <- function(root = NULL, locate = TRUE) {
+  if (inherits(root, "orderly_config")) {
+    root
+  } else if (is.null(root) && locate) {
+    orderly_locate_config()
+  } else if (is.character(root)) {
+    orderly_config_$new(root)
+  } else {
+    stop("Invalid input")
+  }
+}
+
 orderly_locate_config <- function() {
   root <- find_file_descend("orderly_config.yml")
   if (is.null(root)) {
@@ -5,20 +29,6 @@ orderly_locate_config <- function() {
   }
   orderly_config_$new(root)
 }
-
-
-orderly_config_get <- function(x, locate = FALSE) {
-  if (inherits(x, "orderly_config")) {
-    x
-  } else if (is.null(x) && locate) {
-    orderly_locate_config()
-  } else if (is.character(x)) {
-    orderly_config_$new(x)
-  } else {
-    stop("Invalid input")
-  }
-}
-
 
 orderly_config_ <- R6::R6Class(
   "orderly_config",

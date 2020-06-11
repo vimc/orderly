@@ -111,7 +111,7 @@ orderly_develop_clean <- function(name = NULL, root = NULL, locate = TRUE) {
 
 
 orderly_develop_location <- function(name, root, locate) {
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
   config <- check_orderly_archive_version(config)
 
   if (is.null(name)) {
@@ -147,7 +147,7 @@ orderly_status <- function(path) {
   assert_is_directory(path, FALSE)
   assert_file_exists(file.path(path, "orderly.yml"))
   ## TODO: this needs making more robust
-  config <- orderly_config_get(file.path(path, "..", ".."), FALSE)
+  config <- orderly_config(file.path(path, "..", ".."), FALSE)
   info <- orderly_recipe$new(basename(path), config, TRUE)
 
   internal <- list(orderly = "orderly.yml",

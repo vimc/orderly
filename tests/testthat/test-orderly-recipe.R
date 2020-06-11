@@ -152,7 +152,7 @@ test_that("resource case matters", {
   file.rename(file.path(path, "src", "example", "script.R"),
               file.path(path, "src", "example", "script.r"))
 
-  config <- orderly_config_get(path, FALSE)
+  config <- orderly_config(path, FALSE)
   expect_error(orderly_recipe$new("example", config),
                "Script file does not exist: 'script.R'")
 })
