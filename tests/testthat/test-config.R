@@ -30,7 +30,7 @@ test_that("can retrieve config", {
     cfg3 <- orderly_config(locate = TRUE)
   })
   expect_is(cfg3, "orderly_config")
-  expect_identical(cfg, cfg3)
+  expect_equal(cfg, cfg3)
 })
 
 
