@@ -24,6 +24,7 @@ test_that("custom fields", {
   expect_error(report_db_init(con, config, FALSE),
                "custom fields 'author' not present in existing database")
 
+  unlockBinding(quote(fields), config)
   config$fields <- NULL
   expect_error(report_db_init(con, config, FALSE),
                "custom fields 'requester', 'comments' in database")
