@@ -30,20 +30,8 @@ orderly_locate_config <- function() {
   orderly_config_$new(root)
 }
 
-
-##' Orderly config
 ##'
-##' An object representing orderly config. Reads the yml, validates
-##' it and makes the options available.
-##'
-##' @return An R6 object representing the orderly config.
-##' @export
-##'
-##' @examples
-##' # The orderly demo, with lots of potential reports:
-##' path <- orderly::orderly_example("demo")
-##'
-##' orderly::orderly_config_$new(path)
+##' @rdname orderly_config
 orderly_config_ <- R6::R6Class(
   "orderly_config",
 
@@ -78,7 +66,7 @@ orderly_config_ <- R6::R6Class(
     database = NULL,
     ##' @field archive_version Orderly version number of the archive
     archive_version = NULL,
-    ##' @field run_options
+    ##' @field run_options List of run options
     run_options = list(),
 
 
