@@ -1,6 +1,6 @@
 # orderly 1.2.12
 
-* Add new function `orderly_config` to return an object representing the config (VIMC-4048)
+* Add new function `orderly::orderly_config` to return an object representing the config (VIMC-4048)
 
 # orderly 1.2.11
 
