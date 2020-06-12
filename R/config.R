@@ -94,7 +94,9 @@ orderly_config_ <- R6::R6Class(
       if (validate) {
         private$validate()
       }
-      lockBinding(quote(raw), self)
+      lock_bindings(c("raw", "destination", "fields", "remote", "vault",
+                      "global_resources", "changelog", "tags", "database"),
+                    self)
     },
 
     ##' @description
@@ -235,16 +237,6 @@ config_validate <- function(self, filename) {
     raw[["database"]], filename)
 
   self$archive_version <- read_orderly_archive_version(".")
-
-  lockBinding(quote(destination), self)
-  lockBinding(quote(fields), self)
-  lockBinding(quote(remote), self)
-  lockBinding(quote(vault), self)
-  lockBinding(quote(global_resources), self)
-  lockBinding(quote(changelog), self)
-  lockBinding(quote(tags), self)
-  lockBinding(quote(database), self)
-
   invisible(self)
 }
 

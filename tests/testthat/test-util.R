@@ -900,3 +900,21 @@ test_that("first_dirname gets the first dir part of the filename", {
     first_dirname(c("test/file/name.txt", "test", ".", "testing/file.txt")),
     c("test", "test", ".", "testing"))
 })
+
+test_that("lock_bindings can lock multiple variables at once", {
+  test_class <- R6::R6Class(
+    "test_class",
+
+    public = list(
+      a = "a",
+      b = "b",
+      initialize = function() {
+        lock_bindings(c("a", "b"), self)
+      }
+    )
+  )
+
+  obj <- test_class$new()
+  expect_error(obj$a <- "2", "cannot change value of locked binding for 'a'")
+  expect_error(obj$b <- "2", "cannot change value of locked binding for 'b'")
+})
