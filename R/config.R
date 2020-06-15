@@ -34,6 +34,7 @@ orderly_locate_config <- function() {
 ##' @rdname orderly_config
 orderly_config_ <- R6::R6Class(
   "orderly_config",
+  cloneable = FALSE,
 
   public = list(
     ## The core data will remain available as top-level keys, but

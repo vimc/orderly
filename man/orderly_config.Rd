@@ -70,7 +70,6 @@ connection args for (possibly multiple) databases}
 \item \href{#method-server_options}{\code{orderly_config_$server_options()}}
 \item \href{#method-add_run_option}{\code{orderly_config_$add_run_option()}}
 \item \href{#method-get_run_option}{\code{orderly_config_$get_run_option()}}
-\item \href{#method-clone}{\code{orderly_config_$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -143,23 +142,6 @@ Retrieve value of a run option
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{name}}{Name of run option}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{orderly_config_$clone(deep = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
 }
 \if{html}{\out{</div>}}
 }
