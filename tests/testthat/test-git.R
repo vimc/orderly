@@ -303,7 +303,6 @@ test_that("commit hash intepreted as string to avoid duck typing issues", {
   expect_equal(colnames(commits), c("id", "date_time", "age"))
   expect_type(commits$id, "character")
   expect_equal(commits$id, "123e456")
-  expect_equal(commits$date_time, "2020-06-12 11:30:13")
 })
 
 test_that("can get report list from git", {
