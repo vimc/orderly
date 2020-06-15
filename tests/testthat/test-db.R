@@ -16,7 +16,7 @@ test_that("custom fields", {
 
   expect_true(DBI::dbExistsTable(con, "orderly_schema"))
 
-  config <- orderly_config_get(path)
+  config <- orderly_config(path)
   expect_error(report_db_init(con, config, TRUE),
                "Table 'orderly_schema' already exists")
 
@@ -24,6 +24,7 @@ test_that("custom fields", {
   expect_error(report_db_init(con, config, FALSE),
                "custom fields 'author' not present in existing database")
 
+  unlockBinding(quote(fields), config)
   config$fields <- NULL
   expect_error(report_db_init(con, config, FALSE),
                "custom fields 'requester', 'comments' in database")
@@ -113,7 +114,7 @@ test_that("dialects", {
   expect_false(isTRUE(all.equal(s, p)))
 
   path <- prepare_orderly_example("minimal")
-  config <- orderly_config$new(path)
+  config <- orderly_config_$new(path)
   con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
   on.exit(DBI::dbDisconnect(con))
   expect_error(report_db_init_create(con, config, "postgres"),

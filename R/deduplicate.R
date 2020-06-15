@@ -56,7 +56,7 @@
 ##'   error = function(e) NULL)
 orderly_deduplicate <- function(root = NULL, locate = TRUE, dry_run = TRUE,
                                 quiet = FALSE) {
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
   info <- orderly_deduplicate_info(config)
   if (!quiet) {
     print(info)

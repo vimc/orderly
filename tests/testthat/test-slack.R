@@ -165,7 +165,7 @@ test_that("main interface", {
 
   config <- withr::with_envvar(
     c(ORDERLY_API_SERVER_IDENTITY = "myserver"),
-    orderly_config$new(path))
+    orderly_config_$new(path))
 
   r <- post_success(dat, config)
 
@@ -205,7 +205,7 @@ test_that("main interface", {
 
   config <- withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = "production"),
-    orderly_config$new(path))
+    orderly_config_$new(path))
 
   r <- post_success(dat, config)
   expect_equal(r$slack$status_code, 200L)
@@ -216,7 +216,7 @@ test_that("main interface", {
 
   config <- withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = "testing"),
-    orderly_config$new(path))
+    orderly_config_$new(path))
 
   r <- post_success(dat, config)
   expect_equal(r$slack$status_code, 200L)
@@ -440,7 +440,7 @@ test_that("main teams interface", {
 
   config <- withr::with_envvar(
     c(ORDERLY_API_SERVER_IDENTITY = "myserver"),
-    orderly_config$new(path))
+    orderly_config_$new(path))
 
   r <- post_success(dat, config)
 
@@ -478,7 +478,7 @@ test_that("look up environment variables before hook send", {
   env <- c(ORDERLY_API_SERVER_IDENTITY = "myserver",
            ORDERLY_SLACK_URL = "https://httpbin.org/post")
 
-  config <- withr::with_envvar(env, orderly_config$new(path))
+  config <- withr::with_envvar(env, orderly_config_$new(path))
 
   r <- post_success(dat, config)
   expect_equal(r, list())

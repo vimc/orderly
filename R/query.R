@@ -35,7 +35,7 @@ version_id_re <- "^([0-9]{8}-[0-9]{6})-([[:xdigit:]]{4})([[:xdigit:]]{4})$"
 ##' # Reports that _could_ be run:
 ##' orderly::orderly_list(path)
 orderly_list <- function(root = NULL, locate = TRUE) {
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
   basename(list_dirs(path_src(config$root)))
 }
 
@@ -137,7 +137,7 @@ orderly_list_archive <- function(root = NULL, locate = TRUE) {
 ##' orderly::orderly_latest("example", root = path)
 orderly_latest <- function(name = NULL, root = NULL, locate = TRUE,
                            draft = FALSE, must_work = TRUE) {
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
 
   if (is.null(name)) {
     d <- orderly_list2(draft, config, FALSE)
@@ -166,7 +166,7 @@ orderly_latest <- function(name = NULL, root = NULL, locate = TRUE,
 
 orderly_list2 <- function(draft, root = NULL, locate = TRUE,
                           include_failed = FALSE) {
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
   path <- if (draft) path_draft else path_archive
   check <- list_dirs(path(config$root))
   check_run_rds <- draft && !include_failed
@@ -178,7 +178,7 @@ orderly_list2 <- function(draft, root = NULL, locate = TRUE,
 
 orderly_find_name <- function(id, config, locate = FALSE, draft = TRUE,
                               must_work = FALSE) {
-  config <- orderly_config_get(config, locate)
+  config <- orderly_config(config, locate)
   path <- (if (draft) path_draft else path_archive)(config$root)
   ## NOTE: listing draft/archive rather than using orderly_list here
   ## because it allows for the existance of an archived report that we
@@ -205,7 +205,7 @@ orderly_find_name <- function(id, config, locate = FALSE, draft = TRUE,
 ## update this later if needed.
 orderly_find_report <- function(id, name, config, locate = FALSE,
                                 draft = TRUE, must_work = FALSE) {
-  config <- orderly_config_get(config, locate)
+  config <- orderly_config(config, locate)
 
   if (is.character(draft)) {
     draft <- match_value(draft, c("always", "newer", "never"))

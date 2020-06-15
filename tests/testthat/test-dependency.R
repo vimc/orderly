@@ -351,7 +351,7 @@ test_that("Pinned reports", {
 test_that("source - downstream", {
   path <- prepare_orderly_example("depends", testing = TRUE)
 
-  config <- orderly_config$new(path)
+  config <- orderly_config_$new(path)
   g <- orderly_graph("example", root = path,
                      direction = "downstream", use = "src")
 
@@ -383,7 +383,7 @@ test_that("source - upstream", {
 
 test_that("can't get dependencies for nonexistant report", {
   path <- prepare_orderly_example("minimal")
-  config <- orderly_config$new(path)
+  config <- orderly_config_$new(path)
   expect_error(
     orderly_graph_src("missing", config, "upstream"),
     "Unknown source report 'missing'")
@@ -393,7 +393,7 @@ test_that("can't get dependencies for nonexistant report", {
 test_that("prevent excessive recursion", {
   path <- prepare_orderly_example("depends", testing = TRUE)
 
-  config <- orderly_config$new(path)
+  config <- orderly_config_$new(path)
   expect_error(
     orderly_graph_src("depend3", config, "upstream", max_depth = 1),
     "The tree is very large or degenerate")
@@ -409,7 +409,7 @@ test_that("id attribution", {
   dat$depends$example$id <- id
   yaml::write_yaml(dat, p)
 
-  config <- orderly_config$new(path)
+  config <- orderly_config_$new(path)
   g <- orderly_graph_src("example", config, "downstream")
 
   children <- g$root$children
@@ -436,7 +436,7 @@ test_that("detect loop", {
                  "        output.rds: output.rds"),
                file.path(path, "src", "example", "orderly.yml"))
 
-  config <- orderly_config$new(path)
+  config <- orderly_config_$new(path)
   expect_error(
     orderly_graph_src("depend3", config, "upstream"),
     "Detected circular dependency: 'depend2' -> 'example' -> 'depend2'")

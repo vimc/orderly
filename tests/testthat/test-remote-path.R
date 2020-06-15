@@ -19,7 +19,7 @@ test_that("get remote", {
   path1 <- prepare_orderly_example("minimal")
   path2 <- prepare_orderly_example("minimal")
 
-  obj <- get_remote(path1, orderly_config$new(path2))
+  obj <- get_remote(path1, orderly_config_$new(path2))
   expect_is(obj, "orderly_remote_path")
   expect_equal(normalizePath(obj$name), normalizePath(path1))
 })

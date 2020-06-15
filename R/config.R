@@ -1,45 +1,82 @@
-orderly_locate_config <- function() {
-  root <- find_file_descend("orderly_config.yml")
-  if (is.null(root)) {
-    stop("Reached root without finding 'orderly_config.yml'")
-  }
-  orderly_config$new(root)
-}
-
-
-orderly_config_get <- function(x, locate = FALSE) {
-  if (inherits(x, "orderly_config")) {
-    x
-  } else if (is.null(x) && locate) {
+##' Retrieve orderly config object.
+##'
+##' @inheritParams orderly_list
+##'
+##' @return An R6 object representing the orderly config.
+##' @export
+##'
+##' @examples
+##' # The orderly demo, with lots of potential reports:
+##' path <- orderly::orderly_example("demo")
+##'
+##' orderly::orderly_config(path)
+orderly_config <- function(root = NULL, locate = TRUE) {
+  if (inherits(root, "orderly_config")) {
+    root
+  } else if (is.null(root) && locate) {
     orderly_locate_config()
-  } else if (is.character(x)) {
-    orderly_config$new(x)
+  } else if (is.character(root)) {
+    orderly_config_$new(root)
   } else {
     stop("Invalid input")
   }
 }
 
+orderly_locate_config <- function() {
+  root <- find_file_descend("orderly_config.yml")
+  if (is.null(root)) {
+    stop("Reached root without finding 'orderly_config.yml'")
+  }
+  orderly_config_$new(root)
+}
 
-orderly_config <- R6::R6Class(
+##'
+##' @rdname orderly_config
+orderly_config_ <- R6::R6Class(
   "orderly_config",
+  cloneable = FALSE,
 
   public = list(
     ## The core data will remain available as top-level keys, but
     ## we'll make this extensible when we do the plugins.
+    ##' @field root Root dir of the orderly repository
     root = NULL,
+    ##' @field raw The raw orderly config yaml
     raw = NULL,
 
+    ##' @field destination DB connection configuration for where
+    ##' to store orderly output datbase. Defaults to local SQLite
+    ##' db `orderly.sqlite`
     destination = NULL,
+    ##' @field fields Configuration of fields in reports, specifying
+    ##' which are required
     fields = NULL,
+    ##' @field remote Configuration of remote sources i.e. shared
+    ##' copy of orderly on a remote machine
     remote = NULL,
+    ##' @field vault Vault server connection information
     vault = NULL,
+    ##' @field global_resources Path to dir containing global resources.
     global_resources = NULL,
+    ##' @field changelog Changelog type configuration
     changelog = NULL,
+    ##' @field tags List of available tags for orderly reports.
     tags = NULL,
+    ##' @field database Database configuation specifying driver and
+    ##' connection args for (possibly multiple) databases
     database = NULL,
+    ##' @field archive_version Orderly version number of the archive
     archive_version = NULL,
+    ##' @field run_options List of run options
     run_options = list(),
 
+
+    ##' @description
+    ##' Create an object representing orderly config
+    ##' @param root Root dir of the orderly repository
+    ##' @param validate If TRUE migrate cfg to handle any
+    ##' format changes and validate structure if well formed
+    ##' for each of the cfg fields
     initialize = function(root, validate = TRUE) {
       assert_is_directory(root)
       self$root <- normalizePath(root, mustWork = TRUE)
@@ -56,23 +93,20 @@ orderly_config <- R6::R6Class(
       }
 
       if (validate) {
-        self$validate()
+        private$validate()
       }
+      lock_bindings(c("raw", "destination", "fields", "remote", "vault",
+                      "global_resources", "changelog", "tags", "database"),
+                    self)
     },
 
-    migrate = function() {
-      self$raw <- config_migrate(self$raw, "orderly_config.yml")
-    },
-
-    validate = function() {
-      self$migrate()
-      withr::with_dir(
-        self$root,
-        withr::with_envvar(
-          orderly_envir_read("."),
-          config_validate(self, "orderly_config.yml")))
-    },
-
+    ##' @description
+    ##' Get connection options for the current server. This is
+    ##' the details from the "remote" section for the server
+    ##' being run on. Server identified via env var
+    ##' `ORDERLY_API_SERVER_IDENTITY`
+    ##' @return Options for current server if can be identified,
+    ##' otherwise NULL
     server_options = function() {
       i <- vlapply(self$remote, function(x) isTRUE(x$identity))
       if (!any(i)) {
@@ -83,14 +117,39 @@ orderly_config <- R6::R6Class(
       ret[setdiff(names(ret), c("identity", "driver", "args"))]
     },
 
+
+    ##' @description
+    ##' Add a key-value pair run option
+    ##' @param name Name of run option
+    ##' @param value Value for run option
     add_run_option = function(name, value) {
       self$run_options[[name]] <- value
     },
 
+
+    ##' @description
+    ##' Retrieve value of a run option
+    ##' @param name Name of run option
     get_run_option = function(name) {
       self$run_options[[name]]
     }
-  ))
+  ),
+
+  private = list(
+    migrate = function() {
+      self$raw <- config_migrate(self$raw, "orderly_config.yml")
+    },
+
+    validate = function() {
+      private$migrate()
+      withr::with_dir(
+        self$root,
+        withr::with_envvar(
+          orderly_envir_read("."),
+          config_validate(self, "orderly_config.yml")))
+    }
+  )
+)
 
 
 config_migrate <- function(raw, filename) {
@@ -179,7 +238,6 @@ config_validate <- function(self, filename) {
     raw[["database"]], filename)
 
   self$archive_version <- read_orderly_archive_version(".")
-
   invisible(self)
 }
 

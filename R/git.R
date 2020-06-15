@@ -123,12 +123,10 @@ git_commits <- function(branch, root = NULL) {
   }
   commits <- git_run(args, root = root, check = TRUE)$output
   commits <- utils::read.table(text = commits, stringsAsFactors = FALSE,
-                               sep = ",", col.names = c("id", "date_time"))
+                               sep = ",", col.names = c("id", "date_time"),
+                               colClasses = c("character", "integer"))
   commits$age <- calculate_age(commits$date_time)
   commits$date_time <- convert_unix_to_iso_time(commits$date_time)
-  ## ID can be parsed as an integer by read.table if by chance the id contains
-  ## only numbers
-  commits$id <- as.character(commits$id)
   commits
 }
 

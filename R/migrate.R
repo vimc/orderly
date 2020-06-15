@@ -49,7 +49,7 @@ orderly_migrate <- function(root = NULL, locate = TRUE, to = NULL,
   oo <- options(orderly.nowarnings = TRUE)
   on.exit(options(oo))
 
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
   root <- config$root
 
   migrations <- migrate_plan(config$archive_version, to)

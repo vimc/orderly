@@ -20,7 +20,7 @@
 ##' ids <- orderly::orderly_workflow("my_workflow", root = path)
 orderly_workflow <- function(name, envir = NULL, root = NULL, locate = TRUE,
                              message = NULL, instance = NULL, remote = NULL) {
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
   workflow <- orderly_workflow_get(name, config)
   workflow$run(envir, message, instance, remote)
 }

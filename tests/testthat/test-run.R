@@ -60,7 +60,7 @@ test_that("sink imbalance", {
   skip_on_cran()
   skip_on_cran_windows()
   path <- prepare_orderly_example("minimal")
-  config <- orderly_config$new(path)
+  config <- orderly_config_$new(path)
   path_script <- file.path(path, "src/example/script.R")
   txt <- readLines(path_script)
   writeLines(c("sink('somefile', split = TRUE)", txt), path_script)
@@ -95,7 +95,7 @@ test_that("leave connection open", {
   ## garbage collected.
   e <- new.env(parent = .GlobalEnv)
   path <- prepare_orderly_example("minimal")
-  config <- orderly_config$new(path)
+  config <- orderly_config_$new(path)
   path_script <- file.path(path, "src/example/script.R")
 
   writeLines(
@@ -402,7 +402,7 @@ test_that("required field OK", {
   yml_path <- file.path(path_example, "orderly.yml")
   minimal_yml <- readLines(yml_path)
   # get required fields out of config
-  config <- orderly_config$new(path)
+  config <- orderly_config_$new(path)
   req_fields <- config$fields$name[config$fields$required]
   # set required fields to correct type
   minimal_yml <- c(minimal_yml, sprintf("%s: %s", req_fields[1], "character"))
@@ -425,7 +425,7 @@ test_that("missing required field", {
   yml_path <- file.path(path_example, "orderly.yml")
   minimal_yml <- readLines(yml_path)
   # get required fields out of config
-  config <- orderly_config$new(path)
+  config <- orderly_config_$new(path)
   req_fields <- config$fields$name[config$fields$required]
   # iterate over the required fields...
   for (field in req_fields) {
@@ -456,7 +456,7 @@ test_that("required field wrong type", {
   yml_path <- file.path(path_example, "orderly.yml")
   minimal_yml <- readLines(yml_path)
   # get required fields out of config
-  config <- orderly_config$new(path)
+  config <- orderly_config_$new(path)
   req_fields <- config$fields$name[config$fields$required]
   # add the second required to the yml with the wrong type
   minimal_yml <- c(minimal_yml, sprintf("%s: %s", req_fields[1], "character"))

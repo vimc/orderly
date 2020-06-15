@@ -93,7 +93,7 @@ orderly_graph <- function(name, id = "latest", root = NULL, locate = TRUE,
                           direction = "downstream", propagate = TRUE,
                           max_depth = 100, show_all = FALSE,
                           use = "archive") {
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
   use <- match_value(use, c("archive", "src"))
   if (use == "archive") {
     orderly_graph_archive(name, id, config, direction, propagate,

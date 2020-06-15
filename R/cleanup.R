@@ -39,7 +39,7 @@
 ##' orderly::orderly_list_archive(root = path)
 orderly_cleanup <- function(name = NULL, root = NULL, locate = TRUE,
                             draft = TRUE, data = TRUE, failed_only = FALSE) {
-  config <- orderly_config_get(root, locate)
+  config <- orderly_config(root, locate)
   if (draft) {
     orderly_cleanup_drafts(config, name, failed_only)
   }
