@@ -964,7 +964,7 @@ first_dirname <- function(paths) {
 }
 
 lock_bindings <- function(syms, env) {
-  for(sym in syms) {
+  for (sym in syms) {
     lockBinding(sym, env)
   }
   invisible(NULL)
