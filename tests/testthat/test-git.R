@@ -293,6 +293,19 @@ test_that("can get commit history for a branch", {
   expect_true(commits$id != other_commits$id)
 })
 
+test_that("commit hash intepreted as string to avoid duck typing issues", {
+  testthat::skip_on_cran()
+  path <- prepare_orderly_git_example()
+
+  mockery::stub(git_commits, "git_run", list(output = "123e456,1591957813"))
+  commits <- git_commits("master", path[["local"]])
+  expect_equal(nrow(commits), 1)
+  expect_equal(colnames(commits), c("id", "date_time", "age"))
+  expect_type(commits$id, "character")
+  expect_equal(commits$id, "123e456")
+  expect_equal(commits$date_time, "2020-06-12 11:30:13")
+})
+
 test_that("can get report list from git", {
   testthat::skip_on_cran()
   path <- prepare_orderly_git_example()
