@@ -88,5 +88,3 @@ git_pull <- function(root = NULL) {
   orderly_log("git", "pull")
   git_run("pull", root = root, check = TRUE)
 }
-
-
