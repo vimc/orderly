@@ -943,26 +943,6 @@ with_retry <- function(callback, n = 10, backoff = 1, match = NULL) {
                result$value$message), call. = FALSE)
 }
 
-calculate_age <- function(times) {
-  as.integer(as.numeric(Sys.time(), "secs")) - times
-}
-
-convert_unix_to_iso_time <- function(times) {
-  strftime(as.POSIXct(times, origin = "1970-01-01", tz = "UTC"))
-}
-
-first_dirname <- function(paths) {
-  first_dir <- function(path) {
-    if (basename(path) == path) {
-      dir <- path
-    } else {
-      dir <- first_dirname(dirname(path))
-    }
-    dir
-  }
-  vcapply(paths, first_dir, USE.NAMES = FALSE)
-}
-
 lock_bindings <- function(syms, env) {
   for (sym in syms) {
     lockBinding(sym, env)
