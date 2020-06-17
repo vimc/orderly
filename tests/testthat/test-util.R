@@ -887,12 +887,6 @@ test_that("Can filter error messages", {
     with_retry(g, n = 2, match = "Resource not ready", backoff = 0))
 })
 
-test_that("first_dirname gets the first dir part of the filename", {
-  expect_equal(
-    first_dirname(c("test/file/name.txt", "test", ".", "testing/file.txt")),
-    c("test", "test", ".", "testing"))
-})
-
 test_that("lock_bindings can lock multiple variables at once", {
   test_class <- R6::R6Class(
     "test_class",
