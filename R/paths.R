@@ -48,13 +48,6 @@ path_orderly_workflow_dir <- function(path, workflow_name) {
   file.path(path, "workflows", paste0(workflow_name, ".yml"))
 }
 
-path_runner_log <- function(path) {
-  file.path(path, "runner", "log")
-}
-path_runner_id <- function(path) {
-  file.path(path, "runner", "id")
-}
-
 
 ## Used in migrations
 path_orderly_run_rds_backup <- function(path, version) {

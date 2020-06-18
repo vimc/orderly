@@ -593,43 +593,6 @@ test_that("show_question interactive", {
 })
 
 
-test_that("periodic", {
-  e <- new.env(parent = emptyenv())
-  e$x <- 1
-
-  skip_on_windows() # timing on windows is a pain
-  skip_on_cran() # gc may cause occasional failures here
-  gc() # avoid slow collections during this test
-  f <- function() {
-    e$x <- e$x + 1
-  }
-  g <- periodic(f, 0.1)
-  g()
-  expect_equal(e$x, 1)
-  Sys.sleep(0.2)
-  g()
-  expect_equal(e$x, 2)
-  g()
-  expect_equal(e$x, 2)
-})
-
-
-test_that("protect", {
-  f <- function() {
-    if (x < 0) {
-      stop("negative x")
-    } else {
-      x
-    }
-  }
-  g <- protect(f)
-  x <- 1
-  expect_equal(g(), 1)
-  x <- -1
-  expect_null(g())
-})
-
-
 test_that("backup db", {
   skip_on_cran_windows()
   list_tables <- function(path) {
@@ -885,20 +848,6 @@ test_that("Can filter error messages", {
     "Unexpected error")
   expect_true(
     with_retry(g, n = 2, match = "Resource not ready", backoff = 0))
-})
-
-test_that("calculating age uses seconds", {
-  now <- Sys.time()
-  times <- c(as.integer(now - 10000), as.integer(now + 10000))
-  ## Stub Sys.time for easy of testing
-  mockery::stub(calculate_age, "Sys.time", now)
-  expect_equal(calculate_age(times), c(10000, -10000))
-})
-
-test_that("first_dirname gets the first dir part of the filename", {
-  expect_equal(
-    first_dirname(c("test/file/name.txt", "test", ".", "testing/file.txt")),
-    c("test", "test", ".", "testing"))
 })
 
 test_that("lock_bindings can lock multiple variables at once", {

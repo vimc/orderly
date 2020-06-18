@@ -705,29 +705,6 @@ sqlite_backup <- function(src, dest) {
 }
 
 
-periodic <- function(fun, period) {
-  fun <- match.fun(fun)
-  force(period)
-  env <- new.env(parent = emptyenv())
-  env$last <- Sys.time()
-  function() {
-    now <- Sys.time()
-    if (now > env$last + period) {
-      fun()
-      env$last <- now
-    }
-  }
-}
-
-
-protect <- function(fun) {
-  fun <- match.fun(fun)
-  function() {
-    tryCatch(fun(), error = function(e) NULL)
-  }
-}
-
-
 ## Does not exist in older R (< 3.3.0 I think)
 file_size <- function(path) {
   file.info(path, extra_cols = FALSE)$size
@@ -941,26 +918,6 @@ with_retry <- function(callback, n = 10, backoff = 1, match = NULL) {
   }
   stop(sprintf("Failed to run command after %d attempts: %s", n,
                result$value$message), call. = FALSE)
-}
-
-calculate_age <- function(times) {
-  as.integer(as.numeric(Sys.time(), "secs")) - times
-}
-
-convert_unix_to_iso_time <- function(times) {
-  strftime(as.POSIXct(times, origin = "1970-01-01", tz = "UTC"))
-}
-
-first_dirname <- function(paths) {
-  first_dir <- function(path) {
-    if (basename(path) == path) {
-      dir <- path
-    } else {
-      dir <- first_dirname(dirname(path))
-    }
-    dir
-  }
-  vcapply(paths, first_dir, USE.NAMES = FALSE)
 }
 
 lock_bindings <- function(syms, env) {

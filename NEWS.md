@@ -1,3 +1,7 @@
+# orderly 1.2.13
+
+* Remove `orderly::orderly_runner` which has been moved to `vimc/orderly.server` (VIMC-4073)
+
 # orderly 1.2.12
 
 * Add new function `orderly::orderly_config` to return an object representing the config (VIMC-4048)

@@ -29,23 +29,6 @@ git_detach_head_at_ref <- function(ref, root = NULL) {
   prev
 }
 
-git_ref_to_sha <- function(ref, root = NULL, check = FALSE) {
-  assert_scalar_character(ref)
-  res <- git_run(c("rev-parse", ref), root = root, check = FALSE)
-  if (res$success) {
-    res$output
-  } else if (check) {
-    stop(sprintf("Git reference '%s' not found", ref), call. = FALSE)
-  } else {
-    NA_character_
-  }
-}
-
-git_ref_exists <- function(ref, root = NULL) {
-  assert_scalar_character(ref)
-  git_run(c("merge-base", ref, "HEAD"), root = root, check = FALSE)$success
-}
-
 git_status <- function(root = NULL, ignore_untracked = FALSE) {
   args <- c("status", "--porcelain",
             if (ignore_untracked) "--untracked-files=no")
@@ -87,93 +70,4 @@ git_fetch <- function(root = NULL) {
 git_pull <- function(root = NULL) {
   orderly_log("git", "pull")
   git_run("pull", root = root, check = TRUE)
-}
-
-git_branches_no_merged <- function(root = NULL, include_master = FALSE) {
-  branches <- git_run(c("for-each-ref", "refs/remotes/origin",
-                        "--sort=-committerdate",
-                        "--format='%(refname:lstrip=3),%(committerdate:unix)'",
-                        "--no-merged=origin/master"),
-                      root = root, check = TRUE)$output
-  if (isTRUE(include_master)) {
-    master <- git_run(c("for-each-ref", "refs/remotes/origin/master",
-                        "--format='%(refname:lstrip=3),%(committerdate:unix)'"),
-                      root = root, check = TRUE)$output
-    branches <- c(master, branches)
-  }
-  branches <- utils::read.table(text = branches, stringsAsFactors = FALSE,
-                                sep = ",", col.names = c("name", "last_commit"))
-  branches <- branches[branches$name != "gh-pages", ]
-  branches$last_commit_age <- calculate_age(branches$last_commit)
-  branches$last_commit <- convert_unix_to_iso_time(branches$last_commit)
-  branches
-}
-
-## This gets last 25 commits from master
-## if not master then gets the unmerged commits (limit 25)
-git_commits <- function(branch, root = NULL) {
-  if (branch == "master") {
-    args <- c("log", "--pretty='%h,%cd'", "--date=unix", "--max-count=25",
-              sprintf("refs/remotes/origin/%s", branch))
-  } else {
-    remote_branch <- sprintf("refs/remotes/origin/%s", branch)
-    args <- c("log", "--pretty='%h,%cd'", "--date=unix", "--max-count=25",
-              paste0("--cherry refs/remotes/origin/master...", remote_branch),
-              remote_branch)
-  }
-  commits <- git_run(args, root = root, check = TRUE)$output
-  commits <- utils::read.table(text = commits, stringsAsFactors = FALSE,
-                               sep = ",", col.names = c("id", "date_time"),
-                               colClasses = c("character", "integer"))
-  commits$age <- calculate_age(commits$date_time)
-  commits$date_time <- convert_unix_to_iso_time(commits$date_time)
-  commits
-}
-
-
-get_reports <- function(branch, commit, root) {
-  if (branch == "master") {
-    ## Get all reports in commit if on master branch
-    reports <- git_run(c("ls-tree", "--name-only", "-d",
-                         sprintf("%s:src/", commit)),
-                       root = root, check = TRUE)$output
-  } else {
-    ## Ideally we would use plumbing function diff-tree here instead of
-    ## diff but at time of writing this was not supporting ... syntax
-    ## As we have control over the output format this is probably safe to use
-    ## the porcelain version
-    reports <- git_run(
-      c("diff", "--name-only", "--relative=src/",
-      paste0("refs/remotes/origin/master...", commit),
-      "-- src/"),
-      root = root, check = TRUE)$output
-    ## We only want to return the reports which have changes i.e. the dirname
-    ## of any changed files
-    reports <- unique(first_dirname(reports))
-  }
-  reports
-}
-
-get_report_parameters <- function(report, commit, root) {
-  tryCatch({
-    yml <- git_run(
-      c("show", paste0(commit, file.path(":src", report, "orderly.yml"))),
-      root = root, check = TRUE)
-    if (!isTRUE(yml$success)) {
-      stop("Non zero exit code from git")
-    }
-  },
-  error = function(e) {
-    stop(sprintf(
-      "Failed to get report parameters for report '%s' and commit '%s':\n%s",
-      report, commit, e$message))
-  })
-  tryCatch(
-    report_cfg <- yaml_load(yml$output),
-    error = function(e) {
-      stop(sprintf("Failed to parse yml for report '%s' and commit '%s':\n%s",
-           report, commit, e$message))
-    }
-  )
-  report_cfg$parameters
 }

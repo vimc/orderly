@@ -191,3 +191,8 @@ expect_log_message <- function(expr, ...) {
 if (Sys.getenv("NOT_CRAN") != "true") {
   options(orderly.nogit = TRUE)
 }
+
+append_lines <- function(text, filename) {
+  prev <- readLines(filename)
+  writeLines(c(prev, text), filename)
+}
