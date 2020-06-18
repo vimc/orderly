@@ -1,9 +1,0 @@
-data:
-  dat:
-    query: SELECT name, number FROM thing
-script: script.R
-resources: parameters.json
-artefacts:
-  staticgraph:
-    description: A graph of things
-    filenames: mygraph.png
