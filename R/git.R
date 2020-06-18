@@ -29,23 +29,6 @@ git_detach_head_at_ref <- function(ref, root = NULL) {
   prev
 }
 
-git_ref_to_sha <- function(ref, root = NULL, check = FALSE) {
-  assert_scalar_character(ref)
-  res <- git_run(c("rev-parse", ref), root = root, check = FALSE)
-  if (res$success) {
-    res$output
-  } else if (check) {
-    stop(sprintf("Git reference '%s' not found", ref), call. = FALSE)
-  } else {
-    NA_character_
-  }
-}
-
-git_ref_exists <- function(ref, root = NULL) {
-  assert_scalar_character(ref)
-  git_run(c("merge-base", ref, "HEAD"), root = root, check = FALSE)$success
-}
-
 git_status <- function(root = NULL, ignore_untracked = FALSE) {
   args <- c("status", "--porcelain",
             if (ignore_untracked) "--untracked-files=no")
