@@ -593,43 +593,6 @@ test_that("show_question interactive", {
 })
 
 
-test_that("periodic", {
-  e <- new.env(parent = emptyenv())
-  e$x <- 1
-
-  skip_on_windows() # timing on windows is a pain
-  skip_on_cran() # gc may cause occasional failures here
-  gc() # avoid slow collections during this test
-  f <- function() {
-    e$x <- e$x + 1
-  }
-  g <- periodic(f, 0.1)
-  g()
-  expect_equal(e$x, 1)
-  Sys.sleep(0.2)
-  g()
-  expect_equal(e$x, 2)
-  g()
-  expect_equal(e$x, 2)
-})
-
-
-test_that("protect", {
-  f <- function() {
-    if (x < 0) {
-      stop("negative x")
-    } else {
-      x
-    }
-  }
-  g <- protect(f)
-  x <- 1
-  expect_equal(g(), 1)
-  x <- -1
-  expect_null(g())
-})
-
-
 test_that("backup db", {
   skip_on_cran_windows()
   list_tables <- function(path) {

@@ -705,29 +705,6 @@ sqlite_backup <- function(src, dest) {
 }
 
 
-periodic <- function(fun, period) {
-  fun <- match.fun(fun)
-  force(period)
-  env <- new.env(parent = emptyenv())
-  env$last <- Sys.time()
-  function() {
-    now <- Sys.time()
-    if (now > env$last + period) {
-      fun()
-      env$last <- now
-    }
-  }
-}
-
-
-protect <- function(fun) {
-  fun <- match.fun(fun)
-  function() {
-    tryCatch(fun(), error = function(e) NULL)
-  }
-}
-
-
 ## Does not exist in older R (< 3.3.0 I think)
 file_size <- function(path) {
   file.info(path, extra_cols = FALSE)$size
