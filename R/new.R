@@ -58,19 +58,17 @@ orderly_new <- function(name, root = NULL, locate = TRUE, quiet = FALSE,
   if (grepl("[[:space:]]", name)) {
     stop("'name' cannot contain spaces")
   }
-
   dest <- file.path(path_src(config$root), name)
   if (file.exists(dest)) {
     stop(sprintf("A report already exists called '%s'", name))
   }
-
-  dir.create(path_src(config$root), FALSE, TRUE)
 
   if (is.null(template)) {
     template <-
       if (has_template(config$root, "default")) "default" else "system"
   }
 
+  dir.create(path_src(config$root), FALSE, TRUE)
   if (template == "system") {
     orderly_new_system(dest, config)
   } else {
