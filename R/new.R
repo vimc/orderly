@@ -68,6 +68,7 @@ orderly_new <- function(name, root = NULL, locate = TRUE, quiet = FALSE,
       if (has_template(config$root, "default")) "default" else "system"
   }
 
+  dir.create(path_src(config$root), FALSE, TRUE)
   if (template == "system") {
     orderly_new_system(dest, config)
   } else {

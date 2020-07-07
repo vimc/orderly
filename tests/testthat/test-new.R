@@ -115,3 +115,11 @@ test_that("missing templates are an error", {
     "Did not find file 'template/foo/orderly.yml' within orderly root")
   expect_false(file.exists(file.path(path, "src", "testing")))
 })
+
+
+test_that("can create src directory if needed", {
+  path <- prepare_orderly_example("minimal")
+  unlink(file.path(path, "src"), recursive = TRUE)
+  orderly_new("test", root = path)
+  expect_true(file.exists(file.path(path, "src", "test", "orderly.yml")))
+})
