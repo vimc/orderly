@@ -1,3 +1,7 @@
+# orderly 1.2.14
+
+* `orderly::orderly_new()` works in an orderly repo that does not (yet) have a `src/` directory (VIMC-4032)
+
 # orderly 1.2.13
 
 * Remove `orderly::orderly_runner` which has been moved to `vimc/orderly.server` (VIMC-4073)
