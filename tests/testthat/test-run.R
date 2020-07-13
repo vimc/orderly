@@ -958,3 +958,32 @@ test_that("run errors if given extra parameters", {
     orderly_run("other", list(nmin = 1, a = 1), root = path),
     "Extra parameters: 'a'")
 })
+
+
+test_that("parameters passed to dependency resolution include defaults", {
+  dat <- prepare_orderly_query_example()
+  root <- dat$root
+  ids <- dat$ids
+
+  config <- orderly_config_$new(root)
+
+  p <- file.path(root, "src", "use_dependency", "orderly.yml")
+  txt <- readLines(p)
+  txt <- sub("latest", "latest(parameter:nmin < x)", txt, fixed = TRUE)
+  txt <- c(txt, c("parameters:",
+                  "  x:",
+                  "    default: 0.25"))
+  writeLines(txt, p)
+
+  ## Use default
+  id <- orderly_run("use_dependency", echo = FALSE, root = root)
+  info <- readRDS(
+    path_orderly_run_rds(file.path(root, "draft", "use_dependency", id)))
+  expect_equal(info$meta$depends$id, dat$ids[[2]])
+
+  ## Override default
+  id <- orderly_run("use_dependency", list(x = 0.15), echo = FALSE, root = root)
+  info <- readRDS(
+    path_orderly_run_rds(file.path(root, "draft", "use_dependency", id)))
+  expect_equal(info$meta$depends$id, dat$ids[[1]])
+})

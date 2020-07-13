@@ -521,7 +521,8 @@ orderly_version <- R6::R6Class(
       private$tags <- union(private$recipe$tags,
                             recipe_validate_tags(tags, private$config, NULL))
       private$depends <-
-        private$recipe$resolve_dependencies(use_draft, parameters, remote)
+        private$recipe$resolve_dependencies(use_draft, private$parameters,
+                                            remote)
     },
 
     ## Prepare phase of a report - create id, load changelog and

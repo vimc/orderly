@@ -1,3 +1,7 @@
+# orderly 1.2.15
+
+* Fixes bug where default parameter values were not used in resolving query dependencies (VIMC-4135)
+
 # orderly 1.2.14
 
 * `orderly::orderly_new()` works in an orderly repo that does not (yet) have a `src/` directory (VIMC-4032)
