@@ -151,3 +151,50 @@ test_that("workflow can post success to slack/teams", {
   expect_equal(args[[2]][[1]], readRDS(global_rds))
   expect_s3_class(args[[2]][[2]], "orderly_config")
 })
+
+test_that("workflow can be run with specified git ref", {
+  testthat::skip_on_cran()
+  path <- unzip_git_demo()
+
+  ## Change workflow on "other" branch
+  prev <- git_checkout_branch("other", root = path)
+  workflow_file <- file.path(path, "workflows/my_workflow.yml")
+  workflow <- c("steps:",
+                '  - name: "minimal"',
+                '  - name: "other"')
+  writeLines(workflow, workflow_file)
+  ## Add a default param - eventually we want to workflow to be able
+  ## to pass params but set some default for now
+  other_yml <- file.path(path, "src/other/orderly.yml")
+  other <- readLines(other_yml)
+  other <- gsub(pattern = "nmin: ~", replace = "nmin:\n    default: 0.25",
+                x = other)
+  writeLines(other, other_yml)
+  git_run(c("add", "."), root = path, check = TRUE)
+  git_run(c("commit", "-m", "'initial-import'"), root = path, check = TRUE)
+  other_branch <- git_checkout_branch(prev, root = path)
+  expect_false(identical(workflow, readLines(workflow_file)))
+
+  mock_random_id <- mockery::mock("workflowid", cycle = TRUE)
+
+  with_mock(
+    "ids::random_id" = mock_random_id, {
+      output <- evaluate_promise(
+        orderly_workflow_internal("my_workflow", root = path, ref = "other"))
+    })
+
+  expect_output <- function(message) {
+    expect_true(any(grepl(message, output$messages)))
+  }
+  expect_output("Running workflow 'my_workflow' with ID 'workflowid'")
+  expect_output("Running report 'minimal'")
+  expect_output("Completed running & committing report 'minimal'")
+  expect_output("Running report 'other'")
+  expect_output("Completed running & committing report 'other'")
+  expect_output("Completed running workflow 'my_workflow' with ID 'workflowid'")
+
+  expect_true(file.exists(path_orderly_run_rds(
+    file.path(path, "archive", "minimal", output$result[1]))))
+  expect_true(file.exists(path_orderly_run_rds(
+    file.path(path, "archive", "other", output$result[2]))))
+})

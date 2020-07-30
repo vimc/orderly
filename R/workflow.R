@@ -20,16 +20,17 @@
 ##' ids <- orderly::orderly_workflow("my_workflow", root = path)
 orderly_workflow <- function(name, envir = NULL, root = NULL, locate = TRUE,
                              message = NULL, instance = NULL, remote = NULL) {
-  config <- orderly_config(root, locate)
-  workflow <- orderly_workflow_get(name, config)
-  workflow$run(envir, message, instance, remote)
+  orderly_workflow_internal(name, envir, root, locate, message, instance,
+                            remote, ref = NULL)
 }
 
-orderly_workflow_get <- function(name, config) {
-  filename <- path_orderly_workflow_dir(config$root, name)
-  assert_file_exists(basename(filename), workdir = dirname(filename),
-                     name = "workflow configuration")
-  workflow$new(name, filename, config)
+orderly_workflow_internal <- function(name, envir = NULL, root = NULL,
+                                    locate = TRUE,message = NULL,
+                                    instance = NULL, remote = NULL,
+                                    ref = NULL) {
+  config <- orderly_config(root, locate)
+  workflow <- workflow$new(name, config, ref)
+  workflow$run(envir, message, instance, remote)
 }
 
 workflow <- R6::R6Class(
@@ -40,14 +41,23 @@ workflow <- R6::R6Class(
     steps = NULL,
     workflow_id = NULL,
     config = NULL,
+    ref = NULL,
 
-    initialize = function(workflow_name, workflow_path, config) {
+    initialize = function(workflow_name, config, ref = NULL) {
       self$workflow_name <- workflow_name
       self$workflow_id <- ids::random_id()
       self$config <- config
-      raw <- yaml_read(workflow_path)
-      self$steps <- validate_workflow(raw, self$config, self$workflow_name,
-                                      workflow_path)
+      self$ref <- ref
+      git_restore <- private$git_checkout(self$ref)
+      tryCatch({
+        workflow_path <- path_orderly_workflow_dir(config$root, workflow_name)
+        assert_file_exists(basename(workflow_path),
+                           workdir = dirname(workflow_path),
+                           name = "workflow configuration")
+        raw <- yaml_read(workflow_path)
+        self$steps <- validate_workflow(raw, self$config, self$workflow_name,
+                                        workflow_path)
+      }, finally = git_restore())
     },
 
     run = function(envir = NULL, message = NULL, instance = NULL,
@@ -58,6 +68,7 @@ workflow <- R6::R6Class(
       for (i in seq_along(run_ids)) {
         report <- self$steps[i]
         orderly_log("workflow", sprintf("Running report '%s'", report))
+        git_restore <- private$git_checkout(self$ref)
         tryCatch({
           run_ids[i] <- orderly_run_internal(
             report, envir = envir, root = self$config, message = message,
@@ -71,12 +82,23 @@ workflow <- R6::R6Class(
         error = function(e) {
           orderly_log("error", sprintf("Running report '%s' failed", report))
           stop(e)
-        })
+        },
+        finally = git_restore())
       }
       orderly_log("workflow",
                   sprintf("Completed running workflow '%s' with ID '%s'",
                           self$workflow_name, self$workflow_id))
       run_ids
+    }
+  ),
+
+  private = list(
+    git_checkout = function(ref) {
+      if (is.null(ref)) {
+        return(function() NULL)
+      }
+      prev <- git_detach_head_at_ref(ref, self$config$root)
+      function() git_checkout_branch(prev, TRUE, self$config$root)
     }
   )
 )

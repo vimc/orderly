@@ -404,6 +404,7 @@ usage_workflow <- "Usage:
 
 Options:
   --print-log      Print the log (rather than storing it)
+  --ref=REF        Git reference (branch or sha) to use
   --pull           Pull git before running report
   --instance=NAME  Database instance to use (if instances are configured)
   --message=TEXT   A message explaining why the workflow was run
@@ -423,6 +424,7 @@ main_do_workflow <- function(x) {
   name <- x$options$name
   instance <- x$options$instance
   print_log <- x$options$print_log
+  ref <- x$options$ref
   pull <- x$options$pull
   message <- x$options$message
 
@@ -434,11 +436,16 @@ main_do_workflow <- function(x) {
   }
 
   if (pull) {
-    git_pull(config$root)
+    if (is.null(ref)) {
+      git_pull(config$root)
+    } else {
+      orderly_cli_error(
+        "Can't use --pull with --ref.")
+    }
   }
 
-  output <- orderly_workflow(name, root = config, instance = instance,
-                                  message = message)
+  output <- orderly_workflow_internal(name, root = config, instance = instance,
+                                      message = message, ref = ref)
   message("ids:", paste(output, collapse = ", "))
 }
 
