@@ -25,7 +25,7 @@ orderly_workflow <- function(name, envir = NULL, root = NULL, locate = TRUE,
 }
 
 orderly_workflow_internal <- function(name, envir = NULL, root = NULL,
-                                    locate = TRUE,message = NULL,
+                                    locate = TRUE, message = NULL,
                                     instance = NULL, remote = NULL,
                                     ref = NULL) {
   config <- orderly_config(root, locate)
