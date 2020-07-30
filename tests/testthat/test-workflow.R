@@ -151,3 +151,36 @@ test_that("workflow can post success to slack/teams", {
   expect_equal(args[[2]][[1]], readRDS(global_rds))
   expect_s3_class(args[[2]][[2]], "orderly_config")
 })
+
+test_that("orderly remote workflow can run reports on remote", {
+  path_local <- prepare_orderly_example("demo")
+
+  ## Create a minimal remote class which will satisfy implements_remote
+  mock_remote <- R6::R6Class(
+    "orderly_mock_remote",
+    lock_objects = FALSE,
+    public = list(
+      list_reports = function() TRUE,
+      list_versions = function() TRUE,
+      pull = function() TRUE,
+      url_report = function() TRUE
+    )
+  )
+
+  ## Bit of awkwardness with adding run function here. We want to mock out new
+  ## function but can't do that inside the class.
+  remote <- mock_remote$new()
+  remote$run <- mockery::mock(TRUE, cycle = TRUE)
+  orderly_run_remote("minimal", remote = remote, root = path_local)
+
+  mockery::expect_called(remote$run, 1)
+  args <- mockery::mock_args(remote$run)[[1]]
+  expect_null(args$instance)
+
+  orderly_run_remote("minimal", remote = remote, root = path_local,
+                     instance = "test")
+
+  mockery::expect_called(remote$run, 2)
+  args <- mockery::mock_args(remote$run)[[2]]
+  expect_equal(args$instance, "test")
+})

@@ -9,7 +9,7 @@
 ##' @inheritParams orderly_list
 ##' @inheritParams orderly_run
 ##'
-##' @return ID of workflow run
+##' @return IDs of reports run
 ##' @export
 ##'
 ##' @examples
@@ -23,6 +23,40 @@ orderly_workflow <- function(name, envir = NULL, root = NULL, locate = TRUE,
   config <- orderly_config(root, locate)
   workflow <- orderly_workflow_get(name, config)
   workflow$run(envir, message, instance, remote)
+}
+
+##' Run a workflow on a remote server.  Note that this is only supported
+##' for remotes using OrderlyWeb at present.
+##'
+##' This runs & commits each of the reports configured in the workflow in turn.
+##' Note that if one report fails to be run or to be commited this will
+##' continue and attempt to run the remaining reports.
+##'
+##' Note the timeout, wait are per report - there is no mechanism for
+##' limiting the time on the workflow as a whole.
+##'
+##' @param name Name of workflow to run
+##'
+##' @inheritParams orderly_run_remote
+##'
+##' @return No return value, this function is called only for its side effects
+##' @export
+##'
+##' @examples
+##' path_remote <- orderly::orderly_example("demo")
+##' path_local <- orderly::orderly_example("demo")
+##' remote <- orderly::orderly_remote_path(path_remote)
+##' # Currently, path remotes don't support run
+##' try(orderly::orderly_workflow_remote(
+##'   "my_workflow", remote = remote, root = path_local))
+orderly_workflow_remote <- function(name, ref = NULL, timeout = NULL,
+                                    wait = 3600, poll = 1, progress = TRUE,
+                                    root = NULL, locate = TRUE, instance = NULL,
+                                    remote = NULL) {
+  config <- orderly_config(root, locate)
+  workflow <- orderly_workflow_get(name, config)
+  remote <- get_remote(remote, config)
+  workflow$run_remote(ref, timeout, wait, poll, progress, instance, remote)
 }
 
 orderly_workflow_get <- function(name, config) {
@@ -77,6 +111,34 @@ workflow <- R6::R6Class(
                   sprintf("Completed running workflow '%s' with ID '%s'",
                           self$workflow_name, self$workflow_id))
       run_ids
+    },
+
+    run_remote = function(ref, timeout, wait, poll, progress, instance,
+                          remote) {
+      orderly_log("workflow", sprintf(
+        "Running workflow '%s' on remote with ID '%s'", self$workflow_name,
+        self$workflow_id))
+      for (i in seq_along(self$steps)) {
+        report <- self$steps[i]
+        orderly_log("workflow", sprintf("Running report '%s'", report))
+        tryCatch({
+          invisible(remote$run(
+            report, ref = ref, timeout = timeout, wait = wait, poll = poll,
+            progress = progress, open = FALSE, instance = instance,
+            stop_on_error = TRUE, stop_on_timeout = TRUE))
+          orderly_log("workflow",
+                      sprintf("Completed running & committing report '%s'",
+                              report))
+        },
+        error = function(e) {
+          orderly_log("error", sprintf("Running report '%s' failed", report))
+          stop(e)
+        })
+      }
+      orderly_log("workflow",
+                  sprintf("Completed running workflow '%s' with ID '%s'",
+                          self$workflow_name, self$workflow_id))
+      invisible(TRUE)
     }
   )
 )
