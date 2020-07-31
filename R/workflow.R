@@ -68,13 +68,13 @@ workflow <- R6::R6Class(
       for (i in seq_along(run_ids)) {
         report <- self$steps[i]
         orderly_log("workflow", sprintf("Running report '%s'", report))
-        git_restore <- private$git_checkout(self$ref)
         tryCatch({
           run_ids[i] <- orderly_run_internal(
             report, envir = envir, root = self$config, message = message,
             instance = instance, remote = remote, commit = TRUE, echo = FALSE,
             workflow_info = list(id = self$workflow_id,
-                                 name = self$workflow_name))
+                                 name = self$workflow_name),
+            ref = self$ref)
           orderly_log("workflow",
                       sprintf("Completed running & committing report '%s'",
                               report))
@@ -82,8 +82,7 @@ workflow <- R6::R6Class(
         error = function(e) {
           orderly_log("error", sprintf("Running report '%s' failed", report))
           stop(e)
-        },
-        finally = git_restore())
+        })
       }
       orderly_log("workflow",
                   sprintf("Completed running workflow '%s' with ID '%s'",
