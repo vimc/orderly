@@ -47,3 +47,11 @@ test_that("warning colourtion", {
 
   expect_equal(orderly_log_style("workflow"), "workflow")
 })
+
+test_that("orderly log produces progress messages", {
+  log <- tryCatch(orderly_log("subject", "value"),
+                  message = identity)
+  expect_s3_class(log, "progress")
+  expect_s3_class(log, "message")
+  expect_s3_class(log, "condition")
+})

@@ -94,7 +94,13 @@ orderly_log <- function(topic, value) {
     if (n > 0L) {
       str <- paste(str, collapse = "\n")
     }
-    message(str)
+    msg <- list(
+      message = str,
+      topic = topic,
+      value = value
+    )
+    class(msg) <- c("progress", "message", "condition")
+    message(msg)
   }
 }
 
