@@ -95,7 +95,7 @@ orderly_log <- function(topic, value) {
       str <- paste(str, collapse = "\n")
     }
     msg <- list(
-      message = str,
+      message = paste0(str, "\n"),
       topic = topic,
       value = value
     )
