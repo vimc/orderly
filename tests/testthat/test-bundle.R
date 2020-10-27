@@ -236,3 +236,23 @@ test_that("sensible error when given junk input", {
     orderly_bundle_import(tmp, root = path),
     "Failed to extract bundle info from '.*'")
 })
+
+
+test_that("can run a bundle from a relative path", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+
+  writeLines(
+    "readme",
+    file.path(path, "src", "example", "README.md"))
+
+  path_bundles <- tempfile()
+  res <- orderly_bundle_pack(path_bundles, "example", root = path)
+
+  workdir <- tempfile()
+  withr::with_dir(dirname(workdir),
+                  orderly_bundle_run(res$path, basename(workdir),
+                                     echo = FALSE))
+  ## Just ensure that we run without error
+  expect_equal(length(dir(workdir)), 1)
+})
