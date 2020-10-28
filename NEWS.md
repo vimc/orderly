@@ -1,3 +1,7 @@
+# orderly 1.2.16
+
+* Fixes bug where `orderly_bundle_run` failed when using a relative path for a working directory (VIMC-4337)
+
 # orderly 1.2.15
 
 * Fixes bug where default parameter values were not used in resolving query dependencies (VIMC-4135)

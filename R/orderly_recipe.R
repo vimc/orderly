@@ -175,10 +175,10 @@ recipe_validate <- function(self, develop, filename) {
 
   recipe_validate_skip_on_develop(
     develop,
-    self$changelog <- recipe_validate_changelog(self$path))
+    self$changelog <- recipe_validate_changelog("."))
   recipe_validate_skip_on_develop(
     develop,
-    self$readme <- recipe_validate_readme(self$path))
+    self$readme <- recipe_validate_readme("."))
 
   ## Combined validation:
   err <- intersect(self$sources, self$resources)
