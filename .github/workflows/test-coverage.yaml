@@ -15,6 +15,10 @@ jobs:
     runs-on: macOS-latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      VAULTR_TEST_SERVER_INSTALL: true
+      VAULTR_TEST_SERVER_PORT: 18200
+      VAULTR_TEST_SERVER_BIN_PATH: $PWD/.vault
+
     steps:
       - uses: actions/checkout@v2
 
@@ -41,7 +45,12 @@ jobs:
           install.packages(c("remotes"))
           remotes::install_deps(dependencies = TRUE)
           remotes::install_cran("covr")
+          vaultr::vault_test_server_install()
         shell: Rscript {0}
+
+      - name: Copy reference data
+        run: |
+          cp -r reference tests/testthat
 
       - name: Test coverage
         run: covr::codecov()

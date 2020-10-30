@@ -69,6 +69,10 @@ jobs:
           remotes::install_cran("rcmdcheck")
         shell: Rscript {0}
 
+      - name: Copy reference data
+        run: |
+          cp -r reference tests/testthat
+
       - name: Check
         env:
           _R_CHECK_CRAN_INCOMING_REMOTE_: false
