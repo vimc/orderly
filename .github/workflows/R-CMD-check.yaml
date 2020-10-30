@@ -71,7 +71,7 @@ jobs:
 
       - name: Copy reference data
         run: |
-          cp -r reference tests/testthat
+          ./scripts/copy_reference
 
       - name: Check
         env:
