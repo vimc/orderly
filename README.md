@@ -9,6 +9,7 @@
 [![codecov.io](https://codecov.io/github/vimc/orderly/coverage.svg?branch=master)](https://codecov.io/github/vimc/orderly?branch=master)
 [![CodeFactor](https://www.codefactor.io/repository/github/vimc/orderly/badge)](https://www.codefactor.io/repository/github/vimc/orderly)
 [![](https://www.r-pkg.org/badges/version/orderly)](https://cran.r-project.org/package=orderly)
+[![R build status](https://github.com/vimc/orderly/workflows/R-CMD-check/badge.svg)](https://github.com/vimc/orderly/actions)
 <!-- badges: end -->
 
 > 1. an attendant in a hospital responsible for the non-medical care of patients and the maintenance of order and cleanliness.
