@@ -201,6 +201,7 @@ test_that("which_max_time", {
 test_that("git", {
   skip_if_no_git()
   skip_on_appveyor() # needs some git work
+  skip_on_windows_ci()
 
   path <- tempfile()
   code <- system2("git", c("init", path), stdout = FALSE, stderr = FALSE)

@@ -148,7 +148,7 @@ orderly_develop_location <- function(name, root, locate) {
 ## This might be more general, but for now assume not
 orderly_status <- function(path) {
   assert_is_directory(path, FALSE)
-  assert_file_exists(file.path(path, "orderly.yml"))
+  assert_file_exists("orderly.yml", workdir = path)
   ## TODO: this needs making more robust
   config <- orderly_config(file.path(path, "..", ".."), FALSE)
   info <- orderly_recipe$new(basename(path), config, TRUE)

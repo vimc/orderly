@@ -20,6 +20,12 @@ skip_on_windows <- function() {
   testthat::skip_on_os("windows")
 }
 
+skip_on_windows_ci <- function() {
+  if (isTRUE(as.logical(Sys.getenv("CI")))) {
+    skip_on_windows()
+  }
+}
+
 
 skip_on_solaris <- function() {
   testthat::skip_on_os("solaris")
@@ -195,4 +201,8 @@ if (Sys.getenv("NOT_CRAN") != "true") {
 append_lines <- function(text, filename) {
   prev <- readLines(filename)
   writeLines(c(prev, text), filename)
+}
+
+normalize_path <- function(path) {
+  normalizePath(path, "/", TRUE)
 }
