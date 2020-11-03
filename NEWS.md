@@ -1,3 +1,7 @@
+# orderly 1.2.17
+
+* Fixes bug where `orderly_bundle_pack` failed when the orderly tree and temporary directory were on different filesystems (VIMC-4354)
+
 # orderly 1.2.16
 
 * Fixes bug where `orderly_bundle_run` failed when using a relative path for a working directory (VIMC-4337)
