@@ -245,9 +245,6 @@ test_that("fetch remote metadata", {
   expect_equal(
     normalize_path(dat$remote$metadata("example", dat$id1)),
     normalize_path(file.path(base, "example", dat$id1, "orderly_run.rds")))
-  expect_equal(
-    normalize_path(dat$remote$metadata("name", "version")),
-    normalize_path(file.path(base, "name", "version", "orderly_run.rds")))
 })
 
 
