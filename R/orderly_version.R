@@ -476,7 +476,11 @@ orderly_version <- R6::R6Class(
       saveRDS(manifest, file.path(path_meta, "manifest.rds"))
       saveRDS(info, file.path(path_meta, "info.rds"))
       saveRDS(session_info(), file.path(path_meta, "session.rds"))
-      file.rename(private$workdir, path_pack)
+      ## If we're on the same filesystem we could move the file with
+      ## fs::file_move or file.rename, but the temporary directory may
+      ## easily be in a different filesystem to the work tree.
+      fs::dir_copy(private$workdir, path_pack)
+      fs::dir_delete(private$workdir)
       zip <- zip_dir(dest_id)
 
       unlink(dest_id, recursive = TRUE)
