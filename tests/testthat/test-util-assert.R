@@ -54,7 +54,7 @@ test_that("assert_type", {
 })
 
 test_that("assert_file_exists", {
-  path <- tempfile(tmpdir = normalizePath(tempdir(), mustWork = TRUE)
+  path <- tempfile(tmpdir = normalizePath(tempdir(), mustWork = TRUE))
   expect_error(assert_file_exists(path), "File does not exist")
   writeLines(character(0), path)
   expect_silent(assert_file_exists(path))
