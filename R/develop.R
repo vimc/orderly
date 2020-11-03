@@ -118,10 +118,13 @@ orderly_develop_location <- function(name, root, locate) {
     if (!file.exists("orderly.yml")) {
       stop("Did not find orderly.yml within working directory")
     }
-    if (!fs::path_has_parent(getwd(), config$root)) {
+    ## There is a corner case here with DOS 8.3 filenames that
+    ## requires a round of path normalization to safely get through.
+    wd <- normalizePath(getwd(), "/", mustWork = TRUE)
+    if (!fs::path_has_parent(wd, config$root)) {
       stop("Working directory is not within the orderly root")
     }
-    rel <- fs::path_split(fs::path_rel(getwd(), config$root))[[1]]
+    rel <- fs::path_split(fs::path_rel(wd, config$root))[[1]]
     if (length(rel) != 2 || rel[[1L]] != "src") {
       stop("Unexpected working directory - expected src/<name>")
     }
