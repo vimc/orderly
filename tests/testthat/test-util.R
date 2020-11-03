@@ -200,7 +200,6 @@ test_that("which_max_time", {
 
 test_that("git", {
   skip_if_no_git()
-  skip_on_appveyor() # needs some git work
   skip_on_windows_ci()
 
   path <- tempfile()
@@ -536,7 +535,7 @@ test_that("ordered_map_to_list", {
 
 test_that("handle_missing_packages", {
   ## These packages don't exist so don't even try to install them to avoid
-  ## appveyer pain
+  ## CI pain
   mockery::stub(handle_missing_packages, "install_missing_packages", TRUE)
   ## we test show_question later
   mockery::stub(handle_missing_packages, "show_question", FALSE)
@@ -550,7 +549,7 @@ test_that("handle_missing_packages", {
 
 test_that("install_missing_packages", {
   ## These packages don't exist so don't even try to install them to avoid
-  ## appveyer pain
+  ## CI pain
   mockery::stub(install_missing_packages, "install_packages", TRUE)
 
   ## scenario 1: user asks to install the packages and succeed

@@ -241,7 +241,6 @@ test_that("exit on no httr", {
 ## will continue to work.
 test_that("slack payload is correct given actual run data", {
   skip_on_cran()
-  skip_on_appveyor()
   skip_on_windows_ci()
   path <- prepare_orderly_git_example()
   path1 <- path[["origin"]]
