@@ -30,6 +30,8 @@ jobs:
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       RSPM: ${{ matrix.config.rspm }}
+      VAULTR_TEST_SERVER_INSTALL: true
+      VAULTR_TEST_SERVER_PORT: 18200
 
     steps:
       - uses: actions/checkout@v2
@@ -55,6 +57,9 @@ jobs:
           key: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-1-${{ hashFiles('.github/depends.Rds') }}
           restore-keys: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-1-
 
+      - name: Set env
+        run: echo "VAULTR_TEST_SERVER_BIN_PATH=$GITHUB_WORKSPACE/.vault" >> $GITHUB_ENV
+
       - name: Install system dependencies
         if: runner.os == 'Linux'
         run: |
@@ -69,6 +74,7 @@ jobs:
         run: |
           remotes::install_deps(dependencies = TRUE)
           remotes::install_cran("rcmdcheck")
+          vaultr::vault_test_server_install()
         shell: Rscript {0}
 
       - name: Copy reference data
