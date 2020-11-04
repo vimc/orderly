@@ -78,7 +78,7 @@ orderly_config_ <- R6::R6Class(
     ##' format changes and validate structure if well formed
     ##' for each of the cfg fields
     initialize = function(root, validate = TRUE) {
-      assert_is_directory(root)
+      assert_is_directory(root, FALSE)
       self$root <- normalizePath(root, mustWork = TRUE)
       filename <- path_orderly_config_yml(self$root)
       assert_file_exists(basename(filename), workdir = self$root,

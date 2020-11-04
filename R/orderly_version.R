@@ -451,7 +451,7 @@ orderly_version <- R6::R6Class(
       private$fetch()
 
       if (file.exists(dest)) {
-        assert_is_directory(dest)
+        assert_is_directory(dest, FALSE)
       }
 
       path <- private$workdir

@@ -181,7 +181,7 @@ orderly_bundle_list <- function(path) {
 
 
 orderly_bundle_list_files <- function(path) {
-  assert_is_directory(path)
+  assert_is_directory(path, FALSE)
   sort(dir(path, full.names = TRUE,
            pattern = "[0-9]{8}-[0-9]{6}-[[:xdigit:]]{8}\\.zip$"))
 }
