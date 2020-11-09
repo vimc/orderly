@@ -256,3 +256,19 @@ test_that("can run a bundle from a relative path", {
   ## Just ensure that we run without error
   expect_equal(length(dir(workdir)), 1)
 })
+
+
+test_that("Can rename a bundle before import", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+
+  path_bundles <- tempfile()
+  res <- orderly_bundle_pack(path_bundles, "example", root = path)
+  ans <- orderly_bundle_run(res$path, echo = FALSE)
+  tmp <- tempfile()
+  on.exit(unlink(tmp), add = TRUE)
+  file_copy(ans$path, tmp)
+  expect_true(orderly_bundle_import(tmp, root = path))
+  expect_equal(orderly_list_archive(path),
+               data_frame(name = "example", id = res$id))
+})
