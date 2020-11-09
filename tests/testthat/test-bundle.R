@@ -230,8 +230,8 @@ test_that("can't import an unrun bundle", {
 
 test_that("sensible error when given junk input", {
   path <- orderly::orderly_example("minimal")
-  tmp <- tempfile()
-  file.create(tmp)
+  tmp <- tempfile(fileext = ".zip")
+  zip_dir(file.path(path, "src"), tmp)
   expect_error(
     orderly_bundle_import(tmp, root = path),
     "Failed to extract bundle info from '.*'")
