@@ -181,7 +181,7 @@ orderly_bundle_list <- function(path) {
 
 
 orderly_bundle_list_files <- function(path) {
-  assert_is_directory(path)
+  assert_is_directory(path, FALSE)
   sort(dir(path, full.names = TRUE,
            pattern = "[0-9]{8}-[0-9]{6}-[[:xdigit:]]{8}\\.zip$"))
 }
@@ -199,13 +199,15 @@ orderly_bundle_complete <- function(path) {
 
 
 orderly_bundle_info <- function(path) {
+  id <- fs::path_split(zip::zip_list(path)$filename[[1]])[[1]]
+
   tmp <- tempfile()
   dir_create(tmp)
   on.exit(unlink(tmp))
-  id <- sub("\\.zip$", "", basename(path))
+
   tryCatch(
-    zip::unzip(path, sprintf("%s/meta/info.rds", id),
-               junkpaths = TRUE, exdir = tmp),
+    zip::unzip(path, sprintf("%s/meta/info.rds", id), exdir = tmp,
+               junkpaths = TRUE),
     error = function(e)
       stop(sprintf("Failed to extract bundle info from '%s'\n(%s)",
                    path, e$message), call. = FALSE))

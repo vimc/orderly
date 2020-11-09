@@ -36,7 +36,7 @@ orderly_remote_path_ <- R6::R6Class(
     name = NULL,
 
     initialize = function(path, name) {
-      assert_file_exists(path)
+      assert_file_exists(path, FALSE)
       path <- normalizePath(path, "/", mustWork = TRUE)
       if (!file.exists(path_orderly_config_yml(path))) {
         stop("Does not look like an orderly repository: ", squote(path))

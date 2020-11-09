@@ -22,3 +22,4 @@
 ^build$
 ^ignore$
 ^tests/testthat/tmp$
+^\.github$

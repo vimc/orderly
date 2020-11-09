@@ -243,11 +243,8 @@ test_that("fetch remote metadata", {
   base <- normalizePath(file.path(dat$path_remote, "archive"))
 
   expect_equal(
-    dat$remote$metadata("example", dat$id1),
-    file.path(base, "example", dat$id1, "orderly_run.rds"))
-  expect_equal(
-    dat$remote$metadata("name", "version"),
-    file.path(base, "name", "version", "orderly_run.rds"))
+    normalize_path(dat$remote$metadata("example", dat$id1)),
+    normalize_path(file.path(base, "example", dat$id1, "orderly_run.rds")))
 })
 
 

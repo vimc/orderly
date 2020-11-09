@@ -1,3 +1,15 @@
+# orderly 1.2.18
+
+* Allow `orderly_bundle_import` to accept a filename that has been renamed from `<id>.zip`. While this is not generally desireable, it may be needed for some workflows (VIMC-4382)
+
+# orderly 1.2.17
+
+* Fixes bug where `orderly_bundle_pack` failed when the orderly tree and temporary directory were on different filesystems (VIMC-4354)
+
+# orderly 1.2.16
+
+* Fixes bug where `orderly_bundle_run` failed when using a relative path for a working directory (VIMC-4337)
+
 # orderly 1.2.15
 
 * Fixes bug where default parameter values were not used in resolving query dependencies (VIMC-4135)

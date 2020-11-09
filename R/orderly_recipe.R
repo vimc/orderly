@@ -42,8 +42,10 @@ orderly_recipe <- R6::R6Class(
       self$path <- path %||% file.path(config$root, "src", name)
 
       filename <- file.path(self$path, "orderly.yml")
-      assert_file_exists(self$path, name = "Report working directory")
-      assert_file_exists(filename, name = "Orderly configuration")
+      assert_is_directory(basename(self$path), workdir = dirname(self$path),
+                          name = "Report working directory")
+      assert_file_exists(basename(filename), workdir = dirname(filename),
+                         name = "Orderly configuration")
       self$raw <- yaml_read(filename)
       self$config <- config
 
@@ -175,10 +177,10 @@ recipe_validate <- function(self, develop, filename) {
 
   recipe_validate_skip_on_develop(
     develop,
-    self$changelog <- recipe_validate_changelog(self$path))
+    self$changelog <- recipe_validate_changelog("."))
   recipe_validate_skip_on_develop(
     develop,
-    self$readme <- recipe_validate_readme(self$path))
+    self$readme <- recipe_validate_readme("."))
 
   ## Combined validation:
   err <- intersect(self$sources, self$resources)
