@@ -987,3 +987,30 @@ test_that("parameters passed to dependency resolution include defaults", {
     path_orderly_run_rds(file.path(root, "draft", "use_dependency", id)))
   expect_equal(info$meta$depends$id, dat$ids[[1]])
 })
+
+test_that("orderly_run signals progress message", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+
+  progress <- testthat:::Stack$new()
+  handle_progress <- function(condition) {
+    progress$push(condition)
+  }
+  id <- withCallingHandlers(
+    orderly_run_internal("example", root = path, echo = FALSE,
+                         capture_log = TRUE, commit = TRUE),
+    progress = handle_progress
+  )
+
+  ## ID has been printed as progress message
+  progress <- progress$as_list()
+  expect_length(progress, 1)
+  expect_equal(progress[[1]]$id, id)
+
+  ## Log has still been saved to file
+  archive_logs <- file.path(path, "archive", "example", id, "orderly.log")
+  expect_true(file.exists(archive_logs))
+  log <- readLines(archive_logs)
+  expect_true("[ name       ]  example" %in% log)
+  expect_true(any(grepl("^\\[ commit     \\]  .*", log)))
+})

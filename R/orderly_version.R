@@ -43,6 +43,7 @@ orderly_version <- R6::R6Class(
     create = function(id_file) {
       private$id <- new_report_id()
       orderly_log("id", private$id)
+      orderly_progress(list(id = private$id))
       if (!is.null(id_file)) {
         orderly_log("id_file", id_file)
         writelines_atomic(private$id, id_file)

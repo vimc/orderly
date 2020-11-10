@@ -94,13 +94,7 @@ orderly_log <- function(topic, value) {
     if (n > 0L) {
       str <- paste(str, collapse = "\n")
     }
-    msg <- list(
-      message = paste0(str, "\n"),
-      topic = topic,
-      value = value
-    )
-    class(msg) <- c("progress", "message", "condition")
-    message(msg)
+    message(str)
   }
 }
 
@@ -127,4 +121,8 @@ orderly_log_style <- function(topic) {
          rollback = "alert",
          workflow = "workflow",
          "highlight")
+}
+
+orderly_progress <- function(value) {
+  signalCondition(structure(value, class = c("progress", "condition")))
 }
