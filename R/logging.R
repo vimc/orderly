@@ -123,6 +123,16 @@ orderly_log_style <- function(topic) {
          "highlight")
 }
 
+
+##' Signal a progress message which can be picked up by orderly server
+##'
+##' Use to send messages back to server about progress of a particular
+##' report run.
+##'
+##' @param value The value of the progress message, can be arbitrary data
+##'
+##' @return Signals a condition, called for side effect
+##' @keywords internal
 orderly_progress <- function(value) {
   signalCondition(structure(value, class = c("progress", "condition")))
 }
