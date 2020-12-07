@@ -496,3 +496,27 @@ remote_report_update_metadata <- function(name, remote, config) {
   }
   data_frame(id = ids, path = file.path(path_cache, ids))
 }
+
+
+orderly_bundle_pack_remote <- function(name, parameters = NULL,
+                                       instance = NULL,
+                                       root = NULL, locate = TRUE,
+                                       remote = NULL, dest = tempdir()) {
+  remote <- get_remote(remote, orderly_config(root, locate))
+  dir_create(dest)
+  path <- remote$bundle_pack(name, parameters = parameters,
+                             instance = instance)
+  if (dest != tempdir()) {
+    fs::file_move(path, dest)
+    path <- file.path(dest, basename(path))
+  }
+
+  path
+}
+
+
+orderly_bundle_import_remote <- function(path, root = NULL, locate = TRUE,
+                                         remote = NULL) {
+  remote <- get_remote(remote, orderly_config(root, locate))
+  remote$bundle_import(path)
+}
