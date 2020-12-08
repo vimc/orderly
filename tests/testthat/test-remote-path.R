@@ -304,10 +304,9 @@ test_that("pull dependencies that use a query", {
 
 test_that("bundle pack and import", {
   skip_on_cran_windows()
-  path1 <- prepare_orderly_example("minimal")
-  path2 <- prepare_orderly_example("minimal")
+  path <- prepare_orderly_example("minimal")
 
-  remote <- orderly_remote_path(path1)
+  remote <- orderly_remote_path(path)
   res <- orderly_bundle_pack_remote("example", remote = remote)
   expect_true(same_path(dirname(res), tempdir()))
   expect_match(basename(res), "^[0-9]{8}-[0-9]{6}-[[:xdigit:]]{8}\\.zip$")
