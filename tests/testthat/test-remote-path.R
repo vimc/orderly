@@ -309,7 +309,7 @@ test_that("bundle pack and import", {
 
   remote <- orderly_remote_path(path1)
   res <- orderly_bundle_pack_remote("example", remote = remote)
-  expect_equal(dirname(res), tempdir())
+  expect_true(same_path(dirname(res), tempdir()))
   expect_match(basename(res), "^[0-9]{8}-[0-9]{6}-[[:xdigit:]]{8}\\.zip$")
 
   ans <- orderly_bundle_run(res, echo = FALSE)
