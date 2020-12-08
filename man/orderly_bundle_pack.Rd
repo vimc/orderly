@@ -38,7 +38,7 @@ orderly_bundle_list(path)
   file created by \code{orderly_bundle_pack})}
 
 \item{\code{orderly_bundle_import}}{The path to unpack and import
-  (a zip file created by \code{orderly_bundle_run}}
+  (a zip file created by \code{orderly_bundle_run})}
 
 \item{\code{orderly_bundle_list}}{The path to a directory that might
   contain either incomplete or complete bundles (created by either
