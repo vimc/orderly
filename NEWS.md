@@ -1,3 +1,7 @@
+# orderly 1.2.19
+
+* New functions `orderly_bundle_pack_remote` and `orderly_bundle_import_remote` which create a bundle from a remote and return the completed bundle back to the remote (VIMC-4457)
+
 # orderly 1.2.18
 
 * Allow `orderly_bundle_import` to accept a filename that has been renamed from `<id>.zip`. While this is not generally desireable, it may be needed for some workflows (VIMC-4382)
