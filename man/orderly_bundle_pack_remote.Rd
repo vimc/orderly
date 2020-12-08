@@ -44,7 +44,11 @@ searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
 
-\item{remote}{The remote to pack the bundle from, or import to}
+\item{remote}{The remote to pack the bundle from, or import into}
+
+\item{dest}{Optional path to write bundle to (a directory
+name). By default we use the temporary directory and return the
+full path to the created file.}
 
 \item{path}{The path to unpack and import
 (a zip file created by \code{orderly_bundle_run})}

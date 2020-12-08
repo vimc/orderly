@@ -530,7 +530,11 @@ remote_report_update_metadata <- function(name, remote, config) {
 ##'
 ##' @inheritParams orderly_bundle_pack
 ##'
-##' @param remote The remote to pack the bundle from, or import to
+##' @param remote The remote to pack the bundle from, or import into
+##'
+##' @param dest Optional path to write bundle to (a directory
+##'   name). By default we use the temporary directory and return the
+##'   full path to the created file.
 ##'
 ##' @export
 orderly_bundle_pack_remote <- function(name, parameters = NULL,
