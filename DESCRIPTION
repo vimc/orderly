@@ -44,7 +44,7 @@ Suggests:
     rmarkdown,
     testthat,
     vaultr (>= 1.0.4)
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 VignetteBuilder: knitr
 Language: en-GB
 Remotes: vimc/vaultr

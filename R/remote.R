@@ -498,6 +498,41 @@ remote_report_update_metadata <- function(name, remote, config) {
 }
 
 
+##' Pack a bundle on a remote. This is like calling
+##' \code{\link{orderly_bundle_pack}} on the remote and can be used to
+##' extract a long-running report from a server to run (say) on a HPC
+##' system.
+##'
+##' The workflow here will typically be:
+##'
+##' 1. Use \code{orderly_bundle_pack_remote()} to create a local
+##'    copy of a bundle, extracted from a remote. Typically this will
+##'    be run fro the system where the bundle will be run (an HPC
+##'    head-node or a other powerful computer).
+##'
+##' 2. Run the bundle using \code{\link{orderly_bundle_run}}
+##'
+##' 3. Re-import the completed bundle using
+##'   \code{orderly_bundle_import_remote} which sends the zip
+##'   file to the remote and adds it to the archive.
+##'
+##' Typically these commands will \emph{not} be run from the orderly
+##' root. However, the \code{root} argument may still be used to find
+##' your remote configuration. Alternatively, if your \code{remote}
+##' argument is an orderly remote (e.g.,
+##' \code{\link{orderly_remote_path}}, or \code{orderlyweb}'s
+##' \code{orderlyweb::orderlyweb_remote}) then the \code{root} and
+##' \code{locate} arguments will be ignored and this command can be
+##' run from anywhere. This is the recommended configuration for
+##' running on a HPC system.
+##'
+##' @title Pack and import bundles with remotes
+##'
+##' @inheritParams orderly_bundle_pack
+##'
+##' @param remote The remote to pack the bundle from, or import to
+##'
+##' @export
 orderly_bundle_pack_remote <- function(name, parameters = NULL,
                                        instance = NULL,
                                        root = NULL, locate = TRUE,
@@ -515,6 +550,12 @@ orderly_bundle_pack_remote <- function(name, parameters = NULL,
 }
 
 
+##' @rdname orderly_bundle_pack_remote
+##'
+##' @param path The path to unpack and import
+##'   (a zip file created by \code{orderly_bundle_run})
+##'
+##' @export
 orderly_bundle_import_remote <- function(path, root = NULL, locate = TRUE,
                                          remote = NULL) {
   remote <- get_remote(remote, orderly_config(root, locate))
