@@ -500,15 +500,15 @@ remote_report_update_metadata <- function(name, remote, config) {
 
 ##' Pack a bundle on a remote. This is like calling
 ##' \code{\link{orderly_bundle_pack}} on the remote and can be used to
-##' extract a long-running report from a server to run (say) on a HPC
+##' extract a long-running report from a server to run (say) on an HPC
 ##' system.
 ##'
 ##' The workflow here will typically be:
 ##'
 ##' 1. Use \code{orderly_bundle_pack_remote()} to create a local
 ##'    copy of a bundle, extracted from a remote. Typically this will
-##'    be run fro the system where the bundle will be run (an HPC
-##'    head-node or a other powerful computer).
+##'    be run from the system where the bundle will be run (an HPC
+##'    head-node or another powerful computer).
 ##'
 ##' 2. Run the bundle using \code{\link{orderly_bundle_run}}
 ##'
