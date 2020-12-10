@@ -85,5 +85,16 @@ orderly_remote_path_ <- R6::R6Class(
 
     url_report = function(name, id) {
       file.path(self$config$root, name, id, fsep = "/")
+    },
+
+    bundle_pack = function(name, parameters = NULL, instance = NULL) {
+      res <- orderly_bundle_pack(tempdir(), name, parameters = parameters,
+                                 instance = instance,
+                                 root = self$config, locate = FALSE)
+      res$path
+    },
+
+    bundle_import = function(path) {
+      orderly_bundle_import(path, root = self$config, locate = FALSE)
     }
   ))

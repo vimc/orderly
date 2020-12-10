@@ -300,3 +300,20 @@ test_that("pull dependencies that use a query", {
     orderly_list_archive(root),
     data_frame(name = "other", id = dat$ids[[2]]))
 })
+
+
+test_that("bundle pack and import", {
+  skip_on_cran_windows()
+  path <- prepare_orderly_example("minimal")
+
+  remote <- orderly_remote_path(path)
+  res <- orderly_bundle_pack_remote("example", remote = remote)
+  expect_true(same_path(dirname(res), tempdir()))
+  expect_match(basename(res), "^[0-9]{8}-[0-9]{6}-[[:xdigit:]]{8}\\.zip$")
+
+  ans <- orderly_bundle_run(res, echo = FALSE)
+
+  orderly_bundle_import_remote(ans$path, remote = remote)
+
+  expect_equal(remote$list_versions("example"), ans$id)
+})

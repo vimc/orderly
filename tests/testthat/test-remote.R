@@ -290,3 +290,34 @@ test_that("orderly run remote passes instance to run", {
   args <- mockery::mock_args(remote$run)[[2]]
   expect_equal(args$instance, "test")
 })
+
+
+test_that("orderly_bundle_(pack|import)_remote do not use root/locate", {
+  skip_on_cran_windows()
+  path <- prepare_orderly_example("minimal")
+  remote <- orderly_remote_path(path)
+
+  temp <- tempfile()
+  on.exit(unlink(temp, recursive = TRUE))
+  dir_create(temp)
+
+  res <- withr::with_dir(
+    temp,
+    orderly_bundle_pack_remote("example", remote = remote,
+                               root = stop("don't force me"),
+                               locate = stop("don't force me"),
+                               dest = "."))
+
+  expect_true(file.exists(file.path(temp, basename(res))))
+  expect_equal(dirname(res), ".")
+
+  ans <- orderly_bundle_run(file.path(temp, basename(res)), echo = FALSE)
+
+  withr::with_dir(
+    temp,
+    orderly_bundle_import_remote(ans$path, remote = remote,
+                                 root = stop("don't force me"),
+                                 locate = stop("don't force me")))
+
+  expect_equal(remote$list_versions("example"), ans$id)
+})
