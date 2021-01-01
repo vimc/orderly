@@ -102,7 +102,9 @@ orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
 orderly_pull_archive <- function(name, id = "latest", root = NULL,
                                  locate = TRUE, remote = NULL,
                                  parameters = NULL) {
-  config <- orderly_config(root, locate)
+  loc <- orderly_develop_location(name, root, locate)
+  name <- loc$name
+  config <- loc$config
   config <- check_orderly_archive_version(config)
 
   remote <- get_remote(remote, config)
