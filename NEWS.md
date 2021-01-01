@@ -1,3 +1,7 @@
+# orderly 1.2.20
+
+* `orderly_pull_archive` is now more tolerant of trailing slashes (#260)
+
 # orderly 1.2.19
 
 * New functions `orderly_bundle_pack_remote` and `orderly_bundle_import_remote` which create a bundle from a remote and return the completed bundle back to the remote (VIMC-4457)
