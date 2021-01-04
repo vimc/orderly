@@ -130,11 +130,11 @@ orderly_develop_location <- function(name, root, locate) {
     }
     name <- rel[[2L]]
   } else {
-    if (grepl("^src/.+", name)) {
-      name <- sub("^src/", "", name)
+    if (grepl("^src[/\\].+", name)) {
+      name <- sub("^src[/\\]+", "", name)
     }
-    if (grepl("/$", name)) {
-      name <- sub("/$", "", name)
+    if (grepl("[/\\]$", name)) {
+      name <- sub("[/\\]+$", "", name)
     }
   }
 

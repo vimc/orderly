@@ -74,6 +74,24 @@ test_that("orderly_develop_location", {
 })
 
 
+test_that("orderly_develop_location strips trailing slashes of all types", {
+  path <- prepare_orderly_example("minimal")
+  expect_equal(orderly_develop_location("foo/", path, FALSE)$name, "foo")
+  expect_equal(orderly_develop_location("foo//", path, FALSE)$name, "foo")
+  expect_equal(orderly_develop_location("foo\\", path, FALSE)$name, "foo")
+  expect_equal(orderly_develop_location("foo\\\\", path, FALSE)$name, "foo")
+})
+
+
+test_that("orderly_develop_location strips src with any slash", {
+  path <- prepare_orderly_example("minimal")
+  expect_equal(orderly_develop_location("src/foo", path, FALSE)$name, "foo")
+  expect_equal(orderly_develop_location("src//foo", path, FALSE)$name, "foo")
+  expect_equal(orderly_develop_location("src\\foo", path, FALSE)$name, "foo")
+  expect_equal(orderly_develop_location("src\\\\foo", path, FALSE)$name, "foo")
+})
+
+
 test_that("status can detect dependencies", {
   path <- prepare_orderly_example("demo")
   name <- "use_dependency"
