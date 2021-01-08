@@ -436,3 +436,14 @@ test_that("run query on remote", {
                    draft = "newer", remote = remote, root = root),
     "Can't use 'draft' along with 'remote'")
 })
+
+test_that("query can be built from parameters list", {
+  expect_equal(build_query(list(nmin = 2)),
+               "latest(parameter:nmin == 2)")
+  expect_equal(build_query(list(iso3 = "AGO")),
+               'latest(parameter:iso3 == "AGO")')
+  expect_equal(build_query(list(nmin = 2, iso3 = "AGO")),
+               'latest(parameter:nmin == 2 && parameter:iso3 == "AGO")')
+  expect_error(build_query(list(nmin = c(1, 2))),
+               "Failed to build default query:\n'nmin' must be a scalar")
+})

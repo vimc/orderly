@@ -71,20 +71,23 @@ unpack_reference <- function(version, path = tempfile()) {
 }
 
 
-prepare_orderly_remote_example <- function(path = tempfile()) {
+prepare_orderly_remote_example <- function(path = tempfile(),
+                                           name = "depends",
+                                           testing = TRUE,
+                                           report_name = "example") {
   skip_on_cran_windows()
   path_remote <- file.path(path, "remote")
   path_local <- file.path(path, "local")
 
-  prepare_orderly_example("depends", path_remote, testing = TRUE)
+  prepare_orderly_example(name, path_remote, testing = testing)
 
-  id1 <- orderly_run("example", root = path_remote, echo = FALSE)
-  id2 <- orderly_run("example", root = path_remote, echo = FALSE)
+  id1 <- orderly_run(report_name, root = path_remote, echo = FALSE)
+  id2 <- orderly_run(report_name, root = path_remote, echo = FALSE)
   orderly_commit(id1, root = path_remote)
   orderly_commit(id2, root = path_remote)
   remote_path <- orderly_remote_path(path_remote)
 
-  path_local <- prepare_orderly_example("depends", testing = TRUE)
+  path_local <- prepare_orderly_example(name, testing = testing)
 
   r <- list(remote = list(
               default = list(

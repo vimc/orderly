@@ -1,3 +1,7 @@
+# orderly 1.2.21
+
+* Make `orderly_pull_archive` parameter arg more predictable - it will now construct a query from parameters if id = `latest` (VIMC-4492)
+
 # orderly 1.2.20
 
 * `orderly_pull_archive` is now more tolerant of trailing slashes (#260)
