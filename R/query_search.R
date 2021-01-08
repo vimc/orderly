@@ -453,23 +453,6 @@ remote_report_metadata <- function(name, remote, config) {
 
 
 build_query <- function(parameters) {
-  withCallingHandlers({
-    lapply(names(parameters), function(name) {
-      assert_scalar(parameters[[name]], name)
-    })
-  }, error = function(e) {
-    e$message <- paste0("Failed to build default query:\n", e$message)
-    stop(e)
-  })
-  quote_character <- function(x) {
-    out <- x
-    if (is.character(x)) {
-      out <- paste0('"', x, '"')
-    }
-    out
-  }
-  params <- lapply(parameters, quote_character)
-  sprintf("latest(%s)",
-          paste(sprintf("parameter:%s == %s", names(params), unlist(params)),
-                collapse = " && "))
+  params <- sprintf("parameter:%s == %s", names(parameters), names(parameters))
+  sprintf("latest(%s)", paste(params, collapse = " && "))
 }
