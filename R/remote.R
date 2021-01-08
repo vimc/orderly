@@ -58,9 +58,12 @@
 ##'   will be passed through to all dependencies). If passed with
 ##'   \code{id = "latest"} then query will be constructed to pull latest
 ##'   version of report with report parameters equal to those passed e.g. if
-##'   \code{parameters = list(nmin = 0.5, nmax = 1)} this will pull latest
-##'   report run where \code{nmin == 0.5 && nmax == 1}. For anything more
-##'   complicated than equality and && connectors use \code{id} to build
+##'   \code{parameters = list(nmin = 0.5, nmax = 1)} this is equivalent
+##'   to providing the query
+##'   \code{latest(parameter:nmin == nmin && parameter:nmax == nmax)}.
+##'   It will pull latest report run where \code{nmin == 0.5 && nmax == 1}.
+##'   For anything more complicated than equality and && connectors use
+##'   \code{id} to build
 ##'   the query.
 ##'
 ##' @inheritParams orderly_list
@@ -108,9 +111,7 @@ orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
 ##'   \code{orderly_search} see \code{\link{orderly_search}} for details.
 ##'   If \code{id = "latest"} and parameters are not NULL then query will
 ##'   be constructed to pull latest version of report  with report parameters
-##'   equal to those passed e.g. if
-##'   \code{parameters = list(nmin = 0.5, nmax = 1)} this will pull latest
-##'   report run where \code{nmin == 0.5 && nmax == 1}.
+##'   equal to those passed see parameters for details.
 orderly_pull_archive <- function(name, id = "latest", root = NULL,
                                  locate = TRUE, remote = NULL,
                                  parameters = NULL) {
