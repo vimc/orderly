@@ -441,7 +441,7 @@ test_that("query can be built from parameters list", {
   expect_equal(build_query(list(nmin = 2)),
                "latest(parameter:nmin == nmin)")
   expect_equal(build_query(list(iso3 = "AGO")),
-               'latest(parameter:iso3 == iso3)')
+               "latest(parameter:iso3 == iso3)")
   expect_equal(build_query(list(nmin = 2, iso3 = "AGO")),
-               'latest(parameter:nmin == nmin && parameter:iso3 == iso3)')
+               "latest(parameter:nmin == nmin && parameter:iso3 == iso3)")
 })
