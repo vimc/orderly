@@ -346,7 +346,7 @@ test_that("pull from remote builds query from parameters", {
 
   ## Pulling with parameters and ID specified
   expect_log_message(
-    orderly_pull_archive("other", id = 'latest(parameter:nmin == n)',
+    orderly_pull_archive("other", id = "latest(parameter:nmin == n)",
                          parameters = list(n = 0.25),
                          root = dat$config, remote = dat$remote),
     "\\[ pull\\s+ \\]  other:")
