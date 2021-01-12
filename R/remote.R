@@ -49,13 +49,22 @@
 ##'   for this orderly repository is used - by default that is the
 ##'   first listed remote.
 ##'
-##' @param parameters Parameters to pass through when doing depenency
+##' @param parameters Parameters to pass through when doing dependency
 ##'   resolution.  If you are using a query for \code{id} that
 ##'   involves a parameter (e.g., \code{latest(parameter:x == p)}) you
 ##'   will need to pass in the parameters here.  Similarly, if you are
 ##'   pulling a report that uses query dependencies that reference
 ##'   parameters you need to pass them here (the same parameter set
-##'   will be passed through to all dependencies).
+##'   will be passed through to all dependencies). If passed with
+##'   \code{id = "latest"} then query will be constructed to pull latest
+##'   version of report with report parameters equal to those passed e.g. if
+##'   \code{parameters = list(nmin = 0.5, nmax = 1)} this is equivalent
+##'   to providing the query
+##'   \code{latest(parameter:nmin == nmin && parameter:nmax == nmax)}.
+##'   It will pull latest report run where \code{nmin == 0.5 && nmax == 1}.
+##'   For anything more complicated than equality and && connectors use
+##'   \code{id} to build
+##'   the query.
 ##'
 ##' @inheritParams orderly_list
 ##' @export
@@ -97,8 +106,12 @@ orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
 ##' @export
 ##' @rdname orderly_pull_dependencies
 ##'
-##' @param id The identifier (for \code{orderly_pull_archive}).  The default is
-##'   to use the latest report.
+##' @param id The identifier (for \code{orderly_pull_archive}).  The default
+##'   is to use the latest report.  This can be a query string to
+##'   \code{orderly_search} see \code{\link{orderly_search}} for details.
+##'   If \code{id = "latest"} and parameters are not NULL then query will
+##'   be constructed to pull latest version of report  with report parameters
+##'   equal to those passed see parameters for details.
 orderly_pull_archive <- function(name, id = "latest", root = NULL,
                                  locate = TRUE, remote = NULL,
                                  parameters = NULL) {
@@ -116,8 +129,14 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
   }
 
   if (id == "latest") {
-    id <- latest_id(v)
-  } else if (id_is_query(id)) {
+    if (!is.null(parameters)) {
+      id <- build_query(parameters)
+    } else {
+      id <- latest_id(v)
+    }
+  }
+
+  if (id_is_query(id)) {
     id <- orderly_search(id, name, parameters, root = root, remote = remote)
   }
 

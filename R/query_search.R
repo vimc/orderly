@@ -450,3 +450,9 @@ remote_report_metadata <- function(name, remote, config) {
   candidates$type <- "remote"
   candidates[c("id", "type", "path")]
 }
+
+
+build_query <- function(parameters) {
+  params <- sprintf("parameter:%s == %s", names(parameters), names(parameters))
+  sprintf("latest(%s)", paste(params, collapse = " && "))
+}
