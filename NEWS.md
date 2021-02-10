@@ -1,4 +1,4 @@
-# orderly 1.2.22
+# orderly 1.2.23
 
 * `orderly_run_remote` checks that ref exists before running (VIMC-4574)
 
