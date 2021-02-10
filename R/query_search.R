@@ -406,7 +406,7 @@ query_check_parameters <- function(parameters) {
 }
 
 
-query_check_draft <- function(draft, as) {
+query_check_draft <- function(draft) {
   if (is.logical(draft)) {
     assert_scalar(draft)
     draft <- if (draft) "always" else "never"
