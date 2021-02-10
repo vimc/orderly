@@ -54,6 +54,7 @@ orderly_cleanup_drafts <- function(config, name = NULL, failed_only = FALSE) {
   d <- orderly_list_drafts(config, FALSE, include_failed = TRUE)
   if (!is.null(name)) {
     assert_character(name)
+    name <- clean_report_name(name)
     d <- d[d$name %in% name, , drop = FALSE]
   }
   p <- file.path(path_draft(config$root), d$name, d$id)

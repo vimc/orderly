@@ -869,3 +869,9 @@ test_that("lock_bindings can lock multiple variables at once", {
   expect_error(obj$a <- "2", "cannot change value of locked binding for 'a'")
   expect_error(obj$b <- "2", "cannot change value of locked binding for 'b'")
 })
+
+test_that("clean_report_name strips slashes and src dir", {
+  expect_equal(clean_report_name("test"), "test")
+  expect_equal(clean_report_name("test/"), "test")
+  expect_equal(clean_report_name("src/test"), "test")
+})

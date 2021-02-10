@@ -92,3 +92,17 @@ test_that("cleanup by name", {
   expect_match(out$messages, "Found 0 csv files", all = FALSE)
   expect_match(out$messages, "Found 0 rds files", all = FALSE)
 })
+
+test_that("cleanup by name sanitises report name", {
+  skip_on_cran_windows()
+  path <- prepare_orderly_example("demo")
+  id1 <- orderly_run("minimal", root = path, echo = FALSE)
+  id2 <- orderly_run("other", list(nmin = 0), root = path, echo = FALSE)
+  out <- capture_logs(orderly_cleanup("minimal/", path))
+  expect_equal(orderly_list_drafts(path),
+               data.frame(name = "other", id = id2, stringsAsFactors = FALSE))
+  expect_match(out$messages, "Found 1 draft report for report name 'minimal'",
+               all = FALSE)
+  expect_match(out$messages, "Found 0 csv files", all = FALSE)
+  expect_match(out$messages, "Found 0 rds files", all = FALSE)
+})
