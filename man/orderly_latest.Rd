@@ -25,7 +25,11 @@ searched for.  If \code{TRUE} and \code{config} is not given,
 then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
 
-\item{draft}{Find most recent \emph{draft} report}
+\item{draft}{Should draft reports be used searched? Valid values
+are logical (\code{TRUE}, \code{FALSE}) or use the string
+\code{newer} to use draft reports where they are newer than
+archive reports. For consistency, \code{always} and \code{never}
+are equivalent to \code{TRUE} and \code{FALSE}, respectively.}
 
 \item{must_work}{Throw an error if no report is found.  If FALSE,
 returns \code{NA_character_}.}

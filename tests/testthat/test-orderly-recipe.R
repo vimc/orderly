@@ -282,6 +282,27 @@ test_that("Using draft within a dependency is now a warning", {
 })
 
 
+test_that("VIMC-4579: dependencies draft works with non-boolean use_draft", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+  id1 <- orderly_run("example", root = path, echo = FALSE)
+
+  filename <- file.path(path, "src", "depend", "orderly.yml")
+  dat <- yaml_read(filename)
+  dat$depends$example$id <- id1
+  dat$depends$example$draft <- NULL
+  yaml_write(dat, filename)
+
+  f <- function(id) {
+    readRDS(path_orderly_run_rds(file.path(path, "draft", "depend", id)))
+  }
+
+  id2 <- orderly_run("depend", root = path, use_draft = "newer", echo = FALSE)
+  id3 <- orderly_run("depend", root = path, use_draft = "always", echo = FALSE)
+  expect_equal(f(id2)$meta$depends$id, id1)
+  expect_equal(f(id3)$meta$depends$id, id1)
+})
+
+
 test_that("data field is optional", {
   path <- prepare_orderly_example("nodata")
   report_path <- file.path(path, "src", "example")

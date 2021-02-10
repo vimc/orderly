@@ -1,3 +1,7 @@
+# orderly 1.2.23
+
+* `orderly_run` with non-boolean `use_draft` and fixed ID dependency works (#259)
+
 # orderly 1.2.20
 
 * `orderly_pull_archive` is now more tolerant of trailing slashes (#260)
