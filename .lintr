@@ -2,6 +2,7 @@ linters: with_defaults(
     object_length_linter = NULL,
     object_usage_linter = NULL,
     todo_comment_linter = NULL,
-    cyclocomp_linter = NULL
-    )
+    cyclocomp_linter = NULL,
+    undesirable_function_linter = lintr::undesirable_function_linter(c(
+      list(file.rename = "use fs::file_move"))))
 exclusions: list("tests/testthat.R")
