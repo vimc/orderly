@@ -143,36 +143,11 @@ orderly_latest <- function(name = NULL, root = NULL, locate = TRUE,
                            draft = FALSE, must_work = TRUE) {
   config <- orderly_config(root, locate)
 
-  get_latest_archive <- function() {
-    if (is.null(name)) {
-      d <- orderly_list2(FALSE, config, FALSE)
-      ids <- d$id
-      path <- file.path(path_archive(config$root), d$name)
-    } else {
-      path <-
-        file.path(path_archive(config$root), name)
-      ids <- orderly_list_dir(path, check_run_rds = FALSE)
-    }
-    ids
-  }
-  get_latest_draft <- function() {
-    if (is.null(name)) {
-      d <- orderly_list2(TRUE, config, FALSE)
-      ids <- d$id
-      path <- file.path(path_draft(config$root), d$name)
-    } else {
-      path <-
-        file.path(path_draft(config$root), name)
-      ids <- orderly_list_dir(path, check_run_rds = TRUE)
-    }
-    ids
-  }
-
   draft <- query_check_draft(draft)
   path_funcs <- switch(draft,
-                       always = c(get_latest_draft),
-                       never = c(get_latest_archive),
-                       newer = c(get_latest_draft, get_latest_archive))
+                       always = c(list_draft),
+                       never = c(list_archive),
+                       newer = c(list_draft, list_archive))
   what <- switch(draft,
                  always = "draft",
                  never = "archive",
@@ -180,7 +155,7 @@ orderly_latest <- function(name = NULL, root = NULL, locate = TRUE,
 
   ids <- c()
   for (func in path_funcs) {
-    ids <- c(ids, func())
+    ids <- c(ids, func(name, config))
   }
 
   if (length(ids) == 0L) {
@@ -193,6 +168,26 @@ orderly_latest <- function(name = NULL, root = NULL, locate = TRUE,
   }
 
   latest_id(ids)
+}
+
+list_archive <- function(name, config) {
+  if (is.null(name)) {
+    d <- orderly_list2(FALSE, config, FALSE)
+    d$id
+  } else {
+    path <- file.path(path_archive(config$root), name)
+    orderly_list_dir(path, check_run_rds = FALSE)
+  }
+}
+
+list_draft <- function(name, config) {
+  if (is.null(name)) {
+    d <- orderly_list2(TRUE, config, FALSE)
+    d$id
+  } else {
+    path <- file.path(path_draft(config$root), name)
+    orderly_list_dir(path, check_run_rds = TRUE)
+  }
 }
 
 
