@@ -12,7 +12,7 @@ test_that("pack bundle", {
 
   ## Move the orderly root to prevent any file references being valid:
   path2 <- paste0(path, "-moved")
-  file.rename(path, path2)
+  fs::file_move(path, path2)
 
   workdir <- tempfile()
   zip <- orderly_bundle_run(res$path, workdir, echo = FALSE)

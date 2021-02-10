@@ -33,15 +33,6 @@ test_that("copy failure", {
 })
 
 
-test_that("move failure", {
-  path1 <- tempfile()
-  path2 <- file.path(tempfile(), "dest")
-  writeLines("a", path1)
-  expect_error(suppressWarnings(file_move(path1, path2)),
-               "Error moving files")
-})
-
-
 test_that("resolve_env", {
   set.seed(1)
   v <- paste(sample(c(LETTERS, 0:9, "_"), 20, replace = TRUE), collapse = "")

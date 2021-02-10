@@ -149,8 +149,8 @@ test_that("duplicate artefact filenames; between artefacts", {
 
 test_that("resource case matters", {
   path <- prepare_orderly_example("minimal")
-  file.rename(file.path(path, "src", "example", "script.R"),
-              file.path(path, "src", "example", "script.r"))
+  fs::file_move(file.path(path, "src", "example", "script.R"),
+                file.path(path, "src", "example", "script.r"))
 
   config <- orderly_config(path, FALSE)
   expect_error(orderly_recipe$new("example", config),
@@ -399,8 +399,8 @@ test_that("warn old style db", {
     orderly_recipe$new("connection", cfg),
     "Use of strings for connection: is deprecated")
 
-  file.rename(file.path(path, "orderly_config.yml.new"),
-              file.path(path, "orderly_config.yml"))
+  fs::file_move(file.path(path, "orderly_config.yml.new"),
+                file.path(path, "orderly_config.yml"))
   expect_warning(
     cfg <- orderly_config_$new(path),
     "Please move your database arguments")
