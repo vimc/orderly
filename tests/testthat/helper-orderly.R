@@ -193,6 +193,12 @@ expect_log_message <- function(expr, ...) {
     ..., all = FALSE)
 }
 
+capture_logs <- function(expr) {
+  res <- testthat::evaluate_promise(expr)
+  res$messages <- crayon::strip_style(res$messages)
+  res
+}
+
 
 if (Sys.getenv("NOT_CRAN") != "true") {
   options(orderly.nogit = TRUE)
