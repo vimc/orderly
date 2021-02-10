@@ -184,7 +184,8 @@ test_that("push report (path)", {
 
   res <- testthat::evaluate_promise(
     orderly_push_archive("multifile-artefact", "latest", ours, remote = remote))
-  expect_match(crayon::strip_style(res$messages), paste(re, "already exists, skipping\\n$"))
+  expect_match(crayon::strip_style(res$messages),
+               paste(re, "already exists, skipping\\n$"))
 })
 
 
