@@ -106,7 +106,11 @@ orderly_list_archive <- function(root = NULL, locate = TRUE) {
 ##' @param name Name of the report to find; if \code{NULL} returns the
 ##'   most recent report across all names
 ##'
-##' @param draft Find most recent \emph{draft} report
+##' @param draft Should draft reports be used searched? Valid values
+##'   are logical (\code{TRUE}, \code{FALSE}) or use the string
+##'   \code{newer} to use draft reports where they are newer than
+##'   archive reports. For consistency, \code{always} and \code{never}
+##'   are equivalent to \code{TRUE} and \code{FALSE}, respectively.
 ##'
 ##' @param must_work Throw an error if no report is found.  If FALSE,
 ##'   returns \code{NA_character_}.
