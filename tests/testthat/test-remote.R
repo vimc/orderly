@@ -327,5 +327,5 @@ test_that("orderly run remote checks ref", {
   path_local <- prepare_orderly_example("demo")
 
   expect_error(orderly_run_remote("minimal", root = path_local, ref = "123"),
-               "Failed to locate git ref 123")
+               "Failed to find git reference '123'")
 })

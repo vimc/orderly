@@ -209,7 +209,7 @@ test_that("can check valid ref", {
   skip_if_no_git()
   path <- unzip_git_demo()
   expect_error(git_ref_is_valid("test-ref", path),
-               "Failed to locate git ref test-ref")
+               "Failed to find git reference 'test-ref'")
   expect_true(git_ref_is_valid("master", path))
   expect_true(git_ref_is_valid(NULL, path))
 })
