@@ -176,7 +176,7 @@ test_that("push report (path)", {
     orderly_push_archive("multifile-artefact", "latest", ours, remote = remote))
 
   re <- "^\\[ push\\s+\\]  multifile-artefact:[0-9]{8}-[0-9]{6}-[[:xdigit:]]{8}"
-  expect_match(res$messages, paste0(re, "\\n$"))
+  expect_match(crayon::strip_style(res$messages), paste0(re, "\\n$"))
 
   d <- orderly_list_archive(theirs)
   expect_equal(d$name, "multifile-artefact")
@@ -184,7 +184,7 @@ test_that("push report (path)", {
 
   res <- testthat::evaluate_promise(
     orderly_push_archive("multifile-artefact", "latest", ours, remote = remote))
-  expect_match(res$messages, paste(re, "already exists, skipping\\n$"))
+  expect_match(crayon::strip_style(res$messages), paste(re, "already exists, skipping\\n$"))
 })
 
 
@@ -211,15 +211,15 @@ test_that("push report & deps", {
   expect_equal(orderly_list_archive(ours), d)
 
   re <- "\\[ ([a-z]+)\\s*\\]  ([a-z0-9]+)[:/](.*?)\\s*$"
-  expect_true(all(grepl(re, res$messages)))
+  expect_true(all(grepl(re, crayon::strip_style(res$messages))))
   expect_equal(
-    sub(re, "\\1", res$messages),
+    sub(re, "\\1", crayon::strip_style(res$messages)),
     c("push", "depends", "push", "depends", "push"))
   expect_equal(
-    sub(re, "\\2", res$messages),
+    sub(re, "\\2", crayon::strip_style(res$messages)),
     c("depend3", "depend2", "depend2", "example", "example"))
   expect_equal(
-    sub(re, "\\3", res$messages),
+    sub(re, "\\3", crayon::strip_style(res$messages)),
     c(id3, id2, id2, id1, id1))
 })
 

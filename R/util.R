@@ -217,7 +217,7 @@ capture_log <- function(expr, filename) {
     close(con)
   })
   handle_message <- function(e) {
-    cat(e$message, file = stdout())
+    cat(crayon::strip_style(e$message), file = stdout())
   }
   handle_error <- function(e) {
     calls <- sys.calls()
@@ -225,7 +225,7 @@ capture_log <- function(expr, filename) {
     lab <- format(seq_along(str))
     str <- gsub("\n", sprintf("\n%s", strrep(" ", nchar(lab)[[1]] + 2)), str)
     trace <- paste(sprintf("%s: %s\n", lab, str), collapse = "")
-    cat(sprintf("Error: %s\nTraceback:\n%s", e$message, trace),
+    cat(crayon::strip_style(sprintf("Error: %s\nTraceback:\n%s", e$message, trace)),
         file = stdout())
   }
 
@@ -798,7 +798,6 @@ yaml_block_info <- function(name, text) {
 
 insert_into_file <- function(text, where, value, path, show, edit, prompt) {
   x <- filediff(text, where, value)
-
   if (length(x$changed) == 0L) {
     message(sprintf("No changes to make to '%s'", path))
     return(invisible(x))

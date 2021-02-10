@@ -708,9 +708,11 @@ test_that("insert into files", {
   path <- tempfile()
   writeLines(text, path)
 
-  res <- evaluate_promise(
-    insert_into_file(text, where, value, path,
-                     show = TRUE, edit = FALSE, prompt = FALSE))
+  withr::with_envvar(c("NO_COLOR" = "true"), {
+    res <- evaluate_promise(
+      insert_into_file(text, where, value, path,
+                       show = TRUE, edit = FALSE, prompt = FALSE))
+  })
   expect_match(res$messages, "Changes to '.+'")
   expect_equal(res$result, filediff(text, where, value))
   expect_equal(res$output,
