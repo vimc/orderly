@@ -145,15 +145,15 @@ orderly_latest <- function(name = NULL, root = NULL, locate = TRUE,
 
   draft <- query_check_draft(draft)
   path_funcs <- switch(draft,
-                       always = c(list_draft),
-                       never = c(list_archive),
-                       newer = c(list_draft, list_archive))
+                       always = list(list_draft),
+                       never = list(list_archive),
+                       newer = list(list_draft, list_archive))
   what <- switch(draft,
                  always = "draft",
                  never = "archive",
                  newer = "draft or archive")
 
-  ids <- c()
+  ids <- character(0)
   for (func in path_funcs) {
     ids <- c(ids, func(name, config))
   }
