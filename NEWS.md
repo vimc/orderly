@@ -1,3 +1,7 @@
+# orderly 1.2.24
+
+* Make `orderly_cleanup` much chattier (#265)
+
 # orderly 1.2.20
 
 * `orderly_pull_archive` is now more tolerant of trailing slashes (#260)
