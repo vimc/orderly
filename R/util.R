@@ -225,7 +225,8 @@ capture_log <- function(expr, filename) {
     lab <- format(seq_along(str))
     str <- gsub("\n", sprintf("\n%s", strrep(" ", nchar(lab)[[1]] + 2)), str)
     trace <- paste(sprintf("%s: %s\n", lab, str), collapse = "")
-    cat(sprintf("Error: %s\nTraceback:\n%s", e$message, trace), file = stdout())
+    cat(sprintf("Error: %s\nTraceback:\n%s", e$message, trace),
+        file = stdout())
   }
 
   suppressMessages(withCallingHandlers(
