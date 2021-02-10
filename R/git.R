@@ -71,10 +71,3 @@ git_pull <- function(root = NULL) {
   orderly_log("git", "pull")
   git_run("pull", root = root, check = TRUE)
 }
-
-git_fix_ref <- function(ref, root) {
-  ## ref can be either a branch name or a git hash, git_commit_id will
-  ## give us full ID if ref is valid, if not throws an error.
-  gert::git_commit_id(ref, root)
-  invisible(TRUE)
-}
