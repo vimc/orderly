@@ -203,3 +203,13 @@ test_that("git into db", {
   expect_equal(d$git_branch, "master")
   expect_equal(d$git_clean, 1)
 })
+
+
+test_that("can check valid ref", {
+  skip_if_no_git()
+  path <- unzip_git_demo()
+  expect_error(git_ref_is_valid("test-ref", path),
+               "Failed to locate git ref test-ref")
+  expect_true(git_ref_is_valid("master", path))
+  expect_true(git_ref_is_valid(NULL, path))
+})

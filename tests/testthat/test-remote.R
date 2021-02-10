@@ -321,3 +321,11 @@ test_that("orderly_bundle_(pack|import)_remote do not use root/locate", {
 
   expect_equal(remote$list_versions("example"), ans$id)
 })
+
+test_that("orderly run remote checks ref", {
+  skip_if_no_git()
+  path_local <- prepare_orderly_example("demo")
+
+  expect_error(orderly_run_remote("minimal", root = path_local, ref = "123"),
+               "Failed to locate git ref 123")
+})

@@ -1,3 +1,7 @@
+# orderly 1.2.22
+
+* `orderly_run_remote` checks that ref exists before running (VIMC-4574)
+
 # orderly 1.2.20
 
 * `orderly_pull_archive` is now more tolerant of trailing slashes (#260)
