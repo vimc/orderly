@@ -139,22 +139,50 @@ orderly_latest <- function(name = NULL, root = NULL, locate = TRUE,
                            draft = FALSE, must_work = TRUE) {
   config <- orderly_config(root, locate)
 
-  if (is.null(name)) {
-    d <- orderly_list2(draft, config, FALSE)
-    ids <- d$id
-    path <-
-      file.path((if (draft) path_draft else path_archive)(config$root), d$name)
-  } else {
-    path <-
-      file.path((if (draft) path_draft else path_archive)(config$root), name)
-    ids <- orderly_list_dir(path, check_run_rds = draft)
+  get_latest_archive <- function() {
+    if (is.null(name)) {
+      d <- orderly_list2(FALSE, config, FALSE)
+      ids <- d$id
+      path <- file.path(path_archive(config$root), d$name)
+    } else {
+      path <-
+        file.path(path_archive(config$root), name)
+      ids <- orderly_list_dir(path, check_run_rds = FALSE)
+    }
+    ids
+  }
+  get_latest_draft <- function() {
+    if (is.null(name)) {
+      d <- orderly_list2(TRUE, config, FALSE)
+      ids <- d$id
+      path <- file.path(path_draft(config$root), d$name)
+    } else {
+      path <-
+        file.path(path_draft(config$root), name)
+      ids <- orderly_list_dir(path, check_run_rds = TRUE)
+    }
+    ids
+  }
+
+  draft <- query_check_draft(draft)
+  path_funcs <- switch(draft,
+                       always = c(get_latest_draft),
+                       never = c(get_latest_archive),
+                       newer = c(get_latest_draft, get_latest_archive))
+  what <- switch(draft,
+                 always = "draft",
+                 never = "archive",
+                 newer = "draft or archive")
+
+  ids <- c()
+  for (func in path_funcs) {
+    ids <- c(ids, func())
   }
 
   if (length(ids) == 0L) {
     if (must_work) {
-      type <- if (draft) "draft" else "archive"
       name <- name %||% "any report"
-      stop(sprintf("Did not find any %s reports for %s", type, name))
+      stop(sprintf("Did not find any %s reports for %s", what, name))
     } else {
       return(NA_character_)
     }
@@ -207,19 +235,13 @@ orderly_find_report <- function(id, name, config, locate = FALSE,
                                 draft = TRUE, must_work = FALSE) {
   config <- orderly_config(config, locate)
 
-  if (is.character(draft)) {
-    draft <- match_value(draft, c("always", "newer", "never"))
-    search_draft <- draft != "never"
-    search_archive <- draft != "always"
-    what <- switch(draft,
-                   always = "draft",
-                   never = "archive",
-                   newer = "draft or archive")
-  } else {
-    search_draft <- draft
-    search_archive <- !draft
-    what <- if (draft) "draft" else "archive"
-  }
+  draft <- query_check_draft(draft)
+  search_draft <- draft != "never"
+  search_archive <- draft != "always"
+  what <- switch(draft,
+                 always = "draft",
+                 never = "archive",
+                 newer = "draft or archive")
 
   base_archive <- file.path(path_archive(config$root), name)
   base_draft <- file.path(path_draft(config$root), name)

@@ -145,6 +145,17 @@ test_that("latest", {
   expect_equal(orderly_latest("example", root = path), id2)
 })
 
+test_that("latest works with draft always, never, newer", {
+  skip_on_cran_windows()
+  path <- prepare_orderly_example("minimal")
+  id1 <- orderly_run("example", root = path, echo = FALSE)
+  id2 <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id1, root = path)
+  expect_equal(orderly_latest("example", root = path, draft = "never"), id1)
+  expect_equal(orderly_latest("example", root = path, draft = "always"), id2)
+  expect_equal(orderly_latest("example", root = path, draft = "newer"), id2)
+})
+
 
 test_that("Behaviour with rogue files", {
   testthat::skip_on_cran()
