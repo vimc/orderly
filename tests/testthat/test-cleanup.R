@@ -92,4 +92,3 @@ test_that("cleanup by name", {
   expect_match(out$messages, "Found 0 csv files", all = FALSE)
   expect_match(out$messages, "Found 0 rds files", all = FALSE)
 })
-
