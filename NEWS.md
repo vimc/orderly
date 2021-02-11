@@ -1,3 +1,7 @@
+# orderly 1.2.24
+
+* `orderly_run_remote` checks that ref exists before running (VIMC-4574)
+
 # orderly 1.2.23
 
 * `orderly_run` with non-boolean `use_draft` and fixed ID dependency works (#259)

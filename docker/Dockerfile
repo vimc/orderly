@@ -22,6 +22,7 @@ RUN install2.r \
   digest \
   docopt \
   fs \
+  gert \
   ids \
   jsonlite \
   knitr \
