@@ -78,8 +78,8 @@ test_that("global resource from a subdir", {
   skip_on_cran_windows()
   path <- prepare_orderly_example("global", testing = TRUE)
   dir.create(file.path(path, "global", "dir"))
-  file.rename(file.path(path, "global", "data.csv"),
-              file.path(path, "global", "dir", "data.csv"))
+  fs::file_move(file.path(path, "global", "data.csv"),
+                file.path(path, "global", "dir", "data.csv"))
 
   p_orderly <- file.path(path, "src", "example", "orderly.yml")
   d <- yaml_read(p_orderly)
@@ -109,8 +109,8 @@ test_that("rename global resource on import, into new dir", {
   skip_on_cran_windows()
   path <- prepare_orderly_example("global", testing = TRUE)
   dir.create(file.path(path, "global", "dir"))
-  file.rename(file.path(path, "global", "data.csv"),
-              file.path(path, "global", "dir", "globaldata.csv"))
+  fs::file_move(file.path(path, "global", "data.csv"),
+                file.path(path, "global", "dir", "globaldata.csv"))
 
   p_orderly <- file.path(path, "src", "example", "orderly.yml")
   d <- yaml_read(p_orderly)

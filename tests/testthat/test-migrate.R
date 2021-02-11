@@ -193,8 +193,8 @@ test_that("can't commit old version", {
   contents <- orderly_list_archive(path)
 
   id <- contents$id[contents$name == "depend"][[1L]]
-  file.rename(file.path(path, "archive", "depend", id),
-              file.path(path, "draft", "depend", id))
+  fs::file_move(file.path(path, "archive", "depend", id),
+                file.path(path, "draft", "depend", id))
   orderly_migrate(path)
   orderly_rebuild(path)
   expect_error(

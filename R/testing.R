@@ -156,7 +156,7 @@ demo_change_time <- function(id, time, path) {
   name <- orderly_find_name(id, path)
   date <- sprintf("date: %s", as.character(time))
   p <- file.path(path_draft(path), name, id_new)
-  stopifnot(file.rename(file.path(path_draft(path), name, id), p))
+  fs::file_move(file.path(path_draft(path), name, id), p)
 
   rds <- path_orderly_run_rds(p)
   dat <- readRDS(rds)
@@ -187,8 +187,8 @@ build_git_demo <- function() {
   dir.create(file.path(path, "extra"))
   move <- setdiff(dir(file.path(path, "src"), pattern = "^[^.]+$"),
                   c("minimal", "global"))
-  file.rename(file.path(path, "src", move),
-              file.path(path, "extra", move))
+  fs::file_move(file.path(path, "src", move),
+                file.path(path, "extra", move))
 
   git_run("init", root = path)
   git_run(c("config", "user.email", "email@example.com"), root = path,
@@ -204,8 +204,8 @@ build_git_demo <- function() {
 
   prev <- git_checkout_branch("other", root = path, create = TRUE)
 
-  file.rename(file.path(path, "extra", "other"),
-              file.path(path, "src", "other"))
+  fs::file_move(file.path(path, "extra", "other"),
+                file.path(path, "src", "other"))
   unlink(file.path(path, "extra"), recursive = TRUE)
   git_run(c("add", "."), root = path)
   git_run(c("commit", "-m", "'add-other'"), root = path)

@@ -159,7 +159,7 @@ migrate_skip <- function(error, root, version, config, dry_run) {
     action <- "would be"
   } else {
     dir.create(dirname(dest), FALSE, TRUE)
-    file_move(root, dest)
+    fs::file_move(root, dest)
     action <- "has been"
   }
   message(sprintf("...this report %s moved to\n\t'%s'",
@@ -183,7 +183,7 @@ migrate_rollback1 <- function(path, version, root) {
   if (file.exists(file)) {
     orderly_log("revert",
                 sub(paste0(path_archive(root), "/"), "", path, fixed = TRUE))
-    file.rename(file, path_orderly_run_rds(path))
+    fs::file_move(file, path_orderly_run_rds(path))
   }
 }
 

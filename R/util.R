@@ -164,15 +164,6 @@ file_copy <- function(..., overwrite = TRUE) {
 }
 
 
-file_move <- function(from, to) {
-  ok <- file.rename(from, to)
-  if (any(!ok)) {
-    stop("Error moving files")
-  }
-  ok
-}
-
-
 is_directory <- function(x) {
   file.info(x, extra_cols = FALSE)$isdir
 }
@@ -406,7 +397,7 @@ open_directory <- function(path) {
 writelines_atomic <- function(txt, path) {
   tmp <- paste0(path, ".orderly")
   writeLines(txt, tmp)
-  file.rename(tmp, path)
+  fs::file_move(tmp, path)
 }
 
 data_frame <- function(...) {
@@ -691,7 +682,7 @@ flow_text <- function(x) {
 
 sqlite_backup <- function(src, dest) {
   if (file.exists(dest)) {
-    file.rename(dest, paste0(dest, ".prev"))
+    fs::file_move(dest, paste0(dest, ".prev"))
   }
 
   dest_con <- DBI::dbConnect(RSQLite::SQLite(), dest)

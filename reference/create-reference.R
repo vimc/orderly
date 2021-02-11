@@ -14,7 +14,7 @@ file.remove("reference/0.4.8/orderly_version")
 run_orderly_demo("reference/0.4.8")
 withr::with_dir("reference", zip("0.4.8.zip", "0.4.8"))
 
-file.rename("reference/0.4.8", "reference/0.3.2")
+fs::file_move("reference/0.4.8", "reference/0.3.2")
 local({
   d <- orderly_list_archive("reference/0.3.2")
   p <- path_orderly_run_rds(file.path("reference/0.3.2/archive", d$name, d$id))

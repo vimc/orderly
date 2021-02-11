@@ -129,7 +129,7 @@ prepare_orderly_query_example <- function(draft = FALSE) {
   zip::unzip(test_cache$examples$query, exdir = path)
   ids <- dir(file.path(path, "archive", "other"))
   if (draft) {
-    file.rename(
+    fs::file_move(
       file.path(path, "archive", "other", ids),
       file.path(path, "draft", "other", ids))
     unlink(file.path(path, "orderly.sqlite"))
