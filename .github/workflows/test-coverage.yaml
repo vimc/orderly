@@ -41,7 +41,7 @@ jobs:
 
       - name: Install libs
         run: |
-          brew install libgit
+          brew install libgit2
 
       - name: Set env
         run: echo "VAULTR_TEST_SERVER_BIN_PATH=$GITHUB_WORKSPACE/.vault" >> $GITHUB_ENV
