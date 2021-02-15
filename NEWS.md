@@ -1,6 +1,11 @@
+# orderly 1.2.25
+
+* `orderly_cleanup` will now sanitise the report name passed to it
+* `orderly_cleanup` will now print summary of how many items will be deleted (#265)
+
 # orderly 1.2.24
 
-* Make `orderly_cleanup` much chattier (#265)
+* `orderly_run_remote` checks that ref exists before running (VIMC-4574)
 
 # orderly 1.2.23
 

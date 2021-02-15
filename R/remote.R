@@ -247,7 +247,11 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
                                progress = TRUE,
                                root = NULL, locate = TRUE, instance = NULL,
                                remote = NULL) {
-  remote <- get_remote(remote, orderly_config(root, locate))
+  cfg <- orderly_config(root, locate)
+  if (!is.null(ref)) {
+    ref <- gert::git_commit_id(ref, cfg$root)
+  }
+  remote <- get_remote(remote, cfg)
   invisible(remote$run(
     name, parameters = parameters, ref = ref,
     timeout = timeout, wait = wait, poll = poll,

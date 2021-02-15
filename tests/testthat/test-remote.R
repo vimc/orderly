@@ -321,3 +321,37 @@ test_that("orderly_bundle_(pack|import)_remote do not use root/locate", {
 
   expect_equal(remote$list_versions("example"), ans$id)
 })
+
+
+test_that("orderly run remote passes ref to run", {
+  path <- prepare_orderly_git_example()
+
+  ## Create a minimal remote class which will satisfy implements_remote
+  mock_remote <- R6::R6Class(
+    "orderly_mock_remote",
+    lock_objects = FALSE,
+    public = list(
+      list_reports = function() TRUE,
+      list_versions = function() TRUE,
+      pull = function() TRUE,
+      url_report = function() TRUE
+    )
+  )
+
+  ## Bit of awkwardness with adding run function here. We want to mock out new
+  ## function but can't do that inside the class.
+  remote <- mock_remote$new()
+  remote$run <- mockery::mock(TRUE, cycle = TRUE)
+  orderly_run_remote("minimal", remote = remote, root = path[["local"]])
+
+  mockery::expect_called(remote$run, 1)
+  args <- mockery::mock_args(remote$run)[[1]]
+  expect_null(args$ref)
+
+  orderly_run_remote("minimal", remote = remote, root = path[["local"]],
+                     ref = "master")
+
+  mockery::expect_called(remote$run, 2)
+  args <- mockery::mock_args(remote$run)[[2]]
+  expect_match(args$ref, "[0-9a-f]{40}")
+})
