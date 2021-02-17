@@ -54,12 +54,19 @@ orderly_cleanup_drafts <- function(config, name = NULL, failed_only = FALSE) {
   d <- orderly_list_drafts(config, FALSE, include_failed = TRUE)
   if (!is.null(name)) {
     assert_character(name)
+    name <- clean_report_name(name)
     d <- d[d$name %in% name, , drop = FALSE]
   }
   p <- file.path(path_draft(config$root), d$name, d$id)
   if (failed_only) {
     p <- p[!file.exists(path_orderly_run_rds(p))]
   }
+  msg <- sprintf("Found %s draft %s", length(p),
+                 ngettext(length(p), "report", "reports"))
+  if (!is.null(name)) {
+    msg <- paste(msg, sprintf("for report name '%s'", name))
+  }
+  orderly_log("clean", msg)
   if (length(p) > 0L) {
     orderly_log(if (failed_only) "prune" else "clean", p)
     unlink(p, recursive = TRUE)
@@ -85,12 +92,18 @@ orderly_cleanup_data <- function(config) {
 
   csv <- orderly_db("csv", config, FALSE)
   drop_csv <- setdiff(csv$list(), used)
+  msg <- sprintf("Found %s csv %s", length(drop_csv),
+                 ngettext(length(drop_csv), "file", "files"))
+  orderly_log("clean", msg)
   if (length(drop_csv) > 0L) {
     csv$del(drop_csv)
   }
 
   rds <- orderly_db("rds", config, FALSE)
   drop_rds <- setdiff(rds$list(), used)
+  msg <- sprintf("Found %s rds %s", length(drop_rds),
+                 ngettext(length(drop_rds), "file", "files"))
+  orderly_log("clean", msg)
   if (length(drop_rds) > 0L) {
     rds$del(drop_rds)
   }

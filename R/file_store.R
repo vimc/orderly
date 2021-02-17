@@ -41,6 +41,7 @@ file_store <- R6::R6Class(
     },
 
     del = function(hash) {
+      orderly_log("clean", self$filename(hash))
       invisible(file.remove(self$filename(hash)))
     },
 

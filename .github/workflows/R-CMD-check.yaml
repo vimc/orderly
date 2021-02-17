@@ -70,6 +70,11 @@ jobs:
             eval sudo $cmd
           done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "20.04"))')
 
+      - name: "[macOS] system dependencies"
+        if: runner.os == 'macOS'
+        run: |
+          brew install libgit2
+
       - name: Install dependencies
         run: |
           remotes::install_deps(dependencies = TRUE)

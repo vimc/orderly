@@ -925,3 +925,13 @@ lock_bindings <- function(syms, env) {
   }
   invisible(NULL)
 }
+
+clean_report_name <- function(name) {
+  if (grepl("^src[/\\].+", name)) {
+    name <- sub("^src[/\\]+", "", name)
+  }
+  if (grepl("[/\\]$", name)) {
+    name <- sub("[/\\]+$", "", name)
+  }
+  name
+}
