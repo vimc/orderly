@@ -16,6 +16,9 @@
 ##' @param quiet Logical, indicating if informational messages should
 ##'   be suppressed when running the demo.
 ##'
+##' @param git Logical, indicating if we should create an empty git
+##'   repository along with the demo.
+##'
 ##' @return Returns the path to the orderly example
 ##' @export
 ##' @examples
@@ -26,10 +29,13 @@
 ##' # Example reports within this repository:
 ##' orderly::orderly_list(path)
 orderly_example <- function(name, path = tempfile(), run_demo = FALSE,
-                            quiet = FALSE) {
+                            quiet = FALSE, git = FALSE) {
   path <- prepare_orderly_example(name, path)
   if (run_demo && file.exists(path_demo_yml(path))) {
     run_orderly_demo(path, quiet)
+  }
+  if (git) {
+    gert::git_init(path)
   }
   path
 }
@@ -39,8 +45,9 @@ orderly_example <- function(name, path = tempfile(), run_demo = FALSE,
 ## with prepare_orderly_example below that simply prepares the
 ## source).  This is used to create a set of data for testing the API.
 ## See inst/demo/demo.yml for more information.
-create_orderly_demo <- function(path = tempfile(), quiet = FALSE) {
-  orderly_example("demo", path, TRUE, quiet)
+create_orderly_demo <- function(path = tempfile(), quiet = FALSE,
+                                git = FALSE) {
+  orderly_example("demo", path, TRUE, quiet, git)
 }
 
 
