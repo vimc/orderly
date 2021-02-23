@@ -1,3 +1,7 @@
+# orderly 1.2.26
+
+* `orderly_run`, `orderly_run_internal` and `bundle_run` will now save a `orderly_fail.rds` if run fails containing metadata and info about failure reason (VIMC-4037)
+
 # orderly 1.2.25
 
 * `orderly_cleanup` will now sanitise the report name passed to it
