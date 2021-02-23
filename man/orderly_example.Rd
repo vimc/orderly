@@ -4,7 +4,13 @@
 \alias{orderly_example}
 \title{Set up an orderly example}
 \usage{
-orderly_example(name, path = tempfile(), run_demo = FALSE, quiet = FALSE)
+orderly_example(
+  name,
+  path = tempfile(),
+  run_demo = FALSE,
+  quiet = FALSE,
+  git = FALSE
+)
 }
 \arguments{
 \item{name}{Name of the example}
@@ -19,6 +25,9 @@ committed), should these be run?}
 
 \item{quiet}{Logical, indicating if informational messages should
 be suppressed when running the demo.}
+
+\item{git}{Logical, indicating if we should create an empty git
+repository along with the demo.}
 }
 \value{
 Returns the path to the orderly example
