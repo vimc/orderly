@@ -987,3 +987,65 @@ test_that("parameters passed to dependency resolution include defaults", {
     path_orderly_run_rds(file.path(root, "draft", "use_dependency", id)))
   expect_equal(info$meta$depends$id, dat$ids[[1]])
 })
+
+test_that("failed run creates failed rds", {
+  testthat::skip_on_cran()
+  path <- prepare_orderly_git_example("minimal")
+  on.exit(unlink(path[["local"]], recursive = TRUE))
+
+  append_lines('stop("some error")',
+               file.path(path[["local"]], "src", "minimal", "script.R"))
+  expect_error(orderly_run("minimal", root = path[["local"]], echo = FALSE),
+               "some error")
+  drafts <- orderly_list_drafts(root = path[["local"]], include_failed = TRUE)
+  expect_equal(nrow(drafts), 1)
+
+  draft_dir <- file.path(path_draft(path[["local"]]), drafts$name, drafts$id)
+  expect_true(file.exists(path_orderly_fail_rds(draft_dir)))
+
+  failed_rds <- readRDS(path_orderly_fail_rds(draft_dir))
+  expect_equal(names(failed_rds),
+               c("session_info", "time", "env", "git", "error", "meta",
+                 "archive_version"))
+
+  expect_s3_class(failed_rds$error, "simpleError")
+  expect_equal(failed_rds$error$message, "some error")
+  expect_true(length(failed_rds$error$trace) > 5)
+  expect_equal(failed_rds$erro$trace[length(failed_rds$erro$trace)],
+               "script.R#5: stop(\"some error\")")
+
+  expect_equal(failed_rds$meta$id, drafts$id)
+  expect_equal(failed_rds$meta$name, "minimal")
+  expect_null(failed_rds$meta$parameters)
+  expect_true(!is.null(failed_rds$meta$elapsed))
+
+  expect_equal(failed_rds$archive_version, cache$current_archive_version)
+
+  expect_equal(failed_rds$meta$git$branch, "master")
+  expect_equal(failed_rds$meta$git$status, " M src/minimal/script.R")
+})
+
+test_that("fail during cleanup creates failed rds", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+
+  writeLines("1 + 1", file.path(path, "src/example/script.R"))
+  expect_error(orderly_run("example", root = path, echo = FALSE),
+               "Script did not produce expected artefacts: mygraph.png")
+
+  drafts <- orderly_list_drafts(root = path, include_failed = TRUE)
+  expect_equal(nrow(drafts), 1)
+
+  draft_dir <- file.path(path_draft(path), drafts$name, drafts$id)
+  expect_true(file.exists(path_orderly_fail_rds(draft_dir)))
+
+  failed_rds <- readRDS(path_orderly_fail_rds(draft_dir))
+  expect_equal(names(failed_rds),
+               c("session_info", "time", "env", "error", "meta",
+                 "archive_version"))
+  expect_equal(failed_rds$error$message,
+               "Script did not produce expected artefacts: mygraph.png")
+  expect_true(length(failed_rds$error$trace) > 5)
+  expect_match(failed_rds$erro$trace[length(failed_rds$erro$trace)],
+               "Script did not produce expected artefacts:")
+})

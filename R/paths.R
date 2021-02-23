@@ -40,6 +40,10 @@ path_orderly_run_rds <- function(path) {
   file.path(path, "orderly_run.rds")
 }
 
+path_orderly_fail_rds <- function(path) {
+  file.path(path, "orderly_fail.rds")
+}
+
 path_orderly_envir_yml <- function(path) {
   file.path(path, "orderly_envir.yml")
 }
