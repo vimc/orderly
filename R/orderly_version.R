@@ -429,23 +429,26 @@ orderly_version <- R6::R6Class(
       logfile <- tempfile()
       capture_log <- capture_log %||%
         private$config$get_run_option("capture_log") %||% FALSE
-      conditional_capture_log(capture_log, logfile, {
-        git_restore <- private$git_checkout(ref, fetch)
-        tryCatch({
-          self$run_read(parameters, instance, envir, tags, use_draft,
-                        remote)
-          self$run_prepare(message, id_file)
-        }, finally = git_restore())
-        if (capture_log) {
-          on.exit(file_copy(logfile,
-                            file.path(private$workdir, "orderly.log")))
-        }
-        private$batch_id <- batch_id
-        private$workflow_info <- workflow_info
-        private$fetch()
-        self$run_execute(echo)
-        self$run_cleanup()
-      })
+      withCallingHandlers(
+        conditional_capture_log(capture_log, logfile, {
+          git_restore <- private$git_checkout(ref, fetch)
+          tryCatch({
+            self$run_read(parameters, instance, envir, tags, use_draft,
+                          remote)
+            self$run_prepare(message, id_file)
+          }, finally = git_restore())
+          if (capture_log) {
+            on.exit(file_copy(logfile,
+                              file.path(private$workdir, "orderly.log")))
+          }
+          private$batch_id <- batch_id
+          private$workflow_info <- workflow_info
+          private$fetch()
+          self$run_execute(echo)
+          self$run_cleanup()
+        }), error = function(e) {
+          self$run_failed_cleanup(e)
+        })
       private$id
     },
 
@@ -538,15 +541,19 @@ orderly_version <- R6::R6Class(
         private[[v]] <- info[[v]]
       }
 
-      ## Refetch the preflight info here: we want to keep git but
-      ## replace everything else I think.  We might save the random
-      ## seed but that is not actually supposed to work across R
-      ## versions.
-      private$preflight()
-      private$preflight_info["git"] <- info$preflight_info["git"]
+      withCallingHandlers({
+        ## Refetch the preflight info here: we want to keep git but
+        ## replace everything else I think.  We might save the random
+        ## seed but that is not actually supposed to work across R
+        ## versions.
+        private$preflight()
+        private$preflight_info["git"] <- info$preflight_info["git"]
 
-      self$run_execute(echo)
-      self$run_cleanup()
+        self$run_execute(echo)
+        self$run_cleanup()
+      }, error = function(e) {
+        self$run_failed_cleanup(e)
+      })
     },
 
     ## The next bit are the basic "phases" - we'll probably tweak

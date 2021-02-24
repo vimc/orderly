@@ -1011,7 +1011,7 @@ test_that("failed run creates failed rds", {
   expect_s3_class(failed_rds$error, "simpleError")
   expect_equal(failed_rds$error$message, "some error")
   expect_true(length(failed_rds$error$trace) > 5)
-  expect_equal(failed_rds$erro$trace[length(failed_rds$erro$trace)],
+  expect_equal(failed_rds$error$trace[length(failed_rds$error$trace)],
                "stop(\"some error\")")
 
   expect_equal(failed_rds$meta$id, drafts$id)
@@ -1046,7 +1046,7 @@ test_that("fail during cleanup creates failed rds", {
   expect_equal(failed_rds$error$message,
                "Script did not produce expected artefacts: mygraph.png")
   expect_true(length(failed_rds$error$trace) > 5)
-  expect_match(failed_rds$erro$trace[length(failed_rds$erro$trace)],
+  expect_match(failed_rds$error$trace[length(failed_rds$error$trace)],
                "Script did not produce expected artefacts:")
 })
 
@@ -1061,4 +1061,41 @@ test_that("message printed if run fails before working dir is set", {
 
   expect_message(expect_error(version$run(), "test"),
                  "Can't save fail RDS, workdir not set")
+})
+
+test_that("orderly_run_internal writes fail rds on error", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+
+  append_lines(
+    c("f <- function() g()",
+      "g <- function() h()",
+      "h <- function() stop('some error')",
+      "f()"),
+    file.path(path, "src", "example", "script.R"))
+
+  expect_error(orderly_run_internal("example", root = path, echo = FALSE,
+                                    capture_log = TRUE),
+               "some error")
+
+  drafts <- orderly_list_drafts(root = path, include_failed = TRUE)
+  expect_equal(nrow(drafts), 1)
+
+  draft_dir <- file.path(path_draft(path), drafts$name, drafts$id)
+  expect_true(file.exists(path_orderly_fail_rds(draft_dir)))
+
+  failed_rds <- readRDS(path_orderly_fail_rds(draft_dir))
+  expect_equal(names(failed_rds),
+               c("session_info", "time", "env", "error", "meta",
+                 "archive_version"))
+  expect_equal(failed_rds$error$message, "some error")
+  expect_true(length(failed_rds$error$trace) > 5)
+  expect_match(failed_rds$error$trace[length(failed_rds$error$trace) - 3],
+               "f()")
+  expect_match(failed_rds$error$trace[length(failed_rds$error$trace) - 2],
+               "g()")
+  expect_match(failed_rds$error$trace[length(failed_rds$error$trace) - 1],
+               "h()")
+  expect_match(failed_rds$error$trace[length(failed_rds$error$trace)],
+               'stop\\("some error"\\)')
 })
