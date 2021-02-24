@@ -377,10 +377,10 @@ orderly_version <- R6::R6Class(
       trace <- utils::limitedLabels(sys.calls())
       if (length(trace) > 4) {
         ## Remove the last 4 entries, these will always be calls to:
-        ## .handleSimpleError(...
-        ## h(simpleError(msg, call))
-        ## self$run_failed_cleanup(e)
-        ## private$write_orderly_fail_rds(error)
+        ## .handleSimpleError(...                  # nolint
+        ## h(simpleError(msg, call))               # nolint
+        ## self$run_failed_cleanup(e)              # nolint
+        ## private$write_orderly_fail_rds(error)   # nolint
         ## which aren't really interesting
         trace <- trace[seq(1, length(trace) - 4)]
       }

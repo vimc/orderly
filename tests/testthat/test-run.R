@@ -1057,7 +1057,7 @@ test_that("message printed if run fails before working dir is set", {
   ## Contrive an example which will throw an error before working directory
   ## has been created
   unlockBinding("create_workdir", version$.__enclos_env__$private)
-  version$.__enclos_env__$private$create_workdir <- function() { stop("test") }
+  version$.__enclos_env__$private$create_workdir <- function() stop("test")
 
   expect_message(expect_error(version$run(), "test"),
                  "Can't save fail RDS, workdir not set")
