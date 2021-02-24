@@ -33,12 +33,9 @@
 ##' orderly::orderly_list(path)
 orderly_example <- function(name, path = tempfile(), run_demo = FALSE,
                             quiet = FALSE, git = FALSE) {
-  path <- prepare_orderly_example(name, path)
+  path <- prepare_orderly_example(name, path, git = git)
   if (run_demo && file.exists(path_demo_yml(path))) {
     run_orderly_demo(path, quiet)
-  }
-  if (git) {
-    prepare_basic_git(path, quiet)
   }
   path
 }
@@ -105,7 +102,8 @@ fake_db <- function(con, seed = 1) {
 
 ## Copy an example directory from 'inst/' and set up the source
 ## database ready to be used.
-prepare_orderly_example <- function(name, path = tempfile(), testing = FALSE) {
+prepare_orderly_example <- function(name, path = tempfile(), testing = FALSE,
+                                    git = FALSE) {
   if (testing) {
     src <- file.path("examples", name)
     stopifnot(file.exists(src))
@@ -126,6 +124,11 @@ prepare_orderly_example <- function(name, path = tempfile(), testing = FALSE) {
   if (length(con) > 0L) {
     generator(con)
   }
+
+  if (git) {
+    prepare_basic_git(path, quiet = TRUE)
+  }
+
   path
 }
 
