@@ -2,6 +2,7 @@ FROM rocker/r-ver:4.0.2
 
 RUN apt-get update && apt-get -y install --no-install-recommends \
   git \
+  libgit2-dev \
   libssl-dev \
   libpq-dev \
   sqlite3 \
