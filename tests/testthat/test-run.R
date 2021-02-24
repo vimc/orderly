@@ -1012,7 +1012,7 @@ test_that("failed run creates failed rds", {
   expect_equal(failed_rds$error$message, "some error")
   expect_true(length(failed_rds$error$trace) > 5)
   expect_equal(failed_rds$erro$trace[length(failed_rds$erro$trace)],
-               "script.R#5: stop(\"some error\")")
+               "stop(\"some error\")")
 
   expect_equal(failed_rds$meta$id, drafts$id)
   expect_equal(failed_rds$meta$name, "minimal")
@@ -1048,4 +1048,17 @@ test_that("fail during cleanup creates failed rds", {
   expect_true(length(failed_rds$error$trace) > 5)
   expect_match(failed_rds$erro$trace[length(failed_rds$erro$trace)],
                "Script did not produce expected artefacts:")
+})
+
+test_that("message printed if run fails before working dir is set", {
+  path <- prepare_orderly_example("minimal")
+
+  version <- orderly_version$new("example", path, locate = TRUE)
+  ## Contrive an example which will throw an error before working directory
+  ## has been created
+  unlockBinding("create_workdir", version$.__enclos_env__$private)
+  version$.__enclos_env__$private$create_workdir <- function() { stop("test") }
+
+  expect_message(expect_error(version$run(), "test"),
+                 "Can't save fail RDS, workdir not set")
 })

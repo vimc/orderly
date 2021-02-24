@@ -369,6 +369,10 @@ orderly_version <- R6::R6Class(
     },
 
     write_orderly_fail_rds = function(error) {
+      if (is.null(private$workdir)) {
+        message("Can't save fail RDS, workdir not set")
+        return(invisible(FALSE))
+      }
       session <- withr::with_envvar(private$envvar, session_info())
       trace <- utils::limitedLabels(sys.calls())
       if (length(trace) > 4) {
@@ -401,9 +405,9 @@ orderly_version <- R6::R6Class(
     run = function(parameters = NULL, instance = NULL, envir = NULL,
                    message = NULL, tags = NULL, echo = TRUE,
                    use_draft = FALSE, remote = NULL) {
+      self$run_read(parameters, instance, envir, tags, use_draft,
+                    remote)
       withCallingHandlers({
-        self$run_read(parameters, instance, envir, tags, use_draft,
-                      remote)
         self$run_prepare(message)
         private$fetch()
         self$run_execute(echo)
