@@ -16,8 +16,11 @@
 ##' @param quiet Logical, indicating if informational messages should
 ##'   be suppressed when running the demo.
 ##'
-##' @param git Logical, indicating if we should create an empty git
-##'   repository along with the demo.
+##' @param git Logical, indicating if we should create an basic git
+##'   repository along with the demo. This will have the default
+##'   orderly .gitignore set up, and a remote which is itself (so that
+##'   git pull and git fetch run without error, though they will do
+##'   nothing).
 ##'
 ##' @return Returns the path to the orderly example
 ##' @export
@@ -30,12 +33,9 @@
 ##' orderly::orderly_list(path)
 orderly_example <- function(name, path = tempfile(), run_demo = FALSE,
                             quiet = FALSE, git = FALSE) {
-  path <- prepare_orderly_example(name, path)
+  path <- prepare_orderly_example(name, path, git = git)
   if (run_demo && file.exists(path_demo_yml(path))) {
     run_orderly_demo(path, quiet)
-  }
-  if (git) {
-    gert::git_init(path)
   }
   path
 }
@@ -102,7 +102,8 @@ fake_db <- function(con, seed = 1) {
 
 ## Copy an example directory from 'inst/' and set up the source
 ## database ready to be used.
-prepare_orderly_example <- function(name, path = tempfile(), testing = FALSE) {
+prepare_orderly_example <- function(name, path = tempfile(), testing = FALSE,
+                                    git = FALSE) {
   if (testing) {
     src <- file.path("examples", name)
     stopifnot(file.exists(src))
@@ -123,6 +124,11 @@ prepare_orderly_example <- function(name, path = tempfile(), testing = FALSE) {
   if (length(con) > 0L) {
     generator(con)
   }
+
+  if (git) {
+    prepare_basic_git(path, quiet = TRUE)
+  }
+
   path
 }
 
@@ -260,4 +266,19 @@ prepare_orderly_git_example <- function(path = tempfile(), run_report = FALSE,
   }
 
   c(origin = path_upstream, local = path)
+}
+
+
+prepare_basic_git <- function(path, quiet) {
+  file.copy(orderly_file("init/gitignore"), path)
+  gert::git_init(path)
+  withr::with_dir(
+    path,
+    gert::git_add(".", repo = path))
+  gert::git_commit("Init repo", repo = path,
+                   author = "T User <test.user@example.com>")
+  gert::git_remote_add(path, "origin", repo = path)
+  gert::git_fetch(remote = "origin", repo = path, verbose = !quiet)
+  gert::git_branch_set_upstream("origin/master", "master", repo = path)
+  path
 }

@@ -26,8 +26,11 @@ committed), should these be run?}
 \item{quiet}{Logical, indicating if informational messages should
 be suppressed when running the demo.}
 
-\item{git}{Logical, indicating if we should create an empty git
-repository along with the demo.}
+\item{git}{Logical, indicating if we should create an basic git
+repository along with the demo. This will have the default
+orderly .gitignore set up, and a remote which is itself (so that
+git pull and git fetch run without error, though they will do
+nothing).}
 }
 \value{
 Returns the path to the orderly example
