@@ -362,7 +362,7 @@ orderly_version <- R6::R6Class(
     write_orderly_run_rds = function() {
       session <- withr::with_envvar(private$envvar, session_info())
       session$meta <- private$metadata()
-      ## NOTE: git is here twice for some reason
+      ## NOTE: git is here twice for some reason see VIMC-4613
       session$git <- session$meta$git
       session$archive_version <- cache$current_archive_version
       saveRDS(session, path_orderly_run_rds(private$workdir))
@@ -387,7 +387,7 @@ orderly_version <- R6::R6Class(
       error$trace <- trace
       session$error <- error
       session$meta <- private$metadata()
-      ## NOTE: git is here twice for some reason
+      ## NOTE: git is here twice for some reason see VIMC-4613
       session$git <- session$meta$git
       session$archive_version <- cache$current_archive_version
       saveRDS(session, path_orderly_fail_rds(private$workdir))
