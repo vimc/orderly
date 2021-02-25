@@ -989,9 +989,7 @@ test_that("parameters passed to dependency resolution include defaults", {
 })
 
 test_that("failed run creates failed rds", {
-  testthat::skip_on_cran()
-  path <- prepare_orderly_git_example("minimal")
-  on.exit(unlink(path[["local"]], recursive = TRUE))
+  path <- prepare_orderly_git_example()
 
   append_lines('stop("some error")',
                file.path(path[["local"]], "src", "minimal", "script.R"))
@@ -1011,8 +1009,8 @@ test_that("failed run creates failed rds", {
   expect_s3_class(failed_rds$error, "simpleError")
   expect_equal(failed_rds$error$message, "some error")
   expect_true(length(failed_rds$error$trace) > 5)
-  expect_equal(failed_rds$error$trace[length(failed_rds$error$trace)],
-               "stop(\"some error\")")
+  expect_match(failed_rds$error$trace[length(failed_rds$error$trace)],
+               'stop\\("some error"\\)')
 
   expect_equal(failed_rds$meta$id, drafts$id)
   expect_equal(failed_rds$meta$name, "minimal")
