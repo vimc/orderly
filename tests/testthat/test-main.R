@@ -459,6 +459,13 @@ test_that("run: message", {
 
   table_message <- sprintf("[%s] %s", d$label, d$value)
   expect_equal(message, table_message)
+
+
+  path <- prepare_orderly_example("changelog", testing = TRUE)
+  message <- "[label1] This is a test message."
+  args <- c("--root", path, "run", "--message", squote(message),
+            "example")
+  res <- cli_args_process(args)
 })
 
 

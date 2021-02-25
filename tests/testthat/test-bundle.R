@@ -272,3 +272,49 @@ test_that("Can rename a bundle before import", {
   expect_equal(orderly_list_archive(path),
                data_frame(name = "example", id = res$id))
 })
+
+test_that("failed bundle run writes out failed rds", {
+  path <- prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+
+  append_lines(
+    c("f <- function() g()",
+      "g <- function() h()",
+      "h <- function() stop('some error')",
+      "f()"),
+    file.path(path, "src", "example", "script.R"))
+
+  path_bundles <- tempfile()
+
+  res <- orderly_bundle_pack(path_bundles, "example", root = path)
+  expect_equal(dir(path_bundles), basename(res$path))
+  expect_equal(basename(res$path), paste0(res$id, ".zip"))
+
+  ## Move the orderly root to prevent any file references being valid:
+  path2 <- paste0(path, "-moved")
+  file.rename(path, path2)
+
+  workdir <- tempfile()
+  expect_error(orderly_bundle_run(res$path, workdir, echo = FALSE),
+               "some error")
+
+  ## Failed rds has been saved into pack
+  id <- list.files(workdir)
+  path_rds <- path_orderly_fail_rds(file.path(workdir, id, "pack"))
+  expect_true(file.exists(path_rds))
+
+  failed_rds <- readRDS(path_rds)
+  expect_equal(names(failed_rds),
+               c("session_info", "time", "env", "error", "meta",
+                 "archive_version"))
+  expect_equal(failed_rds$error$error$message, "some error")
+  expect_true(length(failed_rds$error$trace) > 5)
+  expect_match(failed_rds$error$trace[length(failed_rds$error$trace) - 3],
+               "f()")
+  expect_match(failed_rds$error$trace[length(failed_rds$error$trace) - 2],
+               "g()")
+  expect_match(failed_rds$error$trace[length(failed_rds$error$trace) - 1],
+               "h()")
+  expect_match(failed_rds$error$trace[length(failed_rds$error$trace)],
+               'stop\\("some error"\\)')
+})

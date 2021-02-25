@@ -299,6 +299,19 @@ orderly_version <- R6::R6Class(
         view_info = view_info)
     },
 
+    postflight_failed = function() {
+      time <- Sys.time()
+      if (is.null(private$time)) {
+        elapsed <- time - private$preflight_info$time
+        private$time <- list(start = private$preflight_info$time,
+                             end = time,
+                             elapsed = elapsed)
+      }
+      orderly_log("failed", as.character(time))
+      orderly_log("elapsed", sprintf("Failed report in %s",
+                                     format(private$time$elapsed)))
+    },
+
     metadata = function() {
       recipe <- private$recipe
 
@@ -349,10 +362,34 @@ orderly_version <- R6::R6Class(
     write_orderly_run_rds = function() {
       session <- withr::with_envvar(private$envvar, session_info())
       session$meta <- private$metadata()
-      ## NOTE: git is here twice for some reason
+      ## NOTE: git is here twice for some reason see VIMC-4613
       session$git <- session$meta$git
       session$archive_version <- cache$current_archive_version
       saveRDS(session, path_orderly_run_rds(private$workdir))
+    },
+
+    write_orderly_fail_rds = function(error) {
+      if (is.null(private$workdir)) {
+        message("Can't save fail RDS, workdir not set")
+        return(invisible(FALSE))
+      }
+      session <- withr::with_envvar(private$envvar, session_info())
+      trace <- utils::limitedLabels(sys.calls())
+      if (length(trace) > 4) {
+        ## Remove the last 4 entries, these will always be calls to:
+        ## > .handleSimpleError(...
+        ## > h(simpleError(msg, call))
+        ## > self$run_failed_cleanup(e)
+        ## > private$write_orderly_fail_rds(error)
+        ## which aren't really interesting
+        trace <- trace[seq(1, length(trace) - 4)]
+      }
+      session$error <- list(error = error, trace = trace)
+      session$meta <- private$metadata()
+      ## NOTE: git is here twice for some reason see VIMC-4613
+      session$git <- session$meta$git
+      session$archive_version <- cache$current_archive_version
+      saveRDS(session, path_orderly_fail_rds(private$workdir))
     }
   ),
 
@@ -369,11 +406,15 @@ orderly_version <- R6::R6Class(
                    use_draft = FALSE, remote = NULL) {
       self$run_read(parameters, instance, envir, tags, use_draft,
                     remote)
-      self$run_prepare(message)
-      private$fetch()
-      self$run_execute(echo)
-      self$run_cleanup()
-      private$id
+      withCallingHandlers({
+        self$run_prepare(message)
+        private$fetch()
+        self$run_execute(echo)
+        self$run_cleanup()
+        private$id
+      }, error = function(e) {
+        self$run_failed_cleanup(e)
+      })
     },
 
     ## Run a report as for orderly_run_internal (orderly-internal facing)
@@ -387,24 +428,26 @@ orderly_version <- R6::R6Class(
       logfile <- tempfile()
       capture_log <- capture_log %||%
         private$config$get_run_option("capture_log") %||% FALSE
-      ## TODO (VIMC-3841): this does not properly capture errors.
-      conditional_capture_log(capture_log, logfile, {
-        git_restore <- private$git_checkout(ref, fetch)
-        tryCatch({
-          self$run_read(parameters, instance, envir, tags, use_draft,
-                        remote)
-          self$run_prepare(message, id_file)
-        }, finally = git_restore())
-        if (capture_log) {
-          on.exit(file_copy(logfile,
-                            file.path(private$workdir, "orderly.log")))
-        }
-        private$batch_id <- batch_id
-        private$workflow_info <- workflow_info
-        private$fetch()
-        self$run_execute(echo)
-        self$run_cleanup()
-      })
+      withCallingHandlers(
+        conditional_capture_log(capture_log, logfile, {
+          git_restore <- private$git_checkout(ref, fetch)
+          tryCatch({
+            self$run_read(parameters, instance, envir, tags, use_draft,
+                          remote)
+            self$run_prepare(message, id_file)
+          }, finally = git_restore())
+          if (capture_log) {
+            on.exit(file_copy(logfile,
+                              file.path(private$workdir, "orderly.log")))
+          }
+          private$batch_id <- batch_id
+          private$workflow_info <- workflow_info
+          private$fetch()
+          self$run_execute(echo)
+          self$run_cleanup()
+        }), error = function(e) {
+          self$run_failed_cleanup(e)
+        })
       private$id
     },
 
@@ -497,15 +540,19 @@ orderly_version <- R6::R6Class(
         private[[v]] <- info[[v]]
       }
 
-      ## Refetch the preflight info here: we want to keep git but
-      ## replace everything else I think.  We might save the random
-      ## seed but that is not actually supposed to work across R
-      ## versions.
-      private$preflight()
-      private$preflight_info["git"] <- info$preflight_info["git"]
+      withCallingHandlers({
+        ## Refetch the preflight info here: we want to keep git but
+        ## replace everything else I think.  We might save the random
+        ## seed but that is not actually supposed to work across R
+        ## versions.
+        private$preflight()
+        private$preflight_info["git"] <- info$preflight_info["git"]
 
-      self$run_execute(echo)
-      self$run_cleanup()
+        self$run_execute(echo)
+        self$run_cleanup()
+      }, error = function(e) {
+        self$run_failed_cleanup(e)
+      })
     },
 
     ## The next bit are the basic "phases" - we'll probably tweak
@@ -562,6 +609,11 @@ orderly_version <- R6::R6Class(
     run_cleanup = function() {
       private$postflight()
       private$write_orderly_run_rds()
+    },
+
+    run_failed_cleanup = function(error) {
+      private$postflight_failed()
+      private$write_orderly_fail_rds(error)
     },
 
     ## Commit a report, including reporting back via slack/teams
