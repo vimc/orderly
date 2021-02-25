@@ -1006,8 +1006,8 @@ test_that("failed run creates failed rds", {
                c("session_info", "time", "env", "git", "error", "meta",
                  "archive_version"))
 
-  expect_s3_class(failed_rds$error, "simpleError")
-  expect_equal(failed_rds$error$message, "some error")
+  expect_s3_class(failed_rds$error$error, "simpleError")
+  expect_equal(failed_rds$error$error$message, "some error")
   expect_true(length(failed_rds$error$trace) > 5)
   expect_match(failed_rds$error$trace[length(failed_rds$error$trace)],
                'stop\\("some error"\\)')
@@ -1041,7 +1041,7 @@ test_that("fail during cleanup creates failed rds", {
   expect_equal(names(failed_rds),
                c("session_info", "time", "env", "error", "meta",
                  "archive_version"))
-  expect_equal(failed_rds$error$message,
+  expect_equal(failed_rds$error$error$message,
                "Script did not produce expected artefacts: mygraph.png")
   expect_true(length(failed_rds$error$trace) > 5)
   expect_match(failed_rds$error$trace[length(failed_rds$error$trace)],
@@ -1086,7 +1086,7 @@ test_that("orderly_run_internal writes fail rds on error", {
   expect_equal(names(failed_rds),
                c("session_info", "time", "env", "error", "meta",
                  "archive_version"))
-  expect_equal(failed_rds$error$message, "some error")
+  expect_equal(failed_rds$error$error$message, "some error")
   expect_true(length(failed_rds$error$trace) > 5)
   expect_match(failed_rds$error$trace[length(failed_rds$error$trace) - 3],
                "f()")

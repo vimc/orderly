@@ -384,8 +384,7 @@ orderly_version <- R6::R6Class(
         ## which aren't really interesting
         trace <- trace[seq(1, length(trace) - 4)]
       }
-      error$trace <- trace
-      session$error <- error
+      session$error <- list(error = error, trace = trace)
       session$meta <- private$metadata()
       ## NOTE: git is here twice for some reason see VIMC-4613
       session$git <- session$meta$git

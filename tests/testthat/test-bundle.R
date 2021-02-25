@@ -307,7 +307,7 @@ test_that("failed bundle run writes out failed rds", {
   expect_equal(names(failed_rds),
                c("session_info", "time", "env", "error", "meta",
                  "archive_version"))
-  expect_equal(failed_rds$error$message, "some error")
+  expect_equal(failed_rds$error$error$message, "some error")
   expect_true(length(failed_rds$error$trace) > 5)
   expect_match(failed_rds$error$trace[length(failed_rds$error$trace) - 3],
                "f()")
