@@ -1049,23 +1049,11 @@ test_that("fail during cleanup creates failed rds", {
 })
 
 test_that("message printed if run fails before working dir is set", {
-  path <- prepare_orderly_example("minimal")
-
-  ## Contrive an example which will throw an error before working directory
-  ## has been created. We can't mock out private function of orderly_version
-  ## so instead extend the class and override to trigger an error.
-  mock_version <- R6::R6Class(
-    "test_version",
-    inherit = orderly_version,
-    private = list(
-      create_workdir = function() {
-        stop("test error")
-      }
-    ))
-  version <- mock_version$new("example", path, locate = TRUE)
-
-  expect_message(expect_error(version$run(), "test error"),
-                 "Can't save fail RDS, workdir not set")
+  ## git checkout happens before workdir is set, so we trigger an error there
+  expect_message(expect_error(
+    orderly_run_internal("minimal", root = path[["local"]],
+                         echo = FALSE, fetch = TRUE, ref = "123")),
+    "Can't save fail RDS, workdir not set")
 })
 
 test_that("orderly_run_internal writes fail rds on error", {
