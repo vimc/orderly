@@ -1049,6 +1049,7 @@ test_that("fail during cleanup creates failed rds", {
 })
 
 test_that("message printed if run fails before working dir is set", {
+  path <- prepare_orderly_git_example()
   ## git checkout happens before workdir is set, so we trigger an error there
   expect_message(expect_error(
     orderly_run_internal("minimal", root = path[["local"]],
