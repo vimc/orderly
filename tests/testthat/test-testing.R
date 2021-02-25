@@ -14,4 +14,5 @@ test_that("create_orderly_demo can create a git repo", {
   skip_on_cran()
   path <- create_orderly_demo(quiet = TRUE, git = TRUE)
   expect_true(file.exists(file.path(path, ".git")))
+  expect_true(same_path(gert::git_pull(repo = path), path))
 })
