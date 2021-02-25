@@ -1,4 +1,4 @@
-# orderly 1.2.28
+# orderly 1.2.29
 
 * `orderly_run`, `orderly_run_internal` and `bundle_run` will now save a `orderly_fail.rds` if run fails containing metadata and info about failure reason (VIMC-4037)
 
