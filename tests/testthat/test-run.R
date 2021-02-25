@@ -1051,13 +1051,20 @@ test_that("fail during cleanup creates failed rds", {
 test_that("message printed if run fails before working dir is set", {
   path <- prepare_orderly_example("minimal")
 
-  version <- orderly_version$new("example", path, locate = TRUE)
   ## Contrive an example which will throw an error before working directory
-  ## has been created
-  unlockBinding("create_workdir", version$.__enclos_env__$private)
-  version$.__enclos_env__$private$create_workdir <- function() stop("test")
+  ## has been created. We can't mock out private function of orderly_version
+  ## so instead extend the class and override to trigger an error.
+  mock_version <- R6::R6Class(
+    "test_version",
+    inherit = orderly_version,
+    private = list(
+      create_workdir = function() {
+        stop("test error")
+      }
+    ))
+  version <- mock_version$new("example", path, locate = TRUE)
 
-  expect_message(expect_error(version$run(), "test"),
+  expect_message(expect_error(version$run(), "test error"),
                  "Can't save fail RDS, workdir not set")
 })
 
