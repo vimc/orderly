@@ -1,6 +1,6 @@
 # orderly 1.2.39
 
-* New function `orderly_info` which returns details from failed and succeeded report runs
+* New function `orderly_info` which returns details from failed and succeeded report runs (VIMC-4619)
 
 # orderly 1.2.29
 
