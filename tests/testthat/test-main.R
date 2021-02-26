@@ -564,7 +564,7 @@ test_that("run captures output", {
   archive_path <- file.path(path, "archive", "example")
   id <- list.files(archive_path)
   expect_length(id, 1)
-  log_file <- file.path(archive_path, id, "orderly.log")
+  log_file <- path_orderly_log(file.path(archive_path, id))
   expect_true(file.exists(log_file))
   logs <- readLines(log_file)
   expect_true(sprintf("[ id         ]  %s", id) %in% logs)

@@ -12,12 +12,15 @@ orderly_info <- function(id, name, root = NULL, locate = TRUE) {
       success = FALSE
     } else {
       stop(sprintf(
-        "Failed to locate info for report %s:%s, rds does not exists",
+        "Failed to retrieve info for report %s:%s, rds does not exists",
         name, id))
     }
   }
 
-  ## TODO read logs
+  logfile <- NULL
+  if (file.exists(path_orderly_log(report))) {
+    logfile <- path_orderly_log(report)
+  }
 
   ## Find rds from name & id in draft & archive (maybe allow switch?)
   ## Read rds
@@ -44,6 +47,7 @@ orderly_info <- function(id, name, root = NULL, locate = TRUE) {
     elapsed = info$meta$elapsed,
     git = git,
     parameters = info$meta$parameters,
+    logfile = logfile,
     error = error
   )
 }
