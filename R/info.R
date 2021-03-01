@@ -4,12 +4,12 @@ orderly_info <- function(id, name, root = NULL, locate = TRUE) {
   success_rds <- path_orderly_run_rds(report)
   if (file.exists(success_rds)) {
     info <- readRDS(success_rds)
-    success = TRUE
+    success <- TRUE
   } else {
     fail_rds <- path_orderly_fail_rds(report)
     if (file.exists(fail_rds)) {
       info <- readRDS(fail_rds)
-      success = FALSE
+      success <- FALSE
     } else {
       stop(sprintf(
         "Failed to retrieve info for report %s:%s, rds does not exists",
