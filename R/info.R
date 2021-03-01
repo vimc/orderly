@@ -1,3 +1,20 @@
+##' Return info about a report which has been run
+##'
+##' This will return info from either successful or failed reports. It will
+##' look for the report with `id` in archive first and then look in drafts
+##' if it can't be found from archive.
+##'
+##' @param id The report ID
+##' @param name The name of the report
+##' @inheritParams orderly_list
+##'
+##' @return Info from report run
+##' @export
+##'
+##' @examples
+##' path <- orderly::orderly_example("demo")
+##' id <- orderly::orderly_run("minimal", root = path)
+##' orderly::orderly_info(id, "minimal", root = path)
 orderly_info <- function(id, name, root = NULL, locate = TRUE) {
   report <- orderly_find_report(id, name, root, locate, draft = "newer",
                                 must_work = TRUE)
