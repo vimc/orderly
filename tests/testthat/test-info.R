@@ -56,8 +56,6 @@ test_that("will return path to logfile if exists", {
                              capture_log = TRUE, commit = TRUE)
   info <- orderly_info(id, "example", path)
   expect_true(file.exists(info$logfile))
-  print(info$logfile)
-  expect_equal(info$logfile, "test err to force printing")
   expect_true(is_absolute_path(info$logfile))
   log <- readLines(info$logfile)
   expect_true("[ name       ]  example" %in% log)

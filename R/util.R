@@ -102,7 +102,7 @@ is_within_dir <- function(files, path = getwd()) {
 }
 
 is_absolute_path <- function(path) {
-  grepl("^(/|[A-Z][a-z]:)", path)
+  grepl("^(/|[A-Za-z]:)", path)
 }
 
 is_relative_path <- function(path) {
