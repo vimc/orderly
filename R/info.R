@@ -8,7 +8,10 @@
 ##' @param name The name of the report
 ##' @inheritParams orderly_list
 ##'
-##' @return Info from report run
+##' @return Info from report run - this is subject to change. Returns a list
+##' which includes report id, name, indication of success, run date and
+##' elapsed time, parameters, git info (if available), path to logfile
+##' (if exists) and details of error if the run failed
 ##' @export
 ##'
 ##' @examples

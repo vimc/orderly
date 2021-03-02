@@ -21,7 +21,10 @@ then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
 }
 \value{
-Info from report run
+Info from report run - this is subject to change. Returns a list
+which includes report id, name, indication of success, run date and
+elapsed time, parameters, git info (if available), path to logfile
+(if exists) and details of error if the run failed
 }
 \description{
 This will return info from either successful or failed reports. It will
@@ -31,5 +34,5 @@ if it can't be found from archive.
 \examples{
 path <- orderly::orderly_example("demo")
 id <- orderly::orderly_run("minimal", root = path)
-orderly_info(id, "minimal", root = path)
+orderly::orderly_info(id, "minimal", root = path)
 }
