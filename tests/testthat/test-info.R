@@ -70,7 +70,7 @@ test_that("info errors if fails to find report rds", {
 
   expect_error(
     orderly_info(id, "example", path), sprintf(
-      "Failed to retrieve info for report example:%s, rds does not exists",
+      "Failed to retrieve info for report example:%s, rds does not exist",
       id),
     fixed = TRUE)
 })
