@@ -29,7 +29,7 @@ orderly_info <- function(id, name, root = NULL, locate = TRUE) {
       success <- FALSE
     } else {
       stop(sprintf(
-        "Failed to retrieve info for report %s:%s, rds does not exists",
+        "Failed to retrieve info for report %s:%s, rds does not exist",
         name, id))
     }
   }
