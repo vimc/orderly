@@ -242,6 +242,7 @@ orderly_find_report <- function(id, name, config, locate = FALSE,
                  never = "archive",
                  newer = "draft or archive")
 
+  name <- clean_report_name(name)
   base_archive <- file.path(path_archive(config$root), name)
   base_draft <- file.path(path_draft(config$root), name)
 

@@ -1,3 +1,7 @@
+# orderly 1.2.39
+
+* New function `orderly_info` which returns details from report runs, both successful and failed (VIMC-4619)
+
 # orderly 1.2.29
 
 * `orderly_run`, `orderly_run_internal` and `bundle_run` will now save a `orderly_fail.rds` if run fails containing metadata and info about failure reason (VIMC-4037)

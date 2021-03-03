@@ -438,7 +438,7 @@ orderly_version <- R6::R6Class(
           }, finally = git_restore())
           if (capture_log) {
             on.exit(file_copy(logfile,
-                              file.path(private$workdir, "orderly.log")))
+                              path_orderly_log(private$workdir)))
           }
           private$batch_id <- batch_id
           private$workflow_info <- workflow_info
@@ -618,8 +618,8 @@ orderly_version <- R6::R6Class(
 
     ## Commit a report, including reporting back via slack/teams
     commit = function(capture_log, ...) {
-      logfile <- file.path(path_draft(private$config$root),
-                           private$name, private$id, "orderly.log")
+      logfile <- path_orderly_log(file.path(
+        path_draft(private$config$root), private$name, private$id))
       conditional_capture_log(
         capture_log, logfile,
         orderly_commit(private$id, root = private$config, locate = FALSE, ...))

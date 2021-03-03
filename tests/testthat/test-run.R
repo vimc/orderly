@@ -912,7 +912,7 @@ test_that("orderly_run can capture messages", {
   id <- orderly_run_internal("example", root = path, echo = FALSE,
                              capture_log = TRUE, commit = TRUE)
 
-  archive_logs <- file.path(path, "archive", "example", id, "orderly.log")
+  archive_logs <- path_orderly_log(file.path(path, "archive", "example", id))
   expect_true(file.exists(archive_logs))
   log <- readLines(archive_logs)
   expect_true("[ name       ]  example" %in% log)

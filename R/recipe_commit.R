@@ -50,7 +50,7 @@ orderly_commit <- function(id, name = NULL, root = NULL, locate = TRUE,
   workdir <- file.path(path_draft(config$root), name, id)
 
   capture_log <- isTRUE(config$get_run_option("capture_log"))
-  logfile <- file.path(path_draft(config$root), name, id, "orderly.log")
+  logfile <- path_orderly_log(file.path(path_draft(config$root), name, id))
   conditional_capture_log(
     capture_log, logfile,
     recipe_commit(workdir, config$root, retry_n, retry_backoff))
