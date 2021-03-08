@@ -197,11 +197,13 @@ report_db_open_existing <- function(con, config) {
 }
 
 
-report_db_import <- function(name, id, config) {
+report_db_import <- function(name, id, config, timeout = 10) {
   orderly_log("import", sprintf("%s:%s", name, id))
   con <- orderly_db("destination", config)
   on.exit(DBI::dbDisconnect(con))
-  DBI::dbBegin(con)
+  ## sqlite busy handler expects milliseconds
+  RSQLite::sqliteSetBusyHandler(con, timeout * 1000)
+  DBI::dbExecute(con, "BEGIN IMMEDIATE")
   report_data_import(con, name, id, config)
   DBI::dbCommit(con)
 }
