@@ -90,6 +90,7 @@ jobs:
       - name: Install devl RSQlite
         run: |
           remotes::install_github("gaborcsardi/RSQLite@fix/usleep")
+        shell: Rscript {0}
 
       - name: Copy reference data
         run: |
