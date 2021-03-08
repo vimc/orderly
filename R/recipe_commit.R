@@ -7,11 +7,11 @@
 ##' @param id The identifier of the report
 ##'
 ##' @param name The name of the report - this can be omitted and the
-##'   name will be determined from the \code{id}
+##'   name will be determined from the \code{id}.
 ##'
 ##' @param timeout Time in seconds to wait for db to be available. In
 ##'   parallel the database may become locked so we can choose to wait
-##'   for \code{timeout} seconds before throwing an error
+##'   for \code{timeout} seconds before throwing an error.
 ##'
 ##' @inheritParams orderly_list
 ##'
