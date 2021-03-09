@@ -35,6 +35,9 @@ RUN install2.r \
 
 RUN Rscript -e 'remove.packages("BH")'
 
+# Install devl RSQLite
+RUN Rscript -e 'remotes::install_github("gaborcsardi/RSQLite@fix/usleep")
+
 # Install Pandoc
 ENV PANDOC_VERSION "2.7.3"
 RUN wget https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-1-amd64.deb \
