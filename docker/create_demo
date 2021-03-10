@@ -3,8 +3,8 @@ set -e
 HERE=$(dirname $0)
 . $HERE/common
 
-USER_UID=`id -u`
-USER_GID=`id -g`
+USER_UID=$(id -u)
+USER_GID=$(id -g)
 USER_STR="${USER_UID}:${USER_GID}"
 
 DEST=build
