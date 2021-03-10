@@ -111,6 +111,7 @@ prepare_orderly_example <- function(name, path = tempfile(), testing = FALSE,
     src <- orderly_file(file.path("examples", name))
   }
   orderly_init(path, quiet = TRUE)
+  path <- normalizePath(path, mustWork = TRUE)
   src_files <- dir(src, full.names = TRUE)
   file_copy(src_files, path, overwrite = TRUE, recursive = TRUE)
 

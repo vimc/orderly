@@ -3,8 +3,8 @@ set -e
 HERE=$(dirname $0)
 . $HERE/common
 
-USER_UID=`id -u`
-USER_GID=`id -g`
+USER_UID=$(id -u)
+USER_GID=$(id -g)
 USER_STR="${USER_UID}:${USER_GID}"
 
 DEST=build
@@ -15,6 +15,7 @@ rm -rf $DEST
 
 docker run --rm --entrypoint create_orderly_demo.sh \
        --user "$USER_STR" \
+       --env HOME=/tmp \
        -v "${PWD}":/orderly \
        -w /orderly \
        "$TAG_SHA" \
