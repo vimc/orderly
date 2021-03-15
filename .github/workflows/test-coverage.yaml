@@ -54,11 +54,6 @@ jobs:
           vaultr::vault_test_server_install()
         shell: Rscript {0}
 
-      - name: Install devl RSQlite
-        run: |
-          remotes::install_github("gaborcsardi/RSQLite@fix/usleep")
-        shell: Rscript {0}
-
       - name: Copy reference data
         run: |
           ./scripts/copy_reference
