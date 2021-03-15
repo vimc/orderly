@@ -571,3 +571,8 @@ orderly_bundle_import_remote <- function(path, root = NULL, locate = TRUE,
   remote <- get_remote(remote, orderly_config(root, locate))
   remote$bundle_import(path)
 }
+
+orderly_remote_status <- function() {
+  remote <- get_remote(remote, orderly_config(root, locate))
+  remote$queue_status()
+}
