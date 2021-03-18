@@ -506,7 +506,6 @@ test_that("rebuild nonempty database with backup", {
   DBI::dbDisconnect(con2)
 })
 
-
 test_that("db write collision", {
   skip_on_cran()
 
@@ -518,15 +517,17 @@ test_that("db write collision", {
   orderly_commit(id1, root = path)
   con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
-  DBI::dbBegin(con)
+  DBI::dbExecute(con, "BEGIN IMMEDIATE")
   DBI::dbExecute(con, "DELETE FROM file_artefact")
 
-  testthat::expect_error(
-    orderly_commit(id2, root = path, retry_backoff = 0.001),
-    "Failed to run command after 5 attempts: database is locked")
+  elapsed <- system.time(
+    testthat::expect_error(
+      orderly_commit(id2, root = path, timeout = 5),
+      "database is locked"))
+  expect_true(elapsed["elapsed"] > 5)
 
   DBI::dbRollback(con)
-  p <- orderly_commit(id2, root = path, retry_backoff = 0.001)
+  p <- orderly_commit(id2, root = path)
   ids <- DBI::dbGetQuery(con, "SELECT id from report_version")$id
   expect_equal(length(ids), 2)
   expect_setequal(ids, c(id1, id2))

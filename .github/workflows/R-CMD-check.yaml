@@ -81,6 +81,11 @@ jobs:
           remotes::install_cran("rcmdcheck")
         shell: Rscript {0}
 
+      - name: Install RSQlite
+        run: |
+          remotes::install_cran("RSQLite")
+        shell: Rscript {0}
+
       - name: Install vault
         if: runner.os != 'Windows'
         run: |
