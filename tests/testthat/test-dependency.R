@@ -444,3 +444,135 @@ test_that("detect loop", {
     orderly_graph_src("example", config, "downstream"),
     "Detected circular dependency: 'example' -> 'depend2' -> 'example'")
 })
+
+test_that("archive: set depth of dependencies", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+
+  demo <- c("- name: example",
+            "- name: depend2",
+            "- name: depend3",
+            "- name: depend2",
+            "- name: depend3")
+  writeLines(demo, file.path(path, "demo.yml"))
+  run_orderly_demo(path)
+
+  tree <- orderly_graph("example", root = path,
+                        propagate = FALSE, show_all = TRUE,
+                        max_depth = 1)
+
+  root <- tree$root
+  expect_equal(root$name, "example")
+  expect_length(root$children, 2)
+  child_1 <- root$children[[1]]
+  child_2 <- root$children[[2]]
+  expect_equal(child_1$name, "depend2")
+  expect_length(child_1$children, 0)
+  expect_equal(child_2$name, "depend2")
+  expect_length(child_2$children, 0)
+})
+
+test_that("src: set depth of dependencies", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+
+  tree <- orderly_graph("example", root = path, use = "src",
+                        propagate = FALSE, show_all = TRUE,
+                        max_depth = 1)
+
+  root <- tree$root
+  expect_equal(root$name, "example")
+  expect_length(root$children, 2)
+  child_1 <- root$children[[1]]
+  child_2 <- root$children[[2]]
+  expect_equal(child_1$name, "depend")
+  expect_length(child_1$children, 0)
+  expect_equal(child_2$name, "depend2")
+  expect_length(child_2$children, 0)
+})
+
+test_that("archive: set depth of dependencies upstream", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+
+  demo <- c("- name: example",
+            "- name: depend2",
+            "- name: depend3",
+            "- name: depend2",
+            "- name: depend3")
+  writeLines(demo, file.path(path, "demo.yml"))
+  run_orderly_demo(path)
+
+  tree <- orderly_graph("depend3", root = path, direction = "upstream",
+                        propagate = FALSE, show_all = TRUE,
+                        max_depth = 1)
+
+  root <- tree$root
+  expect_equal(root$name, "depend3")
+  expect_length(root$children, 1)
+  child_1 <- root$children[[1]]
+  expect_equal(child_1$name, "depend2")
+  expect_length(child_1$children, 0)
+})
+
+test_that("src: set depth of dependencies upstream", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+
+  tree <- orderly_graph("depend3", root = path, use = "src",
+                        propagate = FALSE, show_all = TRUE,
+                        direction = "upstream", max_depth = 1)
+
+  root <- tree$root
+  expect_equal(root$name, "depend3")
+  expect_length(root$children, 1)
+  child_1 <- root$children[[1]]
+  expect_equal(child_1$name, "depend2")
+  expect_length(child_1$children, 0)
+})
+
+test_that("archive: set depth of dependencies and recursion limit", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+
+  demo <- c("- name: example",
+            "- name: depend2",
+            "- name: depend3",
+            "- name: depend2",
+            "- name: depend3")
+  writeLines(demo, file.path(path, "demo.yml"))
+  run_orderly_demo(path)
+
+  tree <- orderly_graph("depend3", root = path, direction = "upstream",
+                        propagate = FALSE, show_all = TRUE,
+                        max_depth = 1, recursion_limit = 1)
+
+  root <- tree$root
+  expect_equal(root$name, "depend3")
+  expect_length(root$children, 1)
+  child_1 <- root$children[[1]]
+  expect_equal(child_1$name, "depend2")
+  expect_length(child_1$children, 0)
+
+  expect_error(orderly_graph("depend3", root = path, direction = "upstream",
+                propagate = FALSE, show_all = TRUE,
+                max_depth = 1, recursion_limit = 0),
+               "The tree is very large or degenerate")
+})
+
+test_that("src: set depth of dependencies and recursion limit", {
+  path <- prepare_orderly_example("depends", testing = TRUE)
+
+  tree <- orderly_graph("depend3", root = path, use = "src",
+                        propagate = FALSE, show_all = TRUE,
+                        direction = "upstream", max_depth = 1,
+                        recursion_limit = 1)
+
+  root <- tree$root
+  expect_equal(root$name, "depend3")
+  expect_length(root$children, 1)
+  child_1 <- root$children[[1]]
+  expect_equal(child_1$name, "depend2")
+  expect_length(child_1$children, 0)
+
+  expect_error(orderly_graph("depend3", root = path, use = "src",
+                             propagate = FALSE, show_all = TRUE,
+                             direction = "upstream", max_depth = 1,
+                             recursion_limit = 0),
+               "The tree is very large or degenerate")
+})

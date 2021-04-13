@@ -1,5 +1,6 @@
 orderly_graph_src <- function(name, config, direction = "downstream",
-                              recursion_limit = 100, show_all = FALSE) {
+                              max_depth = 100, recursion_limit = 100,
+                              show_all = FALSE) {
   ## Start by reading all the src files; this would ideally be done
   ## with some caching layer I think.  The other option would be to
   ## make sure that we can rip through this really fast by not
@@ -32,13 +33,13 @@ orderly_graph_src <- function(name, config, direction = "downstream",
   ## We then can work with this fairly easily I think
   root <- report_vertex$new(NULL, name, "latest", FALSE)
   seen <- new.env()
-  build_tree_src(root, deps, recursion_limit, NULL)
+  build_tree_src(root, deps, max_depth, recursion_limit, NULL)
   report_tree$new(root, direction)
 }
 
 
-build_tree_src <- function(parent, deps, depth, seen = NULL) {
-  if (depth < 0) {
+build_tree_src <- function(parent, deps, depth, limit, seen = NULL) {
+  if (limit < 0) {
     stop("The tree is very large or degenerate.")
   }
   name <- parent$name
@@ -48,14 +49,14 @@ build_tree_src <- function(parent, deps, depth, seen = NULL) {
                paste(squote(loop), collapse = " -> ")),
          call. = FALSE)
   }
-  if (is.null(deps[[name]])) {
+  if (is.null(deps[[name]]) || depth == 0) {
     return(NULL)
   }
   d <- deps[[name]]
   for (i in seq_len(NROW(d))) {
     child <- report_vertex$new(parent, d$name[[i]], d$id[[i]], FALSE)
     parent$add_child(child)
-    build_tree_src(child, deps, depth - 1, c(seen, name))
+    build_tree_src(child, deps, depth - 1, limit - 1, c(seen, name))
   }
   child
 }

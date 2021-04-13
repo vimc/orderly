@@ -11,6 +11,7 @@ orderly_graph(
   locate = TRUE,
   direction = "downstream",
   propagate = TRUE,
+  max_depth = 100,
   recursion_limit = 100,
   show_all = FALSE,
   use = "archive"
@@ -37,6 +38,9 @@ the tree permitted values are upstream, downstream}
 \item{propagate}{A boolean indicating if we want to propagate out
 of date through the tree}
 
+\item{max_depth}{A numeric, how far back should the tree go, this
+can be useful to truncate a very large tree. (default = 100)}
+
 \item{recursion_limit}{A numeric, limit for depth of tree, if the tree
 goes beyond this then an error is thrown. (default = 100)}
 
@@ -47,9 +51,6 @@ not just the latest.}
 dependency tree.  Current valid values are \code{archive} (the
 default), which reads from archive reports and \code{src} which
 reads from the source reports.}
-
-\item{max_depth}{A numeric, how far back should the tree go, this
-can be useful to truncate a very large tree. (default = 100)}
 }
 \value{
 An orderly tree object with the root corresponding to the given
