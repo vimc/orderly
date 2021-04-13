@@ -576,3 +576,28 @@ test_that("src: set depth of dependencies and recursion limit", {
                              recursion_limit = 0),
                "The tree is very large or degenerate")
 })
+
+test_that("dependency latest with search query", {
+  dat <- prepare_orderly_query_example()
+  root <- dat$root
+
+  config <- orderly_config_$new(root)
+
+  p <- file.path(root, "src", "use_dependency", "orderly.yml")
+  txt <- readLines(p)
+  txt <- sub("latest", "latest(parameter:nmin < x)", txt, fixed = TRUE)
+  txt <- c(txt, c("parameters:",
+                  "  x:",
+                  "    default: 0.25"))
+  writeLines(txt, p)
+
+  tree <- orderly_graph("use_dependency", root = root, use = "src",
+                        propagate = FALSE, show_all = TRUE,
+                        direction = "upstream")
+  root <- tree$root
+  expect_equal(root$name, "use_dependency")
+  expect_length(root$children, 1)
+  child_1 <- root$children[[1]]
+  expect_equal(child_1$name, "other")
+  expect_length(child_1$children, 0)
+})
