@@ -1,5 +1,5 @@
 orderly_graph_src <- function(name, config, direction = "downstream",
-                              max_depth = 100, show_all = FALSE) {
+                              recursion_limit = 100, show_all = FALSE) {
   ## Start by reading all the src files; this would ideally be done
   ## with some caching layer I think.  The other option would be to
   ## make sure that we can rip through this really fast by not
@@ -32,7 +32,7 @@ orderly_graph_src <- function(name, config, direction = "downstream",
   ## We then can work with this fairly easily I think
   root <- report_vertex$new(NULL, name, "latest", FALSE)
   seen <- new.env()
-  build_tree_src(root, deps, max_depth, NULL)
+  build_tree_src(root, deps, recursion_limit, NULL)
   report_tree$new(root, direction)
 }
 

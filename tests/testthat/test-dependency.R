@@ -212,7 +212,7 @@ test_that("infinite recursion", {
   writeLines(demo, file.path(path, "demo.yml"))
   run_orderly_demo(path)
 
-  expect_error(orderly_graph("example", max_depth = 1, root = path),
+  expect_error(orderly_graph("example", recursion_limit = 1, root = path),
                "The tree is very large or degenerate.")
 })
 
@@ -395,7 +395,7 @@ test_that("prevent excessive recursion", {
 
   config <- orderly_config_$new(path)
   expect_error(
-    orderly_graph_src("depend3", config, "upstream", max_depth = 1),
+    orderly_graph_src("depend3", config, "upstream", recursion_limit = 1),
     "The tree is very large or degenerate")
 })
 

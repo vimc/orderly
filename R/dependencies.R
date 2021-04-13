@@ -61,6 +61,9 @@
 ##' @param propagate A boolean indicating if we want to propagate out
 ##'   of date through the tree
 ##'
+##' @param recursion_limit A numeric, limit for depth of tree, if the tree
+##'   goes beyond this then an error is thrown. (default = 100)
+##'
 ##' @param max_depth A numeric, how far back should the tree go, this
 ##'   can be useful to truncate a very large tree. (default = 100)
 ##'
@@ -91,22 +94,22 @@
 ##'                                  direction = "upstream")
 orderly_graph <- function(name, id = "latest", root = NULL, locate = TRUE,
                           direction = "downstream", propagate = TRUE,
-                          max_depth = 100, show_all = FALSE,
+                          recursion_limit = 100, show_all = FALSE,
                           use = "archive") {
   config <- orderly_config(root, locate)
   use <- match_value(use, c("archive", "src"))
   if (use == "archive") {
     orderly_graph_archive(name, id, config, direction, propagate,
-                          max_depth, show_all)
+                          recursion_limit, show_all)
   } else {
     ## id, propagate ignored
-    orderly_graph_src(name, config, direction, max_depth, show_all)
+    orderly_graph_src(name, config, direction, recursion_limit, show_all)
   }
 }
 
 
 orderly_graph_archive <- function(name, id, config, direction = "downstream",
-                                  propagate = TRUE, max_depth = 100,
+                                  propagate = TRUE, recursion_limit = 100,
                                   show_all = FALSE) {
   assert_scalar_character(direction)
   direction <- match_value(direction, c("upstream", "downstream"))
@@ -115,7 +118,7 @@ orderly_graph_archive <- function(name, id, config, direction = "downstream",
   assert_scalar_character(id)
   assert_scalar_logical(propagate)
   assert_scalar_logical(show_all)
-  assert_scalar_numeric(max_depth)
+  assert_scalar_numeric(recursion_limit)
 
   con <- orderly_db("destination", config)
   on.exit(DBI::dbDisconnect(con))
@@ -126,8 +129,8 @@ orderly_graph_archive <- function(name, id, config, direction = "downstream",
     stop("This report does not exist")
   }
 
-  dep_tree <- build_tree(name = name, id = id, depth = max_depth, con = con,
-                         direction = direction, show_all = show_all)
+  dep_tree <- build_tree(name = name, id = id, depth = recursion_limit,
+                         con = con, direction = direction, show_all = show_all)
 
   # propagate out-of-date
   if (propagate) {
