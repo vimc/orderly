@@ -1,5 +1,5 @@
 orderly_graph_src <- function(name, config, direction = "downstream",
-                              max_depth = 100, recursion_limit = 100,
+                              max_depth = Inf, recursion_limit = 100,
                               show_all = FALSE) {
   ## Start by reading all the src files; this would ideally be done
   ## with some caching layer I think.  The other option would be to

@@ -11,7 +11,7 @@ orderly_graph(
   locate = TRUE,
   direction = "downstream",
   propagate = TRUE,
-  max_depth = 100,
+  max_depth = Inf,
   recursion_limit = 100,
   show_all = FALSE,
   use = "archive"
@@ -39,7 +39,7 @@ the tree permitted values are upstream, downstream}
 of date through the tree}
 
 \item{max_depth}{A numeric, how far back should the tree go, this
-can be useful to truncate a very large tree. (default = 100)}
+can be useful to truncate a very large tree. (default = Inf)}
 
 \item{recursion_limit}{A numeric, limit for depth of tree, if the tree
 goes beyond this then an error is thrown. (default = 100)}

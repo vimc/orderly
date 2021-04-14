@@ -1,6 +1,6 @@
 # orderly 1.2.32
 
-* `orderly_graph` arg `max_depth` now truncates depth of the tree instead of throwing error and arg `recursion_depth` added which works how `max_depth` used to
+* `orderly_graph` arg `max_depth` now truncates depth of the tree instead of throwing error and arg `recursion_limit` added which works how `max_depth` used to
 
 # orderly 1.2.30
 
