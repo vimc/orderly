@@ -449,7 +449,6 @@ report_data_import <- function(con, name, id, config) {
       dat_rds$meta$instance[[type]]
     })
     instances <- instances[!vlapply(instances, is.null)]
-    browser()
     if (length(instances) > 0) {
       report_version_instance <- data_frame(
         id = id,
