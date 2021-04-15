@@ -444,13 +444,24 @@ report_data_import <- function(con, name, id, config) {
 
   ## DB instance:
   if (!is.null(dat_rds$meta$instance)) {
-    report_version_instance <- data_frame(
-      report_version = id,
-      type = names(dat_rds$meta$instance),
-      instance = unname(unlist(dat_rds$meta$instance))
-    )
-    DBI::dbWriteTable(con, "report_version_instance", report_version_instance,
-                      append = TRUE)
+    ## Only add row where instance is set
+    build_row <- function(type) {
+      instance <- dat_rds$meta$instance[[type]]
+      row <- NULL
+      if (!is.null(instance)) {
+        row <- list(report_version = id,
+                    type = type,
+                    instance = instance
+        )
+      }
+      row
+    }
+    report_version_instance <- lapply(names(dat_rds$meta$instance), build_row)
+    report_version_instance <- do.call(rbind, report_version_instance)
+    if (!is.null(report_version_instance)) {
+      DBI::dbWriteTable(con, "report_version_instance", report_version_instance,
+                        append = TRUE)
+    }
   }
 
   sql <- "UPDATE report SET latest = $1 WHERE name = $2"
