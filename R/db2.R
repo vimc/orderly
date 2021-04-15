@@ -8,7 +8,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-orderly_schema_version <- "1.2.6"
+orderly_schema_version <- "1.2.33"
 orderly_schema_table <- "orderly_schema"
 orderly_table_list <- "orderly_schema_tables"
 
@@ -439,6 +439,17 @@ report_data_import <- function(con, name, id, config) {
       workflow_id = dat_rds$meta$workflow$id
     )
     DBI::dbWriteTable(con, "report_version_workflow", report_version_workflow,
+                      append = TRUE)
+  }
+
+  ## DB instance:
+  if (!is.null(dat_rds$meta$instance)) {
+    report_version_instance <- data_frame(
+      report_version = id,
+      type = names(dat_rds$meta$instance),
+      instance = unname(unlist(dat_rds$meta$instance))
+    )
+    DBI::dbWriteTable(con, "report_version_instance", report_version_instance,
                       append = TRUE)
   }
 
