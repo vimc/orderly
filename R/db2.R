@@ -448,10 +448,11 @@ report_data_import <- function(con, name, id, config) {
     instances <- lapply(names(dat_rds$meta$instance), function(type) {
       dat_rds$meta$instance[[type]]
     })
+    names(instances) <- names(dat_rds$meta$instance)
     instances <- instances[!vlapply(instances, is.null)]
     if (length(instances) > 0) {
       report_version_instance <- data_frame(
-        id = id,
+        report_version = id,
         type = names(instances),
         instance = list_to_character(instances))
       DBI::dbWriteTable(con, "report_version_instance", report_version_instance,
