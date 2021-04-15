@@ -457,7 +457,8 @@ report_data_import <- function(con, name, id, config) {
       row
     }
     report_version_instance <- lapply(names(dat_rds$meta$instance), build_row)
-    report_version_instance <- do.call(rbind, report_version_instance)
+    report_version_instance <- do.call(rbind.data.frame,
+                                       report_version_instance)
     if (!is.null(report_version_instance)) {
       DBI::dbWriteTable(con, "report_version_instance", report_version_instance,
                         append = TRUE)
