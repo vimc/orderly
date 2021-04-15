@@ -445,21 +445,16 @@ report_data_import <- function(con, name, id, config) {
   ## DB instance:
   if (!is.null(dat_rds$meta$instance)) {
     ## Only add row where instance is set
-    build_row <- function(type) {
-      instance <- dat_rds$meta$instance[[type]]
-      row <- NULL
-      if (!is.null(instance)) {
-        row <- list(report_version = id,
-                    type = type,
-                    instance = instance
-        )
-      }
-      row
-    }
-    report_version_instance <- lapply(names(dat_rds$meta$instance), build_row)
-    report_version_instance <- do.call(rbind.data.frame,
-                                       report_version_instance)
-    if (!is.null(report_version_instance)) {
+    instances <- lapply(names(dat_rds$meta$instance), function(type) {
+      dat_rds$meta$instance[[type]]
+    })
+    instances <- instances[!vlapply(instances, is.null)]
+    browser()
+    if (length(instances) > 0) {
+      report_version_instance <- data_frame(
+        id = id,
+        type = names(instances),
+        instance = list_to_character(instances))
       DBI::dbWriteTable(con, "report_version_instance", report_version_instance,
                         append = TRUE)
     }
