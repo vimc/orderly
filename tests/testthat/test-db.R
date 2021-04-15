@@ -532,3 +532,41 @@ test_that("db write collision", {
   expect_equal(length(ids), 2)
   expect_setequal(ids, c(id1, id2))
 })
+
+test_that("db includes instance", {
+  skip_on_cran_windows()
+
+  path <- prepare_orderly_example("minimal")
+
+  p <- file.path(path, "orderly_config.yml")
+  writeLines(c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    instances:",
+    "      default:",
+    "        dbname: source.sqlite",
+    "      alternative:",
+    "        dbname: alternative.sqlite"),
+    p)
+
+  file.copy(file.path(path, "source.sqlite"),
+            file.path(path, "alternative.sqlite"))
+
+  id1 <- orderly_run("example", root = path, echo = FALSE)
+  id2 <- orderly_run("example", root = path, echo = FALSE,
+                     instance = "default")
+  id3 <- orderly_run("example", root = path, echo = FALSE,
+                     instance = "alternative")
+
+  orderly_commit(id1, root = path)
+  orderly_commit(id2, root = path)
+  orderly_commit(id3, root = path)
+  con <- orderly_db("destination", root = path)
+  d <- DBI::dbReadTable(con, "report_version_instance")
+  DBI::dbDisconnect(con)
+  expect_equal(d,
+               data_frame(report_version = c(id1, id2, id3),
+                          type = rep("source", 3),
+                          instance = c("default", "default", "alternative")))
+})

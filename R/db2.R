@@ -8,7 +8,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-orderly_schema_version <- "1.2.6"
+orderly_schema_version <- "1.2.33"
 orderly_schema_table <- "orderly_schema"
 orderly_table_list <- "orderly_schema_tables"
 
@@ -440,6 +440,24 @@ report_data_import <- function(con, name, id, config) {
     )
     DBI::dbWriteTable(con, "report_version_workflow", report_version_workflow,
                       append = TRUE)
+  }
+
+  ## DB instance:
+  if (!is.null(dat_rds$meta$instance)) {
+    ## Only add row where instance is set
+    instances <- lapply(names(dat_rds$meta$instance), function(type) {
+      dat_rds$meta$instance[[type]]
+    })
+    names(instances) <- names(dat_rds$meta$instance)
+    instances <- instances[!vlapply(instances, is.null)]
+    if (length(instances) > 0) {
+      report_version_instance <- data_frame(
+        report_version = id,
+        type = names(instances),
+        instance = list_to_character(instances))
+      DBI::dbWriteTable(con, "report_version_instance", report_version_instance,
+                        append = TRUE)
+    }
   }
 
   sql <- "UPDATE report SET latest = $1 WHERE name = $2"

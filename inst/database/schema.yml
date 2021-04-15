@@ -139,6 +139,13 @@ report_version_package:
     - package_name: {type: TEXT}
     - package_version: {type: TEXT}
 
+# Database instances the report version pulled data from
+report_version_instance:
+  columns:
+    - report_version: {fk: report_version.id}
+    - type: {type: TEXT}
+    - instance: {type: TEXT}
+
 # Values here will be populated by orderly as we keep a list in the
 # package and we should not repeat that definition.
 artefact_format:

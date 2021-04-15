@@ -33,7 +33,7 @@ RUN install2.r \
   yaml \
   zip
 
-RUN Rscript -e 'remove.packages("BH")'
+RUN Rscript -e 'remove.packages("BH")' || true
 
 # Install Pandoc
 ENV PANDOC_VERSION "2.7.3"
