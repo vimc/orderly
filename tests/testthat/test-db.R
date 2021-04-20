@@ -566,7 +566,8 @@ test_that("db includes instance", {
   d <- DBI::dbReadTable(con, "report_version_instance")
   DBI::dbDisconnect(con)
   expect_equal(d,
-               data_frame(report_version = c(id1, id2, id3),
+               data_frame(id = c(1, 2, 3),
+                          report_version = c(id1, id2, id3),
                           type = rep("source", 3),
                           instance = c("default", "default", "alternative")))
 })
