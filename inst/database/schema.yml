@@ -142,6 +142,7 @@ report_version_package:
 # Database instances the report version pulled data from
 report_version_instance:
   columns:
+    - id: {type: SERIAL}
     - report_version: {fk: report_version.id}
     - type: {type: TEXT}
     - instance: {type: TEXT}
