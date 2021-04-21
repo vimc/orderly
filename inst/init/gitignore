@@ -17,3 +17,6 @@ orderly_envir.yml
 .Rhistory
 .Rdata
 .Rproj.user
+
+# Created by orderly.server
+runner
