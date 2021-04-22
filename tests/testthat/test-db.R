@@ -571,3 +571,19 @@ test_that("db includes instance", {
                           type = rep("source", 3),
                           instance = c("default", "default", "alternative")))
 })
+
+
+test_that("Can cope when all fields are optional", {
+  path <- prepare_orderly_example("minimal")
+  append_lines(
+    c("fields:",
+      "  requester:",
+      "    required: false",
+      "  author:",
+      "    required: false"),
+    file.path(path, "orderly_config.yml"))
+  id <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id, root = path)
+  db <- orderly_db("destination", root = path)
+  expect_equal(nrow(DBI::dbReadTable(db, "report_version_custom_fields")), 0)
+})
