@@ -1,3 +1,7 @@
+# orderly 1.2.37
+
+* Add function `orderly_remote_status` to return details of currently running and queued reports on the remote queue.
+
 # orderly 1.2.32
 
 * `orderly_graph` arg `max_depth` now truncates depth of the tree instead of throwing error and arg `recursion_limit` added which works how `max_depth` used to

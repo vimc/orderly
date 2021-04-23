@@ -572,7 +572,17 @@ orderly_bundle_import_remote <- function(path, root = NULL, locate = TRUE,
   remote$bundle_import(path)
 }
 
-orderly_remote_status <- function() {
+##' Get status of remote queue.
+##'
+##' Get the status of the remote queue as a list.
+##'
+##' @inheritParams orderly_pull_dependencies
+##'
+##' @return List containing details of running and queued reports on the
+##' remote queue. Including report name, status and version (where known)
+##'
+##' @export
+orderly_remote_status <- function(root = NULL, locate = TRUE, remote = NULL) {
   remote <- get_remote(remote, orderly_config(root, locate))
   remote$queue_status()
 }

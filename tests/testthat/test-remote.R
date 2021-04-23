@@ -355,3 +355,36 @@ test_that("orderly run remote passes ref to run", {
   args <- mockery::mock_args(remote$run)[[2]]
   expect_match(args$ref, "[0-9a-f]{40}")
 })
+
+
+test_that("can get status of remote queue", {
+  path_local <- prepare_orderly_example("demo")
+
+  status <- list(
+    tasks = list(
+      name = "slow3",
+      version = "20210423-143954-e634ca18",
+      key = "fungiform_kiwi",
+      status = "running"
+    )
+  )
+  mock_status <- mockery::mock(status)
+  ## Create a minimal remote class which will satisfy implements_remote
+  mock_remote <- R6::R6Class(
+    "orderly_mock_remote",
+    lock_objects = FALSE,
+    public = list(
+      list_reports = function() TRUE,
+      list_versions = function() TRUE,
+      pull = function() TRUE,
+      run = function() TRUE,
+      url_report = function() TRUE,
+      queue_status = function() mock_status()
+    )
+  )
+
+  remote <- mock_remote$new()
+  res <- orderly_remote_status(remote = remote)
+  mockery::expect_called(mock_status, 1)
+  expect_equal(res, status)
+})
