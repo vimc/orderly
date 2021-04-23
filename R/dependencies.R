@@ -62,7 +62,10 @@
 ##'   of date through the tree
 ##'
 ##' @param max_depth A numeric, how far back should the tree go, this
-##'   can be useful to truncate a very large tree. (default = 100)
+##'   can be useful to truncate a very large tree. (default = Inf)
+##'
+##' @param recursion_limit A numeric, limit for depth of tree, if the tree
+##'   goes beyond this then an error is thrown. (default = 100)
 ##'
 ##' @param show_all A boolean, should we show all reports in the tree,
 ##'   not just the latest.
@@ -91,23 +94,24 @@
 ##'                                  direction = "upstream")
 orderly_graph <- function(name, id = "latest", root = NULL, locate = TRUE,
                           direction = "downstream", propagate = TRUE,
-                          max_depth = 100, show_all = FALSE,
-                          use = "archive") {
+                          max_depth = Inf, recursion_limit = 100,
+                          show_all = FALSE, use = "archive") {
   config <- orderly_config(root, locate)
   use <- match_value(use, c("archive", "src"))
   if (use == "archive") {
     orderly_graph_archive(name, id, config, direction, propagate,
-                          max_depth, show_all)
+                          max_depth, recursion_limit, show_all)
   } else {
     ## id, propagate ignored
-    orderly_graph_src(name, config, direction, max_depth, show_all)
+    orderly_graph_src(name, config, direction, max_depth, recursion_limit,
+                      show_all)
   }
 }
 
 
 orderly_graph_archive <- function(name, id, config, direction = "downstream",
-                                  propagate = TRUE, max_depth = 100,
-                                  show_all = FALSE) {
+                                  propagate = TRUE, max_depth = Inf,
+                                  recursion_limit = 100, show_all = FALSE) {
   assert_scalar_character(direction)
   direction <- match_value(direction, c("upstream", "downstream"))
 
@@ -116,6 +120,7 @@ orderly_graph_archive <- function(name, id, config, direction = "downstream",
   assert_scalar_logical(propagate)
   assert_scalar_logical(show_all)
   assert_scalar_numeric(max_depth)
+  assert_scalar_numeric(recursion_limit)
 
   con <- orderly_db("destination", config)
   on.exit(DBI::dbDisconnect(con))
@@ -126,7 +131,8 @@ orderly_graph_archive <- function(name, id, config, direction = "downstream",
     stop("This report does not exist")
   }
 
-  dep_tree <- build_tree(name = name, id = id, depth = max_depth, con = con,
+  dep_tree <- build_tree(name = name, id = id, depth = max_depth,
+                         limit = recursion_limit, con = con,
                          direction = direction, show_all = show_all)
 
   # propagate out-of-date
@@ -397,8 +403,9 @@ check_parents <- function(parent_vertex, name) {
 ##'
 ##' @param name the name of the report
 ##' @param id the id of the report, if omitted, use the id of the latest report
-##' @param depth [internal] - only used ensure we don't get trapped in an
-##'              infinite loop
+##' @param depth [internal] - The depth of dependencies we want to return
+##' @param limit [internal] - limit on number of dependencies - used ensure
+##'              we don't get trapped in an infinite loop
 ##' @param parent [internal] - the previous vertex in the tree
 ##' @param graph [internal] - The tree object that is built up and returned at
 ##'             the end
@@ -408,12 +415,12 @@ check_parents <- function(parent_vertex, name) {
 ##'
 ##' @return An R6 tree object
 ##' @noRd
-build_tree <- function(name, id, depth = 100, parent = NULL,
+build_tree <- function(name, id, depth = 100, limit = 100, parent = NULL,
                        tree = NULL, con, direction = "downstream",
                        show_all = FALSE) {
   ## this should never get triggered - it only exists the prevent an infinite
   ## recursion
-  if (depth < 0) {
+  if (limit < 0) {
     stop("The tree is very large or degenerate.")
   }
 
@@ -455,6 +462,9 @@ build_tree <- function(name, id, depth = 100, parent = NULL,
   } else { ## ...otherwise add a vertex
     v <- tree$add_child(parent, name, id, out_of_date)
   }
+  if (depth == 0) {
+    return(tree)
+  }
 
   dependency_ids <- get_dependencies_db(name = name, id = id, con = con,
                                         direction = direction,
@@ -463,8 +473,8 @@ build_tree <- function(name, id, depth = 100, parent = NULL,
     dependency_name <- id_to_name(id = dep_id, con = con)
 
     build_tree(name = dependency_name, id = dep_id, depth = depth - 1,
-               parent = v, tree = tree, con, direction = direction,
-               show_all = show_all)
+               limit = limit - 1, parent = v, tree = tree, con,
+               direction = direction, show_all = show_all)
   }
 
   tree

@@ -8,7 +8,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-orderly_schema_version <- "1.2.6"
+orderly_schema_version <- "1.2.34"
 orderly_schema_table <- "orderly_schema"
 orderly_table_list <- "orderly_schema_tables"
 
@@ -197,11 +197,13 @@ report_db_open_existing <- function(con, config) {
 }
 
 
-report_db_import <- function(name, id, config) {
+report_db_import <- function(name, id, config, timeout = 10) {
   orderly_log("import", sprintf("%s:%s", name, id))
   con <- orderly_db("destination", config)
   on.exit(DBI::dbDisconnect(con))
-  DBI::dbBegin(con)
+  ## sqlite busy handler expects milliseconds
+  RSQLite::sqliteSetBusyHandler(con, timeout * 1000)
+  DBI::dbExecute(con, "BEGIN IMMEDIATE")
   report_data_import(con, name, id, config)
   DBI::dbCommit(con)
 }
@@ -281,12 +283,14 @@ report_data_import <- function(con, name, id, config) {
   if (!is.null(dat_rds$meta$extra_fields)) {
     custom <- vcapply(dat_rds$meta$extra_fields, function(x) as.character(x))
     custom <- custom[!is.na(custom)]
-    report_version_custom_fields <- data_frame(
-      report_version = id,
-      key = names(custom),
-      value = unname(custom))
-    DBI::dbWriteTable(con, "report_version_custom_fields",
-                      report_version_custom_fields, append = TRUE)
+    if (length(custom) > 0) {
+      report_version_custom_fields <- data_frame(
+        report_version = id,
+        key = names(custom),
+        value = unname(custom))
+      DBI::dbWriteTable(con, "report_version_custom_fields",
+                        report_version_custom_fields, append = TRUE)
+    }
   }
 
   if (!is.null(dat_rds$meta$view)) {
@@ -438,6 +442,24 @@ report_data_import <- function(con, name, id, config) {
     )
     DBI::dbWriteTable(con, "report_version_workflow", report_version_workflow,
                       append = TRUE)
+  }
+
+  ## DB instance:
+  if (!is.null(dat_rds$meta$instance)) {
+    ## Only add row where instance is set
+    instances <- lapply(names(dat_rds$meta$instance), function(type) {
+      dat_rds$meta$instance[[type]]
+    })
+    names(instances) <- names(dat_rds$meta$instance)
+    instances <- instances[!vlapply(instances, is.null)]
+    if (length(instances) > 0) {
+      report_version_instance <- data_frame(
+        report_version = id,
+        type = names(instances),
+        instance = list_to_character(instances))
+      DBI::dbWriteTable(con, "report_version_instance", report_version_instance,
+                        append = TRUE)
+    }
   }
 
   sql <- "UPDATE report SET latest = $1 WHERE name = $2"

@@ -111,6 +111,7 @@ prepare_orderly_example <- function(name, path = tempfile(), testing = FALSE,
     src <- orderly_file(file.path("examples", name))
   }
   orderly_init(path, quiet = TRUE)
+  path <- normalizePath(path, mustWork = TRUE)
   src_files <- dir(src, full.names = TRUE)
   file_copy(src_files, path, overwrite = TRUE, recursive = TRUE)
 
@@ -270,7 +271,7 @@ prepare_orderly_git_example <- function(path = tempfile(), run_report = FALSE,
 
 
 prepare_basic_git <- function(path, quiet) {
-  file.copy(orderly_file("init/gitignore"), path)
+  orderly_use_gitignore(path, prompt = FALSE, show = FALSE)
   gert::git_init(path)
   withr::with_dir(
     path,

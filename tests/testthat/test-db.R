@@ -506,7 +506,6 @@ test_that("rebuild nonempty database with backup", {
   DBI::dbDisconnect(con2)
 })
 
-
 test_that("db write collision", {
   skip_on_cran()
 
@@ -518,16 +517,73 @@ test_that("db write collision", {
   orderly_commit(id1, root = path)
   con <- orderly_db("destination", root = path)
   on.exit(DBI::dbDisconnect(con))
-  DBI::dbBegin(con)
+  DBI::dbExecute(con, "BEGIN IMMEDIATE")
   DBI::dbExecute(con, "DELETE FROM file_artefact")
 
-  testthat::expect_error(
-    orderly_commit(id2, root = path, retry_backoff = 0.001),
-    "Failed to run command after 5 attempts: database is locked")
+  elapsed <- system.time(
+    testthat::expect_error(
+      orderly_commit(id2, root = path, timeout = 5),
+      "database is locked"))
+  expect_true(elapsed["elapsed"] > 5)
 
   DBI::dbRollback(con)
-  p <- orderly_commit(id2, root = path, retry_backoff = 0.001)
+  p <- orderly_commit(id2, root = path)
   ids <- DBI::dbGetQuery(con, "SELECT id from report_version")$id
   expect_equal(length(ids), 2)
   expect_setequal(ids, c(id1, id2))
+})
+
+test_that("db includes instance", {
+  skip_on_cran_windows()
+
+  path <- prepare_orderly_example("minimal")
+
+  p <- file.path(path, "orderly_config.yml")
+  writeLines(c(
+    "database:",
+    "  source:",
+    "    driver: RSQLite::SQLite",
+    "    instances:",
+    "      default:",
+    "        dbname: source.sqlite",
+    "      alternative:",
+    "        dbname: alternative.sqlite"),
+    p)
+
+  file.copy(file.path(path, "source.sqlite"),
+            file.path(path, "alternative.sqlite"))
+
+  id1 <- orderly_run("example", root = path, echo = FALSE)
+  id2 <- orderly_run("example", root = path, echo = FALSE,
+                     instance = "default")
+  id3 <- orderly_run("example", root = path, echo = FALSE,
+                     instance = "alternative")
+
+  orderly_commit(id1, root = path)
+  orderly_commit(id2, root = path)
+  orderly_commit(id3, root = path)
+  con <- orderly_db("destination", root = path)
+  d <- DBI::dbReadTable(con, "report_version_instance")
+  DBI::dbDisconnect(con)
+  expect_equal(d,
+               data_frame(id = c(1, 2, 3),
+                          report_version = c(id1, id2, id3),
+                          type = rep("source", 3),
+                          instance = c("default", "default", "alternative")))
+})
+
+
+test_that("Can cope when all fields are optional", {
+  path <- prepare_orderly_example("minimal")
+  append_lines(
+    c("fields:",
+      "  requester:",
+      "    required: false",
+      "  author:",
+      "    required: false"),
+    file.path(path, "orderly_config.yml"))
+  id <- orderly_run("example", root = path, echo = FALSE)
+  orderly_commit(id, root = path)
+  db <- orderly_db("destination", root = path)
+  expect_equal(nrow(DBI::dbReadTable(db, "report_version_custom_fields")), 0)
 })
