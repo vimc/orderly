@@ -1,3 +1,7 @@
+# orderly 1.2.28
+
+* Remove `orderly_workflow` in favour of supporting workflows through orderly.server (mrc-2275)
+
 # orderly 1.2.37
 
 * Add function `orderly_remote_status` to return details of currently running and queued reports on the remote queue.

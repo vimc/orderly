@@ -30,10 +30,6 @@ cli_args_process <- function(args) {
     dat$options$parameters <- cli_args_process_batch_parameters(
       dat$options$parameter, dat$options$file)
     dat$options$name <- dat$options[["<name>"]] # docopt bug?
-  } else if (dat$command == "workflow") {
-    dat$options$parameters <- cli_args_process_run_parameters(
-      dat$options$parameter)
-    dat$options$name <- dat$options[["<name>"]] # docopt bug?
   }
 
   dat
@@ -55,8 +51,7 @@ Commands:
   cleanup      Remove drafts and dangling data
   rebuild      Rebuild the database
   migrate      Migrate the archive
-  batch        Run a batch of reports
-  workflow     Run a workflow"
+  batch        Run a batch of reports"
 
 cli_args_preprocess <- function(args) {
   ## This will work ok for filtering away unwanted arguments *if* the
@@ -387,49 +382,6 @@ main_do_batch <- function(x) {
   message("ids:", paste(ids, collapse = ", "))
 }
 
-## 9. workflow
-usage_workflow <- "Usage:
-  orderly workflow [options] <name> [<parameter>...]
-
-Options:
-  --print-log      Print the log (rather than storing it)
-  --ref=REF        Git reference (branch or sha) to use
-  --pull           Pull git before running report
-  --instance=NAME  Database instance to use (if instances are configured)
-  --message=TEXT   A message explaining why the workflow was run
-
-Parameters, if given, must be passed through in key=value pairs"
-
-main_do_workflow <- function(x) {
-  ## TODO: Get some classed errors though here and then write out
-  ## information about whether or not things worked and why they
-  ## didn't.  Possible issues (in order)
-  ##
-  ## * orderly report not found
-  ## * error while preparing (e.g., package not found)
-  ## * error while running report
-  ## * error checking artefacts
-  config <- orderly_config(x$options$root, TRUE)
-  name <- x$options$name
-  instance <- x$options$instance
-  print_log <- x$options$print_log
-  ref <- x$options$ref
-  pull <- x$options$pull
-  message <- x$options$message
-
-  if (print_log) {
-    sink(stderr(), type = "output")
-    on.exit(sink(NULL, type = "output"))
-  } else {
-    config$add_run_option("capture_log", TRUE)
-  }
-
-  git_pull_ref(pull, ref, config, message = "Can't use --pull with --ref.")
-
-  output <- orderly_workflow_internal(name, root = config, instance = instance,
-                                      message = message, ref = ref)
-  message("ids:", paste(output, collapse = ", "))
-}
 
 write_script <- function(path, versioned = FALSE) {
   if (!isTRUE(is_directory(path))) {
@@ -476,10 +428,7 @@ cli_commands <- function() {
                       target = main_do_migrate),
        batch = list(name = "batch run reports",
                       usage = usage_batch,
-                      target = main_do_batch),
-       workflow = list(name = "run workflow",
-                       usage = usage_workflow,
-                       target = main_do_workflow))
+                      target = main_do_batch))
 }
 
 
