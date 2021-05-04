@@ -139,14 +139,15 @@ usage_run <- "Usage:
   orderly run [options] <name> [<parameter>...]
 
 Options:
-  --instance=NAME  Database instance to use (if instances are configured)
-  --no-commit      Do not commit the report
-  --print-log      Print the log (rather than storing it)
-  --id-file=FILE   File to write the id into
-  --ref=REF        Git reference (branch or sha) to use
-  --fetch          Fetch git before updating reference
-  --pull           Pull git before running report
-  --message=TEXT   A message explaining why the report was run
+  --instance=NAME     Database instance to use (if instances are configured)
+  --no-commit         Do not commit the report
+  --print-log         Print the log (rather than storing it)
+  --id-file=FILE      File to write the id into
+  --ref=REF           Git reference (branch or sha) to use
+  --fetch             Fetch git before updating reference
+  --pull              Pull git before running report
+  --message=TEXT      A message explaining why the report was run
+  --workflow-id=TEXT  The ID of the workflow this report is run as part of
 
 Parameters, if given, must be passed through in key=value pairs"
 
@@ -171,6 +172,7 @@ main_do_run <- function(x) {
   fetch <- x$options$fetch
   pull <- x$options$pull
   message <- x$options$message
+  workflow_id <- x$options$workflow_id
 
   if (print_log) {
     sink(stderr(), type = "output")
@@ -183,7 +185,8 @@ main_do_run <- function(x) {
   id <- orderly_run_internal(name, parameters, root = config,
                              id_file = id_file, instance = instance,
                              ref = ref, fetch = fetch, message = message,
-                             commit = commit, capture_log = !print_log)
+                             commit = commit, capture_log = !print_log,
+                             workflow_id = workflow_id)
   message("id:", id)
 }
 

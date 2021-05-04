@@ -1093,3 +1093,39 @@ test_that("orderly_run_internal writes fail rds on error", {
   expect_match(failed_rds$error$trace[length(failed_rds$error$trace)],
                'stop\\("some error"\\)')
 })
+
+test_that("orderly_run_internal can save workflow metadata", {
+  path <- prepare_orderly_example("minimal")
+  tmp <- tempfile()
+  id <- orderly_run_internal("example", root = path, id_file = tmp,
+                             commit = TRUE, echo = FALSE,
+                             workflow_id = "123")
+  rds <- path_orderly_run_rds(file.path(path, "archive", "example", id))
+  expect_true(file.exists(rds))
+  dat <- readRDS(rds)
+  expect_equal(dat$meta$workflow, "123")
+
+  con <- orderly_db("destination", root = path)
+  on.exit(DBI::dbDisconnect(con))
+  workflow <- DBI::dbGetQuery(con, "SELECT * FROM workflow")
+  expect_equal(workflow, data_frame(id = "123"))
+  report_version_workflow <-
+    DBI::dbGetQuery(con, "SELECT * FROM report_version_workflow")
+  expect_equal(report_version_workflow, data_frame(report_version = id,
+                                                   workflow_id = "123"))
+
+  id2 <- orderly_run_internal("example", root = path, id_file = tmp,
+                             commit = TRUE, echo = FALSE,
+                             workflow_id = "123")
+  rds <- path_orderly_run_rds(file.path(path, "archive", "example", id2))
+  expect_true(file.exists(rds))
+  dat <- readRDS(rds)
+  expect_equal(dat$meta$workflow, "123")
+  workflow <- DBI::dbGetQuery(con, "SELECT * FROM workflow")
+  expect_equal(workflow, data_frame(id = "123"))
+  report_version_workflow <-
+    DBI::dbGetQuery(con, "SELECT * FROM report_version_workflow")
+  expect_equal(report_version_workflow,
+               data_frame(report_version = c(id, id2),
+                          workflow_id = c("123", "123")))
+})

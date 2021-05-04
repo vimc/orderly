@@ -8,7 +8,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-orderly_schema_version <- "1.2.34"
+orderly_schema_version <- "1.2.35"
 orderly_schema_table <- "orderly_schema"
 orderly_table_list <- "orderly_schema_tables"
 
@@ -429,16 +429,13 @@ report_data_import <- function(con, name, id, config) {
 
   if (!is.null(dat_rds$meta$workflow)) {
     sql_batch <- "SELECT id FROM workflow WHERE id = $1"
-    if (nrow(DBI::dbGetQuery(con, sql_batch, dat_rds$meta$workflow$id)) == 0L) {
-      workflow <- data_frame(
-        id = dat_rds$meta$workflow$id,
-        name = dat_rds$meta$workflow$name
-      )
+    if (nrow(DBI::dbGetQuery(con, sql_batch, dat_rds$meta$workflow)) == 0L) {
+      workflow <- data_frame(id = dat_rds$meta$workflow)
       DBI::dbWriteTable(con, "workflow", workflow, append = TRUE)
     }
     report_version_workflow <- data_frame(
       report_version = id,
-      workflow_id = dat_rds$meta$workflow$id
+      workflow_id = dat_rds$meta$workflow
     )
     DBI::dbWriteTable(con, "report_version_workflow", report_version_workflow,
                       append = TRUE)
