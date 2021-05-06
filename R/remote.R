@@ -118,16 +118,30 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
   if (id == "latest") {
     id <- latest_id(v)
   } else if (id_is_query(id)) {
-    id <- orderly_search(id, name, parameters, root = root, remote = remote)
-  }
-
-  if (!(id %in% v)) {
-    ## Confirm that the report does actually exist, working around
-    ## VIMC-1281:
-    stop(sprintf(
-      "Version '%s' not found at '%s': valid versions are:\n%s",
-      id, remote_name(remote), paste(sprintf("  - %s", v), collapse = "\n")),
-      call. = FALSE)
+    query <- id
+    id <-
+      orderly_search(id, name, parameters, root = root, remote = remote)
+    if (is.na(id)) {
+      msg <- c(
+        sprintf("Failed to find suitable version of '%s' with query:", name),
+        sprintf("  '%s'", query),
+        "and parameters",
+        sprintf("  - %s: %s", names(parameters),
+                vcapply(parameters, as.character)))
+      stop(paste(msg, collapse = "\n"), call. = FALSE)
+    }
+  } else {
+    ## We've been given a direct id so we just need to check that it
+    ## exists
+    if (!(id %in% v)) {
+      ## Confirm that the report does actually exist, working around
+      ## VIMC-1281:
+      stop(sprintf(
+        "Version '%s' of '%s' not found at '%s': valid versions are:\n%s",
+        id, name, remote_name(remote),
+        paste(sprintf("  - %s", v), collapse = "\n")),
+        call. = FALSE)
+    }
   }
 
   dest <- file.path(path_archive(config$root), name, id)

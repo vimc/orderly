@@ -1,6 +1,10 @@
-# orderly 1.2.28
+# orderly 1.2.39
 
 * Remove `orderly_workflow` in favour of supporting workflows through orderly.server (mrc-2275)
+
+# orderly 1.2.38
+
+* Much clearer error message where dependency resolution fails due to a query dependency (vimc-4499)
 
 # orderly 1.2.37
 

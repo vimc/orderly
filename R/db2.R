@@ -8,7 +8,7 @@
 ## namespace/module feature so that implementation details can be
 ## hidden away a bit further.
 
-orderly_schema_version <- "1.2.35"
+orderly_schema_version <- "1.2.39"
 orderly_schema_table <- "orderly_schema"
 orderly_table_list <- "orderly_schema_tables"
 
