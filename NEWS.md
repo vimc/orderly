@@ -1,3 +1,7 @@
+# orderly 1.2.38
+
+* Much clearer error message where dependency resolution fails due to a query dependency (vimc-4499)
+
 # orderly 1.2.37
 
 * Add function `orderly_remote_status` to return details of currently running and queued reports on the remote queue.

@@ -601,3 +601,31 @@ test_that("dependency latest with search query", {
   expect_equal(child_1$name, "other")
   expect_length(child_1$children, 0)
 })
+
+
+test_that("Sensible error message if query fails", {
+  dat <- prepare_orderly_query_example()
+  remote <- orderly_remote_path(dat$root)
+
+  path_local <- prepare_orderly_example("demo")
+  config <- orderly_config_$new(path_local)
+
+  p <- file.path(path_local, "src", "use_dependency", "orderly.yml")
+  txt <- readLines(p)
+  txt <- sub("latest", "latest(parameter:nmin < x)", txt, fixed = TRUE)
+  txt <- c(txt, c("parameters:",
+                  "  x:",
+                  "    default: 0.25"))
+  writeLines(txt, p)
+
+  expect_error(
+    orderly_pull_dependencies("use_dependency", parameters = list(x = 0.05),
+                              remote = remote, root = path_local),
+    "Failed to find suitable version of 'other' with query:")
+
+  expect_error(
+    orderly_pull_archive("other", "latest(parameter:nmin < x)",
+                         parameters = list(x = 0.05),
+                         remote = remote, root = path_local),
+    "Failed to find suitable version of 'other' with query:")
+})
