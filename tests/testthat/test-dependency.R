@@ -629,6 +629,4 @@ test_that("...", {
     orderly_pull_archive("other", "latest(parameter:nmin < x)",
                          parameters = list(x = 0.05),
                          remote = remote, root = path_local))
-
-  orderly_search("1 == 1", "other", root = path_local, remote = remote)
 })
