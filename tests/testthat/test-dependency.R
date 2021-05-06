@@ -603,7 +603,7 @@ test_that("dependency latest with search query", {
 })
 
 
-test_that("...", {
+test_that("Sensible error message if query fails", {
   dat <- prepare_orderly_query_example()
   remote <- orderly_remote_path(dat$root)
 
@@ -624,9 +624,8 @@ test_that("...", {
     "Failed to find suitable version of 'other' with query:")
 
   expect_error(
-    orderly_pull_dependencies("use_dependency", parameters = list(x = 0.05),
-                              remote = remote, root = path_local),
     orderly_pull_archive("other", "latest(parameter:nmin < x)",
                          parameters = list(x = 0.05),
-                         remote = remote, root = path_local))
+                         remote = remote, root = path_local),
+    "Failed to find suitable version of 'other' with query:")
 })
