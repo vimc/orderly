@@ -48,10 +48,6 @@ path_orderly_envir_yml <- function(path) {
   file.path(path, "orderly_envir.yml")
 }
 
-path_orderly_workflow_dir <- function(path, workflow_name) {
-  file.path(path, "workflows", paste0(workflow_name, ".yml"))
-}
-
 path_orderly_log <- function(path) {
   file.path(path, "orderly.log")
 }

@@ -684,174 +684,19 @@ test_that("batch: pull before run", {
   expect_equal(git_ref_to_sha("HEAD", path_local), sha_origin)
 })
 
-test_that("workflow", {
-  testthat::skip_on_cran()
-  path <- unzip_git_demo()
 
-  args <- c("--root", path, "workflow", "my_workflow")
-
+test_that("run can save workflow metadata", {
+  path <- prepare_orderly_example("minimal")
+  args <- c("--root", path, "run", "--workflow-id", "123", "example")
   res <- cli_args_process(args)
-  expect_equal(res$command, "workflow")
-  expect_equal(res$options$name, "my_workflow")
-  expect_false(res$options$print_log)
-  expect_false(res$options$pull)
-  expect_equal(res$options$instance, NULL)
-  expect_equal(res$target, main_do_workflow)
+  expect_equal(res$options$workflow_id, "123")
 
-  expect_message(res$target(res), "ids:[\\w\\d-]*")
-
-  d <- orderly_list_archive(path)
-  expect_equal(nrow(d), 2L)
-  expect_equal(d$name, c("global", "minimal"))
-
-  log_file <- file.path(path, "archive", "global", d$id[1], "orderly.log")
-  expect_true(file.exists(log_file))
-  logs <- readLines(log_file)
-  expect_true(sprintf("[ id         ]  %s", d$id[1]) %in%
-                crayon::strip_style(logs))
-  expect_equal(sum(grepl("\\[ id         \\].*", logs)), 1)
-
-  log_file <- file.path(path, "archive", "minimal", d$id[2], "orderly.log")
-  expect_true(file.exists(log_file))
-  logs <- readLines(log_file)
-  expect_true(sprintf("[ id         ]  %s", d$id[2]) %in%
-                crayon::strip_style(logs))
-  expect_equal(sum(grepl("\\[ id         \\].*", logs)), 1)
-})
-
-test_that("workflow: pull before run", {
-  testthat::skip_on_cran()
-  path <- prepare_orderly_git_example(branch = "other")
-  path_local <- path[["local"]]
-  path_origin <- path[["origin"]]
-  sha_local <- git_ref_to_sha("HEAD", path_local)
-  sha_origin <- git_ref_to_sha("HEAD", path_origin)
-
-  args <- c("--root", path_local, "workflow", "--pull", "my_workflow")
-
-  res <- cli_args_process(args)
-  expect_equal(res$command, "workflow")
-  expect_equal(res$options$name, "my_workflow")
-  expect_equal(res$options$instance, NULL)
-  expect_true(res$options$pull)
-  expect_equal(res$target, main_do_workflow)
-
-  expect_message(res$target(res), "ids:[\\w\\d-]*")
-
-  id <- orderly_latest("minimal", root = path_local)
-  d <- readRDS(path_orderly_run_rds(
-    file.path(path_local, "archive", "minimal", id)))
-  expect_equal(d$git$sha, sha_origin)
-  expect_equal(git_ref_to_sha("HEAD", path_local), sha_origin)
-})
-
-test_that("workflow: print logs", {
-  testthat::skip_on_cran()
-  path <- unzip_git_demo()
-
-  args <- c("--root", path, "workflow", "--print-log", "my_workflow")
-
-  res <- cli_args_process(args)
-  expect_equal(res$command, "workflow")
-  expect_equal(res$options$name, "my_workflow")
-  expect_true(res$options$print_log)
-  expect_false(res$options$pull)
-  expect_equal(res$options$instance, NULL)
-  expect_equal(res$target, main_do_workflow)
-
-  out <- evaluate_promise(capture.output(res$target(res), type = "message"))
-
-  d <- orderly_list_archive(path)
-  expect_equal(nrow(d), 2L)
-  expect_equal(d$name, c("global", "minimal"))
-
-  expect_true(sprintf("[ id         ]  %s\n", d$id[1])
-              %in% crayon::strip_style(out$messages))
-  log_file <- file.path(path, "archive", "global", d$id[1], "orderly.log")
-  ## Logs have not been written to file
-  expect_false(file.exists(log_file))
-
-  expect_true(sprintf("[ id         ]  %s\n", d$id[2])
-              %in% crayon::strip_style(out$messages))
-  log_file <- file.path(path, "archive", "global", d$id[2], "orderly.log")
-  ## Logs have not been written to file
-  expect_false(file.exists(log_file))
-})
-
-test_that("workflow: args passed to workflow", {
-  path <- unzip_git_demo()
-  args <- c("--root", path, "workflow", "--instance", "inst",
-            "--message", "msg", "my_workflow")
-
-  res <- cli_args_process(args)
-  expect_equal(res$command, "workflow")
-  expect_equal(res$options$name, "my_workflow")
-  expect_false(res$options$print_log)
-  expect_false(res$options$pull)
-  expect_equal(res$options$instance, "inst")
-  expect_equal(res$options$message, "msg")
-  expect_equal(res$target, main_do_workflow)
-
-  mock_workflow <- mockery::mock("id")
-  with_mock("orderly:::orderly_workflow_internal" = mock_workflow,
-            tryCatch(res$target(res),
-                     error = function(e) {
-                       ## We don't care about error here so just consume it
-                       invisible(NULL)
-                     }))
-
-  args <- mockery::mock_args(mock_workflow)
-  ## orderly_workflow called once
-  expect_length(args, 1)
-  expect_equal(args[[1]]$instance, "inst")
-  expect_equal(args[[1]]$message, "msg")
-})
-
-test_that("workflow: ref", {
-  testthat::skip_on_cran()
-  path <- unzip_git_demo()
-
-  ## Change workflow on "other" branch
-  prev <- git_checkout_branch("other", root = path)
-  workflow_file <- file.path(path, "workflows/my_workflow.yml")
-  workflow <- c("steps:",
-                '  - name: "minimal"',
-                '  - name: "other"')
-  writeLines(workflow, workflow_file)
-  ## Add a default param - eventually we want to workflow to be able
-  ## to pass params but set some default for now
-  other_yml <- file.path(path, "src/other/orderly.yml")
-  other <- readLines(other_yml)
-  other <- gsub(pattern = "nmin: ~", replace = "nmin:\n    default: 0.25",
-                x = other)
-  writeLines(other, other_yml)
-  git_run(c("add", "."), root = path, check = TRUE)
-  git_run(c("commit", "-m", "'initial-import'"), root = path, check = TRUE)
-  other_branch <- git_checkout_branch(prev, root = path)
-  expect_false(identical(workflow, readLines(workflow_file)))
-
-  ## Run the workflow on --ref other
-  args <- c("--root", path, "workflow", "--ref", "other", "my_workflow")
-
-  res <- cli_args_process(args)
-  expect_equal(res$command, "workflow")
-  expect_equal(res$options$ref, "other")
-
-  ans <- capture.output(res$target(res))
-
-  d <- orderly_list_archive(path)
-  expect_equal(nrow(d), 2L)
-  expect_equal(d$name, c("minimal", "other"))
-})
-
-test_that("workflow: pull & ref don't go together", {
-  testthat::skip_on_cran()
-  path <- unzip_git_demo()
-  args <- c("--root", path, "workflow", "--ref", "origin/master", "--pull",
-            "my_workflow")
-  res <- cli_args_process(args)
-  expect_error(res$target(res),
-               "Can't use --pull with --ref.",
-               fixed = TRUE,
-               class = "orderly_cli_error")
+  capture.output(res$target(res))
+  expect_equal(orderly_list(path), "example")
+  expect_equal(nrow(orderly_list_archive(path)), 1)
+  id <- orderly_list_archive(path)$id
+  rds <- path_orderly_run_rds(file.path(path, "archive", "example", id))
+  expect_true(file.exists(rds))
+  dat <- readRDS(rds)
+  expect_equal(dat$meta$workflow, "123")
 })

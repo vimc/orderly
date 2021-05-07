@@ -128,13 +128,13 @@ orderly_run_internal <- function(name = NULL, parameters = NULL, envir = NULL,
                                  remote = NULL, tags = NULL,
                                  # specific to run_internal
                                  id_file = NULL, batch_id = NULL,
-                                 workflow_info = NULL, fetch = FALSE,
+                                 workflow_id = NULL, fetch = FALSE,
                                  ref = NULL, capture_log = NULL,
                                  commit = FALSE) {
   version <- orderly_version$new(name, root, locate)
   id <- version$run_internal(parameters, instance, envir, message, tags, echo,
                              use_draft, remote, id_file, batch_id,
-                             workflow_info, ref, fetch, capture_log)
+                             workflow_id, ref, fetch, capture_log)
   if (commit) {
     version$commit(capture_log)
   }

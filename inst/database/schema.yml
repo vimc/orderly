@@ -253,7 +253,6 @@ report_version_batch:
 workflow:
   columns:
     - id: {type: TEXT}
-    - name: {type: TEXT}
 
 report_version_workflow:
   columns:

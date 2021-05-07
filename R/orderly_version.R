@@ -8,7 +8,7 @@ orderly_version <- R6::R6Class(
 
     id = NULL,
     batch_id = NULL,
-    workflow_info = NULL,
+    workflow_id = NULL,
     workdir = NULL,
 
     envvar = NULL,
@@ -354,7 +354,7 @@ orderly_version <- R6::R6Class(
            tags = private$tags,
            git = private$preflight_info$git,
            batch_id = private$batch_id,
-           workflow = private$workflow_info,
+           workflow = private$workflow_id,
            data = private$postflight_info$data_info,
            view = private$postflight_info$view_info)
     },
@@ -423,7 +423,7 @@ orderly_version <- R6::R6Class(
                             use_draft = FALSE, remote = NULL,
                             ## These might move around a bit
                             id_file = NULL, batch_id = NULL,
-                            workflow_info = NULL, ref = NULL, fetch = FALSE,
+                            workflow_id = NULL, ref = NULL, fetch = FALSE,
                             capture_log = FALSE) {
       logfile <- tempfile()
       capture_log <- capture_log %||%
@@ -441,7 +441,7 @@ orderly_version <- R6::R6Class(
                               path_orderly_log(private$workdir)))
           }
           private$batch_id <- batch_id
-          private$workflow_info <- workflow_info
+          private$workflow_id <- workflow_id
           private$fetch()
           self$run_execute(echo)
           self$run_cleanup()
