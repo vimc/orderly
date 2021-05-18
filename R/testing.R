@@ -208,8 +208,8 @@ build_git_demo <- function() {
   git_run(c("config", "user.email", "email@example.com"), root = path,
           check = TRUE)
   git_run(c("config", "user.name", "orderly"), root = path, check = TRUE)
-  writeLines(c("source.sqlite", "orderly.sqlite",
-               "archive", "data", "draft", "extra", "runner", "upstream"),
+  writeLines(c("source.sqlite", "orderly.sqlite", "archive", "data", "draft",
+               "extra", "runner", "upstream", "backup"),
              file.path(path, ".gitignore"))
   git_run(c("add", "."), root = path, check = TRUE)
   git_run(c("add", "-f", "archive", "data", "draft"), root = path, check = TRUE)
