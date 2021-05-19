@@ -208,8 +208,11 @@ build_git_demo <- function() {
   git_run(c("config", "user.email", "email@example.com"), root = path,
           check = TRUE)
   git_run(c("config", "user.name", "orderly"), root = path, check = TRUE)
-  writeLines(c("source.sqlite", "orderly.sqlite",
-               "archive", "data", "draft", "extra", "runner", "upstream"),
+  orderly_use_gitignore(path, prompt = FALSE, show = FALSE)
+  gitignore <- readLines(file.path(path, ".gitignore"))
+  ## Ignore "extra" dir created above and "upstream" used to store a remote git
+  ## repo for testing in orderly.server
+  writeLines(c(gitignore, "extra", "upstream"),
              file.path(path, ".gitignore"))
   git_run(c("add", "."), root = path, check = TRUE)
   git_run(c("add", "-f", "archive", "data", "draft"), root = path, check = TRUE)
