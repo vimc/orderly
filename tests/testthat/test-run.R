@@ -1019,8 +1019,8 @@ test_that("failed run creates failed rds", {
 
   expect_equal(failed_rds$archive_version, cache$current_archive_version)
 
-  expect_equal(failed_rds$meta$git$branch, "master")
-  expect_equal(failed_rds$meta$git$status, " M src/minimal/script.R")
+  expect_equal(failed_rds$git$branch, "master")
+  expect_equal(failed_rds$git$status, " M src/minimal/script.R")
 })
 
 test_that("fail during cleanup creates failed rds", {
