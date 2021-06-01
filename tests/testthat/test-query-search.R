@@ -243,7 +243,7 @@ test_that("all together from a report", {
   expect_error(
     orderly_run("use_dependency", root = root, echo = FALSE,
                 use_draft = TRUE),
-    "Query '.+' did not find suitable version")
+    "Query '.+' did not find suitable version of 'other'")
 
   id_draft <- orderly_run("other", root = root, parameters = list(nmin = 0.1),
                           echo = FALSE)
