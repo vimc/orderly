@@ -106,7 +106,8 @@ resolve_dependencies_local <- function(id, name, config, parameters,
     id <- orderly_search(query, name, parameters, draft = use_draft,
                          root = config, locate = FALSE)
     if (is.na(id)) {
-      stop(sprintf("Query '%s' did not find suitable version", query),
+      stop(sprintf("Query '%s' did not find suitable version of '%s'",
+                   query, name),
            call. = FALSE)
     }
   }
