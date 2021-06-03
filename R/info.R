@@ -46,10 +46,10 @@ orderly_info <- function(id, name, root = NULL, locate = TRUE) {
   ## Read rds
   ## Parse info out into nice format
   git <- NULL
-  if (!is.null(info$meta$git)) {
+  if (!is.null(info$git)) {
     git <- list(
-      branch = info$meta$git$branch,
-      ref = info$meta$git$sha_short
+      branch = info$git$branch,
+      ref = info$git$sha_short
     )
   }
   error <- NULL

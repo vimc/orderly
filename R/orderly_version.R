@@ -352,7 +352,6 @@ orderly_version <- R6::R6Class(
            elapsed = as.numeric(private$time$elapsed, "secs"),
            changelog = private$changelog,
            tags = private$tags,
-           git = private$preflight_info$git,
            batch_id = private$batch_id,
            workflow = private$workflow_id,
            data = private$postflight_info$data_info,
@@ -362,8 +361,7 @@ orderly_version <- R6::R6Class(
     write_orderly_run_rds = function() {
       session <- withr::with_envvar(private$envvar, session_info())
       session$meta <- private$metadata()
-      ## NOTE: git is here twice for some reason see VIMC-4613
-      session$git <- session$meta$git
+      session$git <- private$preflight_info$git
       session$archive_version <- cache$current_archive_version
       saveRDS(session, path_orderly_run_rds(private$workdir))
     },
@@ -386,8 +384,7 @@ orderly_version <- R6::R6Class(
       }
       session$error <- list(error = error, trace = trace)
       session$meta <- private$metadata()
-      ## NOTE: git is here twice for some reason see VIMC-4613
-      session$git <- session$meta$git
+      session$git <- private$preflight_info$git
       session$archive_version <- cache$current_archive_version
       saveRDS(session, path_orderly_fail_rds(private$workdir))
     }
