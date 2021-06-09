@@ -48,4 +48,3 @@ Suggests:
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr
 Language: en-GB
-Remotes: vimc/vaultr
