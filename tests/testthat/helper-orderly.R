@@ -215,10 +215,10 @@ normalize_path <- function(path) {
 
 
 ## Wrappers around setup that skip appropriately:
-test_prepare_orderly_git_example <- function() {
+test_prepare_orderly_git_example <- function(...) {
   skip_if_no_git()
   skip_on_cran_windows()
-  prepare_orderly_git_example()
+  prepare_orderly_git_example(...)
 }
 
 

@@ -379,7 +379,7 @@ parse_query_namespace <- function(expr) {
   key <- as.character(key)
 
   match_value(ns, c("tag", "parameter"),
-              sprintf("Query namespace (used as '%s')", ns, key))
+              sprintf("Query namespace (used as '%s')", ns))
 
   list(namespace = ns, key = key)
 }
