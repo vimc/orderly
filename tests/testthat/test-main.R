@@ -146,7 +146,7 @@ test_that("run: ref", {
 
 test_that("run: fetch", {
   testthat::skip_on_cran()
-  path <- prepare_orderly_git_example()
+  path <- test_prepare_orderly_git_example()
   path_local <- path[["local"]]
   path_origin <- path[["origin"]]
   sha_local <- git_ref_to_sha("HEAD", path_local)
@@ -183,7 +183,7 @@ test_that("run: pull & ref don't go together", {
 
 test_that("run: pull before run", {
   testthat::skip_on_cran()
-  path <- prepare_orderly_git_example()
+  path <- test_prepare_orderly_git_example()
   path_local <- path[["local"]]
   path_origin <- path[["origin"]]
   sha_local <- git_ref_to_sha("HEAD", path_local)
@@ -665,7 +665,7 @@ test_that("batch: pull & ref don't go together", {
 
 test_that("batch: pull before run", {
   testthat::skip_on_cran()
-  path <- prepare_orderly_git_example(branch = "other")
+  path <- test_prepare_orderly_git_example(branch = "other")
   path_local <- path[["local"]]
   path_origin <- path[["origin"]]
   sha_local <- git_ref_to_sha("HEAD", path_local)

@@ -26,8 +26,8 @@ test_that("orderly_demo", {
 
 test_that("git demo", {
   testthat::skip_on_cran()
-  path1 <- prepare_orderly_git_example(run_report = FALSE)
-  capture.output(path2 <- prepare_orderly_git_example(run_report = TRUE))
+  path1 <- test_prepare_orderly_git_example(run_report = FALSE)
+  capture.output(path2 <- test_prepare_orderly_git_example(run_report = TRUE))
 
   expect_equal(
     nrow(orderly_list2(root = path1[["local"]], draft = FALSE)), 0)

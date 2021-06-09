@@ -242,7 +242,7 @@ test_that("exit on no httr", {
 test_that("slack payload is correct given actual run data", {
   skip_on_cran()
   skip_on_windows_ci()
-  path <- prepare_orderly_git_example()
+  path <- test_prepare_orderly_git_example()
   path1 <- path[["origin"]]
   id <- orderly_run("minimal", root = path1, echo = FALSE)
   p <- file.path(path1, "draft", "minimal", id)

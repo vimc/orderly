@@ -324,7 +324,7 @@ test_that("orderly_bundle_(pack|import)_remote do not use root/locate", {
 
 
 test_that("orderly run remote passes ref to run", {
-  path <- prepare_orderly_git_example()
+  path <- test_prepare_orderly_git_example()
 
   ## Create a minimal remote class which will satisfy implements_remote
   mock_remote <- R6::R6Class(
