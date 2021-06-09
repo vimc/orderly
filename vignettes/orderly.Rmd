@@ -201,7 +201,7 @@ After this step our directory structure looks like:
 dir_tree(path)
 ```
 
-This looks very like the previous, but files have been moved from being within `draft` to being within `archive`.  The other difference is that the index `orderly.sqlite` has been created.  This is a machine-readable index to all the `orderly` metadata that can be used to build applications around `orderly` (for example [OrderlyWeb](https://github.com/vimc/orderly-web), a web portal for `orderly` - see the "remotes" vignette).  The documentation for the database format is available on the [`orderly` website](https://vimc.github.io/orderly/schema).
+This looks very like the previous, but files have been moved from being within `draft` to being within `archive`.  The other difference is that the index `orderly.sqlite` has been created.  This is a machine-readable index to all the `orderly` metadata that can be used to build applications around `orderly` (for example [OrderlyWeb](https://github.com/vimc/orderly-web), a web portal for `orderly` - see the "remotes" vignette).  The documentation for the database format is available on the [`orderly` website](https://www.vaccineimpact.org/orderly/schema/).
 
 ## Creating a report
 
@@ -624,7 +624,7 @@ and the username and password will be found from environment variables (the actu
 
 _In general, you can ignore this section if you only use one global database._
 
-The above approach can be used to switch databases by using different environmental variables, but that can become tiresome.  If you have multiple database "instances" corresponding to different realisations of the same logical database (e.g., production and staging), then you can configure and switch between these directly from `orderly` commands.  At [VIMC](http://vaccineimpact.org) we have several copies of our main database: one called `production`, which is the canonical copy, and then several `staging` copies that we use for experimentation.
+The above approach can be used to switch databases by using different environmental variables, but that can become tiresome.  If you have multiple database "instances" corresponding to different realisations of the same logical database (e.g., production and staging), then you can configure and switch between these directly from `orderly` commands.  At [VIMC](https://www.vaccineimpact.org) we have several copies of our main database: one called `production`, which is the canonical copy, and then several `staging` copies that we use for experimentation.
 
 To configure this situation, list common arguments within the `args` block as before, then add logical databases as named entries in an `instances` field:
 

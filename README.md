@@ -87,11 +87,11 @@ The workflows we have developed here are oriented towards collaborative groups o
 
 In these projects we have a group of researchers who develop and test analyses locally.  These are developed on a [branch in git](https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging) and then run on a centralised _staging environment_ (a duplicate of our production environment).  The code and outputs are reviewed with the help of [GitHub's "Pull requests"](https://help.github.com/en/articles/about-pull-requests) and then the reports are run on our production environment.
 
-Interaction with the remote environments is achieved using an [HTTP API](https://github.com/vimc/montagu-reporting-api) which `orderly` itself transparently uses, so that reports can be run remotely, [directly from R](https://vimc.github.io/orderly/reference/orderly_run_remote.html).  The remote systems also include an interactive web interface that can be used to explore and download versions of analyses, as well as run new ones.
+Interaction with the remote environments is achieved using an [HTTP API](https://github.com/vimc/montagu-reporting-api) which `orderly` itself transparently uses, so that reports can be run remotely, [directly from R](https://www.vaccineimpact.org/orderly/reference/orderly_run_remote.html).  The remote systems also include an interactive web interface that can be used to explore and download versions of analyses, as well as run new ones.
 
 ## Internal database schema
 
-`orderly` has a database, which should be the preferred way of querying the report archive from other programs.  The schema is programmatically described at [`inst/database/schema.yml`](inst/database/schema.yml) and automatically generated database documentation is available [here](https://vimc.github.io/orderly/schema).
+`orderly` has a database, which should be the preferred way of querying the report archive from other programs.  The schema is programmatically described at [`inst/database/schema.yml`](inst/database/schema.yml) and automatically generated database documentation is available [here](https://www.vaccineimpact.org/orderly/schema/).
 
 ## Testing
 
@@ -112,12 +112,6 @@ To install our internally released version (which might be ahead of CRAN) via dr
 drat:::add("vimc")
 install.packages("orderly")
 ```
-
-## RStudio addins
-
-There are [addins](https://github.com/vimc/orderly.rstudio) avaialble to help with development workflows.
-
-See docs at [orderly.rstudio](https://github.com/vimc/orderly.rstudio#setup) for setup and usage instructions.
 
 ## License
 
