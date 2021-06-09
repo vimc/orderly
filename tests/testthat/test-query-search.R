@@ -137,7 +137,7 @@ test_that("query on a tag", {
   skip_on_cran_windows()
   ## NOTE: not using the pre-made example as there's more extensive
   ## tagging done here.
-  root <- prepare_orderly_example("minimal")
+  root <- test_prepare_orderly_example("minimal")
   append_lines(
     c("tags:",
       "  - weekly",
@@ -406,7 +406,7 @@ test_that("run query on remote", {
   dat <- prepare_orderly_query_example()
   remote <- orderly_remote_path(dat$root)
 
-  root <- prepare_orderly_example("demo")
+  root <- test_prepare_orderly_example("demo")
 
   res <- orderly_search("latest(parameter:nmin > 0.15)", "other",
                         remote = remote, root = root)
@@ -422,7 +422,7 @@ test_that("run query on remote", {
   skip_on_cran()
   dat <- prepare_orderly_query_example()
   remote <- orderly_remote_path(dat$root)
-  root <- prepare_orderly_example("demo")
+  root <- test_prepare_orderly_example("demo")
   expect_error(
     orderly_search("latest(parameter:nmin > 0.15)", "other",
                    draft = TRUE, remote = remote, root = root),

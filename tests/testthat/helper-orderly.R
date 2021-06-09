@@ -220,3 +220,9 @@ test_prepare_orderly_git_example <- function() {
   skip_on_cran_windows()
   prepare_orderly_git_example()
 }
+
+
+test_prepare_orderly_example <- function(...) {
+  skip_on_cran_windows()
+  prepare_orderly_example(...)
+}

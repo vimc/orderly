@@ -45,7 +45,7 @@ test_that("rebuild empty database", {
 
 test_that("rebuild nonempty database", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   id <- orderly_run("example", root = path, echo = FALSE)
   orderly_commit(id, root = path)
   file.remove(file.path(path, "orderly.sqlite"))
@@ -68,7 +68,7 @@ test_that("no transient db", {
 
 test_that("db includes parameters", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
   id <- orderly_run("other", parameters = list(nmin = 0.1), root = path,
                     echo = FALSE)
   orderly_commit(id, root = path)
@@ -85,7 +85,7 @@ test_that("db includes parameters", {
 
 test_that("different parameter types are stored correctly", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("parameters", testing = TRUE)
+  path <- test_prepare_orderly_example("parameters", testing = TRUE)
   id <- orderly_run("example", parameters = list(a = 1, b = TRUE, c = "one"),
                     root = path, echo = FALSE)
   orderly_commit(id, root = path)
@@ -113,7 +113,7 @@ test_that("dialects", {
   p <- report_db_schema_read(NULL, "postgres")
   expect_false(isTRUE(all.equal(s, p)))
 
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   config <- orderly_config_$new(path)
   con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
   on.exit(DBI::dbDisconnect(con))
@@ -132,7 +132,7 @@ test_that("dialects", {
 
 test_that("sources are listed in db", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
   id <- orderly_run("other", root = path, parameters = list(nmin = 0),
                     echo = FALSE)
   orderly_commit(id, root = path)
@@ -176,7 +176,7 @@ test_that("backup", {
 
 test_that("db includes custom fields", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
   id <- orderly_run("minimal", root = path, echo = FALSE)
   orderly_commit(id, root = path)
   con <- orderly_db("destination", root = path)
@@ -193,7 +193,7 @@ test_that("db includes custom fields", {
 
 test_that("db includes file information", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
   id <- orderly_run("multifile-artefact", root = path, echo = FALSE)
   p <- orderly_commit(id, root = path)
   h1 <- hash_files(
@@ -246,7 +246,7 @@ test_that("db includes file information", {
 
 
 test_that("connect to database instances", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   p <- file.path(path, "orderly_config.yml")
   writeLines(c(
     "database:",
@@ -374,7 +374,7 @@ test_that("db instance select rejects instance when no dbs support it", {
 
 
 test_that("Create and verify tags on startup", {
-  root <- prepare_orderly_example("minimal")
+  root <- test_prepare_orderly_example("minimal")
   append_lines(c("tags:", "  - tag1", "  - tag2"),
                file.path(root, "orderly_config.yml"))
   con <- orderly_db("destination", root = root)
@@ -396,7 +396,7 @@ test_that("Create and verify tags on startup", {
 
 
 test_that("Add tags to db", {
-  root <- prepare_orderly_example("minimal")
+  root <- test_prepare_orderly_example("minimal")
   append_lines(c("tags:", "  - tag1", "  - tag2"),
                file.path(root, "orderly_config.yml"))
   append_lines(c("tags:", "  - tag1"),
@@ -412,7 +412,7 @@ test_that("Add tags to db", {
 })
 
 test_that("add batch info to db", {
-  path <- prepare_orderly_example("parameters", testing = TRUE)
+  path <- test_prepare_orderly_example("parameters", testing = TRUE)
 
   params <- data_frame(
     a = c("one", "two", "three"),
@@ -440,7 +440,7 @@ test_that("add batch info to db", {
 
 ## Regression test for vimc-3652
 test_that("trailing slash in report name is tolerated", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   id <- orderly_run("src/example/", root = path, echo = FALSE)
   expect_error(orderly_commit(id, root = path), NA)
 })
@@ -448,7 +448,7 @@ test_that("trailing slash in report name is tolerated", {
 
 test_that("db includes elapsed time", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   id <- orderly_run("example", root = path, echo = FALSE)
   p <- orderly_commit(id, root = path)
   con <- orderly_db("destination", root = path)
@@ -462,7 +462,7 @@ test_that("db includes elapsed time", {
 
 test_that("rebuild nonempty database with backup", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   id <- orderly_run("example", root = path, echo = FALSE)
   orderly_commit(id, root = path)
 
@@ -492,7 +492,7 @@ test_that("db write collision", {
   skip_on_cran()
 
   unlink("tmp", recursive = TRUE)
-  path <- prepare_orderly_example("minimal", "tmp")
+  path <- test_prepare_orderly_example("minimal", "tmp")
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("example", root = path, echo = FALSE)
 
@@ -518,7 +518,7 @@ test_that("db write collision", {
 test_that("db includes instance", {
   skip_on_cran_windows()
 
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
 
   p <- file.path(path, "orderly_config.yml")
   writeLines(c(
@@ -556,7 +556,7 @@ test_that("db includes instance", {
 
 
 test_that("Can cope when all fields are optional", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   append_lines(
     c("fields:",
       "  requester:",

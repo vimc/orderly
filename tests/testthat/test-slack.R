@@ -145,7 +145,7 @@ test_that("main interface", {
   skip_if_no_internet()
   skip_if_not_installed("jsonlite")
 
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   id <- "20181213-123456-fedcba98"
   name <- "example"
   dat <- list(meta = list(elapsed = 10, id = id, name = name),
@@ -182,7 +182,7 @@ test_that("main interface", {
   skip_if_no_internet()
   skip_if_not_installed("httr")
 
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   append_lines(c(
     "remote:",
     "  testing:",
@@ -420,7 +420,7 @@ test_that("main teams interface", {
   skip_if_no_internet()
   skip_if_not_installed("jsonlite")
 
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   id <- "20181213-123456-fedcba98"
   name <- "example"
   dat <- list(meta = list(elapsed = 10, id = id, name = name),
@@ -457,7 +457,7 @@ test_that("look up environment variables before hook send", {
   skip_if_no_internet()
   skip_if_not_installed("jsonlite")
 
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   id <- "20181213-123456-fedcba98"
   name <- "example"
   dat <- list(meta = list(elapsed = 10, id = id, name = name),

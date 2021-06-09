@@ -1,7 +1,7 @@
 context("batch")
 
 test_that("reports can be batch run", {
-  path <- prepare_orderly_example("parameters", testing = TRUE)
+  path <- test_prepare_orderly_example("parameters", testing = TRUE)
 
   params <- data_frame(
     a = c("one", "two", "three"),
@@ -20,7 +20,7 @@ test_that("reports can be batch run", {
 })
 
 test_that("batch running with a single param retains name", {
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
 
   params <- data.frame(nmin = c(0.2, 0.25))
   batch_id <- ids::random_id()
@@ -35,7 +35,7 @@ test_that("batch running with a single param retains name", {
 })
 
 test_that("return useful error if params passed without names", {
-  path <- prepare_orderly_example("parameters", testing = TRUE)
+  path <- test_prepare_orderly_example("parameters", testing = TRUE)
 
   params <- data_frame(
     c("one", "two", "three"),
@@ -49,7 +49,7 @@ test_that("return useful error if params passed without names", {
 })
 
 test_that("return useful error if no parameters are passed", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   expect_error(
     orderly_batch("example", NULL),
     "Parameters for a batch must be a data frame with at least one row")

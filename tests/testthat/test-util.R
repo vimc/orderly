@@ -164,7 +164,7 @@ test_that("vault configuration honours environment variables", {
   cl$write("/secret/users/alice", list(password = "ALICE"))
   cl$write("/secret/users/bob", list(password = "BOB"))
 
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   path_config <- file.path(path, "orderly_config.yml")
   text <- readLines(path_config)
 

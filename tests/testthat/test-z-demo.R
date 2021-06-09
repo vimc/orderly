@@ -37,7 +37,7 @@ test_that("git demo", {
 
 
 test_that("demo infrastructure", {
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
   file.remove(file.path(path, "before.R"))
   expect_error(run_orderly_demo(path),
                "function .* not found in before\\.R")

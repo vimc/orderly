@@ -2,7 +2,7 @@ context("development")
 
 
 test_that("basic development workflow", {
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
   p <- file.path(path, "src", "global")
 
   s1 <- orderly_status(p)
@@ -20,7 +20,7 @@ test_that("basic development workflow", {
 
 test_that("orderly_develop_location", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
 
   cfg <- orderly_config_$new(path)
   name <- "minimal"
@@ -75,7 +75,7 @@ test_that("orderly_develop_location", {
 
 
 test_that("orderly_develop_location strips trailing slashes of all types", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   expect_equal(orderly_develop_location("foo/", path, FALSE)$name, "foo")
   expect_equal(orderly_develop_location("foo//", path, FALSE)$name, "foo")
   expect_equal(orderly_develop_location("foo\\", path, FALSE)$name, "foo")
@@ -84,7 +84,7 @@ test_that("orderly_develop_location strips trailing slashes of all types", {
 
 
 test_that("orderly_develop_location strips src with any slash", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   expect_equal(orderly_develop_location("src/foo", path, FALSE)$name, "foo")
   expect_equal(orderly_develop_location("src//foo", path, FALSE)$name, "foo")
   expect_equal(orderly_develop_location("src\\foo", path, FALSE)$name, "foo")
@@ -93,7 +93,7 @@ test_that("orderly_develop_location strips src with any slash", {
 
 
 test_that("status can detect dependencies", {
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
   name <- "use_dependency"
   p <- file.path(path, "src", name)
 
@@ -118,7 +118,7 @@ test_that("status can detect dependencies", {
 
 
 test_that("status reports resources", {
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
   name <- "use_resource"
   p <- file.path(path, "src", name)
 
@@ -137,7 +137,7 @@ test_that("status reports resources", {
 
 
 test_that("status reports globals", {
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
   name <- "global"
   p <- file.path(path, "src", name)
 
@@ -153,7 +153,7 @@ test_that("status reports globals", {
 
 
 test_that("orderly_develop_status with extra files", {
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
   p <- file.path(path, "src", "minimal")
   file.create(file.path(p, "extra"))
   status <- orderly_develop_status("minimal", root = path)
@@ -164,7 +164,7 @@ test_that("orderly_develop_status with extra files", {
 
 
 test_that("orderly_develop_status with changelog", {
-  path <- prepare_orderly_example("changelog", testing = TRUE)
+  path <- test_prepare_orderly_example("changelog", testing = TRUE)
 
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
@@ -184,7 +184,7 @@ test_that("orderly_develop_status with changelog", {
 
 
 test_that("Can read malformed orderly.yml in develop start", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   p <- orderly_new("partial", root = path, quiet = TRUE)
   expect_log_message(
     res <- orderly_develop_start("partial", root = path),
@@ -207,7 +207,7 @@ test_that("Can read malformed orderly.yml in develop start", {
 
 
 test_that("can load environment variables during develop", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   p <- file.path(path, "src", "example")
   writeLines(c("MY_A: a", "ORDERLY_B: b"), file.path(path, "orderly_envir.yml"))
   on.exit(Sys.unsetenv(c("MY_A", "ORDERLY_B")))
@@ -219,7 +219,7 @@ test_that("can load environment variables during develop", {
 
 test_that("Can develop a report with parameters and dependencies", {
   skip_on_cran_windows()
-  root <- prepare_orderly_example("demo")
+  root <- test_prepare_orderly_example("demo")
 
   p <- file.path(root, "src", "use_dependency", "orderly.yml")
   txt <- sub(": latest$", ": latest(parameter:nmin > nmin)", readLines(p))
@@ -244,7 +244,7 @@ test_that("Can develop a report with parameters and dependencies", {
 
 
 test_that("can load environment variables during develop", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   p <- file.path(path, "src", "example")
   on.exit(Sys.unsetenv("ORDERLY_TEST_VARIABLE"))
   writeLines("ORDERLY_TEST_VARIABLE: hello",
@@ -258,7 +258,7 @@ test_that("can load environment variables during develop", {
 
 
 test_that("don't delete artefacts that are resources", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   name <- "example"
   p <- file.path(path, "src", name)
 

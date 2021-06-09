@@ -1,7 +1,7 @@
 context("envir")
 
 test_that("set env", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   cfg <- c("database:",
            "  source:",
            "    driver: RSQLite::SQLite",
