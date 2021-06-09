@@ -45,7 +45,7 @@ orderly_config_ <- R6::R6Class(
     raw = NULL,
 
     ##' @field destination DB connection configuration for where
-    ##' to store orderly output datbase. Defaults to local SQLite
+    ##' to store orderly output database. Defaults to local SQLite
     ##' db `orderly.sqlite`
     destination = NULL,
     ##' @field fields Configuration of fields in reports, specifying
@@ -62,7 +62,7 @@ orderly_config_ <- R6::R6Class(
     changelog = NULL,
     ##' @field tags List of available tags for orderly reports.
     tags = NULL,
-    ##' @field database Database configuation specifying driver and
+    ##' @field database Database configuration specifying driver and
     ##' connection args for (possibly multiple) databases
     database = NULL,
     ##' @field archive_version Orderly version number of the archive

@@ -99,7 +99,7 @@ There is a set of regression tests that require the reference data.  Enable thes
 
 ## RStudio addins
 
-There are [addins](https://github.com/vimc/orderly.rstudio) avaialble to help with development workflows.
+There are [addins](https://github.com/vimc/orderly.rstudio) available to help with development workflows.
 
 See docs at [orderly.rstudio](https://github.com/vimc/orderly.rstudio#setup) for setup and usage instructions.
 

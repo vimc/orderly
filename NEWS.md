@@ -49,7 +49,7 @@
 
 # orderly 1.2.18
 
-* Allow `orderly_bundle_import` to accept a filename that has been renamed from `<id>.zip`. While this is not generally desireable, it may be needed for some workflows (VIMC-4382)
+* Allow `orderly_bundle_import` to accept a filename that has been renamed from `<id>.zip`. While this is not generally desirable, it may be needed for some workflows (VIMC-4382)
 
 # orderly 1.2.17
 
@@ -101,7 +101,7 @@
 
 # orderly 1.2.4
 
-* Error messages and stack traces are now preserved in `orderly.log` after a faied run; this primarily impacts the cli runner and then primarily when being run in parallel where the log is not printed to screen (VIMC-3841)
+* Error messages and stack traces are now preserved in `orderly.log` after a failed run; this primarily impacts the cli runner and then primarily when being run in parallel where the log is not printed to screen (VIMC-3841)
 
 # orderly 1.2.3
 
@@ -109,7 +109,7 @@
 
 # orderly 1.2.0
 
-* `orderly::orderly_data()` has been removed as do not believe anyone was using it, and it is superceeded by `orderly::orderly_develop_start()` (VIMC-3611)
+* `orderly::orderly_data()` has been removed as do not believe anyone was using it, and it is superseded by `orderly::orderly_develop_start()` (VIMC-3611)
 * Some internally used arguments have been removed from `orderly::orderly_run` (`id_file`, `batch_id`, `ref` and `fetch`). These were not intended for direct use by users (VIMC-3539)
 
 # orderly 1.1.35
@@ -146,7 +146,7 @@
 
 # orderly 1.1.23
 
-* New function `orderly::orderly_remote()` for geting an "orderly remote" object, as declared in the `orderly_config.yml` (VIMC-3655)
+* New function `orderly::orderly_remote()` for getting an "orderly remote" object, as declared in the `orderly_config.yml` (VIMC-3655)
 
 # orderly 1.1.20
 
@@ -154,7 +154,7 @@
 
 # orderly 1.1.15
 
-* Fix bug where report downloading did not work for some pathalogical windows paths (VIMC-3595)
+* Fix bug where report downloading did not work for some pathological windows paths (VIMC-3595)
 
 # orderly 1.1.14
 
