@@ -491,8 +491,7 @@ test_that("rebuild nonempty database with backup", {
 test_that("db write collision", {
   skip_on_cran()
 
-  unlink("tmp", recursive = TRUE)
-  path <- test_prepare_orderly_example("minimal", "tmp")
+  path <- test_prepare_orderly_example("minimal")
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("example", root = path, echo = FALSE)
 
