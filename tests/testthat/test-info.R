@@ -28,7 +28,6 @@ test_that("can retrieve parameter info", {
 })
 
 test_that("can retrieve info from failed run", {
-  skip_if_no_git()
   path <- test_prepare_orderly_git_example()
 
   append_lines('stop("some error")',
