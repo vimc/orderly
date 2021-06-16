@@ -1,7 +1,7 @@
 context("helpers")
 
 test_that("can add resource to an orderly without resources", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   file.create(file.path(path, "src", "example", "new.txt"))
 
   res <- orderly_use_resource("new.txt", root = path, name = "example",
@@ -14,7 +14,7 @@ test_that("can add resource to an orderly without resources", {
 
 
 test_that("can add resource to an orderly with resources", {
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
   p <- file.path(path, "src", "use_resource", "orderly.yml")
   prev <- yaml_read(p)$resources
 
@@ -33,7 +33,7 @@ test_that("can add resource to an orderly with resources", {
 
 
 test_that("can add resource non-block resources", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   file.create(file.path(path, "src", "example", c("a.txt", "b.txt")))
   p <- file.path(path, "src", "example", "orderly.yml")
   text <- readLines(p)
@@ -50,7 +50,7 @@ test_that("can add resource non-block resources", {
 
 
 test_that("require added resources to exist", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   expect_error(
     orderly_use_resource("new.txt", root = path, name = "example",
                          show = FALSE, prompt = FALSE),
@@ -63,7 +63,7 @@ test_that("require added resources to exist", {
 
 
 test_that("require added resources to not already be declared", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   p <- file.path(path, "src", "example", "orderly.yml")
   file.create(file.path(path, "src", "example",
                         c("a.txt", "b.txt", "c.txt")))
@@ -79,7 +79,7 @@ test_that("require added resources to not already be declared", {
 
 
 test_that("require added resources to be unique", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   p <- file.path(path, "src", "example", "orderly.yml")
   file.create(file.path(path, "src", "example",
                         c("a.txt", "b.txt", "c.txt")))
@@ -94,7 +94,7 @@ test_that("require added resources to be unique", {
 ## This uses the same codepath as above, so I've just done a very
 ## rough job of testing here.
 test_that("Add source (minimal test)", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   file.create(file.path(path, "src", "example", "new.R"))
   res <- orderly_use_source("new.R", root = path, name = "example",
                             show = FALSE, prompt = FALSE)
@@ -108,7 +108,7 @@ test_that("Add source (minimal test)", {
 
 
 test_that("Add packages (minimal test)", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   res <- orderly_use_package("knitr", root = path, name = "example",
                              show = FALSE, prompt = FALSE)
   config <- orderly_config_$new(path)
@@ -122,7 +122,7 @@ test_that("Add packages (minimal test)", {
 
 ## Test for #177
 test_that("Add packages to malformed packages section", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   p <- file.path(path, "src", "example", "orderly.yml")
   txt <- readLines(p)
   writeLines(c(txt, "packages:"), p)
@@ -134,7 +134,7 @@ test_that("Add packages to malformed packages section", {
 
 
 test_that("Add resource to incomplete orderly.yml", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   p <- orderly_new("partial", root = path, quiet = TRUE)
   res <- orderly_use_package("knitr", name = "partial", root = path,
                              show = FALSE, prompt = FALSE)
@@ -144,7 +144,7 @@ test_that("Add resource to incomplete orderly.yml", {
 
 
 test_that("Create gitignore", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   res <- orderly_use_gitignore(path, prompt = FALSE, show = FALSE)
 
   contents <- readLines(file.path(path, ".gitignore"))
@@ -165,7 +165,7 @@ test_that("Create gitignore", {
 
 
 test_that("update existing gitignore", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   writeLines(c("data", "*.sqlite", "something"),
              file.path(path, ".gitignore"))
   res <- orderly_use_gitignore(path, prompt = FALSE, show = FALSE)

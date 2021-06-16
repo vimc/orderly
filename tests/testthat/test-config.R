@@ -211,7 +211,7 @@ test_that("remote parse check", {
 })
 
 test_that("no global folder", {
-  path <- prepare_orderly_example("global", testing = TRUE)
+  path <- test_prepare_orderly_example("global", testing = TRUE)
   # now we break the orderly_config.yml
   path_config <- file.path(path, "orderly_config.yml")
   dat <- yaml_read(path_config)
@@ -291,7 +291,7 @@ test_that("previous configuration is transformed with warning", {
 test_that("vault_server (not vault) in configuration yaml", {
   ## 1.0.10 - this fails if config.R:55 uses $vault instead of [["vault"]]
 
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   path_config <- file.path(path, "orderly_config.yml")
   text <- readLines(path_config)
 
@@ -320,7 +320,7 @@ test_that("Can't use both new and old vault configurations", {
 
 
 test_that("vault configuration", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   path_config <- file.path(path, "orderly_config.yml")
   text <- readLines(path_config)
 
@@ -333,7 +333,7 @@ test_that("vault configuration", {
 
 
 test_that("can't use both database and source sections", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   path_config <- file.path(path, "orderly_config.yml")
   txt <- readLines(path_config)
   dat <- list(source = list(driver = "RSQLite::SQLite",
@@ -346,14 +346,14 @@ test_that("can't use both database and source sections", {
 
 
 test_that("can read a configuration with no database", {
-  path <- prepare_orderly_example("db0", testing = TRUE)
+  path <- test_prepare_orderly_example("db0", testing = TRUE)
   config <- orderly_config_$new(path)
   expect_null(config$database)
 })
 
 
 test_that("can read a configuration with two databases", {
-  path <- prepare_orderly_example("db2", testing = TRUE)
+  path <- test_prepare_orderly_example("db2", testing = TRUE)
   config <- orderly_config_$new(path)
   expect_setequal(names(config$database), c("source1", "source2"))
   expect_equal(config$database$source1$args, list(dbname = "source1.sqlite"))
@@ -368,14 +368,14 @@ test_that("can read a configuration with two databases", {
 test_that("warn when reading old-style configuration", {
   path <- withr::with_options(
     list(orderly.nowarnings = TRUE),
-    prepare_orderly_example("olddb", testing = TRUE))
+    test_prepare_orderly_example("olddb", testing = TRUE))
   expect_warning(orderly_config_$new(path),
                  "Use of 'source' is deprecated and will be removed")
 })
 
 
 test_that("warn when reading old-style db config", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   content <- c(
     "database:",
     "  source:",
@@ -392,7 +392,7 @@ test_that("warn when reading old-style db config", {
 
 
 test_that("warn when using url in remote definition", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   append_lines(c(
     "remote:",
     "  testing:",
@@ -413,7 +413,7 @@ test_that("warn when using url in remote definition", {
 
 
 test_that("multiple database configurations", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   p <- file.path(path, "orderly_config.yml")
   writeLines(c(
     "database:",
@@ -435,7 +435,7 @@ test_that("multiple database configurations", {
 
 
 test_that("instances not supported for destination db", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   p <- file.path(path, "orderly_config.yml")
   writeLines(c(
     "database:",
@@ -460,7 +460,7 @@ test_that("instances not supported for destination db", {
 
 
 test_that("default_instance not allowed without instances", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   p <- file.path(path, "orderly_config.yml")
   writeLines(c(
     "database:",
@@ -477,7 +477,7 @@ test_that("default_instance not allowed without instances", {
 
 
 test_that("default instance from an environmental variable", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   p <- file.path(path, "orderly_config.yml")
   writeLines(c(
     "database:",
@@ -526,7 +526,7 @@ test_that("default instance from an environmental variable", {
 
 
 test_that("tags can be included in the configuration", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   expect_null(orderly_config_$new(path)$tags)
   p <- file.path(path, "orderly_config.yml")
   append_lines(c("tags:", "  - tag1", "  - tag2"), p)
@@ -535,7 +535,7 @@ test_that("tags can be included in the configuration", {
 
 
 test_that("tags are validated", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   p <- file.path(path, "orderly_config.yml")
   append_lines(c("tags:", "  - 1", "  - 2"), p)
   expect_error(
@@ -546,7 +546,7 @@ test_that("tags are validated", {
 
 ## VIMC-3442
 test_that("adding new fields in new versions gives good errors", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   append_lines(
     c("new_toplevel_field: value",
       "minimum_orderly_version: 9.9.9"),

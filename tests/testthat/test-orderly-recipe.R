@@ -1,7 +1,7 @@
 context("orderly_recipe")
 
 test_that("nonexistant file", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   config <- orderly_config_$new(path)
   expect_error(orderly_recipe$new("missing", config),
                "Report working directory does not exist")
@@ -12,7 +12,7 @@ test_that("nonexistant file", {
 
 test_that("minimal", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   path_example <- file.path(path, "src", "example")
   on.exit(unlink(path))
 
@@ -87,7 +87,7 @@ test_that("minimal", {
 
 
 test_that("ill formed artefacts", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   on.exit(unlink(path))
   config <- orderly_config_$new(path)
   path_example <- file.path(path, "src", "example")
@@ -104,7 +104,7 @@ test_that("ill formed artefacts", {
 })
 
 test_that("unknown artefact type", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   on.exit(unlink(path))
   config <- orderly_config_$new(path)
   path_example <- file.path(path, "src", "example")
@@ -120,7 +120,7 @@ test_that("unknown artefact type", {
 })
 
 test_that("duplicate artefact filenames; within artefact", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   on.exit(unlink(path))
   config <- orderly_config_$new(path)
   path_example <- file.path(path, "src", "example")
@@ -134,7 +134,7 @@ test_that("duplicate artefact filenames; within artefact", {
 
 
 test_that("duplicate artefact filenames; between artefacts", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   on.exit(unlink(path))
   config <- orderly_config_$new(path)
   path_example <- file.path(path, "src", "example")
@@ -148,7 +148,7 @@ test_that("duplicate artefact filenames; between artefacts", {
 
 
 test_that("resource case matters", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   file.rename(file.path(path, "src", "example", "script.R"),
               file.path(path, "src", "example", "script.r"))
 
@@ -158,7 +158,7 @@ test_that("resource case matters", {
 })
 
 test_that("dependencies must be scalar", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
   id <- orderly_run("example", root = path, echo = FALSE)
 
   filename <- file.path(path, "src", "depend", "orderly.yml")
@@ -172,7 +172,7 @@ test_that("dependencies must be scalar", {
 
 
 test_that("dependencies must exist", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
   id <- orderly_run("example", root = path, echo = FALSE)
 
   filename <- file.path(path, "src", "depend", "orderly.yml")
@@ -187,7 +187,7 @@ test_that("dependencies must exist", {
 
 
 test_that("dependencies draft, new interface", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("example", root = path, echo = FALSE)
   orderly_commit(id1, root = path)
@@ -216,7 +216,7 @@ test_that("dependencies draft, new interface", {
 
 
 test_that("use_draft = newer ignores fails drafts", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("example", root = path, echo = FALSE)
   id3 <- orderly_run("example", root = path, echo = FALSE)
@@ -242,7 +242,7 @@ test_that("use_draft = newer ignores fails drafts", {
 
 
 test_that("dependencies draft, new interface, throws sensible errors", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   filename <- file.path(path, "src", "depend", "orderly.yml")
   dat <- yaml_read(filename)
@@ -268,7 +268,7 @@ test_that("dependencies draft, new interface, throws sensible errors", {
 
 
 test_that("Using draft within a dependency is now a warning", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
   id1 <- orderly_run("example", root = path, echo = FALSE)
 
   filename <- file.path(path, "src", "depend", "orderly.yml")
@@ -283,7 +283,7 @@ test_that("Using draft within a dependency is now a warning", {
 
 
 test_that("VIMC-4579: dependencies draft works with non-boolean use_draft", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
   id1 <- orderly_run("example", root = path, echo = FALSE)
 
   filename <- file.path(path, "src", "depend", "orderly.yml")
@@ -304,7 +304,7 @@ test_that("VIMC-4579: dependencies draft works with non-boolean use_draft", {
 
 
 test_that("data field is optional", {
-  path <- prepare_orderly_example("nodata")
+  path <- test_prepare_orderly_example("nodata")
   report_path <- file.path(path, "src", "example")
 
   ## expect no error
@@ -313,7 +313,7 @@ test_that("data field is optional", {
 
 
 test_that("can't use database in configurations that lack them", {
-  path <- prepare_orderly_example("db0", testing = TRUE)
+  path <- test_prepare_orderly_example("db0", testing = TRUE)
   p <- file.path(path, "src", "example", "orderly.yml")
   txt <- readLines(p)
   dat <- list(data = list(dat = list(query = "SELECT name, number FROM thing")))
@@ -325,7 +325,7 @@ test_that("can't use database in configurations that lack them", {
 
 
 test_that("can't use connection in configurations that lack databases", {
-  path <- prepare_orderly_example("db0", testing = TRUE)
+  path <- test_prepare_orderly_example("db0", testing = TRUE)
   p <- file.path(path, "src", "example", "orderly.yml")
   txt <- readLines(p)
   dat <- list(connection = "con")
@@ -337,7 +337,7 @@ test_that("can't use connection in configurations that lack databases", {
 
 
 test_that("database names are required with more than one db", {
-  path <- prepare_orderly_example("db2", testing = TRUE)
+  path <- test_prepare_orderly_example("db2", testing = TRUE)
   p <- file.path(path, "src", "example", "orderly.yml")
   dat <- yaml_read(p)
   dat$data$dat1$database <- NULL
@@ -349,7 +349,7 @@ test_that("database names are required with more than one db", {
 
 
 test_that("connection names are required with more than one db", {
-  path <- prepare_orderly_example("db2", testing = TRUE)
+  path <- test_prepare_orderly_example("db2", testing = TRUE)
   p <- file.path(path, "src", "connection", "orderly.yml")
   dat <- yaml_read(p)
   dat$connection <- "con"
@@ -363,7 +363,7 @@ test_that("connection names are required with more than one db", {
 
 ## This is not *strictly* necessary, but let's roll with it for now
 test_that("Can't use database name on old style configuration", {
-  path <- prepare_orderly_example("db1", testing = TRUE)
+  path <- test_prepare_orderly_example("db1", testing = TRUE)
   p <- file.path(path, "orderly_config.yml")
   dat <- yaml_read(p)
   writeLines(yaml::as.yaml(list(source = dat$database$source1)), p)
@@ -388,7 +388,7 @@ test_that("Can't use database name on old style configuration", {
 
 
 test_that("validate database names", {
-  path <- prepare_orderly_example("db2", testing = TRUE)
+  path <- test_prepare_orderly_example("db2", testing = TRUE)
   p <- file.path(path, "orderly_config.yml")
   dat <- yaml_read(p)
   names(dat$database) <- c("db1", "db2")
@@ -408,7 +408,7 @@ test_that("validate database names", {
 test_that("warn old style db", {
   path <- withr::with_options(
     list(orderly.nowarnings = TRUE),
-    prepare_orderly_example("olddb", testing = TRUE))
+    test_prepare_orderly_example("olddb", testing = TRUE))
   cfg <- withr::with_options(
     list(orderly.nowarnings = TRUE),
     orderly_config_$new(path))
@@ -437,7 +437,7 @@ test_that("warn old style db", {
 
 test_that("detect modified artefacts", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
   id <- orderly_run("other", parameters = list(nmin = 0),
                     echo = FALSE, root = path)
   p <- orderly_commit(id, root = path)
@@ -453,7 +453,7 @@ test_that("detect modified artefacts", {
 
 test_that("modified artefacts when more than one used", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
 
   id <- orderly_run("multifile-artefact", echo = FALSE, root = path)
   p <- orderly_commit(id, root = path)
@@ -494,7 +494,7 @@ test_that("sources and resources are exclusive", {
 
 test_that("trailing slash on resource directory", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
   ## in report directory create a file called README.md
   report_path <- file.path(path, "src", "use_resource")
   ## rewrite yml to include extra readme file
@@ -528,7 +528,7 @@ test_that("trailing slash on resource directory", {
 
 
 test_that("old style global resources deprecated", {
-  path <- prepare_orderly_example("global", testing = TRUE)
+  path <- test_prepare_orderly_example("global", testing = TRUE)
   path_example <- file.path(path, "src", "example")
   path_yaml <- file.path(path_example, "orderly.yml")
   config_lines <- readLines(path_yaml)
@@ -545,7 +545,7 @@ test_that("old style global resources deprecated", {
 
 
 test_that("read parameters", {
-  path <- prepare_orderly_example("parameters", testing = TRUE)
+  path <- test_prepare_orderly_example("parameters", testing = TRUE)
   path_example <- file.path(path, "src", "example")
   info <- orderly_recipe$new("example", orderly_config_$new(path))
   expect_equal(info$parameters,
@@ -554,7 +554,7 @@ test_that("read parameters", {
 
 
 test_that("read old-style parameters", {
-  path <- prepare_orderly_example("parameters", testing = TRUE)
+  path <- test_prepare_orderly_example("parameters", testing = TRUE)
   path_example <- file.path(path, "src", "example")
   path_orderly <- file.path(path_example, "orderly.yml")
   dat <- yaml_read(path_orderly)
@@ -569,7 +569,7 @@ test_that("read old-style parameters", {
 
 
 test_that("validate parameters", {
-  path <- prepare_orderly_example("parameters", testing = TRUE)
+  path <- test_prepare_orderly_example("parameters", testing = TRUE)
   path_example <- file.path(path, "src", "example")
   path_orderly <- file.path(path_example, "orderly.yml")
   config <- orderly_config_$new(path)
@@ -648,7 +648,7 @@ test_that("Can't use queries when resolving dependencies remotely", {
 
 
 test_that("friendly error message if artefacts are incorrectly given", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   p <- file.path(path, "src", "example", "orderly.yml")
   dat <- yaml_read(p)
   dat$artefacts <- "mygraph.png"
@@ -674,7 +674,7 @@ test_that("friendly error message if artefacts are incorrectly given", {
 
 
 test_that("Read partial orderly.yml", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   p <- orderly_new("partial", root = path, quiet = TRUE)
   config <- orderly_config_$new(path)
   expect_message(
@@ -687,7 +687,7 @@ test_that("Read partial orderly.yml", {
 
 
 test_that("Read completely empty orderly.yml", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   p <- orderly_new("partial", root = path, quiet = TRUE)
   file.create(file.path(p, "orderly.yml")) # truncates file
   config <- orderly_config_$new(path)
@@ -698,7 +698,7 @@ test_that("Read completely empty orderly.yml", {
 
 
 test_that("Validate report tag", {
-  root <- prepare_orderly_example("minimal")
+  root <- test_prepare_orderly_example("minimal")
   append_lines(c("tags:", "  - tag1", "  - tag2"),
                file.path(root, "orderly_config.yml"))
   config <- orderly_config_$new(root)
@@ -729,7 +729,7 @@ test_that("Validate report tag", {
 
 
 test_that("Better error message where tags not enabled", {
-  root <- prepare_orderly_example("minimal")
+  root <- test_prepare_orderly_example("minimal")
   config <- orderly_config_$new(root)
   path <- file.path(root, "src", "example")
   path_config <- file.path(path, "orderly.yml")
@@ -869,7 +869,7 @@ test_that("pass parameters through query interface", {
 
 
 test_that("Errors are thrown if required missing fields are not present", {
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
 
   config <- orderly_config_$new(path)
 
@@ -886,7 +886,7 @@ test_that("Errors are thrown if required missing fields are not present", {
 
 
 test_that("Errors are thrown if required missing fields are wrong type", {
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
 
   config <- orderly_config_$new(path)
 
@@ -903,7 +903,7 @@ test_that("Errors are thrown if required missing fields are wrong type", {
 
 
 test_that("Cope with missing optional fields", {
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
 
   config <- orderly_config_$new(path)
 
@@ -924,7 +924,7 @@ test_that("Cope with missing optional fields", {
 
 test_that("read changelog", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("changelog", testing = TRUE)
+  path <- test_prepare_orderly_example("changelog", testing = TRUE)
 
   tmp <- tempfile()
   path_example <- file.path(path, "src", "example")
@@ -943,7 +943,7 @@ test_that("read changelog", {
 
 
 test_that("readme detection", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   config <- orderly_config_$new(path)
   expect_null(orderly_recipe$new("example", config)$readme)
 
@@ -975,7 +975,7 @@ test_that("readme detection", {
 
 
 test_that("readme listed as a resource", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   report_path <- file.path(path, "src", "example")
   ## in report directory create a file called README.md
   path_example <- file.path(path, "src", "example")
@@ -996,7 +996,7 @@ test_that("readme listed as a resource", {
 
 
 test_that("list README.md as artefact",  {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   report_path <- file.path(path, "src", "example")
   ## in report directory create a file called README.md
   path_example <- file.path(path, "src", "example")

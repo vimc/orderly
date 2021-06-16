@@ -54,7 +54,7 @@ another package).  If left \code{NULL}, then the default remote
 for this orderly repository is used - by default that is the
 first listed remote.}
 
-\item{parameters}{Parameters to pass through when doing depenency
+\item{parameters}{Parameters to pass through when doing dependency
 resolution.  If you are using a query for \code{id} that
 involves a parameter (e.g., \code{latest(parameter:x == p)}) you
 will need to pass in the parameters here.  Similarly, if you are
@@ -103,7 +103,7 @@ Currently this is supported by \code{\link{orderly_remote_path}}
 remotes, though not by orderlyweb remotes.  There is no control
 over what will \emph{accept} a push at this point, nor any check
 that what you've pushed is "good" except that it exists in your
-archive.  As with pulling an archive, pushes are recusive with
+archive.  As with pulling an archive, pushes are recursive with
 respect to dependencies.  The configuration interface here will
 likely change a little over time.
 }

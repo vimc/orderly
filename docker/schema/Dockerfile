@@ -13,8 +13,8 @@ ENV DRIVER_VERSION 42.1.4
 
 WORKDIR /schemaspy
 
-RUN wget -O schemaspy.jar         https://github.com/schemaspy/schemaspy/releases/download/v$SCHEMASPY_VERSION/schemaspy-$SCHEMASPY_VERSION.jar
-RUN wget -O postgresql_driver.jar https://jdbc.postgresql.org/download/postgresql-$DRIVER_VERSION.jar
+RUN wget --progress=dot:giga -O schemaspy.jar         https://github.com/schemaspy/schemaspy/releases/download/v$SCHEMASPY_VERSION/schemaspy-$SCHEMASPY_VERSION.jar && \
+        wget --progress=dot:giga -O postgresql_driver.jar https://jdbc.postgresql.org/download/postgresql-$DRIVER_VERSION.jar
 
 ENTRYPOINT ["java", "-jar", "schemaspy.jar", \
     "-t", "pgsql", \

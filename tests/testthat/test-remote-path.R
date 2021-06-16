@@ -9,15 +9,15 @@ test_that("Reject impossible remotes", {
 
 
 test_that("remote_name", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   expect_identical(normalizePath(orderly_remote_path(path)$name, "/"),
                    normalizePath(path, "/"))
 })
 
 
 test_that("get remote", {
-  path1 <- prepare_orderly_example("minimal")
-  path2 <- prepare_orderly_example("minimal")
+  path1 <- test_prepare_orderly_example("minimal")
+  path2 <- test_prepare_orderly_example("minimal")
 
   obj <- get_remote(path1, orderly_config_$new(path2))
   expect_is(obj, "orderly_remote_path")
@@ -27,11 +27,11 @@ test_that("get remote", {
 
 test_that("pull report", {
   skip_on_cran_windows()
-  path1 <- prepare_orderly_example("demo")
+  path1 <- test_prepare_orderly_example("demo")
   id <- orderly_run("multifile-artefact", root = path1, echo = FALSE)
   orderly_commit(id, root = path1)
 
-  path2 <- prepare_orderly_example("demo")
+  path2 <- test_prepare_orderly_example("demo")
   orderly_pull_archive("multifile-artefact", "latest", path2, remote = path1)
 
   d <- orderly_list_archive(path2)
@@ -46,8 +46,8 @@ test_that("pull report", {
 
 
 test_that("pull report: error not found", {
-  path1 <- prepare_orderly_example("minimal")
-  path2 <- prepare_orderly_example("minimal")
+  path1 <- test_prepare_orderly_example("minimal")
+  path2 <- test_prepare_orderly_example("minimal")
 
   remote <- orderly_remote_path(path1)
 
@@ -59,8 +59,8 @@ test_that("pull report: error not found", {
 
 test_that("pull report: already done", {
   skip_on_cran_windows()
-  path1 <- prepare_orderly_example("minimal")
-  path2 <- prepare_orderly_example("minimal")
+  path1 <- test_prepare_orderly_example("minimal")
+  path2 <- test_prepare_orderly_example("minimal")
 
   id <- orderly_run("example", root = path1, echo = FALSE)
   orderly_commit(id, root = path1)
@@ -156,7 +156,7 @@ test_that("pull report with dependencies", {
 
 
 test_that("remote_path implements url_report", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   remote <- orderly_remote_path(path)
   expect_equal(remote$url_report("name", "id"),
                file.path(remote$config$root, "name", "id", fsep = "/"))
@@ -165,11 +165,11 @@ test_that("remote_path implements url_report", {
 
 test_that("push report (path)", {
   skip_on_cran_windows()
-  ours <- prepare_orderly_example("demo")
+  ours <- test_prepare_orderly_example("demo")
   id <- orderly_run("multifile-artefact", root = ours, echo = FALSE)
   orderly_commit(id, root = ours)
 
-  theirs <- prepare_orderly_example("demo")
+  theirs <- test_prepare_orderly_example("demo")
 
   remote <- orderly_remote_path(theirs)
   res <- testthat::evaluate_promise(
@@ -191,8 +191,8 @@ test_that("push report (path)", {
 
 test_that("push report & deps", {
   skip_on_cran_windows()
-  ours <- prepare_orderly_example("depends", testing = TRUE)
-  theirs <- prepare_orderly_example("depends", testing = TRUE)
+  ours <- test_prepare_orderly_example("depends", testing = TRUE)
+  theirs <- test_prepare_orderly_example("depends", testing = TRUE)
 
   id1 <- orderly_run("example", root = ours, echo = FALSE)
   orderly_commit(id1, root = ours)
@@ -227,8 +227,8 @@ test_that("push report & deps", {
 
 test_that("Fail to push if not supported", {
   skip_on_cran_windows()
-  ours <- prepare_orderly_example("demo")
-  theirs <- prepare_orderly_example("demo")
+  ours <- test_prepare_orderly_example("demo")
+  theirs <- test_prepare_orderly_example("demo")
 
   remote <- as.list(orderly_remote_path(theirs))
   remote$push <- NULL
@@ -253,7 +253,7 @@ test_that("pull archive using query", {
   dat <- prepare_orderly_query_example()
   remote <- orderly_remote_path(dat$root)
 
-  root <- prepare_orderly_example("demo")
+  root <- test_prepare_orderly_example("demo")
   orderly_pull_archive("other", "latest(parameter:nmin < 0.25)", root = root,
                        remote = remote)
   expect_equal(
@@ -266,7 +266,7 @@ test_that("pull archive using query and parameters", {
   dat <- prepare_orderly_query_example()
   remote <- orderly_remote_path(dat$root)
 
-  root <- prepare_orderly_example("demo")
+  root <- test_prepare_orderly_example("demo")
   expect_error(
     orderly_pull_archive("other", "latest(parameter:nmin < n)", root = root,
                          remote = remote),
@@ -284,7 +284,7 @@ test_that("pull dependencies that use a query", {
   dat <- prepare_orderly_query_example()
   remote <- orderly_remote_path(dat$root)
 
-  root <- prepare_orderly_example("demo")
+  root <- test_prepare_orderly_example("demo")
 
   p <- file.path(root, "src", "use_dependency", "orderly.yml")
   txt <- readLines(p)
@@ -305,7 +305,7 @@ test_that("pull dependencies that use a query", {
 
 test_that("bundle pack and import", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
 
   remote <- orderly_remote_path(path)
   res <- orderly_bundle_pack_remote("example", remote = remote)

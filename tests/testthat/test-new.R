@@ -1,7 +1,7 @@
 context("new")
 
 test_that("template", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   name <- "foo"
   expect_message(orderly_new(name, path), "Edit the file")
   expect_true(name %in% orderly_list(path))
@@ -9,19 +9,19 @@ test_that("template", {
 })
 
 test_that("don't overwrite", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   expect_error(orderly_new("example", path),
                "A report already exists called 'example'")
 })
 
 test_that("don't allow spaces", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   expect_error(orderly_new("my report", path),
                "'name' cannot contain spaces")
 })
 
 test_that("custom fields", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   yml <- file.path(path, "orderly_config.yml")
   txt <- readLines(yml)
   fields <- c("fields:",
@@ -53,7 +53,7 @@ test_that("custom fields", {
 
 
 test_that("custom template is copied", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   p <- file.path(path, "template", "default")
   dir.create(p, FALSE, TRUE)
 
@@ -67,7 +67,7 @@ test_that("custom template is copied", {
 
 
 test_that("custom template can be overriden by system", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   p <- file.path(path, "template", "default")
   dir.create(p, FALSE, TRUE)
 
@@ -81,7 +81,7 @@ test_that("custom template can be overriden by system", {
 
 
 test_that("custom template copies all files", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
 
   p <- file.path(path, "template", "foo")
   dir.create(p, FALSE, TRUE)
@@ -109,7 +109,7 @@ test_that("custom template copies all files", {
 
 
 test_that("missing templates are an error", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   expect_error(
     orderly_new("testing", root = path, template = "foo"),
     "Did not find file 'template/foo/orderly.yml' within orderly root")
@@ -118,7 +118,7 @@ test_that("missing templates are an error", {
 
 
 test_that("can create src directory if needed", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   unlink(file.path(path, "src"), recursive = TRUE)
   orderly_new("test", root = path)
   expect_true(file.exists(file.path(path, "src", "test", "orderly.yml")))

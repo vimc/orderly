@@ -2,7 +2,7 @@ context("remote")
 
 
 test_that("defaults: null", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   expect_null(orderly_default_remote_set(NULL, path))
   expect_error(orderly_default_remote_get(path, FALSE),
                "default remote has not been set yet")
@@ -85,7 +85,7 @@ test_that("pull_dependencies counts dependencies", {
 test_that("pull from old remote", {
   oo <- options(orderly.nowarnings = TRUE)
   on.exit(options(oo))
-  path_local <- prepare_orderly_example("demo")
+  path_local <- test_prepare_orderly_example("demo")
   path_remote <- unpack_reference("0.6.0")
 
   ## In order to make this work we do need to update the data table.
@@ -134,7 +134,7 @@ test_that("pull from new remote", {
 test_that("pull migrated archive", {
   oo <- options(orderly.nowarnings = TRUE)
   on.exit(options(oo))
-  path_local <- prepare_orderly_example("demo")
+  path_local <- test_prepare_orderly_example("demo")
   unlink(file.path(path_local, "archive"), recursive = TRUE)
   dir.create(file.path(path_local, "archive"))
 
@@ -170,7 +170,7 @@ test_that("pull migrated archive", {
 
 
 test_that("silently ignore missing slack url, but resolve args", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
 
   append_lines(
     c("remote:",
@@ -203,8 +203,8 @@ test_that("silently ignore missing slack url, but resolve args", {
 
 
 test_that("get remote", {
-  path_remote <- prepare_orderly_example("minimal")
-  path_local <- prepare_orderly_example("minimal")
+  path_remote <- test_prepare_orderly_example("minimal")
+  path_local <- test_prepare_orderly_example("minimal")
 
   ## Configure our remote:
   path_config <- file.path(path_local, "orderly_config.yml")
@@ -227,7 +227,7 @@ test_that("get remote", {
 })
 
 test_that("teams url can be configured and silently ignored if missing", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
 
   append_lines(
     c("remote:",
@@ -259,7 +259,7 @@ test_that("teams url can be configured and silently ignored if missing", {
 })
 
 test_that("orderly run remote passes instance to run", {
-  path_local <- prepare_orderly_example("demo")
+  path_local <- test_prepare_orderly_example("demo")
 
   ## Create a minimal remote class which will satisfy implements_remote
   mock_remote <- R6::R6Class(
@@ -294,7 +294,7 @@ test_that("orderly run remote passes instance to run", {
 
 test_that("orderly_bundle_(pack|import)_remote do not use root/locate", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   remote <- orderly_remote_path(path)
 
   temp <- tempfile()
@@ -324,7 +324,7 @@ test_that("orderly_bundle_(pack|import)_remote do not use root/locate", {
 
 
 test_that("orderly run remote passes ref to run", {
-  path <- prepare_orderly_git_example()
+  path <- test_prepare_orderly_git_example()
 
   ## Create a minimal remote class which will satisfy implements_remote
   mock_remote <- R6::R6Class(
@@ -358,7 +358,7 @@ test_that("orderly run remote passes ref to run", {
 
 
 test_that("can get status of remote queue", {
-  path_local <- prepare_orderly_example("demo")
+  path_local <- test_prepare_orderly_example("demo")
 
   status <- list(
     tasks = list(

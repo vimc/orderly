@@ -28,7 +28,7 @@ test_that("can retrieve parameter info", {
 })
 
 test_that("can retrieve info from failed run", {
-  path <- prepare_orderly_git_example()
+  path <- test_prepare_orderly_git_example()
 
   append_lines('stop("some error")',
                file.path(path[["local"]], "src", "minimal", "script.R"))
@@ -50,7 +50,7 @@ test_that("can retrieve info from failed run", {
 })
 
 test_that("will return path to logfile if exists", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
 
   id <- orderly_run_internal("example", root = path, echo = FALSE,
                              capture_log = TRUE, commit = TRUE)

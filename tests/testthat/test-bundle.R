@@ -1,7 +1,7 @@
 context("bundles")
 
 test_that("pack bundle", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
   path_bundles <- tempfile()
@@ -42,7 +42,7 @@ test_that("pack bundle", {
 
 
 test_that("can run a bundle in place if wanted", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
   path_bundles <- tempfile()
@@ -67,7 +67,7 @@ test_that("can run a bundle in place if wanted", {
 
 
 test_that("pack a bundle that requires parameters", {
-  path_src <- prepare_orderly_example("demo")
+  path_src <- test_prepare_orderly_example("demo")
   path_bundles <- tempfile()
   path_workdir <- tempfile()
 
@@ -88,7 +88,7 @@ test_that("pack a bundle that requires parameters", {
 
 
 test_that("list a directory of bundles", {
-  path <- prepare_orderly_example("demo")
+  path <- test_prepare_orderly_example("demo")
   on.exit(unlink(path, recursive = TRUE))
 
   path_bundles <- tempfile()
@@ -117,7 +117,7 @@ test_that("list a directory of bundles", {
 
 
 test_that("can't run a bundle twice", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
   path_bundles <- tempfile()
@@ -133,7 +133,7 @@ test_that("can't run a bundle twice", {
 
 
 test_that("Can't import a bundle twice", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
   path_bundles <- tempfile()
@@ -151,7 +151,7 @@ test_that("Can't import a bundle twice", {
 
 
 test_that("Can't extract a bundle onto itself", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
   path_bundles <- tempfile()
   res <- orderly_bundle_pack(path_bundles, "example", root = path)
@@ -239,7 +239,7 @@ test_that("sensible error when given junk input", {
 
 
 test_that("can run a bundle from a relative path", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
   writeLines(
@@ -259,7 +259,7 @@ test_that("can run a bundle from a relative path", {
 
 
 test_that("Can rename a bundle before import", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
   path_bundles <- tempfile()
@@ -274,7 +274,7 @@ test_that("Can rename a bundle before import", {
 })
 
 test_that("failed bundle run writes out failed rds", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   on.exit(unlink(path, recursive = TRUE))
 
   append_lines(

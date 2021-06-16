@@ -65,7 +65,7 @@ test_that("detach head checks", {
 
 test_that("fetch / detach / pull", {
   testthat::skip_on_cran()
-  path <- prepare_orderly_git_example()
+  path <- test_prepare_orderly_git_example()
   path1 <- path[["origin"]]
   path2 <- path[["local"]]
 
@@ -101,7 +101,7 @@ test_that("checkout_branch checks", {
 
 test_that("detect missing ref", {
   testthat::skip_on_cran()
-  path <- prepare_orderly_git_example()
+  path <- test_prepare_orderly_git_example()
   path1 <- path[["origin"]]
   path2 <- path[["local"]]
 
@@ -153,7 +153,7 @@ test_that("run in detached head", {
 
 test_that("fetch before run", {
   testthat::skip_on_cran()
-  path <- prepare_orderly_git_example()
+  path <- test_prepare_orderly_git_example()
   path1 <- path[["origin"]]
   path2 <- path[["local"]]
   sha1 <- git_ref_to_sha("HEAD", path1)
@@ -180,7 +180,7 @@ test_that("fetch before run", {
 
 test_that("handle failure", {
   testthat::skip_on_cran()
-  path <- prepare_orderly_git_example()
+  path <- test_prepare_orderly_git_example()
   r <- git_run("unknown-command", root = path[["origin"]])
   expect_false(r$success)
   expect_error(

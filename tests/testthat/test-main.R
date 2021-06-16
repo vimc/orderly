@@ -2,7 +2,7 @@ context("main")
 
 test_that("run", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   args <- c("--root", path, "run", "example")
   res <- cli_args_process(args)
   expect_equal(res$command, "run")
@@ -22,7 +22,7 @@ test_that("run", {
 
 test_that("run: id-file", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   id_file <- tempfile()
   args <- c("--root", path, "run", "--id-file", id_file, "example")
   res <- cli_args_process(args)
@@ -46,7 +46,7 @@ test_that("run: id-file", {
 
 test_that("run: use instance", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   p <- file.path(path, "orderly_config.yml")
   writeLines(c(
@@ -146,7 +146,7 @@ test_that("run: ref", {
 
 test_that("run: fetch", {
   testthat::skip_on_cran()
-  path <- prepare_orderly_git_example()
+  path <- test_prepare_orderly_git_example()
   path_local <- path[["local"]]
   path_origin <- path[["origin"]]
   sha_local <- git_ref_to_sha("HEAD", path_local)
@@ -183,7 +183,7 @@ test_that("run: pull & ref don't go together", {
 
 test_that("run: pull before run", {
   testthat::skip_on_cran()
-  path <- prepare_orderly_git_example()
+  path <- test_prepare_orderly_git_example()
   path_local <- path[["local"]]
   path_origin <- path[["origin"]]
   sha_local <- git_ref_to_sha("HEAD", path_local)
@@ -205,7 +205,7 @@ test_that("run: pull before run", {
 
 test_that("commit", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   id <- orderly_run("example", root = path, echo = FALSE)
   args <- c("--root", path, "commit", id)
   res <- cli_args_process(args)
@@ -220,7 +220,7 @@ test_that("commit", {
 
 test_that("latest", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   id1 <- orderly_run("example", root = path, echo = FALSE)
   Sys.sleep(0.1)
   id2 <- orderly_run("example", root = path, echo = FALSE)
@@ -296,7 +296,7 @@ test_that("pull --dependencies and --id are incompatible", {
 
 test_that("list", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
 
   args <- c("--root", path, "list")
   res <- cli_args_process(args)
@@ -366,7 +366,7 @@ test_that("migrate", {
 
 
 test_that("migrate: args", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   args <- c("--root", path, "migrate", "--to", "0.3.3", "--dry-run", "--clean")
   res <- cli_args_process(args)
   expect_equal(res$command, "migrate")
@@ -394,7 +394,7 @@ test_that("rebuild", {
 
 test_that("cleanup", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   id <- orderly_run("example", root = path, echo = FALSE)
 
   res <- cli_args_process(c("--root", path, "cleanup"))
@@ -413,7 +413,7 @@ test_that("cleanup", {
 
 test_that("list", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   id1 <- orderly_run("example", root = path, echo = FALSE)
   id2 <- orderly_run("example", root = path, echo = FALSE)
   orderly_commit(id2, root = path)
@@ -438,7 +438,7 @@ test_that("list", {
 test_that("run: message", {
   skip_on_cran_windows()
   ## Should have no errors
-  path <- prepare_orderly_example("changelog", testing = TRUE)
+  path <- test_prepare_orderly_example("changelog", testing = TRUE)
   message <- "[label1] This is a test message."
   args <- c("--root", path, "run", "--message", squote(message), "example")
   res <- cli_args_process(args)
@@ -461,7 +461,7 @@ test_that("run: message", {
   expect_equal(message, table_message)
 
 
-  path <- prepare_orderly_example("changelog", testing = TRUE)
+  path <- test_prepare_orderly_example("changelog", testing = TRUE)
   message <- "[label1] This is a test message."
   args <- c("--root", path, "run", "--message", squote(message),
             "example")
@@ -471,7 +471,7 @@ test_that("run: message", {
 
 test_that("run: bad message", {
   ## mal-formatted message
-  path <- prepare_orderly_example("changelog", testing = TRUE)
+  path <- test_prepare_orderly_example("changelog", testing = TRUE)
   message <- "Invalid message"
   args <- c("--root", path, "run", "--message", squote(message), "example")
   res <- cli_args_process(args)
@@ -484,7 +484,7 @@ test_that("run: bad message", {
 
 test_that("run: message no changelog", {
   ## changelog not enabled
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   message <- "[label1] This is a test message."
   args <- c("--root", path, "run", "--message", squote(message), "example")
   res <- cli_args_process(args)
@@ -516,13 +516,13 @@ test_that("preprocess set root", {
 
 
 test_that("main wrapper", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   expect_output(main(c("--root", path, "list")), "example")
 })
 
 
 test_that("docopt failure gives reasonable error", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   expect_error(
     main(c("--root", path, "list", "unknown")),
     class = "orderly_cli_error")
@@ -554,7 +554,7 @@ test_that("parameter type conversion", {
 
 test_that("run captures output", {
   skip_on_cran_windows()
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   args <- c("--root", path, "run", "example")
   res <- cli_args_process(args)
   expect_identical(res$target, main_do_run)
@@ -665,7 +665,7 @@ test_that("batch: pull & ref don't go together", {
 
 test_that("batch: pull before run", {
   testthat::skip_on_cran()
-  path <- prepare_orderly_git_example(branch = "other")
+  path <- test_prepare_orderly_git_example(branch = "other")
   path_local <- path[["local"]]
   path_origin <- path[["origin"]]
   sha_local <- git_ref_to_sha("HEAD", path_local)
@@ -686,7 +686,7 @@ test_that("batch: pull before run", {
 
 
 test_that("run can save workflow metadata", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   args <- c("--root", path, "run", "--workflow-id", "123", "example")
   res <- cli_args_process(args)
   expect_equal(res$options$workflow_id, "123")

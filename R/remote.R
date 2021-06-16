@@ -30,7 +30,7 @@
 ##' remotes, though not by orderlyweb remotes.  There is no control
 ##' over what will \emph{accept} a push at this point, nor any check
 ##' that what you've pushed is "good" except that it exists in your
-##' archive.  As with pulling an archive, pushes are recusive with
+##' archive.  As with pulling an archive, pushes are recursive with
 ##' respect to dependencies.  The configuration interface here will
 ##' likely change a little over time.
 ##'
@@ -49,7 +49,7 @@
 ##'   for this orderly repository is used - by default that is the
 ##'   first listed remote.
 ##'
-##' @param parameters Parameters to pass through when doing depenency
+##' @param parameters Parameters to pass through when doing dependency
 ##'   resolution.  If you are using a query for \code{id} that
 ##'   involves a parameter (e.g., \code{latest(parameter:x == p)}) you
 ##'   will need to pass in the parameters here.  Similarly, if you are
@@ -152,7 +152,7 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
     orderly_log("pull", label)
     path <- remote$pull(name, id)
 
-    ## There's an assumption here that the depenency resolution here
+    ## There's an assumption here that the dependency resolution here
     ## will not be badly affected by migrations.  If a migration
     ## changes how d$meta$depends is structured (if d$meta$depends
     ## stops being a data.frame that includes name and id as

@@ -78,7 +78,7 @@ You will need to set up and/or gather a few things beforehand:
 * Create an OAuth app, following instructions [here](https://github.com/vimc/orderly-web/blob/master/docs/auth.md#authenticating-with-github), somewhat better instructions [here](https://github.com/ncov-ic/setup#create-an-oauth-app)
 * Create a docker image that has all of your wanted R packages and external software; this image should be based off of `vimc/orderly.server:master`, for example [the Dockerfile for the coronavirus response](https://github.com/ncov-ic/ncov-orderly/blob/master/docker/Dockerfile) and push that to some accessible location (either docker hub or a private registry).  You can initially skip this step and just use `vimc/orderly.server:master` but the set of built-in packages is very limited
 
-Create an orderly-web configuration; see [here](https://github.com/ncov-ic/ncov-orderly-web/blob/master/config/orderly-web.yml) for an example and [here](https://github.com/vimc/orderly-web-deploy/blob/master/config/complete/orderly-web.yml) for a highly annotated example.  A somewhat stripped down version of this looks like:
+Create an orderly-web configuration; see [here](https://github.com/mrc-ide/covid19-forecasts-orderly-web/blob/main/config/orderly-web.yml) for an example and [here](https://github.com/vimc/orderly-web-deploy/blob/master/config/complete/orderly-web.yml) for a highly annotated example.  A somewhat stripped down version of this looks like:
 
 ```yaml
 vault:

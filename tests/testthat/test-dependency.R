@@ -1,7 +1,7 @@
 context("dependency")
 
 test_that("basic tree example", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   demo <- c("- name: example",
             "- name: depend2",
@@ -36,7 +36,7 @@ test_that("basic tree example", {
 
 # check a report with no dependencies
 test_that("no dependendent reports", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   demo <- c("- name: example")
   writeLines(demo, file.path(path, "demo.yml"))
@@ -52,7 +52,7 @@ test_that("no dependendent reports", {
 })
 
 test_that("nonexistant reports ", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   demo <- c("- name: example",
             "- name: depend2")
@@ -71,7 +71,7 @@ test_that("nonexistant reports ", {
 })
 
 test_that("has dependencies upstream", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   demo <- c("- name: example",
             "- name: depend2",
@@ -96,7 +96,7 @@ test_that("has dependencies upstream", {
 ## this is a a bit hacky since reports only get flagged as out of date if the
 ## artefact we depend on has changed
 test_that("out of date dependencies", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   demo <- c("- name: example",
             "- name: depend2",
@@ -126,7 +126,7 @@ test_that("out of date dependencies", {
 
 test_that("propagate", {
   ## What happens if we do not propagate the out-of-date status
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   demo <- c("- name: example",
             "- name: depend2",
@@ -174,7 +174,7 @@ test_that("circular dependency", {
   ## A circular dependency is difficult to create
   ## we need two reports A, B s.t. A -> B
   ## run A; then modify A so that B -> A then run B
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
   ## run report other
   demo <- c("- name: example")
   writeLines(demo, file.path(path, "demo.yml"))
@@ -203,7 +203,7 @@ test_that("circular dependency", {
 })
 
 test_that("infinite recursion", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   demo <- c("- name: example",
             "- name: depend2",
@@ -217,7 +217,7 @@ test_that("infinite recursion", {
 })
 
 test_that("multiple dependencies", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   demo <- c("- name: example",
             "- name: depend2",
@@ -242,7 +242,7 @@ test_that("multiple dependencies", {
 })
 
 test_that("List out of date upstream", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   demo <- c("- name: example",
             "- name: depend2",
@@ -259,7 +259,7 @@ test_that("List out of date upstream", {
 })
 
 test_that("List out of date with duplicates", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   demo <- c("- name: example",
             "- name: depend2",
@@ -284,7 +284,7 @@ test_that("R6 errorMessages", {
 })
 
 test_that("Only one report - previous", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   demo <- c("- name: example",
             "- name: depend2",
@@ -305,7 +305,7 @@ test_that("Pinned reports", {
   ## To test this we need to update the yaml to point to specfic versions
 
   ## Run the first report twice
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
   id_1 <- orderly_run("example", root = path, echo = FALSE)
   orderly_commit(id_1, root = path)
   id_2 <- orderly_run("example", root = path, echo = FALSE)
@@ -349,7 +349,7 @@ test_that("Pinned reports", {
 
 
 test_that("source - downstream", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   config <- orderly_config_$new(path)
   g <- orderly_graph("example", root = path,
@@ -368,7 +368,7 @@ test_that("source - downstream", {
 
 
 test_that("source - upstream", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   g <- orderly_graph("depend3", root = path,
                      direction = "upstream", use = "src")
@@ -382,7 +382,7 @@ test_that("source - upstream", {
 
 
 test_that("can't get dependencies for nonexistant report", {
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   config <- orderly_config_$new(path)
   expect_error(
     orderly_graph_src("missing", config, "upstream"),
@@ -391,7 +391,7 @@ test_that("can't get dependencies for nonexistant report", {
 
 
 test_that("prevent excessive recursion", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   config <- orderly_config_$new(path)
   expect_error(
@@ -401,7 +401,7 @@ test_that("prevent excessive recursion", {
 
 
 test_that("id attribution", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   p <- file.path(path, "src", "depend", "orderly.yml")
   dat <- yaml::read_yaml(p)
@@ -428,7 +428,7 @@ test_that("id attribution", {
 
 
 test_that("detect loop", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
   append_lines(c("depends:",
                  "  - depend2:",
                  "      id: latest",
@@ -446,7 +446,7 @@ test_that("detect loop", {
 })
 
 test_that("archive: set depth of dependencies", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   demo <- c("- name: example",
             "- name: depend2",
@@ -472,7 +472,7 @@ test_that("archive: set depth of dependencies", {
 })
 
 test_that("src: set depth of dependencies", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   tree <- orderly_graph("example", root = path, use = "src",
                         propagate = FALSE, show_all = TRUE,
@@ -490,7 +490,7 @@ test_that("src: set depth of dependencies", {
 })
 
 test_that("archive: set depth of dependencies upstream", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   demo <- c("- name: example",
             "- name: depend2",
@@ -513,7 +513,7 @@ test_that("archive: set depth of dependencies upstream", {
 })
 
 test_that("src: set depth of dependencies upstream", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   tree <- orderly_graph("depend3", root = path, use = "src",
                         propagate = FALSE, show_all = TRUE,
@@ -528,7 +528,7 @@ test_that("src: set depth of dependencies upstream", {
 })
 
 test_that("archive: set depth of dependencies and recursion limit", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   demo <- c("- name: example",
             "- name: depend2",
@@ -556,7 +556,7 @@ test_that("archive: set depth of dependencies and recursion limit", {
 })
 
 test_that("src: set depth of dependencies and recursion limit", {
-  path <- prepare_orderly_example("depends", testing = TRUE)
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
 
   tree <- orderly_graph("depend3", root = path, use = "src",
                         propagate = FALSE, show_all = TRUE,
@@ -607,7 +607,7 @@ test_that("Sensible error message if query fails", {
   dat <- prepare_orderly_query_example()
   remote <- orderly_remote_path(dat$root)
 
-  path_local <- prepare_orderly_example("demo")
+  path_local <- test_prepare_orderly_example("demo")
   config <- orderly_config_$new(path_local)
 
   p <- file.path(path_local, "src", "use_dependency", "orderly.yml")

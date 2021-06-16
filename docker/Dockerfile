@@ -15,29 +15,28 @@ COPY docker/Rprofile.site /usr/local/lib/R/etc/Rprofile.site
 
 # R package dependencies, including a few extras that we'll want handy
 RUN install2.r \
-  DBI \
-  R6 \
-  RPostgres \
-  RSQLite \
-  crayon \
-  digest \
-  docopt \
-  fs \
-  gert \
-  ids \
-  jsonlite \
-  knitr \
-  remotes \
-  rmarkdown \
-  withr \
-  yaml \
-  zip
-
-RUN Rscript -e 'remove.packages("BH")' || true
+        DBI \
+        R6 \
+        RPostgres \
+        RSQLite \
+        crayon \
+        digest \
+        docopt \
+        fs \
+        gert \
+        ids \
+        jsonlite \
+        knitr \
+        remotes \
+        rmarkdown \
+        withr \
+        yaml \
+        zip && \
+        (Rscript -e 'remove.packages("BH")' || true)
 
 # Install Pandoc
 ENV PANDOC_VERSION "2.7.3"
-RUN wget https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-1-amd64.deb \
+RUN wget --progress=dot:giga https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-1-amd64.deb \
   && dpkg --install pandoc-${PANDOC_VERSION}-1-amd64.deb \
   && rm pandoc-${PANDOC_VERSION}-1-amd64.deb
 

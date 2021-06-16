@@ -19,7 +19,6 @@
 ^\.lintr$
 ^\.hadolint\.yaml$
 ^buildkite$
-^build$
 ^ignore$
 ^tests/testthat/tmp$
 ^\.github$

@@ -1,6 +1,6 @@
 Package: orderly
 Title: Lightweight Reproducible Reporting
-Version: 1.2.41
+Version: 1.3.0
 Description: Order, create and store reports from R.  By defining a
     lightweight interface around the inputs and outputs of an
     analysis, a lot of the repetitive work for reproducible research
@@ -48,4 +48,3 @@ Suggests:
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr
 Language: en-GB
-Remotes: vimc/vaultr

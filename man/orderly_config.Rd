@@ -37,7 +37,7 @@ orderly::orderly_config(path)
 \item{\code{raw}}{The raw orderly config yaml}
 
 \item{\code{destination}}{DB connection configuration for where
-to store orderly output datbase. Defaults to local SQLite
+to store orderly output database. Defaults to local SQLite
 db `orderly.sqlite`}
 
 \item{\code{fields}}{Configuration of fields in reports, specifying
@@ -54,7 +54,7 @@ copy of orderly on a remote machine}
 
 \item{\code{tags}}{List of available tags for orderly reports.}
 
-\item{\code{database}}{Database configuation specifying driver and
+\item{\code{database}}{Database configuration specifying driver and
 connection args for (possibly multiple) databases}
 
 \item{\code{archive_version}}{Orderly version number of the archive}

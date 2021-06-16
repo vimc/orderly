@@ -208,7 +208,7 @@ test_that("don't migrate new orderly", {
   oo <- options(orderly.nowarnings = TRUE)
   on.exit(options(oo))
 
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   p <- path_orderly_archive_version(path)
   unlink(p)
   check_orderly_archive_version(orderly_config_$new(path))

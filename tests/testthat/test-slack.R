@@ -145,7 +145,7 @@ test_that("main interface", {
   skip_if_no_internet()
   skip_if_not_installed("jsonlite")
 
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   id <- "20181213-123456-fedcba98"
   name <- "example"
   dat <- list(meta = list(elapsed = 10, id = id, name = name),
@@ -182,7 +182,7 @@ test_that("main interface", {
   skip_if_no_internet()
   skip_if_not_installed("httr")
 
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   append_lines(c(
     "remote:",
     "  testing:",
@@ -242,7 +242,7 @@ test_that("exit on no httr", {
 test_that("slack payload is correct given actual run data", {
   skip_on_cran()
   skip_on_windows_ci()
-  path <- prepare_orderly_git_example()
+  path <- test_prepare_orderly_git_example()
   path1 <- path[["origin"]]
   id <- orderly_run("minimal", root = path1, echo = FALSE)
   p <- file.path(path1, "draft", "minimal", id)
@@ -420,7 +420,7 @@ test_that("main teams interface", {
   skip_if_no_internet()
   skip_if_not_installed("jsonlite")
 
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   id <- "20181213-123456-fedcba98"
   name <- "example"
   dat <- list(meta = list(elapsed = 10, id = id, name = name),
@@ -457,7 +457,7 @@ test_that("look up environment variables before hook send", {
   skip_if_no_internet()
   skip_if_not_installed("jsonlite")
 
-  path <- prepare_orderly_example("minimal")
+  path <- test_prepare_orderly_example("minimal")
   id <- "20181213-123456-fedcba98"
   name <- "example"
   dat <- list(meta = list(elapsed = 10, id = id, name = name),
