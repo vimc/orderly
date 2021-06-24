@@ -1,4 +1,4 @@
-FROM rocker/r-ver:4.0.2
+FROM rocker/r-ver:4.1.0
 
 RUN apt-get update && apt-get -y install --no-install-recommends \
   git \
