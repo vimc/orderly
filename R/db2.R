@@ -197,14 +197,27 @@ report_db_open_existing <- function(con, config) {
 }
 
 
-report_db_import <- function(name, id, config, timeout = 10) {
-  orderly_log("import", sprintf("%s:%s", name, id))
+report_db_import <- function(name, id, config, timeout = 10, metadata = FALSE) {
+  if (metadata) {
+    orderly_log("import", sprintf("%s:%s (metadata only)", name, id))
+  } else {
+    orderly_log("import", sprintf("%s:%s", name, id))
+  }
   con <- orderly_db("destination", config)
   on.exit(DBI::dbDisconnect(con))
+
+  if (metadata) {
+    path_meta <- file.path(path_metadata(config$root), name, id)
+  } else {
+    workdir <- file.path(path_archive(config$root), name, id)
+    path_meta <- path_orderly_run_rds(workdir)
+  }
+  meta <- readRDS(path_meta)
+
   ## sqlite busy handler expects milliseconds
   RSQLite::sqliteSetBusyHandler(con, timeout * 1000)
   DBI::dbExecute(con, "BEGIN IMMEDIATE")
-  report_data_import(con, name, id, config)
+  report_data_import(con, meta, config)
   DBI::dbCommit(con)
 }
 
@@ -227,7 +240,9 @@ report_db_rebuild <- function(config, verbose = TRUE) {
       if (verbose) {
         message(sprintf("%s (%s)", id, name))
       }
-      report_data_import(con, name, id, config)
+      workdir <- file.path(config$root, "archive", name, id)
+      meta <- readRDS(path_orderly_run_rds(workdir))
+      report_data_import(con, meta, config)
     }
   }
 
@@ -244,9 +259,9 @@ report_db_needs_rebuild <- function(config) {
 }
 
 
-report_data_import <- function(con, name, id, config) {
-  workdir <- file.path(config$root, "archive", name, id)
-  dat_rds <- readRDS(path_orderly_run_rds(workdir))
+report_data_import <- function(con, dat_rds, config) {
+  name <- dat_rds$meta$name
+  id <- dat_rds$meta$id
 
   sql_name <- "SELECT name FROM report WHERE name = $1"
   if (nrow(DBI::dbGetQuery(con, sql_name, name)) == 0L) {

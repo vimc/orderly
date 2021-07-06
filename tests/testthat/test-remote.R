@@ -388,3 +388,30 @@ test_that("can get status of remote queue", {
   mockery::expect_called(mock_status, 1)
   expect_equal(res, status)
 })
+
+
+test_that("pull dependencies", {
+  dat <- prepare_orderly_remote_example()
+  id3 <- orderly_run("depend", root = dat$path_remote, echo = FALSE)
+  orderly_commit(id3, root = dat$path_remote)
+
+  orderly_pull_archive("depend", root = dat$config, remote = dat$remote,
+                       recursive = FALSE)
+
+  expect_log_message(
+    orderly_pull_dependencies("depend", root = dat$config,
+                              remote = dat$remote),
+    "\\[ pull\\s+ \\]  example:")
+  expect_equal(orderly_list_archive(dat$config),
+               data_frame(name = "example", id = dat$id2))
+
+  ## and update
+  id3 <- orderly_run("example", root = dat$path_remote, echo = FALSE)
+  orderly_commit(id3, root = dat$path_remote)
+  expect_log_message(
+    orderly_pull_dependencies("depend", root = dat$config,
+                              remote = dat$remote),
+    "\\[ pull\\s+ \\]  example:")
+  expect_equal(orderly_list_archive(dat$config),
+               data_frame(name = "example", id = c(dat$id2, id3)))
+})

@@ -258,6 +258,23 @@ migrate_single <- function(path, config) {
 }
 
 
+migrate_metadata <- function(dat_rds, config) {
+  assert_is(config, "orderly_config")
+
+  report_archive_version <- dat_rds$archive_version
+  archive_version <- config$archive_version
+
+  if (report_archive_version > archive_version) {
+    stop("Report was created with orderly more recent than this, upgrade!")
+  }
+
+  if (report_archive_version < archive_version) {
+    ## TODO: better error message needed
+    stop("Can't migrate metadata")
+  }
+}
+
+
 migrate_clean <- function(config, dry_run) {
   files <- list.files(file.path(config$root, "archive"),
                       "^orderly_run_([0-9]+\\.){3}rds", # nolint

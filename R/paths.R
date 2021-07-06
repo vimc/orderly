@@ -21,6 +21,9 @@ path_archive <- function(root, name = NULL) {
   }
 }
 
+path_metadata <- function(root) {
+  file.path(root, "metadata")
+}
 
 path_remote_cache <- function(root) {
   file.path(root, ".orderly", "remote", "cache")
