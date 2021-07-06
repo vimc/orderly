@@ -97,6 +97,14 @@ orderly_list_archive <- function(root = NULL, locate = TRUE) {
   orderly_list2(FALSE, root, locate)
 }
 
+orderly_list_metadata <- function(root = NULL, locate = FALSE) {
+  config <- orderly_config(root, locate)
+  check <- list_dirs(path_metadata(config$root))
+  res <- lapply(check, dir, pattern = version_id_re)
+  data_frame(name = rep(basename(check), lengths(res)),
+             id = as.character(unlist(res)))
+}
+
 ##' Find most recent version of an orderly report.  The most recent
 ##' report is always the most recently run report that has been
 ##' committed (regardless of the order in which they were committed).

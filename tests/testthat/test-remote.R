@@ -390,7 +390,7 @@ test_that("can get status of remote queue", {
 })
 
 
-test_that("pull dependencies", {
+test_that("pull leaf only", {
   dat <- prepare_orderly_remote_example()
   id3 <- orderly_run("depend", root = dat$path_remote, echo = FALSE)
   orderly_commit(id3, root = dat$path_remote)
@@ -398,20 +398,32 @@ test_that("pull dependencies", {
   orderly_pull_archive("depend", root = dat$config, remote = dat$remote,
                        recursive = FALSE)
 
-  expect_log_message(
-    orderly_pull_dependencies("depend", root = dat$config,
-                              remote = dat$remote),
-    "\\[ pull\\s+ \\]  example:")
-  expect_equal(orderly_list_archive(dat$config),
-               data_frame(name = "example", id = dat$id2))
+  ## We only have the one archive report now
+  expect_equal(
+    orderly_list_archive(dat$config),
+    data_frame(name = "depend", id = id3))
 
-  ## and update
-  id3 <- orderly_run("example", root = dat$path_remote, echo = FALSE)
+  ## But we have two in the metadata store
+  con <- orderly_db("destination", dat$config)
+  d <- DBI::dbReadTable(con, "report_version")
+  DBI::dbDisconnect(con)
+  expect_equal(nrow(d), 2)
+  expect_equal(d$id, c(dat$id2, id3))
+})
+
+
+test_that("Can rebuild when there is a metadata store", {
+  dat <- prepare_orderly_remote_example()
+  id3 <- orderly_run("depend", root = dat$path_remote, echo = FALSE)
   orderly_commit(id3, root = dat$path_remote)
-  expect_log_message(
-    orderly_pull_dependencies("depend", root = dat$config,
-                              remote = dat$remote),
-    "\\[ pull\\s+ \\]  example:")
-  expect_equal(orderly_list_archive(dat$config),
-               data_frame(name = "example", id = c(dat$id2, id3)))
+  orderly_pull_archive("depend", root = dat$config, remote = dat$remote,
+                       recursive = FALSE)
+
+  orderly_rebuild(dat$config)
+
+  con <- orderly_db("destination", dat$config)
+  d <- DBI::dbReadTable(con, "report_version")
+  DBI::dbDisconnect(con)
+  expect_equal(nrow(d), 2)
+  expect_equal(d$id, c(dat$id2, id3))
 })

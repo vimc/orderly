@@ -206,13 +206,7 @@ report_db_import <- function(name, id, config, timeout = 10, metadata = FALSE) {
   con <- orderly_db("destination", config)
   on.exit(DBI::dbDisconnect(con))
 
-  if (metadata) {
-    path_meta <- file.path(path_metadata(config$root), name, id)
-  } else {
-    workdir <- file.path(path_archive(config$root), name, id)
-    path_meta <- path_orderly_run_rds(workdir)
-  }
-  meta <- readRDS(path_meta)
+  meta <- read_metadata(name, id, config, metadata)
 
   ## sqlite busy handler expects milliseconds
   RSQLite::sqliteSetBusyHandler(con, timeout * 1000)
@@ -232,18 +226,34 @@ report_db_rebuild <- function(config, verbose = TRUE) {
     report_db_destroy(con, config)
   }
   report_db_init(con, config)
-  reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
-  if (length(reports) > 0L) {
-    for (p in reports[order(basename(reports))]) {
-      id <- basename(p)
-      name <- basename(dirname(p))
-      if (verbose) {
-        message(sprintf("%s (%s)", id, name))
-      }
-      workdir <- file.path(config$root, "archive", name, id)
-      meta <- readRDS(path_orderly_run_rds(workdir))
-      report_data_import(con, meta, config)
+
+  ## There are two places to look for reports: the archive (of course)
+  ## and metadata archive.
+
+  ## TODO: we might need to make this general because we'll need this
+  ## later to do things like resolve partial trees.
+  reports_archive <- orderly_list_archive(config, FALSE)
+  reports_archive$metadata <- FALSE
+  reports_metadata <- orderly_list_metadata(config, FALSE)
+  reports_metadata$metadata <- TRUE
+  i <- !(reports_metadata$id %in% reports_archive$id)
+  if (any(i)) {
+    reports <- rbind(reports_archive, reports_metadata[i, ])
+    reports <- reports[order(reports$id), ]
+  } else {
+    reports <- reports_archive
+  }
+
+  for (i in seq_len(nrow(reports))) {
+    id <- reports$id[[i]]
+    name <- reports$name[[i]]
+    metadata <- reports$metadata[[i]]
+    if (verbose) {
+      fmt <- if (metadata) "%s (%s) (metadata only)" else "%s (%s)"
+      message(sprintf(fmt, id, name))
     }
+    meta <- read_metadata(name, id, config, metadata)
+    report_data_import(con, meta, config)
   }
 
   legacy_report_db_rebuild_published(config)
@@ -613,4 +623,15 @@ report_db_dialect <- function(con) {
     ## throw all the errors that we need.
     stop("Can't determine SQL dialect")
   }
+}
+
+
+read_metadata <- function(name, id, config, metadata_store) {
+  if (metadata_store) {
+    path_meta <- file.path(path_metadata(config$root), name, id)
+  } else {
+    workdir <- file.path(path_archive(config$root), name, id)
+    path_meta <- path_orderly_run_rds(workdir)
+  }
+  readRDS(path_meta)
 }
