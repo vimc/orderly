@@ -35,6 +35,3 @@ path <- orderly::orderly_example("minimal")
 # orderly::orderly_pull_archive(..., recursive = FALSE)
 orderly::orderly_list_metadata(path)
 }
-\author{
-Richard Fitzjohn
-}

@@ -113,7 +113,6 @@ orderly_list_archive <- function(root = NULL, locate = TRUE) {
 ##' @return A \code{\link{data.frame}} with columns \code{name} and
 ##'   \code{id}, as for \code{\link{orderly_list_archive}}
 ##'
-##' @author Richard Fitzjohn
 ##' @export
 ##' @examples
 ##' path <- orderly::orderly_example("minimal")
