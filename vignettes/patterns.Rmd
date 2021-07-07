@@ -1,8 +1,8 @@
 ---
-title: "Orderly patterns"
+title: "orderly patterns"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Orderly patterns}
+  %\VignetteIndexEntry{orderly patterns}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

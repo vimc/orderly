@@ -114,6 +114,7 @@ orderly_list_archive <- function(root = NULL, locate = TRUE) {
 ##'   \code{id}, as for \code{\link{orderly_list_archive}}
 ##'
 ##' @author Richard Fitzjohn
+##' @export
 ##' @examples
 ##' path <- orderly::orderly_example("minimal")
 ##' # No metadata-only reports will be present, unless you have run
