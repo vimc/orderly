@@ -22,3 +22,4 @@
 ^ignore$
 ^tests/testthat/tmp$
 ^\.github$
+^_pkgdown\.yml$
