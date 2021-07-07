@@ -20,7 +20,7 @@ Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
              person("James", "Thompson", role = "aut"),
              person("Imperial College of Science, Technology and Medicine",
                     role = "cph"))
-URL: https://github.com/vimc/orderly
+URL: https://www.vaccineimpact.org/orderly/, https://github.com/vimc/orderly
 BugReports: https://github.com/vimc/orderly/issues
 SystemRequirements: git
 Imports:
