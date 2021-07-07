@@ -435,3 +435,22 @@ test_that("Can rebuild when there is a metadata store", {
   expect_equal(nrow(d), 2)
   expect_equal(d$id, c(dat$id2, id3))
 })
+
+
+test_that("Can cope will pulling complete tree after metadata pulled", {
+  dat <- prepare_orderly_remote_example()
+  id3 <- orderly_run("depend", root = dat$path_remote, echo = FALSE)
+  orderly_commit(id3, root = dat$path_remote)
+  orderly_pull_archive("depend", root = dat$config, remote = dat$remote,
+                       recursive = FALSE)
+  orderly_pull_archive("example", root = dat$config, remote = dat$remote)
+
+  expect_equal(
+    orderly_list_metadata(dat$config),
+    data_frame(name = character(), id = character()))
+  expect_equal(
+    orderly_list_metadata(dat$config, include_archive = TRUE),
+    data_frame(name = "example", id = dat$id2))
+
+  orderly_rebuild(dat$config)
+})

@@ -206,6 +206,22 @@ report_db_import <- function(name, id, config, timeout = 10, metadata = FALSE) {
   con <- orderly_db("destination", config)
   on.exit(DBI::dbDisconnect(con))
 
+  if (!metadata) {
+    prev <- DBI::dbGetQuery(con, "SELECT * from report_version WHERE id = $1",
+                            id)
+    if (nrow(prev) > 0) {
+      ## It seems there is a chance here that something bad could
+      ## happen (e.g., a migration occurs which means that the
+      ## imported metadata is out of date) leaving everything a bit
+      ## inconsistent. This would be detectable by comparing the
+      ## contents of the two rds files
+      ## (archive/:name/:id/orderly_run.rds vs
+      ## metadata/:name/:id). However, with no recovery mechanism I
+      ## think we're better off ignoring this for now...
+      return(invisible())
+    }
+  }
+
   meta <- read_metadata(name, id, config, metadata)
 
   ## sqlite busy handler expects milliseconds
@@ -230,7 +246,7 @@ report_db_rebuild <- function(config, verbose = TRUE) {
   reports_archive <- orderly_list_archive(config, FALSE)
   reports_metadata <- orderly_list_metadata(config, FALSE)
   metadata <- rep(c(FALSE, TRUE),
-                  c(nrow(reports_archive), nrow(reports_mdatadata)))
+                  c(nrow(reports_archive), nrow(reports_metadata)))
   reports <- cbind(rbind(reports_archive, reports_metadata), metadata)
   for (i in order(reports$id)) {
     id <- reports$id[[i]]
