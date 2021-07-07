@@ -454,3 +454,39 @@ test_that("Can cope will pulling complete tree after metadata pulled", {
 
   orderly_rebuild(dat$config)
 })
+
+
+test_that("re-pulling metadata prints informative message", {
+  dat <- prepare_orderly_remote_example()
+  expect_message(
+    orderly_pull_metadata("example", dat$id2, root = dat$config,
+                          remote = dat$remote),
+    "metadata.+fetching example:[0-9]{8}-[0-9]{6}-[[:xdigit:]]{8}")
+  expect_message(
+    orderly_pull_metadata("example", dat$id2, root = dat$config,
+                          remote = dat$remote),
+    "metadata.+example:[0-9]{8}-[0-9]{6}-[[:xdigit:]]{8} already exists, skip")
+})
+
+
+test_that("Can't pull incompatible metadata", {
+  dat <- prepare_orderly_remote_example()
+  p <- file.path(dat$path_remote, "archive", "example", dat$id2,
+                 "orderly_run.rds")
+  d <- readRDS(p)
+  d$archive_version <- numeric_version("1.0.0")
+  saveRDS(d, p)
+
+  expect_error(
+    orderly_pull_metadata("example", dat$id2, root = dat$config,
+                          remote = dat$remote),
+    "Can't migrate metadata for 'example:.+', migrate remote or pull archive")
+
+  d$archive_version <- numeric_version("9.0.0")
+  saveRDS(d, p)
+
+  expect_error(
+    orderly_pull_metadata("example", dat$id2, root = dat$config,
+                          remote = dat$remote),
+    "Report was created with orderly more recent than this, upgrade!")
+})

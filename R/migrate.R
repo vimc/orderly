@@ -269,8 +269,9 @@ migrate_metadata <- function(dat_rds, config) {
   }
 
   if (report_archive_version < archive_version) {
-    ## TODO: better error message needed
-    stop("Can't migrate metadata")
+    stop(sprintf(
+      "Can't migrate metadata for '%s:%s', migrate remote or pull archive",
+      dat_rds$meta$name, dat_rds$meta$id))
   }
 }
 
