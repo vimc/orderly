@@ -1,6 +1,6 @@
 Package: orderly
 Title: Lightweight Reproducible Reporting
-Version: 1.3.1
+Version: 1.3.2
 Description: Order, create and store reports from R.  By defining a
     lightweight interface around the inputs and outputs of an
     analysis, a lot of the repetitive work for reproducible research
@@ -20,7 +20,7 @@ Authors@R: c(person("Rich", "FitzJohn", role = c("aut", "cre"),
              person("James", "Thompson", role = "aut"),
              person("Imperial College of Science, Technology and Medicine",
                     role = "cph"))
-URL: https://github.com/vimc/orderly
+URL: https://www.vaccineimpact.org/orderly/, https://github.com/vimc/orderly
 BugReports: https://github.com/vimc/orderly/issues
 SystemRequirements: git
 Imports:

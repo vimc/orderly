@@ -11,7 +11,8 @@ orderly_pull_dependencies(
   root = NULL,
   locate = TRUE,
   remote = NULL,
-  parameters = NULL
+  parameters = NULL,
+  recursive = TRUE
 )
 
 orderly_pull_archive(
@@ -20,7 +21,8 @@ orderly_pull_archive(
   root = NULL,
   locate = TRUE,
   remote = NULL,
-  parameters = NULL
+  parameters = NULL,
+  recursive = TRUE
 )
 
 orderly_push_archive(
@@ -61,6 +63,12 @@ will need to pass in the parameters here.  Similarly, if you are
 pulling a report that uses query dependencies that reference
 parameters you need to pass them here (the same parameter set
 will be passed through to all dependencies).}
+
+\item{recursive}{Logical, indicating if all dependencies of a
+report should also be pulled. Setting this to \code{FALSE} only
+the direct reports, along with metadata for the dependencies;
+this will be potentially much faster, but leaves your archive in
+a more fragile state.}
 
 \item{id}{The identifier (for \code{orderly_pull_archive}).  The default is
 to use the latest report.}

@@ -197,14 +197,37 @@ report_db_open_existing <- function(con, config) {
 }
 
 
-report_db_import <- function(name, id, config, timeout = 10) {
-  orderly_log("import", sprintf("%s:%s", name, id))
+report_db_import <- function(name, id, config, timeout = 10, metadata = FALSE) {
+  if (metadata) {
+    orderly_log("import", sprintf("%s:%s (metadata only)", name, id))
+  } else {
+    orderly_log("import", sprintf("%s:%s", name, id))
+  }
   con <- orderly_db("destination", config)
   on.exit(DBI::dbDisconnect(con))
+
+  if (!metadata) {
+    prev <- DBI::dbGetQuery(con, "SELECT * from report_version WHERE id = $1",
+                            id)
+    if (nrow(prev) > 0) {
+      ## It seems there is a chance here that something bad could
+      ## happen (e.g., a migration occurs which means that the
+      ## imported metadata is out of date) leaving everything a bit
+      ## inconsistent. This would be detectable by comparing the
+      ## contents of the two rds files
+      ## (archive/:name/:id/orderly_run.rds vs
+      ## metadata/:name/:id). However, with no recovery mechanism I
+      ## think we're better off ignoring this for now...
+      return(invisible())
+    }
+  }
+
+  meta <- read_metadata(name, id, config, metadata)
+
   ## sqlite busy handler expects milliseconds
   RSQLite::sqliteSetBusyHandler(con, timeout * 1000)
   DBI::dbExecute(con, "BEGIN IMMEDIATE")
-  report_data_import(con, name, id, config)
+  report_data_import(con, meta, config)
   DBI::dbCommit(con)
 }
 
@@ -219,16 +242,22 @@ report_db_rebuild <- function(config, verbose = TRUE) {
     report_db_destroy(con, config)
   }
   report_db_init(con, config)
-  reports <- unlist(lapply(list_dirs(path_archive(root)), list_dirs))
-  if (length(reports) > 0L) {
-    for (p in reports[order(basename(reports))]) {
-      id <- basename(p)
-      name <- basename(dirname(p))
-      if (verbose) {
-        message(sprintf("%s (%s)", id, name))
-      }
-      report_data_import(con, name, id, config)
+
+  reports_archive <- orderly_list_archive(config, FALSE)
+  reports_metadata <- orderly_list_metadata(config, FALSE)
+  metadata <- rep(c(FALSE, TRUE),
+                  c(nrow(reports_archive), nrow(reports_metadata)))
+  reports <- cbind(rbind(reports_archive, reports_metadata), metadata)
+  for (i in order(reports$id)) {
+    id <- reports$id[[i]]
+    name <- reports$name[[i]]
+    metadata <- reports$metadata[[i]]
+    if (verbose) {
+      fmt <- if (metadata) "%s (%s) (metadata only)" else "%s (%s)"
+      message(sprintf(fmt, id, name))
     }
+    meta <- read_metadata(name, id, config, metadata)
+    report_data_import(con, meta, config)
   }
 
   legacy_report_db_rebuild_published(config)
@@ -244,9 +273,9 @@ report_db_needs_rebuild <- function(config) {
 }
 
 
-report_data_import <- function(con, name, id, config) {
-  workdir <- file.path(config$root, "archive", name, id)
-  dat_rds <- readRDS(path_orderly_run_rds(workdir))
+report_data_import <- function(con, dat_rds, config) {
+  name <- dat_rds$meta$name
+  id <- dat_rds$meta$id
 
   sql_name <- "SELECT name FROM report WHERE name = $1"
   if (nrow(DBI::dbGetQuery(con, sql_name, name)) == 0L) {
@@ -598,4 +627,15 @@ report_db_dialect <- function(con) {
     ## throw all the errors that we need.
     stop("Can't determine SQL dialect")
   }
+}
+
+
+read_metadata <- function(name, id, config, metadata_store) {
+  if (metadata_store) {
+    path_meta <- file.path(path_metadata(config$root), name, id)
+  } else {
+    workdir <- file.path(path_archive(config$root), name, id)
+    path_meta <- path_orderly_run_rds(workdir)
+  }
+  readRDS(path_meta)
 }

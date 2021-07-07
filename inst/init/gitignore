@@ -3,6 +3,7 @@
 data
 archive
 draft
+metadata
 
 # Orderly will store data in a sqlite database, by default orderly.sqlite
 *.sqlite

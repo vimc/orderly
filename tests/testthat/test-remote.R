@@ -388,3 +388,105 @@ test_that("can get status of remote queue", {
   mockery::expect_called(mock_status, 1)
   expect_equal(res, status)
 })
+
+
+test_that("pull leaf only", {
+  dat <- prepare_orderly_remote_example()
+  id3 <- orderly_run("depend", root = dat$path_remote, echo = FALSE)
+  orderly_commit(id3, root = dat$path_remote)
+
+  orderly_pull_archive("depend", root = dat$config, remote = dat$remote,
+                       recursive = FALSE)
+
+  ## We only have the one archive report now
+  expect_equal(
+    orderly_list_archive(dat$config),
+    data_frame(name = "depend", id = id3))
+
+  ## And one with metadata only
+  expect_equal(
+    orderly_list_metadata(dat$config),
+    data_frame(name = "example", id = dat$id2))
+  expect_equal(
+    orderly_list_metadata(dat$config, include_archive = TRUE),
+    data_frame(name = "example", id = dat$id2))
+
+  ## But we have two in the database
+  con <- orderly_db("destination", dat$config)
+  d <- DBI::dbReadTable(con, "report_version")
+  DBI::dbDisconnect(con)
+  expect_equal(nrow(d), 2)
+  expect_equal(d$id, c(dat$id2, id3))
+})
+
+
+test_that("Can rebuild when there is a metadata store", {
+  dat <- prepare_orderly_remote_example()
+  id3 <- orderly_run("depend", root = dat$path_remote, echo = FALSE)
+  orderly_commit(id3, root = dat$path_remote)
+  orderly_pull_archive("depend", root = dat$config, remote = dat$remote,
+                       recursive = FALSE)
+
+  orderly_rebuild(dat$config)
+
+  con <- orderly_db("destination", dat$config)
+  d <- DBI::dbReadTable(con, "report_version")
+  DBI::dbDisconnect(con)
+  expect_equal(nrow(d), 2)
+  expect_equal(d$id, c(dat$id2, id3))
+})
+
+
+test_that("Can cope will pulling complete tree after metadata pulled", {
+  dat <- prepare_orderly_remote_example()
+  id3 <- orderly_run("depend", root = dat$path_remote, echo = FALSE)
+  orderly_commit(id3, root = dat$path_remote)
+  orderly_pull_archive("depend", root = dat$config, remote = dat$remote,
+                       recursive = FALSE)
+  orderly_pull_archive("example", root = dat$config, remote = dat$remote)
+
+  expect_equal(
+    orderly_list_metadata(dat$config),
+    data_frame(name = character(), id = character()))
+  expect_equal(
+    orderly_list_metadata(dat$config, include_archive = TRUE),
+    data_frame(name = "example", id = dat$id2))
+
+  orderly_rebuild(dat$config)
+})
+
+
+test_that("re-pulling metadata prints informative message", {
+  dat <- prepare_orderly_remote_example()
+  expect_message(
+    orderly_pull_metadata("example", dat$id2, root = dat$config,
+                          remote = dat$remote),
+    "metadata.+fetching example:[0-9]{8}-[0-9]{6}-[[:xdigit:]]{8}")
+  expect_message(
+    orderly_pull_metadata("example", dat$id2, root = dat$config,
+                          remote = dat$remote),
+    "metadata.+example:[0-9]{8}-[0-9]{6}-[[:xdigit:]]{8} already exists, skip")
+})
+
+
+test_that("Can't pull incompatible metadata", {
+  dat <- prepare_orderly_remote_example()
+  p <- file.path(dat$path_remote, "archive", "example", dat$id2,
+                 "orderly_run.rds")
+  d <- readRDS(p)
+  d$archive_version <- numeric_version("1.0.0")
+  saveRDS(d, p)
+
+  expect_error(
+    orderly_pull_metadata("example", dat$id2, root = dat$config,
+                          remote = dat$remote),
+    "Can't migrate metadata for 'example:.+', migrate remote or pull archive")
+
+  d$archive_version <- numeric_version("9.0.0")
+  saveRDS(d, p)
+
+  expect_error(
+    orderly_pull_metadata("example", dat$id2, root = dat$config,
+                          remote = dat$remote),
+    "Report was created with orderly more recent than this, upgrade!")
+})

@@ -1,3 +1,7 @@
+# orderly 1.3.2
+
+* Allow partial pulling of orderly dependency trees, by passing `recursive = FALSE` to `orderly::orderly_pull_archive` and `orderly::orderly_pull_dependencies`. This can reduce the total amount of data transferred when you do not care as much about the integregity of the local archive (vimc-4320)
+
 # orderly 1.2.41
 
 * Clearer error message where dependency resolution fails due to a query dependency (vimc-4742)

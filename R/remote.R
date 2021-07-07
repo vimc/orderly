@@ -57,6 +57,12 @@
 ##'   parameters you need to pass them here (the same parameter set
 ##'   will be passed through to all dependencies).
 ##'
+##' @param recursive Logical, indicating if all dependencies of a
+##'   report should also be pulled. Setting this to \code{FALSE} only
+##'   the direct reports, along with metadata for the dependencies;
+##'   this will be potentially much faster, but leaves your archive in
+##'   a more fragile state.
+##'
 ##' @inheritParams orderly_list
 ##' @export
 ##'
@@ -72,7 +78,8 @@
 ##'
 ##' @example man-roxygen/example-remote.R
 orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
-                                      remote = NULL, parameters = NULL) {
+                                      remote = NULL, parameters = NULL,
+                                      recursive = TRUE) {
   loc <- orderly_develop_location(name, root, locate)
   name <- loc$name
   config <- loc$config
@@ -87,7 +94,7 @@ orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
     for (i in seq_len(nrow(depends))) {
       if (!isTRUE(depends$draft[[i]])) {
         orderly_pull_archive(depends$name[[i]], depends$id[[i]], config,
-                             FALSE, remote, parameters)
+                             FALSE, remote, parameters, recursive)
       }
     }
   }
@@ -101,48 +108,12 @@ orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
 ##'   to use the latest report.
 orderly_pull_archive <- function(name, id = "latest", root = NULL,
                                  locate = TRUE, remote = NULL,
-                                 parameters = NULL) {
-  loc <- orderly_develop_location(name, root, locate)
-  name <- loc$name
-  config <- loc$config
-  config <- check_orderly_archive_version(config)
-
-  remote <- get_remote(remote, config)
-
-  v <- remote_report_versions(name, config, FALSE, remote)
-  if (length(v) == 0L) {
-    stop(sprintf("No versions of '%s' were found at '%s'",
-                 name, remote_name(remote)), call. = FALSE)
-  }
-
-  if (id == "latest") {
-    id <- latest_id(v)
-  } else if (id_is_query(id)) {
-    query <- id
-    id <-
-      orderly_search(id, name, parameters, root = root, remote = remote)
-    if (is.na(id)) {
-      msg <- c(
-        sprintf("Failed to find suitable version of '%s' with query:", name),
-        sprintf("  '%s'", query),
-        "and parameters",
-        sprintf("  - %s: %s", names(parameters),
-                vcapply(parameters, as.character)))
-      stop(paste(msg, collapse = "\n"), call. = FALSE)
-    }
-  } else {
-    ## We've been given a direct id so we just need to check that it
-    ## exists
-    if (!(id %in% v)) {
-      ## Confirm that the report does actually exist, working around
-      ## VIMC-1281:
-      stop(sprintf(
-        "Version '%s' of '%s' not found at '%s': valid versions are:\n%s",
-        id, name, remote_name(remote),
-        paste(sprintf("  - %s", v), collapse = "\n")),
-        call. = FALSE)
-    }
-  }
+                                 parameters = NULL, recursive = TRUE) {
+  info <- pull_info(name, id, root, locate, remote, parameters)
+  name <- info$name
+  id <- info$id
+  config <- info$config
+  remote <- info$remote
 
   dest <- file.path(path_archive(config$root), name, id)
   label <- sprintf("%s:%s", name, id)
@@ -158,7 +129,8 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
     ## stops being a data.frame that includes name and id as
     ## columns) then we'll need to deal with that when checking
     ## dependencies too.
-    orderly_pull_resolve_dependencies(path, remote, config)
+    d <- readRDS(path_orderly_run_rds(path))
+    orderly_pull_resolve_dependencies(d, remote, config, recursive)
 
     ## Only migrate after dependencies have been resolved because
     ## some migrations do check dependencies.
@@ -168,6 +140,39 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
       copy_directory(path, dest)
       report_db_import(name, id, config)
     }, error = function(e) unlink(dest, recursive = TRUE))
+  }
+}
+
+
+orderly_pull_metadata <- function(name, id, root = NULL, locate = TRUE,
+                                  remote = NULL) {
+  info <- pull_info(name, id, root, locate, remote, parameters)
+  name <- info$name
+  id <- info$id
+  config <- info$config
+  remote <- info$remote
+
+  dest_metadata <- file.path(path_metadata(config$root), name, id)
+  dest_archive <- file.path(path_archive(config$root), name, id)
+
+  label <- sprintf("%s:%s", name, id)
+  if (file.exists(dest_archive) || file.exists(dest_metadata)) {
+    orderly_log("metadata", sprintf("%s already exists, skipping", label))
+  } else {
+    orderly_log("metadata", sprintf("fetching %s", label))
+    ## We'll need to make sure that the OW remote fully implements this!
+    path <- remote$metadata(name, id)
+
+    meta <- readRDS(path)
+
+    ## Error if the metadata is unusable
+    migrate_metadata(meta, config)
+
+    dir_create(dirname(dest_metadata))
+    file_copy(path, dest_metadata)
+    orderly_pull_resolve_dependencies(meta, remote, config, FALSE)
+
+    report_db_import(name, id, config, metadata = TRUE)
   }
 }
 
@@ -470,17 +475,23 @@ implements_remote <- function(x) {
 }
 
 
-orderly_pull_resolve_dependencies <- function(path, remote, config) {
-  d <- readRDS(path_orderly_run_rds(path))
+orderly_pull_resolve_dependencies <- function(d, remote, config, recursive) {
   depends <- d$meta$depends
   if (NROW(depends) > 0L) { # NROW(x) is 0 for x = NULL
     depends <- depends[!duplicated(depends$id), c("name", "id"), drop = FALSE]
     orderly_log("depends",
                 paste(sprintf("%s/%s", depends$name, depends$id),
                       collapse = ", "))
-    for (i in seq_len(nrow(depends))) {
-      orderly_pull_archive(depends$name[[i]], depends$id[[i]], root = config,
-                           locate = FALSE, remote = remote)
+    if (recursive) {
+      for (i in seq_len(nrow(depends))) {
+        orderly_pull_archive(depends$name[[i]], depends$id[[i]], root = config,
+                             locate = FALSE, remote = remote)
+      }
+    } else {
+      for (i in seq_len(nrow(depends))) {
+        orderly_pull_metadata(depends$name[[i]], depends$id[[i]],
+                              root = config, locate = FALSE, remote = remote)
+      }
     }
   }
 }
@@ -599,4 +610,54 @@ orderly_bundle_import_remote <- function(path, root = NULL, locate = TRUE,
 orderly_remote_status <- function(root = NULL, locate = TRUE, remote = NULL) {
   remote <- get_remote(remote, orderly_config(root, locate))
   remote$queue_status()
+}
+
+
+pull_info <- function(name, id, root, locate, remote, parameters) {
+  loc <- orderly_develop_location(name, root, locate)
+  name <- loc$name
+  config <- loc$config
+  config <- check_orderly_archive_version(config)
+
+  remote <- get_remote(remote, config)
+
+  v <- remote_report_versions(name, config, FALSE, remote)
+  if (length(v) == 0L) {
+    stop(sprintf("No versions of '%s' were found at '%s'",
+                 name, remote_name(remote)), call. = FALSE)
+  }
+
+  if (id == "latest") {
+    id <- latest_id(v)
+  } else if (id_is_query(id)) {
+    query <- id
+    id <-
+      orderly_search(id, name, parameters, root = root, remote = remote)
+    if (is.na(id)) {
+      msg <- c(
+        sprintf("Failed to find suitable version of '%s' with query:", name),
+        sprintf("  '%s'", query),
+        "and parameters",
+        sprintf("  - %s: %s", names(parameters),
+                vcapply(parameters, as.character)))
+      stop(paste(msg, collapse = "\n"), call. = FALSE)
+    }
+  } else {
+    ## We've been given a direct id so we just need to check that it
+    ## exists
+    if (!(id %in% v)) {
+      ## Confirm that the report does actually exist, working around
+      ## VIMC-1281:
+      stop(sprintf(
+        "Version '%s' of '%s' not found at '%s': valid versions are:\n%s",
+        id, name, remote_name(remote),
+        paste(sprintf("  - %s", v), collapse = "\n")),
+        call. = FALSE)
+    }
+  }
+
+  list(name = name,
+       id = id,
+       config = config,
+       remote = remote)
 }
