@@ -403,7 +403,15 @@ test_that("pull leaf only", {
     orderly_list_archive(dat$config),
     data_frame(name = "depend", id = id3))
 
-  ## But we have two in the metadata store
+  ## And one with metadata only
+  expect_equal(
+    orderly_list_metadata(dat$config),
+    data_frame(name = "example", id = dat$id2))
+  expect_equal(
+    orderly_list_metadata(dat$config, include_archive = TRUE),
+    data_frame(name = "example", id = dat$id2))
+
+  ## But we have two in the database
   con <- orderly_db("destination", dat$config)
   d <- DBI::dbReadTable(con, "report_version")
   DBI::dbDisconnect(con)

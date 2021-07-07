@@ -97,12 +97,41 @@ orderly_list_archive <- function(root = NULL, locate = TRUE) {
   orderly_list2(FALSE, root, locate)
 }
 
-orderly_list_metadata <- function(root = NULL, locate = FALSE) {
+
+##' List reports that are present only as metadata; these are the
+##' result of doing \code{\link{orderly_pull_archive}} with
+##' \code{recursive = FALSE}, in which case only metadata was
+##' downloaded and not the report contents itself.
+##'
+##' @title List reports with only local metadata
+##'
+##' @inheritParams orderly_list
+##'
+##' @param include_archive Logical, indicating if we should include
+##'   reports that are also included in the archive.
+##'
+##' @return A \code{\link{data.frame}} with columns \code{name} and
+##'   \code{id}, as for \code{\link{orderly_list_archive}}
+##'
+##' @author Richard Fitzjohn
+##' @examples
+##' path <- orderly::orderly_example("minimal")
+##' # No metadata-only reports will be present, unless you have run
+##' # orderly::orderly_pull_archive(..., recursive = FALSE)
+##' orderly::orderly_list_metadata(path)
+orderly_list_metadata <- function(root = NULL, locate = FALSE,
+                                  include_archive = FALSE) {
   config <- orderly_config(root, locate)
   check <- list_dirs(path_metadata(config$root))
   res <- lapply(check, dir, pattern = version_id_re)
-  data_frame(name = rep(basename(check), lengths(res)),
-             id = as.character(unlist(res)))
+  ret <- data_frame(name = rep(basename(check), lengths(res)),
+                    id = as.character(unlist(res)))
+  if (!include_archive && nrow(ret) > 0) {
+    drop <- ret$id %in% orderly_list_archive(root, locate)$id
+    ret <- ret[!drop, ]
+    rownames(ret) <- NULL
+  }
+  ret
 }
 
 ##' Find most recent version of an orderly report.  The most recent

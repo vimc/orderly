@@ -227,24 +227,12 @@ report_db_rebuild <- function(config, verbose = TRUE) {
   }
   report_db_init(con, config)
 
-  ## There are two places to look for reports: the archive (of course)
-  ## and metadata archive.
-
-  ## TODO: we might need to make this general because we'll need this
-  ## later to do things like resolve partial trees.
   reports_archive <- orderly_list_archive(config, FALSE)
-  reports_archive$metadata <- FALSE
   reports_metadata <- orderly_list_metadata(config, FALSE)
-  reports_metadata$metadata <- TRUE
-  i <- !(reports_metadata$id %in% reports_archive$id)
-  if (any(i)) {
-    reports <- rbind(reports_archive, reports_metadata[i, ])
-    reports <- reports[order(reports$id), ]
-  } else {
-    reports <- reports_archive
-  }
-
-  for (i in seq_len(nrow(reports))) {
+  metadata <- rep(c(FALSE, TRUE),
+                  c(nrow(reports_archive), nrow(reports_mdatadata)))
+  reports <- cbind(rbind(reports_archive, reports_metadata), metadata)
+  for (i in order(reports$id)) {
     id <- reports$id[[i]]
     name <- reports$name[[i]]
     metadata <- reports$metadata[[i]]
