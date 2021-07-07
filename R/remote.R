@@ -198,7 +198,7 @@ orderly_push_archive <- function(name, id = "latest", root = NULL,
   } else {
     orderly_log("push", sprintf("%s:%s", name, id))
     path <- file.path(config$root, "archive", name, id)
-    orderly_push_resolve_dependencies(path, remote, config, recursive)
+    orderly_push_resolve_dependencies(path, remote, config)
     remote$push(path)
   }
 }
