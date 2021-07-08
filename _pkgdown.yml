@@ -1,0 +1,106 @@
+url: https://www.vaccineimpact.org/orderly/
+
+template:
+  bootstrap: 4
+
+reference:
+  - title: Basic use
+    desc: Core orderly functions for basic use
+    contents:
+      - orderly_init
+      - orderly_new
+      - orderly_run
+      - orderly_commit
+
+  - title: Develop a report
+    desc: >-
+      Interactively develop an orderly report by copying its
+      requiremnts into the source directory
+    contents:
+      - orderly_develop_clean
+      - orderly_develop_start
+      - orderly_develop_status
+
+  - title: Query existing reports
+    desc: >-
+      Find information about previous run reports (draft, archive or
+      failed), search for versions and show information about the
+      dependency graph
+    contents:
+      - orderly_graph
+      - orderly_graph_out_of_date
+      - orderly_info
+      - orderly_latest
+      - orderly_list
+      - orderly_list_archive
+      - orderly_list_drafts
+      - orderly_list_metadata
+      - orderly_search
+
+  - title: Helpers
+    desc: >-
+      A group of usethis-inspired functions for editing `orderly.yml`
+      and configuring a report
+    contents:
+      - orderly_use_gitignore
+      - orderly_use_package
+      - orderly_use_resource
+      - orderly_use_source
+
+  - title: Remotes
+    desc: >-
+      Interact with remotes (see also `vignettes("remotes")`)
+    contents:
+      - orderly_pull_archive
+      - orderly_pull_dependencies
+      - orderly_push_archive
+      - orderly_remote_path
+      - orderly_remote_status
+      - orderly_default_remote_get
+      - orderly_default_remote_set
+      - orderly_run_remote
+
+  - title: Advanced - bundles
+    desc: >-
+      Bundle orderly reports to run on another machine (see also
+      `vignettes("bundles")`)
+    contents:
+      - orderly_bundle_import
+      - orderly_bundle_import_remote
+      - orderly_bundle_list
+      - orderly_bundle_pack
+      - orderly_bundle_pack_remote
+      - orderly_bundle_run
+
+  - title: Advanced - access orderly's state
+    desc: >-
+      Functions that allow interacting with orderly's internal
+      state. Typical users will not need to interact with these very
+      often
+    contents:
+      - orderly_config
+      - orderly_db
+      - orderly_remote
+
+  - title: Advanced - maintenance
+    desc: >-
+      Functions for maintenance of orderly's archive. You may be
+      pointed to these by error messages.
+    contents:
+      - orderly_cleanup
+      - orderly_deduplicate
+      - orderly_rebuild
+      - orderly_migrate
+
+  - title: Other
+    desc: >-
+      Functions that do not fit neatly into the above groupings.
+    contents:
+      - orderly_example
+      - orderly_run_info
+      - orderly_log
+      - orderly_log_off
+      - orderly_log_on
+      - orderly_batch
+      - orderly_test_check
+      - orderly_test_start
