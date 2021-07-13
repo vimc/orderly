@@ -20,7 +20,7 @@ orderly_run(
 }
 \arguments{
 \item{name}{Name of the report to run (see
-\code{\link{orderly_list}}).  A leading \code{src/} will be
+\code{\link[=orderly_list]{orderly_list()}}).  A leading \verb{src/} will be
 removed if provided, allowing easier use of autocomplete.
 Alternatively, the default of \code{NULL} is useful if you have
 already set the working directory to be the source directory.}
@@ -66,18 +66,16 @@ respectively.}
 
 \item{remote}{Remote to use to resolve dependencies.  Use this in
 order to run a report with the same dependencies as are
-available on a remote server, particularly when using \code{id =
-"latest"}.  Note that this is not the same as running
-\code{\link{orderly_pull_dependencies}}, then \code{orderly_run}
+available on a remote server, particularly when using \code{id = "latest"}.  Note that this is not the same as running
+\code{\link[=orderly_pull_dependencies]{orderly_pull_dependencies()}}, then \code{orderly_run}
 with \code{remote = NULL}, as the pull/run approach will use the
-latest report in \emph{your} archive but the \code{remote =
-"remote"} approach will use the latest approach in the
+latest report in \emph{your} archive but the \code{remote = "remote"} approach will use the latest approach in the
 \emph{remote} archive (which might be less recent).}
 
 \item{tags}{Character vector of tags to add to the report.  Tags
 are immutable and cannot be removed once the report is run.
 Tags added here will be \emph{in addition} to any tags listed in
-the \code{tags:} field in \code{orderly.yml} and must be present
+the \verb{tags:} field in \code{orderly.yml} and must be present
 in \code{orderly_config.yml}.}
 }
 \value{
@@ -85,17 +83,14 @@ The id of the newly created report
 }
 \description{
 Run a report.  This will create a new directory in
-\code{drafts/<reportname>}, copy your declared resources there,
+\verb{drafts/<reportname>}, copy your declared resources there,
 extract data from databases (if you are using them), run your
 script and check that all expected artefacts were created.  Once
-successfully run you can use \code{\link{orderly_commit}} to move
+successfully run you can use \code{\link[=orderly_commit]{orderly_commit()}} to move
 it to the \code{archive} directory.
 }
 \details{
-Parameters are passed to the report as a named list, for example
-
-\code{
-id <- orderly::orderly_run("other", list(nmin = 0.2), root = path)
+Parameters are passed to the report as a named list, for example\preformatted{id <- orderly::orderly_run("other", list(nmin = 0.2), root = path)
 }
 
 (see the examples).  The names of the parameters (here,
@@ -107,7 +102,7 @@ provided.
 Environment variables that are created in \code{orderly_envir.yml}
 will be available while the report runs.  Those that begin with
 \code{ORDERLY_} will be saved into the \code{orderly_run.rds}
-within the \code{$env} section (except for any that match the
+within the \verb{$env} section (except for any that match the
 patterns "TOKEN", "PAT" or "PASS").
 }
 \examples{
@@ -139,6 +134,6 @@ id <- orderly::orderly_run("other", list(nmin = 0.2), root = path)
 # code.
 }
 \seealso{
-\code{\link{orderly_log}} for controlling display of log
-  messages (not just R output)
+\code{\link[=orderly_log]{orderly_log()}} for controlling display of log
+messages (not just R output)
 }

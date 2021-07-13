@@ -2,9 +2,9 @@
 ##' print diagnostic information to the message stream.  This is set
 ##' to be on by default.
 ##'
-##' The function \code{orderly_log} is designed to be used from
+##' The function `orderly_log` is designed to be used from
 ##' applications that extend orderly, while the functions
-##' \code{orderly_log_on} and \code{orderly_log_off} can be used by
+##' `orderly_log_on` and `orderly_log_off` can be used by
 ##' applications or users to enable and disable log messages.
 ##'
 ##' The interface here may expand by adding arguments or change
@@ -16,19 +16,20 @@
 ##' @export
 ##' @rdname orderly_log
 ##'
-##' @return \code{orderly_log_on} and \code{orderly_log_off} invisibly
+##' @return `orderly_log_on` and `orderly_log_off` invisibly
 ##'   returns a logical indicating if logging was previously enabled.
 ##'   This allows patterns like:
 ##'
-##' \preformatted{if (!orderly::orderly_log_off()) {
+##' ```
+##' if (!orderly::orderly_log_off()) {
 ##'   on.exit(orderly::orderly_log_on())
 ##' }
-##' }
+##' ```
 ##'
-##' to disable logging within a function (the \code{on.exit} block
+##' to disable logging within a function (the `on.exit` block
 ##'   will be run when the function exits).
 ##'
-##' @seealso \code{\link{orderly_run}}, which makes use of these log
+##' @seealso [orderly::orderly_run()], which makes use of these log
 ##'   messages
 ##'
 ##' @examples

@@ -20,8 +20,7 @@ then orderly looks in the working directory and up through its
 parents until it finds an \code{orderly_config.yml} file.}
 
 \item{validate}{Logical, indicating if the database schema should
-be validated on open (currently only applicable with \code{type
-= "destination"}).  This is primarily intended for internal use.}
+be validated on open (currently only applicable with \code{type = "destination"}).  This is primarily intended for internal use.}
 
 \item{instance}{Used only by \code{type = "source"}, and used to
 select the instance, where multiple instances are configured.
@@ -34,7 +33,7 @@ further information.}
 }
 \value{
 A database connection, or list of connections in the case
-  of \code{source}.
+of \code{source}.
 }
 \description{
 Connect to the orderly databases.  These should be treated as as
@@ -42,19 +41,13 @@ Connect to the orderly databases.  These should be treated as as
 }
 \details{
 Orderly has several databases:
-
-\describe{
-
-\item{source}{All of the databases named in the \code{database}
-  section of the \code{orderly_config.yml}}
-
-\item{destination}{The orderly index database (typically a SQLite
-database stored at the orderly root)}
-
-\item{csv}{The cache of database query results, in csv format}
-
-\item{rds}{The cache of database query results, in rds format}
-
+\itemize{
+\item \code{source}: All of the databases named in the \code{database} section
+of the \code{orderly_config.yml}
+\item \code{destination}: The orderly index database (typically a SQLite
+database stored at the orderly root)
+\item \code{csv}: The cache of database query results, in csv format
+\item \code{rds}: The cache of database query results, in rds format
 }
 }
 \examples{

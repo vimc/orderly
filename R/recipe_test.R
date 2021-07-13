@@ -5,7 +5,7 @@
 ##' the report hands back to the user.
 ##'
 ##' Previous versions of orderly changed into the created directory
-##' when using \code{orderly::orderly_test_start}, which allowed
+##' when using `orderly::orderly_test_start`, which allowed
 ##' interactive testing of a report, including ensuring that it has
 ##' created all expected outputs.  However, CRAN rules do not allow
 ##' changing the working directory, which significantly reduces the
@@ -15,19 +15,17 @@
 ##'
 ##' The new suggested workflow is:
 ##'
-##' \enumerate{
-##' \item{run \code{orderly_test_start(...)} to prepare a report directory}
-##' \item{manually change into that directory following the printed
-##'   instructions}
-##' \item{use \code{orderly_test_check} to check that your report has created
-##'       the expected artefacts}
-##' \item{manually change back to your original directory}
-##' }
+##' 1. run `orderly_test_start(...)` to prepare a report directory
+##' 2. manually change into that directory following the printed
+##'   instructions
+##' 3. use `orderly_test_check` to check that your report has created
+##'       the expected artefacts
+##' 4. manually change back to your original directory
 ##'
 ##' @title Prepare a directory for orderly to use
 ##'
 ##' @param name Name of the report to run (see
-##'   \code{\link{orderly_list}}).  A leading \code{src/} will be
+##'   [orderly::orderly_list()]).  A leading `src/` will be
 ##'   removed if provided, allowing easier use of autocomplete.
 ##'
 ##' @inheritParams orderly_run

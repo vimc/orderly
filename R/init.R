@@ -1,39 +1,35 @@
 ##' Initialise an orderly store.  This is a helper function that
 ##' automates getting started with using orderly for a new project.
 ##' It is not required to use - you can create the orderly structure
-##' yourself (all that is compulsory is the \code{orderly_config.yml}
+##' yourself (all that is compulsory is the `orderly_config.yml`
 ##' file).
 ##'
 ##' This function creates a minimal orderly structure, containing:
-##' \describe{
 ##'
-##' \item{\code{orderly_config.yml}}{The orderly
-##' configuration. Minimally, this can be empty, but it must exist.}
+##' * `orderly_config.yml`: The orderly configuration. Minimally, this
+##'   can be empty, but it must exist.
 ##'
-##' \item{\code{src}}{The path where report sources live. This should
-##' be placed under version control, and contain a number of reports,
-##' each in their own directory with an \code{orderly.yml} describing
-##' their inputs and outputs (artefacts).  The
-##' \code{\link{orderly_new}} function can be used to accelerate
-##' creation of new reports.}
+##' * `src`: The path where report sources live. This should be placed
+##'   under version control, and contain a number of reports, each in
+##'   their own directory with an `orderly.yml` describing their
+##'   inputs and outputs (artefacts).  The [orderly::orderly_new()]
+##'   function can be used to accelerate creation of new reports.
 ##'
-##' \item{\code{draft}}{A directory where reports will be run using
-##' \code{\link{orderly_run}}.  This directory should be excluded from
-##' version control. \code{orderly} will create it as needed if it
-##' does not exist when a report is run.}
+##' * `draft`: A directory where reports will be run using
+##'   [orderly::orderly_run()].  This directory should be excluded
+##'   from version control. `orderly` will create it as needed if
+##'   it does not exist when a report is run.
 ##'
-##' \item{\code{archive}}{A directory where successfully run reports
-##' will be moved to after being committed with
-##' \code{\link{orderly_commit}}.  This directory should be excluded
-##' from version control. \code{orderly} will create it as needed if
-##' it does not exist when a report is committed.}
+##' * `archive`: A directory where successfully run reports will be
+##'   moved to after being committed with [orderly::orderly_commit()].
+##'   This directory should be excluded from version
+##'   control. `orderly` will create it as needed if it does not
+##'   exist when a report is committed.
 ##'
-##' \item{\code{data}}{A directory where data extracted from the
-##' database (if used) will be stored.  This directory should be
-##' excluded from version control. \code{orderly} will create it as
-##' needed if it does not exist when a report is run.}
-##'
-##' }
+##' * `data`: A directory where data extracted from the database (if
+##'   used) will be stored.  This directory should be excluded from
+##'   version control. `orderly` will create it as needed if it
+##'   does not exist when a report is run.
 ##'
 ##' @title Initialise an orderly store
 ##'
@@ -49,7 +45,7 @@
 ##'
 ##' @export
 ##'
-##' @seealso \code{\link{orderly_new}} for creating new reports within
+##' @seealso [orderly::orderly_new()] for creating new reports within
 ##'   a configured orderly repository.
 ##'
 ##' @return The path to the newly created archive

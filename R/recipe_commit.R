@@ -1,5 +1,5 @@
-##' Commit a generated report, moving it from the \code{draft/}
-##' directory to \code{archive/} and updating the orderly index.  Once
+##' Commit a generated report, moving it from the `draft/`
+##' directory to `archive/` and updating the orderly index.  Once
 ##' committed, reports should not be deleted.
 ##'
 ##' @title Commit a generated report
@@ -7,11 +7,11 @@
 ##' @param id The identifier of the report
 ##'
 ##' @param name The name of the report - this can be omitted and the
-##'   name will be determined from the \code{id}.
+##'   name will be determined from the `id`.
 ##'
 ##' @param timeout Time in seconds to wait for db to be available. In
 ##'   parallel the database may become locked so we can choose to wait
-##'   for \code{timeout} seconds before throwing an error.
+##'   for `timeout` seconds before throwing an error.
 ##'
 ##' @inheritParams orderly_list
 ##'

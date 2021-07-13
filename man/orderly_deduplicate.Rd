@@ -23,7 +23,7 @@ planned but not run}
 }
 \value{
 Invisibly, information about the duplication status of the
-  archive before deduplication was run.
+archive before deduplication was run.
 }
 \description{
 Deduplicate an orderly archive.  Deduplicating an orderly archive
@@ -47,12 +47,11 @@ case already.
 
 With "hard linking", two files with the same content can be
 updated so that both files point at the same physical bit of data
-(see \href{https://en.wikipedia.org/wiki/Hard_link}{this Wikipedia
-page for more information}).  This is great, as if the file is
-large, then only one copy needs to be stored.  However, this means
-that if a change is made to one copy of the file, it is
-immediately reflected in the other, but there is nothing to
-indicate that the files are linked!
+(see \href{https://en.wikipedia.org/wiki/Hard_link}{this Wikipedia page for more information}.  This is
+great, as if the file is large, then only one copy needs to be
+stored.  However, this means that if a change is made to one copy
+of the file, it is immediately reflected in the other, but there
+is nothing to indicate that the files are linked!
 
 This approach is worth exploring if you have large files that are
 outputs of one report and inputs to another, or large inputs

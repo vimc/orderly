@@ -1,7 +1,7 @@
-##' Add one or more resources to an \code{orderly.yml} file.
+##' Add one or more resources to an `orderly.yml` file.
 ##'
-##' The \code{orderly_use_gitignore} configures a basic
-##' \code{.gitignore} file at the root of your orderly project that
+##' The `orderly_use_gitignore` configures a basic
+##' `.gitignore` file at the root of your orderly project that
 ##' will prevent files from being added to git.  This is only really
 ##' useful if you are using (or will use) git, but it is harmless at
 ##' worst.
@@ -14,7 +14,7 @@
 ##'   orderly.yml
 ##'
 ##' @param name Name of the report to modify.  Like
-##'   \code{\link{orderly_develop_start}} this can be \code{NULL} if
+##'   [orderly::orderly_develop_start()] this can be `NULL` if
 ##'   you have already set the working directory to be the source
 ##'   directory.
 ##'
@@ -24,11 +24,11 @@
 ##'   changes to screen
 ##'
 ##' @param edit Logical, indicating if we should actually edit the
-##'   \code{orderly.yml} file.
+##'   `orderly.yml` file.
 ##'
 ##' @param prompt Logical, indicating if we should prompt before
-##'   editing the orderly.yml file.  Only has an effect if \code{edit}
-##'   is \code{TRUE}.
+##'   editing the orderly.yml file.  Only has an effect if `edit`
+##'   is `TRUE`.
 ##'
 ##' @return Invisibly, this function returns information about the
 ##'   file it would edit.  This information is primarily for debugging

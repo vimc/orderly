@@ -1,6 +1,6 @@
 ##' Migrate an orderly archive.  This is needed periodically when the
 ##' orderly archive version changes.  If you get a message like
-##' \code{orderly archive needs migrating from a.b.c => x.y.z} then
+##' `orderly archive needs migrating from a.b.c => x.y.z` then
 ##' you need to run this function.  The archive version is at most
 ##' equal to the package version.
 ##'
@@ -8,7 +8,7 @@
 ##' This requires patching previously run versions of the orderly
 ##' metadata and that's not something we want to do lightly.  This
 ##' function uses a relatively safe, and reversible, way of migrating
-##' metadata.  We modify the \code{orderly_run.rds} files, but will
+##' metadata.  We modify the `orderly_run.rds` files, but will
 ##' create versioned backups as files are changed.
 ##'
 ##' @title Migrate an orderly archive
@@ -22,15 +22,15 @@
 ##'   primarily for developing new migrations and will probably not
 ##'   work if you are multiple archive versions behind.
 ##'
-##' @param skip_failed Logical, where \code{TRUE} we will skip over
+##' @param skip_failed Logical, where `TRUE` we will skip over
 ##'   entries that failed to be migrated.  This is expected to be
 ##'   useful on local archives only because it violates the
 ##'   append-only nature of orderly.  However, if a local archive
 ##'   contains unusual copies of orderly archives that can't be
 ##'   migrated this might come in helpful.
 ##'
-##' @param clean Logical, where \code{TRUE} (and where the migration
-##'   was successful and \code{dry_run} is \code{FALSE}) orderly will
+##' @param clean Logical, where `TRUE` (and where the migration
+##'   was successful and `dry_run` is `FALSE`) orderly will
 ##'   clean up all migration backup files.  Use this periodically to
 ##'   clean up the archive.
 ##'

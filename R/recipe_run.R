@@ -1,38 +1,38 @@
 ##' Run a report.  This will create a new directory in
-##' \code{drafts/<reportname>}, copy your declared resources there,
+##' `drafts/<reportname>`, copy your declared resources there,
 ##' extract data from databases (if you are using them), run your
 ##' script and check that all expected artefacts were created.  Once
-##' successfully run you can use \code{\link{orderly_commit}} to move
-##' it to the \code{archive} directory.
+##' successfully run you can use [orderly::orderly_commit()] to move
+##' it to the `archive` directory.
 ##'
 ##' Parameters are passed to the report as a named list, for example
 ##'
-##' \code{
+##' ```
 ##' id <- orderly::orderly_run("other", list(nmin = 0.2), root = path)
-##' }
+##' ```
 ##'
 ##' (see the examples).  The names of the parameters (here,
-##' \code{nmin}) must correspond to declared parameters in the
-##' \code{orderly.yml}.  It is an error if parameters without a
+##' `nmin`) must correspond to declared parameters in the
+##' `orderly.yml`.  It is an error if parameters without a
 ##' default are omitted, and it is an error if unknown parameters are
 ##' provided.
 ##'
-##' Environment variables that are created in \code{orderly_envir.yml}
+##' Environment variables that are created in `orderly_envir.yml`
 ##' will be available while the report runs.  Those that begin with
-##' \code{ORDERLY_} will be saved into the \code{orderly_run.rds}
-##' within the \code{$env} section (except for any that match the
+##' `ORDERLY_` will be saved into the `orderly_run.rds`
+##' within the `$env` section (except for any that match the
 ##' patterns "TOKEN", "PAT" or "PASS").
 ##'
 ##' @title Run a report
 ##'
 ##' @param name Name of the report to run (see
-##'   \code{\link{orderly_list}}).  A leading \code{src/} will be
+##'   [orderly::orderly_list()]).  A leading `src/` will be
 ##'   removed if provided, allowing easier use of autocomplete.
-##'   Alternatively, the default of \code{NULL} is useful if you have
+##'   Alternatively, the default of `NULL` is useful if you have
 ##'   already set the working directory to be the source directory.
 ##'
 ##' @param parameters Parameters passed to the report. A named list of
-##'   parameters declared in the \code{orderly.yml}.  Each parameter
+##'   parameters declared in the `orderly.yml`.  Each parameter
 ##'   must be a scalar character, numeric, integer or logical.
 ##'
 ##' @param envir The parent of the environment that will be used to
@@ -44,10 +44,10 @@
 ##'
 ##' @param instance Select instance of the source database to be used,
 ##'   where multiple instances are configured.  Use a single
-##'   \emph{unnamed} character string to indicate an instance to
+##'   *unnamed* character string to indicate an instance to
 ##'   match.  If given, then this name must be present in all
 ##'   databases where instances are listed in
-##'   \code{orderly_config.yml}, and will be ignored by all database
+##'   `orderly_config.yml`, and will be ignored by all database
 ##'   where instances are not given.  See the "orderly" vignette for
 ##'   further information.
 ##'
@@ -57,29 +57,29 @@
 ##'
 ##' @param use_draft Should draft reports be used for dependencies?
 ##'   This should be used only in development.  Valid values are
-##'   logical (\code{TRUE}, \code{FALSE}) or use the string
-##'   \code{newer} to use draft reports where they are newer than
-##'   archive reports.  For consistency, \code{always} and
-##'   \code{never} are equivalent to \code{TRUE} and \code{FALSE},
+##'   logical (`TRUE`, `FALSE`) or use the string
+##'   `newer` to use draft reports where they are newer than
+##'   archive reports.  For consistency, `always` and
+##'   `never` are equivalent to `TRUE` and `FALSE`,
 ##'   respectively.
 ##'
 ##' @param remote Remote to use to resolve dependencies.  Use this in
 ##'   order to run a report with the same dependencies as are
-##'   available on a remote server, particularly when using \code{id =
-##'   "latest"}.  Note that this is not the same as running
-##'   \code{\link{orderly_pull_dependencies}}, then \code{orderly_run}
-##'   with \code{remote = NULL}, as the pull/run approach will use the
-##'   latest report in \emph{your} archive but the \code{remote =
-##'   "remote"} approach will use the latest approach in the
-##'   \emph{remote} archive (which might be less recent).
+##'   available on a remote server, particularly when using `id =
+##'   "latest"`.  Note that this is not the same as running
+##'   [orderly::orderly_pull_dependencies()], then `orderly_run`
+##'   with `remote = NULL`, as the pull/run approach will use the
+##'   latest report in *your* archive but the `remote =
+##'   "remote"` approach will use the latest approach in the
+##'   *remote* archive (which might be less recent).
 ##'
 ##' @param tags Character vector of tags to add to the report.  Tags
 ##'   are immutable and cannot be removed once the report is run.
-##'   Tags added here will be \emph{in addition} to any tags listed in
-##'   the \code{tags:} field in \code{orderly.yml} and must be present
-##'   in \code{orderly_config.yml}.
+##'   Tags added here will be *in addition* to any tags listed in
+##'   the `tags:` field in `orderly.yml` and must be present
+##'   in `orderly_config.yml`.
 ##'
-##' @seealso \code{\link{orderly_log}} for controlling display of log
+##' @seealso [orderly::orderly_log()] for controlling display of log
 ##'   messages (not just R output)
 ##'
 ##' @export
@@ -338,19 +338,19 @@ recipe_current_run_clear <- function() {
 ##' during an orderly run.  The format returned is internal to orderly
 ##' and subject to change.  It is designed to be used within report
 ##' code.  To use in conjunction with
-##' \code{\link{orderly_test_start}}, you must pass in the path to the
+##' [orderly::orderly_test_start()], you must pass in the path to the
 ##' report in question.
 ##'
 ##' @section Warning:
 ##'
-##' It is important that this data is treated as \emph{readonly}!
+##' It is important that this data is treated as *readonly*!
 ##'
 ##' @title Information on current orderly run
 ##'
 ##' @param path Path to the report currently being run.  This should
-##'   be left as \code{NULL} when running a report, and the path to
+##'   be left as `NULL` when running a report, and the path to
 ##'   the report being run should be used when using
-##'   \code{\link{orderly_test_start}}
+##'   [orderly::orderly_test_start()]
 ##'
 ##' @export
 ##' @return A list of metadata about the current report

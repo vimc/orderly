@@ -5,25 +5,25 @@ version_id_re <- "^([0-9]{8}-[0-9]{6})-([[:xdigit:]]{4})([[:xdigit:]]{4})$"
 ## are present in the database, because I want this to be useful for
 ## getting targets that one can run.
 
-##' List the \emph{names} of reports known to orderly.  These are the
-##' \emph{source} names, not the results of running reports.  Note
+##' List the *names* of reports known to orderly.  These are the
+##' *source* names, not the results of running reports.  Note
 ##' that if a report has been committed from a different branch it
 ##' will not appear here, as this is simply the set of reports in the
-##' \code{src} directory that can be run.
+##' `src` directory that can be run.
 ##'
 ##' @title List orderly reports
 ##'
-##' @param root The path to an orderly root directory, or \code{NULL}
+##' @param root The path to an orderly root directory, or `NULL`
 ##'   (the default) to search for one from the current working
-##'   directory if \code{locate} is \code{TRUE}.
+##'   directory if `locate` is `TRUE`.
 ##'
 ##' @param locate Logical, indicating if the configuration should be
-##'   searched for.  If \code{TRUE} and \code{config} is not given,
+##'   searched for.  If `TRUE` and `config` is not given,
 ##'   then orderly looks in the working directory and up through its
-##'   parents until it finds an \code{orderly_config.yml} file.
+##'   parents until it finds an `orderly_config.yml` file.
 ##'
-##' @seealso \code{\link{orderly_list_archive}} and
-##'   \code{\link{orderly_list_drafts}}, which list archived
+##' @seealso [orderly::orderly_list_archive()] and
+##'   [orderly::orderly_list_drafts()], which list archived
 ##'   (committed) and draft reports and their versions.
 ##'
 ##' @export
@@ -40,25 +40,25 @@ orderly_list <- function(root = NULL, locate = TRUE) {
 }
 
 ##' List draft and archived reports.  This returns a data.frame with
-##' columns \code{name} (see \code{\link{orderly_list}}) and \code{id}.
+##' columns `name` (see [orderly::orderly_list()]) and `id`.
 ##'
 ##' @title List draft and archived reports
 ##'
 ##' @inheritParams orderly_list
 ##'
 ##' @param include_failed Logical, indicating if failed drafts should
-##'   be listed (only has an effect for \code{orderly_list_drafts} as
+##'   be listed (only has an effect for `orderly_list_drafts` as
 ##'   no failed run should make it into the archive).  A failed report
-##'   is one that lacks an \code{orderly_run.rds} file.
+##'   is one that lacks an `orderly_run.rds` file.
 ##'
-##' @seealso \code{\link{orderly_list}}, which lists the names of
-##'   source reports that can be run, and \code{\link{orderly_latest}}
+##' @seealso [orderly::orderly_list()], which lists the names of
+##'   source reports that can be run, and [orderly::orderly_latest()]
 ##'   which returns the id of the most recent report.
 ##'
 ##' @export
 ##'
-##' @return A \code{data.frame} with columns \code{name} and
-##'   \code{id}, containing character vectors of report names and
+##' @return A `data.frame` with columns `name` and
+##'   `id`, containing character vectors of report names and
 ##'   versions, respectively.
 ##'
 ##' @examples
@@ -99,8 +99,8 @@ orderly_list_archive <- function(root = NULL, locate = TRUE) {
 
 
 ##' List reports that are present only as metadata; these are the
-##' result of doing \code{\link{orderly_pull_archive}} with
-##' \code{recursive = FALSE}, in which case only metadata was
+##' result of doing [orderly::orderly_pull_archive()] with
+##' `recursive = FALSE`, in which case only metadata was
 ##' downloaded and not the report contents itself.
 ##'
 ##' @title List reports with only local metadata
@@ -110,8 +110,8 @@ orderly_list_archive <- function(root = NULL, locate = TRUE) {
 ##' @param include_archive Logical, indicating if we should include
 ##'   reports that are also included in the archive.
 ##'
-##' @return A \code{\link{data.frame}} with columns \code{name} and
-##'   \code{id}, as for \code{\link{orderly_list_archive}}
+##' @return A [data.frame()] with columns `name` and
+##'   `id`, as for [orderly::orderly_list_archive()]
 ##'
 ##' @export
 ##' @examples
@@ -140,22 +140,22 @@ orderly_list_metadata <- function(root = NULL, locate = FALSE,
 ##'
 ##' @title Find most recent report
 ##'
-##' @param name Name of the report to find; if \code{NULL} returns the
+##' @param name Name of the report to find; if `NULL` returns the
 ##'   most recent report across all names
 ##'
 ##' @param draft Should draft reports be used searched? Valid values
-##'   are logical (\code{TRUE}, \code{FALSE}) or use the string
-##'   \code{newer} to use draft reports where they are newer than
-##'   archive reports. For consistency, \code{always} and \code{never}
-##'   are equivalent to \code{TRUE} and \code{FALSE}, respectively.
+##'   are logical (`TRUE`, `FALSE`) or use the string
+##'   `newer` to use draft reports where they are newer than
+##'   archive reports. For consistency, `always` and `never`
+##'   are equivalent to `TRUE` and `FALSE`, respectively.
 ##'
-##' @param must_work Throw an error if no report is found.  If FALSE,
-##'   returns \code{NA_character_}.
+##' @param must_work Throw an error if no report is found.  If `FALSE`,
+##'   returns `NA_character_`.
 ##'
 ##' @inheritParams orderly_list
 ##'
-##' @seealso \code{\link{orderly_list}} and
-##'   \code{\link{orderly_list_archive}} for listing report names and
+##' @seealso [orderly::orderly_list] and
+##'   [orderly::orderly_list_archive] for listing report names and
 ##'   versions.
 ##'
 ##' @return A character string with the id of the most recent report

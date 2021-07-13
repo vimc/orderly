@@ -19,16 +19,14 @@ orderly_log(topic, value)
 }
 \value{
 \code{orderly_log_on} and \code{orderly_log_off} invisibly
-  returns a logical indicating if logging was previously enabled.
-  This allows patterns like:
-
-\preformatted{if (!orderly::orderly_log_off()) {
+returns a logical indicating if logging was previously enabled.
+This allows patterns like:\preformatted{if (!orderly::orderly_log_off()) \{
   on.exit(orderly::orderly_log_on())
-}
+\}
 }
 
 to disable logging within a function (the \code{on.exit} block
-  will be run when the function exits).
+will be run when the function exits).
 }
 \description{
 Start and stop the orderly log.  When active, some actions will
@@ -83,6 +81,6 @@ if (logging_was_enabled) {
 }
 }
 \seealso{
-\code{\link{orderly_run}}, which makes use of these log
-  messages
+\code{\link[=orderly_run]{orderly_run()}}, which makes use of these log
+messages
 }

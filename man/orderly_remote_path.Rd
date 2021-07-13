@@ -13,7 +13,7 @@ orderly_remote_path(path, name = NULL)
 }
 \value{
 An \code{orderly_remote_path} object, with methods that
-  orderly will use in order to control this remote
+orderly will use in order to control this remote
 }
 \description{
 Create a "handle" for interacting with orderly repositories that
@@ -71,9 +71,9 @@ orderly::orderly_pull_archive("use_dependency", id, remote = remote,
 orderly::orderly_list_archive(root = path_local)
 }
 \seealso{
-\code{\link{orderly_pull_dependencies}} and
-  \code{\link{orderly_pull_archive}}, which are the primary ways
-  these remote objects are used.  See also
-  \href{https://github.com/vimc/orderly-web}{OrderlyWeb} for a
-  system for hosting orderly repositories over an HTTP API.
+\code{\link[=orderly_pull_dependencies]{orderly_pull_dependencies()}} and
+\code{\link[=orderly_pull_archive]{orderly_pull_archive()}}, which are the primary ways
+these remote objects are used.  See also
+\href{https://github.com/vimc/orderly-web}{OrderlyWeb} for a
+system for hosting orderly repositories over an HTTP API.
 }

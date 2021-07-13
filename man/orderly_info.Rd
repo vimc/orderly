@@ -28,7 +28,7 @@ elapsed time, parameters, git info (if available), path to logfile
 }
 \description{
 This will return info from either successful or failed reports. It will
-look for the report with `id` in archive first and then look in drafts
+look for the report with \code{id} in archive first and then look in drafts
 if it can't be found from archive.
 }
 \examples{

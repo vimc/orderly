@@ -24,9 +24,9 @@ parents until it finds an \code{orderly_config.yml} file.}
 }
 \value{
 The default remote (for
-  \code{orderly_default_remote_get}). The function
-  \code{orderly_default_remote_set} is called for its side effects
-  only.
+\code{orderly_default_remote_get}). The function
+\code{orderly_default_remote_set} is called for its side effects
+only.
 }
 \description{
 Set and get default remote locations.  Default locations are

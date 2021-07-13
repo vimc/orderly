@@ -10,35 +10,31 @@
 ##'
 ##' @param path A path, whose interpretation depends on the function:
 ##'
-##' \describe{
+##' `orderly_bundle_pack`: A directory to save bundles to.  If
+##'   it does not exist it will be created for you.
 ##'
-##' \item{\code{orderly_bundle_pack}}{A directory to save bundles to.  If
-##'   it does not exist it will be created for you.}
+##' `orderly_bundle_run`: The path to the packed bundle (a zip
+##'   file created by `orderly_bundle_pack`)
 ##'
-##' \item{\code{orderly_bundle_run}}{The path to the packed bundle (a zip
-##'   file created by \code{orderly_bundle_pack})}
+##' `orderly_bundle_import`: The path to unpack and import
+##'   (a zip file created by `orderly_bundle_run`)
 ##'
-##' \item{\code{orderly_bundle_import}}{The path to unpack and import
-##'   (a zip file created by \code{orderly_bundle_run})}
-##'
-##' \item{\code{orderly_bundle_list}}{The path to a directory that might
+##' `orderly_bundle_list`: The path to a directory that might
 ##'   contain either incomplete or complete bundles (created by either
-##'   \code{orderly_bundle_pack} or \code{orderly_bundle_run})}
-##'
-##' }
+##'   `orderly_bundle_pack` or `orderly_bundle_run`)
 ##'
 ##' @param name Name of the report to pack (see
-##'   \code{\link{orderly_list}}).  A leading \code{src/} will be
-##'   removed if provided, allowing easier use of autocomplete.
+##'   [orderly::orderly_list()].  A leading `src/` will be removed if
+##'   provided, allowing easier use of autocomplete.
 ##'
 ##' @inheritParams orderly_run
 ##'
-##' @return For \code{orderly_bundle_pack} and
-##'   \code{orderly_bundle_run}, a list with elements \code{path} (the
-##'   path to the bundle) and \code{id} (its orderly id).  For
-##'   \code{orderly_bundle_list} a data.frame with key information
+##' @return For `orderly_bundle_pack` and
+##'   `orderly_bundle_run`, a list with elements `path` (the
+##'   path to the bundle) and `id` (its orderly id).  For
+##'   `orderly_bundle_list` a data.frame with key information
 ##'   about the report in the bundles (id, name, parameters, status,
-##'   time).  The function \code{orderly_bundle_import} is called for
+##'   time).  The function `orderly_bundle_import` is called for
 ##'   its side effect only and does not return anything useful.
 ##'
 ##' @export
@@ -83,7 +79,7 @@ orderly_bundle_pack <- function(path, name, parameters = NULL,
 
 ##' @param workdir The path in which to run bundles.  If it does not
 ##'   exist it will be created for you.  The completed bundle will be
-##'   saved in this directory as \code{<id>.zip}.
+##'   saved in this directory as `<id>.zip`.
 ##'
 ##' @inheritParams orderly_run
 ##' @rdname orderly_bundle_pack

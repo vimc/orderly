@@ -54,15 +54,15 @@ reads from the source reports.}
 }
 \value{
 An orderly tree object with the root corresponding to the given
-        report.
+report.
 }
 \description{
 Investigate the dependency structure in a set of orderly reports.
 This function allows the dependency graph to be created for set of
 reports that have been run and committed (the archive) or of a set
 of reports that could be run (the src) to be discovered and
-printed to screen.  \emph{This is experimental and somewhat
-subject to change and improvement.}
+printed to screen.  \emph{This is experimental and somewhat subject to
+change and improvement.}
 }
 \details{
 orderly allows a report to rely on the artefacts of one or more
@@ -70,19 +70,15 @@ other orderly reports. This allows users to develop a network of
 interconnected reports where the output from report becomes the
 source of data for another.  There are two natural questions that
 can develop around this workflow:
-
 \enumerate{
-
-\item{We have updated a report and now need to re-run everything
-that depends on it.}
-
-\item{We have a report that we want to re-run to ensure uses the
-   latest information. Which other reports are used (directly or
-   indirectly) by this report?}
-
+\item We have updated a report; what are the reports that depend on
+this so that we can re-run them?
+\item We have a report that we want to re-run to ensure uses the
+latest information. Which other reports are used (directly or
+indirectly) by this report?
 }
 
-This function display this information in an easily readable
+This function displays this information in an easily readable
 format.  Allowing users to see the dependency tree and which
 reports are out of date and need to be re-run.
 }
@@ -90,26 +86,26 @@ reports are out of date and need to be re-run.
 
 
 By default the tree is built using data from the local report
-  database (see \code{\link{orderly_commit}}). This means that it
-  will not find changes from a report that has not be run and
-  committed. \emph{i.e.} if a user changes a report to use or
-  create different artefacts this will not be picked up by the
-  function until the reports are re-run and committed to the
-  archive.
+database (see \link{orderly_commit},
+\link{orderly_db}). This means that it will not find changes
+from a report that has not be run and committed. That is, if a
+user changes a report to use or create different artefacts this
+will not be picked up by the function until the reports are
+re-run and committed to the archive.
 
 It is possible to generate a tree from the source reports by using
-  \code{use = "src"} - this generates the "theoretical tree", and
-  has no concept of being "up to date" or of ids.
+\code{use = "src"} - this generates the "theoretical tree", and has
+no concept of being "up to date" or of ids.
 }
 
 \section{Warning}{
 
 
-\emph{This interface is considered experimental and may change
-  without notice}.  Please do not depend on it in scripts as it
-  may break things.  Consider this a (hopefully) useful way of
-  exploring the dependencies in your reports \emph{interactively}
-  - let us know what is missing and we'll try and build it out.
+\emph{This interface is considered experimental and may change without
+notice}.  Please do not depend on it in scripts as it may break
+things.  Consider this a (hopefully) useful way of exploring the
+dependencies in your reports \emph{interactively} - let us know what
+is missing and we'll try and build it out.
 }
 
 \examples{
