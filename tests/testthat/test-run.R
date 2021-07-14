@@ -1147,4 +1147,9 @@ test_that("Can run a report with no fields, when all are optional", {
   expect_equal(d$meta$extra_fields,
                data_frame(requester = NA_character_,
                           author = NA_character_))
+
+  orderly_commit(id, root = path)
+  con <- orderly_db("destination", root = path)
+  on.exit(DBI::dbDisconnect(con, add = TRUE, after = FALSE))
+  expect_equal(DBI::dbReadTable(con, "report_version")$id, id)
 })
