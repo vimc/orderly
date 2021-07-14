@@ -1129,3 +1129,27 @@ test_that("orderly_run_internal can save workflow metadata", {
                data_frame(report_version = c(id, id2),
                           workflow_id = c("123", "123")))
 })
+
+
+test_that("Can run a report with no fields, when all are optional", {
+  path <- test_prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+
+  append_lines(
+    c("fields:", "  requester:",
+      "    required: false",
+      "  author:",
+      "    required: false"),
+    file.path(path, "orderly_config.yml"))
+
+  id <- orderly_run("example", root = path, echo = FALSE)
+  d <- readRDS(path_orderly_run_rds(file.path(path_draft(path), "example", id)))
+  expect_equal(d$meta$extra_fields,
+               data_frame(requester = NA_character_,
+                          author = NA_character_))
+
+  orderly_commit(id, root = path)
+  con <- orderly_db("destination", root = path)
+  on.exit(DBI::dbDisconnect(con, add = TRUE, after = FALSE))
+  expect_equal(DBI::dbReadTable(con, "report_version")$id, id)
+})

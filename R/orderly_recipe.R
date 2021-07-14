@@ -342,6 +342,13 @@ recipe_validate_fields <- function(fields, config, filename) {
     if (config$fields$required[[i]] || !is.null(fields[[nm]])) {
       assert_scalar_character(fields[[nm]], sprintf("%s:%s", filename, nm))
     } else {
+      if (length(fields) == 0L) {
+        ## This is needed in for 3.6 compatibility, as '[[' assignment
+        ## into NULL with 3.6 coerces to character vector, while for
+        ## 4.0 and it coerces to list:
+        ## https://bugs.r-project.org/bugzilla/show_bug.cgi?id=17719
+        fields <- as.list(fields)
+      }
       fields[[nm]] <- NA_character_
     }
   }
