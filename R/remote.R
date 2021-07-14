@@ -1,23 +1,23 @@
 ##' Download dependent reports from an orderly remote.  This can only
-##' be used if the \code{orderly_config.yml} lists a remote.  This
+##' be used if the `orderly_config.yml` lists a remote.  This
 ##' allows for a centralised workflow where a central orderly store
 ##' exists and holds the canonical copies of reports, from which
 ##' versions can be downloaded into local stores.
 ##'
-##' The \code{orderly_pull_archive} function pulls report directly
+##' The `orderly_pull_archive` function pulls report directly
 ##' (without it being a dependent report).
 ##'
 ##' After setting your username up you can run
-##' \code{orderly_pull_dependencies("reportname")} to pull the
-##' \emph{dependencies} of \code{"reportname"} down so that
-##' \code{"reportname"} can be run, or you can run
-##' \code{orderly_pull_archive("reportname")} to pull a copy of
-##' \code{"reportname"} that has been run on the remote server.
+##' `orderly_pull_dependencies("reportname")` to pull the
+##' *dependencies* of `"reportname"` down so that
+##' `"reportname"` can be run, or you can run
+##' `orderly_pull_archive("reportname")` to pull a copy of
+##' `"reportname"` that has been run on the remote server.
 ##'
 ##' Pulling an archive report from a remote also pulls its
 ##' dependencies (recursively), and adds all of these to the local
 ##' database.  This may require migrating old orderly archives
-##' (\code{\link{orderly_migrate}}).  Note that this migration will
+##' ([orderly::orderly_migrate()]).  Note that this migration will
 ##' likely fail for remote orderly versions older than 0.6.8 because
 ##' the migration needs to read data files on disk that are not
 ##' included in the downloaded archive in order to collect all the
@@ -26,9 +26,9 @@
 ##' archive, and then re-pull.
 ##'
 ##' Pushing an archive is possible only if the remote supports it.
-##' Currently this is supported by \code{\link{orderly_remote_path}}
+##' Currently this is supported by [orderly::orderly_remote_path()]
 ##' remotes, though not by orderlyweb remotes.  There is no control
-##' over what will \emph{accept} a push at this point, nor any check
+##' over what will *accept* a push at this point, nor any check
 ##' that what you've pushed is "good" except that it exists in your
 ##' archive.  As with pulling an archive, pushes are recursive with
 ##' respect to dependencies.  The configuration interface here will
@@ -37,28 +37,28 @@
 ##' @title Download dependent reports
 ##'
 ##' @param name Name of the report to download dependencies for.
-##'   Alternatively, the default of \code{NULL} is useful if you have
+##'   Alternatively, the default of `NULL` is useful if you have
 ##'   already set the working directory to be the source directory.
 ##'
 ##' @param remote Description of the location.  Typically this is a
 ##'   character string indicating a remote specified in the
-##'   \code{remotes} block of your \code{orderly_config.yml}.  It is
+##'   `remotes` block of your `orderly_config.yml`.  It is
 ##'   also possible to pass in a directly created remote object (e.g.,
-##'   using \code{\link{orderly_remote_path}}, or one provided by
-##'   another package).  If left \code{NULL}, then the default remote
+##'   using [orderly::orderly_remote_path()], or one provided by
+##'   another package).  If left `NULL`, then the default remote
 ##'   for this orderly repository is used - by default that is the
 ##'   first listed remote.
 ##'
 ##' @param parameters Parameters to pass through when doing dependency
-##'   resolution.  If you are using a query for \code{id} that
-##'   involves a parameter (e.g., \code{latest(parameter:x == p)}) you
+##'   resolution.  If you are using a query for `id` that
+##'   involves a parameter (e.g., `latest(parameter:x == p)`) you
 ##'   will need to pass in the parameters here.  Similarly, if you are
 ##'   pulling a report that uses query dependencies that reference
 ##'   parameters you need to pass them here (the same parameter set
 ##'   will be passed through to all dependencies).
 ##'
 ##' @param recursive Logical, indicating if all dependencies of a
-##'   report should also be pulled. Setting this to \code{FALSE} only
+##'   report should also be pulled. Setting this to `FALSE` only
 ##'   the direct reports, along with metadata for the dependencies;
 ##'   this will be potentially much faster, but leaves your archive in
 ##'   a more fragile state.
@@ -69,11 +69,11 @@
 ##' @return No return value, these functions are called only for their
 ##'   side effects
 ##'
-##' @seealso \code{\link{orderly_remote_path}}, which implements the
+##' @seealso [orderly::orderly_remote_path()], which implements the
 ##'   remote interface for orderly repositories at a local path.  See
-##'   also \href{https://github.com/vimc/orderly-web}{OrderlyWeb} for
-##'   a system for hosting orderly repositories over an HTTP API.
-##'   \code{vignette("remote", package = "orderly")} describes the
+##'   also [OrderlyWeb](https://github.com/vimc/orderly-web) for a
+##'   system for hosting orderly repositories over an HTTP API.
+##'   `vignette("remote", package = "orderly")` describes the
 ##'   remote system in more detail.
 ##'
 ##' @example man-roxygen/example-remote.R
@@ -104,7 +104,7 @@ orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
 ##' @export
 ##' @rdname orderly_pull_dependencies
 ##'
-##' @param id The identifier (for \code{orderly_pull_archive}).  The default is
+##' @param id The identifier (for `orderly_pull_archive`).  The default is
 ##'   to use the latest report.
 orderly_pull_archive <- function(name, id = "latest", root = NULL,
                                  locate = TRUE, remote = NULL,
@@ -217,7 +217,7 @@ orderly_push_archive <- function(name, id = "latest", root = NULL,
 ##'   report.
 ##'
 ##' @param wait Time to wait for the report to be run; if the report
-##'   takes longer than this time to run but \code{timeout} is longer
+##'   takes longer than this time to run but `timeout` is longer
 ##'   it will remain running on the server but we will stop waiting
 ##'   for it and instead throw an error.
 ##'
@@ -227,20 +227,20 @@ orderly_push_archive <- function(name, id = "latest", root = NULL,
 ##'   a browser on completion (if supported by the remote)
 ##'
 ##' @param stop_on_error Logical, indicating if we should throw an
-##'   error if the report fails.  If you set this to \code{FALSE} it
+##'   error if the report fails.  If you set this to `FALSE` it
 ##'   will be much easier to debug, but more annoying in scripts.  If
 ##'   the report times out on the server (i.e., takes longer than
-##'   \code{timeout}) that counts as an error.
+##'   `timeout`) that counts as an error.
 ##'
 ##' @param stop_on_timeout Logical, indicating if we should throw an
-##'   error if the report takes longer than \code{wait} seconds to
+##'   error if the report takes longer than `wait` seconds to
 ##'   complete.
 ##'
 ##' @param progress Logical, indicating if a progress spinner should
 ##'   be included.
 ##'
 ##' @param ref Optional reference, indicating which branch should be
-##'   used.  This cannot be used if the remote has \code{master_only}
+##'   used.  This cannot be used if the remote has `master_only`
 ##'   set.
 ##'
 ##' @param instance Select instance of the source database to be used,
@@ -288,14 +288,14 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
 ##' @title Set default remote location
 ##'
 ##' @param value A string describing a remote, a remote object, or
-##'   \code{NULL} to clear
+##'   `NULL` to clear
 ##'
 ##' @inheritParams orderly_list
 ##' @export
 ##'
 ##' @return The default remote (for
-##'   \code{orderly_default_remote_get}). The function
-##'   \code{orderly_default_remote_set} is called for its side effects
+##'   `orderly_default_remote_get`). The function
+##'   `orderly_default_remote_set` is called for its side effects
 ##'   only.
 ##'
 ##' @rdname orderly_default_remote
@@ -358,7 +358,7 @@ orderly_default_remote_get <- function(root = NULL, locate = TRUE) {
 
 
 ##' Get a remote, based on the configuration in
-##' \code{orderly_config.yml} - different remote drivers have
+##' `orderly_config.yml` - different remote drivers have
 ##' different methods, and this function gives you access to these
 ##' lower-level objects.
 ##'
@@ -367,14 +367,14 @@ orderly_default_remote_get <- function(root = NULL, locate = TRUE) {
 ##' @inheritParams orderly_pull_dependencies
 ##'
 ##' @return The orderly remote, as described in
-##'   \code{orderly_config.yml} - if no remotes are configured, or if
+##'   `orderly_config.yml` - if no remotes are configured, or if
 ##'   the requested remote does not exist, an error will be thrown.
 ##'
-##' @seealso \code{\link{orderly_pull_dependencies}} which provides a
+##' @seealso [orderly::orderly_pull_dependencies()] which provides a
 ##'   higher-level interface to pulling from a remote (including
 ##'   adding the downloaded archive into your orderly repository), and
 ##'   see the documentation underlying the orderly remote driver that
-##'   your \code{orderly_config.yml} declares for information about
+##'   your `orderly_config.yml` declares for information about
 ##'   using that remote.
 ##'
 ##' @export
@@ -530,30 +530,30 @@ remote_report_update_metadata <- function(name, remote, config) {
 
 
 ##' Pack a bundle on a remote. This is like calling
-##' \code{\link{orderly_bundle_pack}} on the remote and can be used to
+##' [orderly::orderly_bundle_pack()] on the remote and can be used to
 ##' extract a long-running report from a server to run (say) on an HPC
 ##' system.
 ##'
 ##' The workflow here will typically be:
 ##'
-##' 1. Use \code{orderly_bundle_pack_remote()} to create a local
+##' 1. Use `orderly_bundle_pack_remote()` to create a local
 ##'    copy of a bundle, extracted from a remote. Typically this will
 ##'    be run from the system where the bundle will be run (an HPC
 ##'    head-node or another powerful computer).
 ##'
-##' 2. Run the bundle using \code{\link{orderly_bundle_run}}
+##' 2. Run the bundle using [orderly::orderly_bundle_run()]
 ##'
 ##' 3. Re-import the completed bundle using
-##'   \code{orderly_bundle_import_remote} which sends the zip
+##'   `orderly_bundle_import_remote` which sends the zip
 ##'   file to the remote and adds it to the archive.
 ##'
-##' Typically these commands will \emph{not} be run from the orderly
-##' root. However, the \code{root} argument may still be used to find
-##' your remote configuration. Alternatively, if your \code{remote}
+##' Typically these commands will *not* be run from the orderly
+##' root. However, the `root` argument may still be used to find
+##' your remote configuration. Alternatively, if your `remote`
 ##' argument is an orderly remote (e.g.,
-##' \code{\link{orderly_remote_path}}, or \code{orderlyweb}'s
-##' \code{orderlyweb::orderlyweb_remote}) then the \code{root} and
-##' \code{locate} arguments will be ignored and this command can be
+##' [orderly::orderly_remote_path()], or `orderlyweb`'s
+##' `orderlyweb::orderlyweb_remote`) then the `root` and
+##' `locate` arguments will be ignored and this command can be
 ##' run from anywhere. This is the recommended configuration for
 ##' running on a HPC system.
 ##'
@@ -588,7 +588,7 @@ orderly_bundle_pack_remote <- function(name, parameters = NULL,
 ##' @rdname orderly_bundle_pack_remote
 ##'
 ##' @param path The path to unpack and import
-##'   (a zip file created by \code{orderly_bundle_run})
+##'   (a zip file created by `orderly_bundle_run`)
 ##'
 ##' @export
 orderly_bundle_import_remote <- function(path, root = NULL, locate = TRUE,

@@ -20,7 +20,7 @@ orderly_test_check(path = NULL)
 }
 \arguments{
 \item{name}{Name of the report to run (see
-\code{\link{orderly_list}}).  A leading \code{src/} will be
+\code{\link[=orderly_list]{orderly_list()}}).  A leading \verb{src/} will be
 removed if provided, allowing easier use of autocomplete.}
 
 \item{parameters}{Parameters passed to the report. A named list of
@@ -59,12 +59,10 @@ respectively.}
 
 \item{remote}{Remote to use to resolve dependencies.  Use this in
 order to run a report with the same dependencies as are
-available on a remote server, particularly when using \code{id =
-"latest"}.  Note that this is not the same as running
-\code{\link{orderly_pull_dependencies}}, then \code{orderly_run}
+available on a remote server, particularly when using \code{id = "latest"}.  Note that this is not the same as running
+\code{\link[=orderly_pull_dependencies]{orderly_pull_dependencies()}}, then \code{orderly_run}
 with \code{remote = NULL}, as the pull/run approach will use the
-latest report in \emph{your} archive but the \code{remote =
-"remote"} approach will use the latest approach in the
+latest report in \emph{your} archive but the \code{remote = "remote"} approach will use the latest approach in the
 \emph{remote} archive (which might be less recent).}
 
 \item{path}{Path to the report that is currently being run}
@@ -90,14 +88,13 @@ a future version of orderly if it does not prove useful in this
 more limited form.
 
 The new suggested workflow is:
-
 \enumerate{
-\item{run \code{orderly_test_start(...)} to prepare a report directory}
-\item{manually change into that directory following the printed
-  instructions}
-\item{use \code{orderly_test_check} to check that your report has created
-      the expected artefacts}
-\item{manually change back to your original directory}
+\item run \code{orderly_test_start(...)} to prepare a report directory
+\item manually change into that directory following the printed
+instructions
+\item use \code{orderly_test_check} to check that your report has created
+the expected artefacts
+\item manually change back to your original directory
 }
 }
 \examples{

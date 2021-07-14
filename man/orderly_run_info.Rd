@@ -10,7 +10,7 @@ orderly_run_info(path = NULL)
 \item{path}{Path to the report currently being run.  This should
 be left as \code{NULL} when running a report, and the path to
 the report being run should be used when using
-\code{\link{orderly_test_start}}}
+\code{\link[=orderly_test_start]{orderly_test_start()}}}
 }
 \value{
 A list of metadata about the current report
@@ -20,7 +20,7 @@ This function allows inspection of some of orderly's metadata
 during an orderly run.  The format returned is internal to orderly
 and subject to change.  It is designed to be used within report
 code.  To use in conjunction with
-\code{\link{orderly_test_start}}, you must pass in the path to the
+\code{\link[=orderly_test_start]{orderly_test_start()}}, you must pass in the path to the
 report in question.
 }
 \section{Warning}{

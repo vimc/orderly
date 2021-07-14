@@ -1,34 +1,34 @@
-##' The functions \code{orderly_develop_start},
-##' \code{orderly_develop_status} and \code{orderly_develop_clean}
+##' The functions `orderly_develop_start`,
+##' `orderly_develop_status` and `orderly_develop_clean`
 ##' provide a workflow for developing a report in much the same way as
 ##' one might write code outside of orderly.
-##' \code{orderly_develop_start} will copy all files required (global
+##' `orderly_develop_start` will copy all files required (global
 ##' resources and dependencies) into the report source directory, as
 ##' well as collect all data and parameters - at this point the
 ##' directory can be developed in directly.  It will also load all
 ##' declared packages, and source all code files listed in the
-##' \code{packages:} and \code{sources:} sections of your
-##' \code{orderly.yml}.  \code{orderly_develop_status} provides
+##' `packages:` and `sources:` sections of your
+##' `orderly.yml`.  `orderly_develop_status` provides
 ##' information about the status of files in the directory, while
-##' \code{orderly_develop_clean} deletes all copied files.
+##' `orderly_develop_clean` deletes all copied files.
 ##'
-##' These functions are designed to work within a report's \code{src}
-##' directory.  For example, for a report \code{analysis} they will
-##' alter or report on the directory \code{src/analysis}.  It is
-##' intended that \code{orderly_develop_start} can be run repeatedly;
-##' doing this will \emph{refresh} the contents of the directory if
+##' These functions are designed to work within a report's `src`
+##' directory.  For example, for a report `analysis` they will
+##' alter or report on the directory `src/analysis`.  It is
+##' intended that `orderly_develop_start` can be run repeatedly;
+##' doing this will *refresh* the contents of the directory if
 ##' upstream files have been updated.
 ##'
 ##' Some degree of care should be used while using these functions.
 ##'
-##' Because \code{orderly_develop_start} copies files into your source
+##' Because `orderly_develop_start` copies files into your source
 ##' tree you should be careful to add these files to your
-##' \code{.gitignore} files so that they are not included if using
-##' git.  Rerunning \code{orderly_develop_start} will copy a fresh
+##' `.gitignore` files so that they are not included if using
+##' git.  Rerunning `orderly_develop_start` will copy a fresh
 ##' copy of dependencies into your tree, overwriting files that are
 ##' there without warning.
 ##'
-##' Repeatedly running \code{orderly_develop_start} is "safe", in that
+##' Repeatedly running `orderly_develop_start` is "safe", in that
 ##' it will re-run through the setup steps, but beware that sourcing
 ##' functions is additive and never subtractive.  If you delete (or
 ##' rename) a function within a source file, it will not be removed
@@ -37,19 +37,19 @@
 ##' happen.  When in doubt, restart your R session.
 ##'
 ##' Note that these functions are much more permissive as to the state
-##' of your \code{orderly.yml} than \code{\link{orderly_run}} - in
+##' of your `orderly.yml` than [orderly::orderly_run()] - in
 ##' particular, they will run, with a message, even if you have not
-##' yet defined a \code{script:} or any \code{artefacts:}.
+##' yet defined a `script:` or any `artefacts:`.
 ##'
-##' The \code{orderly_develop_clean} function will delete dependencies
+##' The `orderly_develop_clean` function will delete dependencies
 ##' without warning.
 ##'
 ##' @title Develop an orderly report
 ##'
 ##' @param name Name of the report to develop (see
-##'   \code{\link{orderly_list}}).  A leading \code{src/} will be
+##'   [orderly::orderly_list()]).  A leading `src/` will be
 ##'   removed if provided, allowing easier use of autocomplete.
-##'   Alternatively, the default of \code{NULL} is useful if you have
+##'   Alternatively, the default of `NULL` is useful if you have
 ##'   already set the working directory to be the source directory.
 ##'
 ##' @inheritParams orderly_run

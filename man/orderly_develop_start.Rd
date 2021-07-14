@@ -23,7 +23,7 @@ orderly_develop_clean(name = NULL, root = NULL, locate = TRUE)
 }
 \arguments{
 \item{name}{Name of the report to develop (see
-\code{\link{orderly_list}}).  A leading \code{src/} will be
+\code{\link[=orderly_list]{orderly_list()}}).  A leading \verb{src/} will be
 removed if provided, allowing easier use of autocomplete.
 Alternatively, the default of \code{NULL} is useful if you have
 already set the working directory to be the source directory.}
@@ -64,17 +64,15 @@ respectively.}
 
 \item{remote}{Remote to use to resolve dependencies.  Use this in
 order to run a report with the same dependencies as are
-available on a remote server, particularly when using \code{id =
-"latest"}.  Note that this is not the same as running
-\code{\link{orderly_pull_dependencies}}, then \code{orderly_run}
+available on a remote server, particularly when using \code{id = "latest"}.  Note that this is not the same as running
+\code{\link[=orderly_pull_dependencies]{orderly_pull_dependencies()}}, then \code{orderly_run}
 with \code{remote = NULL}, as the pull/run approach will use the
-latest report in \emph{your} archive but the \code{remote =
-"remote"} approach will use the latest approach in the
+latest report in \emph{your} archive but the \code{remote = "remote"} approach will use the latest approach in the
 \emph{remote} archive (which might be less recent).}
 }
 \value{
 A character vector with the full path to the directory,
-  invisibly.
+invisibly.
 }
 \description{
 The functions \code{orderly_develop_start},
@@ -86,7 +84,7 @@ resources and dependencies) into the report source directory, as
 well as collect all data and parameters - at this point the
 directory can be developed in directly.  It will also load all
 declared packages, and source all code files listed in the
-\code{packages:} and \code{sources:} sections of your
+\verb{packages:} and \verb{sources:} sections of your
 \code{orderly.yml}.  \code{orderly_develop_status} provides
 information about the status of files in the directory, while
 \code{orderly_develop_clean} deletes all copied files.
@@ -117,9 +115,9 @@ will be loaded each time you call this, but no deletions will
 happen.  When in doubt, restart your R session.
 
 Note that these functions are much more permissive as to the state
-of your \code{orderly.yml} than \code{\link{orderly_run}} - in
+of your \code{orderly.yml} than \code{\link[=orderly_run]{orderly_run()}} - in
 particular, they will run, with a message, even if you have not
-yet defined a \code{script:} or any \code{artefacts:}.
+yet defined a \verb{script:} or any \verb{artefacts:}.
 
 The \code{orderly_develop_clean} function will delete dependencies
 without warning.

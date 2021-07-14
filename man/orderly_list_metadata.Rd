@@ -20,12 +20,12 @@ parents until it finds an \code{orderly_config.yml} file.}
 reports that are also included in the archive.}
 }
 \value{
-A \code{\link{data.frame}} with columns \code{name} and
-  \code{id}, as for \code{\link{orderly_list_archive}}
+A \code{\link[=data.frame]{data.frame()}} with columns \code{name} and
+\code{id}, as for \code{\link[=orderly_list_archive]{orderly_list_archive()}}
 }
 \description{
 List reports that are present only as metadata; these are the
-result of doing \code{\link{orderly_pull_archive}} with
+result of doing \code{\link[=orderly_pull_archive]{orderly_pull_archive()}} with
 \code{recursive = FALSE}, in which case only metadata was
 downloaded and not the report contents itself.
 }

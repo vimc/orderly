@@ -32,7 +32,7 @@ parents until it finds an \code{orderly_config.yml} file.}
 
 \item{failed_only}{Delete only failed reports (those without the
 end-of-run metadata).  This will also clean up drafts created by
-\code{\link{orderly_test_start}}}
+\code{\link[=orderly_test_start]{orderly_test_start()}}}
 }
 \value{
 No return value, this function is called only for its side effects
@@ -42,8 +42,8 @@ Clean up orderly draft and data directories.  Deletes all drafts
 (possibly just for a set of report names) and then deletes
 dangling data sets that are not pointed to by any draft or
 committed reports.  Running cleanup does not affect any reports
-that have been committed with \code{\link{orderly_commit}} (i.e.,
-the contents of the \code{archive/} directory).
+that have been committed with \code{\link[=orderly_commit]{orderly_commit()}} (i.e.,
+the contents of the \verb{archive/} directory).
 }
 \examples{
 # In a new example orderly, run two reports and commit only the

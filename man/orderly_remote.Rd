@@ -11,7 +11,7 @@ orderly_remote(remote = NULL, root = NULL, locate = TRUE)
 character string indicating a remote specified in the
 \code{remotes} block of your \code{orderly_config.yml}.  It is
 also possible to pass in a directly created remote object (e.g.,
-using \code{\link{orderly_remote_path}}, or one provided by
+using \code{\link[=orderly_remote_path]{orderly_remote_path()}}, or one provided by
 another package).  If left \code{NULL}, then the default remote
 for this orderly repository is used - by default that is the
 first listed remote.}
@@ -27,8 +27,8 @@ parents until it finds an \code{orderly_config.yml} file.}
 }
 \value{
 The orderly remote, as described in
-  \code{orderly_config.yml} - if no remotes are configured, or if
-  the requested remote does not exist, an error will be thrown.
+\code{orderly_config.yml} - if no remotes are configured, or if
+the requested remote does not exist, an error will be thrown.
 }
 \description{
 Get a remote, based on the configuration in
@@ -62,10 +62,10 @@ remote <- orderly::orderly_remote(root = path_local)
 remote$list_reports()
 }
 \seealso{
-\code{\link{orderly_pull_dependencies}} which provides a
-  higher-level interface to pulling from a remote (including
-  adding the downloaded archive into your orderly repository), and
-  see the documentation underlying the orderly remote driver that
-  your \code{orderly_config.yml} declares for information about
-  using that remote.
+\code{\link[=orderly_pull_dependencies]{orderly_pull_dependencies()}} which provides a
+higher-level interface to pulling from a remote (including
+adding the downloaded archive into your orderly repository), and
+see the documentation underlying the orderly remote driver that
+your \code{orderly_config.yml} declares for information about
+using that remote.
 }

@@ -11,53 +11,53 @@
 ##' The idea here is that the queries can be used to find ids that
 ##' match certain criteria for use as dependencies.  This function
 ##' lets you work out what would be resolved by the query, and using
-##' this query string in a \code{depends:} section will let you select
+##' this query string in a `depends:` section will let you select
 ##' a report that matches some criteria.  For example, suppose that
-##' you have report \code{A} that takes a parameter "fruit" with
-##' values like "apple", "banana", and a report \code{B} that depends
+##' you have report `A` that takes a parameter "fruit" with
+##' values like "apple", "banana", and a report `B` that depends
 ##' on A.  You could then write:
 ##'
-##' \preformatted{
+##' ```
 ##' depends:
 ##'   A:
 ##'     id: latest(parameter:fruit == "apple")
 ##'     uses:
 ##'       summary.csv: summary.csv
-##' }
+##' ```
 ##'
-##' To get the \code{summary.csv} file out of the latest report
-##' \code{A} that was run with the "fruit" parameter set to "apple".
+##' To get the `summary.csv` file out of the latest report
+##' `A` that was run with the "fruit" parameter set to "apple".
 ##' If "B" itself takes parameters, you can use those parameters in
 ##' these query expressions like
 ##'
-##' \preformatted{
+##' ```
 ##' depends:
 ##'   A:
 ##'     id: latest(parameter:fruit == target_fruit)
 ##'     uses:
 ##'       summary.csv: summary.csv
-##' }
+##' ```
 ##'
-##' (assuming that \code{B} takes a parameter \code{target_fruit}).
+##' (assuming that `B` takes a parameter `target_fruit`).
 ##'
-##' The syntax for tags is simpler, one uses \code{tag:tagname} to
+##' The syntax for tags is simpler, one uses `tag:tagname` to
 ##' test for presence of a tag called "tagname".
 ##'
-##' Search queries can be joined by \code{&&} and \code{||} and
+##' Search queries can be joined by `&&` and `||` and
 ##' grouped using parentheses, these groups (or tags) can be negated
-##' with \code{!}, so a complicated query expression might look like:
+##' with `!`, so a complicated query expression might look like:
 ##'
-##' \preformatted{
+##' ```
 ##' (parameter:fruit == "apple" && !tag:weekly) || parameter:fruit == "banana"
-##' }
+##' ```
 ##'
-##' Be careful of comparing floating point numbers with \code{==} or
-##' \code{!=} as they may not always return what you expect (for example
-##' \code{sqrt(3)^2 == 3} is \code{FALSE}).
+##' Be careful of comparing floating point numbers with `==` or
+##' `!=` as they may not always return what you expect (for example
+##' `sqrt(3)^2 == 3` is `FALSE`).
 ##'
 ##' In the documentation and error messages we may refer to the
-##' left-hand-side of \code{:} as a "namespace".  At this point the
-##' only supported namespaces are \code{tag} and \code{parameter}.
+##' left-hand-side of `:` as a "namespace".  At this point the
+##' only supported namespaces are `tag` and `parameter`.
 ##'
 ##' @title Search for orderly reports matching criteria
 ##'
@@ -68,18 +68,18 @@
 ##'
 ##' @param draft Should draft reports be used searched?  This should
 ##'   be used only in development.  Valid values are logical
-##'   (\code{TRUE}, \code{FALSE}) or use the string \code{newer} to
+##'   (`TRUE`, `FALSE`) or use the string `newer` to
 ##'   use draft reports where they are newer than archive reports.
-##'   For consistency, \code{always} and \code{never} are equivalent
-##'   to \code{TRUE} and \code{FALSE}, respectively.
+##'   For consistency, `always` and `never` are equivalent
+##'   to `TRUE` and `FALSE`, respectively.
 ##'
 ##' @param parameters Named list of parameters (as would be passed to
-##'   \code{\link{orderly_run}}) if your query uses parameters on the
+##'   [orderly::orderly_run()]) if your query uses parameters on the
 ##'   right-hand-side of an expression.
 ##'
 ##' @param remote A remote to use, if you want to apply the query
-##'   remotely.  If this is used then \code{draft} cannot be set to
-##'   \code{TRUE} as remotes do not expose draft reports.
+##'   remotely.  If this is used then `draft` cannot be set to
+##'   `TRUE` as remotes do not expose draft reports.
 ##'
 ##' @inheritParams orderly_list
 ##'

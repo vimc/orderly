@@ -3,22 +3,22 @@
 ##' Details below for how these are configured and discovered by
 ##' orderly.
 ##'
-##' To create a custom template, create a directory \code{templates}
+##' To create a custom template, create a directory `templates`
 ##' within your orderly root.  Within that directory create
 ##' directories containing all the files that you would like a report
-##' to contain.  This \emph{must} contain a file
-##' \code{orderly.yml} but may contain further files (for example, you
+##' to contain.  This *must* contain a file
+##' `orderly.yml` but may contain further files (for example, you
 ##' might want a default script and Rmd file).
 ##'
-##' If \code{template} is not given (i.e., is \code{NULL}) then we
-##' look for a template called \code{default} (i.e., stored at
-##' \code{template/default}), then fall back on the system orderly
+##' If `template` is not given (i.e., is `NULL`) then we
+##' look for a template called `default` (i.e., stored at
+##' `template/default`), then fall back on the system orderly
 ##' template.
 ##'
-##' We first look for a file \code{orderly/template.yml} within the
+##' We first look for a file `orderly/template.yml` within the
 ##' orderly root.  If that is not found, then a copy from the orderly
-##' package is used.  This can always be used by using \code{template
-##' = "system"}.
+##' package is used.  This can always be used by using `template
+##' = "system"`.
 ##'
 ##' @title Create new report
 ##'
@@ -27,15 +27,15 @@
 ##' @param quiet Logical, indicating if informational messages should
 ##'   be suppressed.
 ##'
-##' @param template The name of a template.  If \code{NULL} orderly
+##' @param template The name of a template.  If `NULL` orderly
 ##'   will search for a template (see Details).  If given it must be
-##'   the name of a directory within a directory \code{templates} in
+##'   the name of a directory within a directory `templates` in
 ##'   your project root.  The special label "orderly" will use
 ##'   orderly's builtin template.
 ##'
 ##' @inheritParams orderly_list
 ##'
-##' @seealso \code{\link{orderly_init}} for initialising a new orderly
+##' @seealso [orderly::orderly_init()] for initialising a new orderly
 ##'   repository.
 ##'
 ##' @export

@@ -34,7 +34,7 @@ path <- orderly::orderly_example("demo")
 orderly::orderly_list(path)
 }
 \seealso{
-\code{\link{orderly_list_archive}} and
-  \code{\link{orderly_list_drafts}}, which list archived
-  (committed) and draft reports and their versions.
+\code{\link[=orderly_list_archive]{orderly_list_archive()}} and
+\code{\link[=orderly_list_drafts]{orderly_list_drafts()}}, which list archived
+(committed) and draft reports and their versions.
 }

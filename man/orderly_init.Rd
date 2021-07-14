@@ -29,34 +29,27 @@ file).
 }
 \details{
 This function creates a minimal orderly structure, containing:
-\describe{
-
-\item{\code{orderly_config.yml}}{The orderly
-configuration. Minimally, this can be empty, but it must exist.}
-
-\item{\code{src}}{The path where report sources live. This should
-be placed under version control, and contain a number of reports,
-each in their own directory with an \code{orderly.yml} describing
-their inputs and outputs (artefacts).  The
-\code{\link{orderly_new}} function can be used to accelerate
-creation of new reports.}
-
-\item{\code{draft}}{A directory where reports will be run using
-\code{\link{orderly_run}}.  This directory should be excluded from
-version control. \code{orderly} will create it as needed if it
-does not exist when a report is run.}
-
-\item{\code{archive}}{A directory where successfully run reports
-will be moved to after being committed with
-\code{\link{orderly_commit}}.  This directory should be excluded
+\itemize{
+\item \code{orderly_config.yml}: The orderly configuration. Minimally, this
+can be empty, but it must exist.
+\item \code{src}: The path where report sources live. This should be placed
+under version control, and contain a number of reports, each in
+their own directory with an \code{orderly.yml} describing their
+inputs and outputs (artefacts).  The \code{\link[=orderly_new]{orderly_new()}}
+function can be used to accelerate creation of new reports.
+\item \code{draft}: A directory where reports will be run using
+\code{\link[=orderly_run]{orderly_run()}}.  This directory should be excluded
 from version control. \code{orderly} will create it as needed if
-it does not exist when a report is committed.}
-
-\item{\code{data}}{A directory where data extracted from the
-database (if used) will be stored.  This directory should be
-excluded from version control. \code{orderly} will create it as
-needed if it does not exist when a report is run.}
-
+it does not exist when a report is run.
+\item \code{archive}: A directory where successfully run reports will be
+moved to after being committed with \code{\link[=orderly_commit]{orderly_commit()}}.
+This directory should be excluded from version
+control. \code{orderly} will create it as needed if it does not
+exist when a report is committed.
+\item \code{data}: A directory where data extracted from the database (if
+used) will be stored.  This directory should be excluded from
+version control. \code{orderly} will create it as needed if it
+does not exist when a report is run.
 }
 }
 \examples{
@@ -72,6 +65,6 @@ fs::dir_tree(path)
 readLines(file.path(path, "orderly_config.yml"))
 }
 \seealso{
-\code{\link{orderly_new}} for creating new reports within
-  a configured orderly repository.
+\code{\link[=orderly_new]{orderly_new()}} for creating new reports within
+a configured orderly repository.
 }

@@ -26,12 +26,12 @@ is one that lacks an \code{orderly_run.rds} file.}
 }
 \value{
 A \code{data.frame} with columns \code{name} and
-  \code{id}, containing character vectors of report names and
-  versions, respectively.
+\code{id}, containing character vectors of report names and
+versions, respectively.
 }
 \description{
 List draft and archived reports.  This returns a data.frame with
-columns \code{name} (see \code{\link{orderly_list}}) and \code{id}.
+columns \code{name} (see \code{\link[=orderly_list]{orderly_list()}}) and \code{id}.
 }
 \examples{
 # The orderly demo, with lots of potential reports:
@@ -60,7 +60,7 @@ orderly::orderly_list_drafts(path)
 orderly::orderly_list_archive(path)
 }
 \seealso{
-\code{\link{orderly_list}}, which lists the names of
-  source reports that can be run, and \code{\link{orderly_latest}}
-  which returns the id of the most recent report.
+\code{\link[=orderly_list]{orderly_list()}}, which lists the names of
+source reports that can be run, and \code{\link[=orderly_latest]{orderly_latest()}}
+which returns the id of the most recent report.
 }

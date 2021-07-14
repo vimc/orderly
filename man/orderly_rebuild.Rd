@@ -42,7 +42,7 @@ The report database (orderly's "destination" database) is
 essentially an index over all the metadata associated with
 reports.  It is used by orderly itself, and can be used by
 applications that extend orderly (e.g.,
-\href{https://github.com/vimc/orderly-web}{OrderlyWeb}).  All the
+\href{https://github.com/vimc/orderly-web}{OrderlyWeb}.  All the
 data in this database can be rebuilt from files stored with the
 committed (archive) orderly reports, using the
 \code{orderly_rebuild} function.
