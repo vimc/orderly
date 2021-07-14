@@ -21,7 +21,7 @@ orderly_search(
 can be searched at once.}
 
 \item{parameters}{Named list of parameters (as would be passed to
-\code{\link{orderly_run}}) if your query uses parameters on the
+\code{\link[=orderly_run]{orderly_run()}}) if your query uses parameters on the
 right-hand-side of an expression.}
 
 \item{draft}{Should draft reports be used searched?  This should
@@ -46,8 +46,8 @@ remotely.  If this is used then \code{draft} cannot be set to
 }
 \value{
 A character vector of matching report ids, possibly
-  zero-length.  If the query is a "latest" query, then exactly one
-  report id, possibly NA.
+zero-length.  If the query is a "latest" query, then exactly one
+report id, possibly NA.
 }
 \description{
 Search for orderly reports matching criteria.  This can be used to
@@ -64,14 +64,11 @@ then only orderly (and not OrderlyWeb) tags are searched.
 The idea here is that the queries can be used to find ids that
 match certain criteria for use as dependencies.  This function
 lets you work out what would be resolved by the query, and using
-this query string in a \code{depends:} section will let you select
+this query string in a \verb{depends:} section will let you select
 a report that matches some criteria.  For example, suppose that
 you have report \code{A} that takes a parameter "fruit" with
 values like "apple", "banana", and a report \code{B} that depends
-on A.  You could then write:
-
-\preformatted{
-depends:
+on A.  You could then write:\preformatted{depends:
   A:
     id: latest(parameter:fruit == "apple")
     uses:
@@ -81,10 +78,7 @@ depends:
 To get the \code{summary.csv} file out of the latest report
 \code{A} that was run with the "fruit" parameter set to "apple".
 If "B" itself takes parameters, you can use those parameters in
-these query expressions like
-
-\preformatted{
-depends:
+these query expressions like\preformatted{depends:
   A:
     id: latest(parameter:fruit == target_fruit)
     uses:
@@ -98,10 +92,7 @@ test for presence of a tag called "tagname".
 
 Search queries can be joined by \code{&&} and \code{||} and
 grouped using parentheses, these groups (or tags) can be negated
-with \code{!}, so a complicated query expression might look like:
-
-\preformatted{
-(parameter:fruit == "apple" && !tag:weekly) || parameter:fruit == "banana"
+with \code{!}, so a complicated query expression might look like:\preformatted{(parameter:fruit == "apple" && !tag:weekly) || parameter:fruit == "banana"
 }
 
 Be careful of comparing floating point numbers with \code{==} or

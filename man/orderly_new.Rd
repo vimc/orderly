@@ -51,8 +51,7 @@ template.
 
 We first look for a file \code{orderly/template.yml} within the
 orderly root.  If that is not found, then a copy from the orderly
-package is used.  This can always be used by using \code{template
-= "system"}.
+package is used.  This can always be used by using \code{template = "system"}.
 }
 \examples{
 path <- orderly::orderly_example("minimal")
@@ -67,6 +66,6 @@ dir(file.path(path, "src", "myreport"))
 readLines(file.path(path, "src", "myreport", "orderly.yml"))
 }
 \seealso{
-\code{\link{orderly_init}} for initialising a new orderly
-  repository.
+\code{\link[=orderly_init]{orderly_init()}} for initialising a new orderly
+repository.
 }

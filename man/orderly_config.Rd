@@ -38,7 +38,7 @@ orderly::orderly_config(path)
 
 \item{\code{destination}}{DB connection configuration for where
 to store orderly output database. Defaults to local SQLite
-db `orderly.sqlite`}
+db \code{orderly.sqlite}}
 
 \item{\code{fields}}{Configuration of fields in reports, specifying
 which are required}
@@ -100,7 +100,7 @@ for each of the cfg fields}
 Get connection options for the current server. This is
 the details from the "remote" section for the server
 being run on. Server identified via env var
-`ORDERLY_API_SERVER_IDENTITY`
+\code{ORDERLY_API_SERVER_IDENTITY}
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{orderly_config_$server_options()}\if{html}{\out{</div>}}
 }

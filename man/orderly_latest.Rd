@@ -31,7 +31,7 @@ are logical (\code{TRUE}, \code{FALSE}) or use the string
 archive reports. For consistency, \code{always} and \code{never}
 are equivalent to \code{TRUE} and \code{FALSE}, respectively.}
 
-\item{must_work}{Throw an error if no report is found.  If FALSE,
+\item{must_work}{Throw an error if no report is found.  If \code{FALSE},
 returns \code{NA_character_}.}
 }
 \value{
@@ -59,7 +59,7 @@ orderly::orderly_commit(id2, root = path)
 orderly::orderly_latest("example", root = path)
 }
 \seealso{
-\code{\link{orderly_list}} and
-  \code{\link{orderly_list_archive}} for listing report names and
-  versions.
+\link{orderly_list} and
+\link{orderly_list_archive} for listing report names and
+versions.
 }

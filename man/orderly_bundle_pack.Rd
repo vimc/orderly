@@ -29,26 +29,22 @@ orderly_bundle_list(path)
 \arguments{
 \item{path}{A path, whose interpretation depends on the function:
 
-\describe{
+\code{orderly_bundle_pack}: A directory to save bundles to.  If
+it does not exist it will be created for you.
 
-\item{\code{orderly_bundle_pack}}{A directory to save bundles to.  If
-  it does not exist it will be created for you.}
+\code{orderly_bundle_run}: The path to the packed bundle (a zip
+file created by \code{orderly_bundle_pack})
 
-\item{\code{orderly_bundle_run}}{The path to the packed bundle (a zip
-  file created by \code{orderly_bundle_pack})}
+\code{orderly_bundle_import}: The path to unpack and import
+(a zip file created by \code{orderly_bundle_run})
 
-\item{\code{orderly_bundle_import}}{The path to unpack and import
-  (a zip file created by \code{orderly_bundle_run})}
-
-\item{\code{orderly_bundle_list}}{The path to a directory that might
-  contain either incomplete or complete bundles (created by either
-  \code{orderly_bundle_pack} or \code{orderly_bundle_run})}
-
-}}
+\code{orderly_bundle_list}: The path to a directory that might
+contain either incomplete or complete bundles (created by either
+\code{orderly_bundle_pack} or \code{orderly_bundle_run})}
 
 \item{name}{Name of the report to pack (see
-\code{\link{orderly_list}}).  A leading \code{src/} will be
-removed if provided, allowing easier use of autocomplete.}
+\code{\link[=orderly_list]{orderly_list()}}.  A leading \verb{src/} will be removed if
+provided, allowing easier use of autocomplete.}
 
 \item{parameters}{Parameters passed to the report. A named list of
 parameters declared in the \code{orderly.yml}.  Each parameter
@@ -81,34 +77,32 @@ further information.}
 
 \item{remote}{Remote to use to resolve dependencies.  Use this in
 order to run a report with the same dependencies as are
-available on a remote server, particularly when using \code{id =
-"latest"}.  Note that this is not the same as running
-\code{\link{orderly_pull_dependencies}}, then \code{orderly_run}
+available on a remote server, particularly when using \code{id = "latest"}.  Note that this is not the same as running
+\code{\link[=orderly_pull_dependencies]{orderly_pull_dependencies()}}, then \code{orderly_run}
 with \code{remote = NULL}, as the pull/run approach will use the
-latest report in \emph{your} archive but the \code{remote =
-"remote"} approach will use the latest approach in the
+latest report in \emph{your} archive but the \code{remote = "remote"} approach will use the latest approach in the
 \emph{remote} archive (which might be less recent).}
 
 \item{tags}{Character vector of tags to add to the report.  Tags
 are immutable and cannot be removed once the report is run.
 Tags added here will be \emph{in addition} to any tags listed in
-the \code{tags:} field in \code{orderly.yml} and must be present
+the \verb{tags:} field in \code{orderly.yml} and must be present
 in \code{orderly_config.yml}.}
 
 \item{workdir}{The path in which to run bundles.  If it does not
 exist it will be created for you.  The completed bundle will be
-saved in this directory as \code{<id>.zip}.}
+saved in this directory as \verb{<id>.zip}.}
 
 \item{echo}{Print the result of running the R code to the console}
 }
 \value{
 For \code{orderly_bundle_pack} and
-  \code{orderly_bundle_run}, a list with elements \code{path} (the
-  path to the bundle) and \code{id} (its orderly id).  For
-  \code{orderly_bundle_list} a data.frame with key information
-  about the report in the bundles (id, name, parameters, status,
-  time).  The function \code{orderly_bundle_import} is called for
-  its side effect only and does not return anything useful.
+\code{orderly_bundle_run}, a list with elements \code{path} (the
+path to the bundle) and \code{id} (its orderly id).  For
+\code{orderly_bundle_list} a data.frame with key information
+about the report in the bundles (id, name, parameters, status,
+time).  The function \code{orderly_bundle_import} is called for
+its side effect only and does not return anything useful.
 }
 \description{
 Pack up and run orderly reports to run elsewhere. By using these

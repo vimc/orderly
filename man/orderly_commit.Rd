@@ -29,8 +29,8 @@ for \code{timeout} seconds before throwing an error.}
 The path to the newly committed report
 }
 \description{
-Commit a generated report, moving it from the \code{draft/}
-directory to \code{archive/} and updating the orderly index.  Once
+Commit a generated report, moving it from the \verb{draft/}
+directory to \verb{archive/} and updating the orderly index.  Once
 committed, reports should not be deleted.
 }
 \examples{

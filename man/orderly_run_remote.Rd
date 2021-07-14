@@ -74,7 +74,7 @@ default if NULL.}
 character string indicating a remote specified in the
 \code{remotes} block of your \code{orderly_config.yml}.  It is
 also possible to pass in a directly created remote object (e.g.,
-using \code{\link{orderly_remote_path}}, or one provided by
+using \code{\link[=orderly_remote_path]{orderly_remote_path()}}, or one provided by
 another package).  If left \code{NULL}, then the default remote
 for this orderly repository is used - by default that is the
 first listed remote.}

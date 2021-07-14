@@ -19,8 +19,8 @@ orderly_bundle_import_remote(path, root = NULL, locate = TRUE, remote = NULL)
 }
 \arguments{
 \item{name}{Name of the report to pack (see
-\code{\link{orderly_list}}).  A leading \code{src/} will be
-removed if provided, allowing easier use of autocomplete.}
+\code{\link[=orderly_list]{orderly_list()}}.  A leading \verb{src/} will be removed if
+provided, allowing easier use of autocomplete.}
 
 \item{parameters}{Parameters passed to the report. A named list of
 parameters declared in the \code{orderly.yml}.  Each parameter
@@ -55,29 +55,28 @@ full path to the created file.}
 }
 \description{
 Pack a bundle on a remote. This is like calling
-\code{\link{orderly_bundle_pack}} on the remote and can be used to
+\code{\link[=orderly_bundle_pack]{orderly_bundle_pack()}} on the remote and can be used to
 extract a long-running report from a server to run (say) on an HPC
 system.
 }
 \details{
 The workflow here will typically be:
-
-1. Use \code{orderly_bundle_pack_remote()} to create a local
-   copy of a bundle, extracted from a remote. Typically this will
-   be run from the system where the bundle will be run (an HPC
-   head-node or another powerful computer).
-
-2. Run the bundle using \code{\link{orderly_bundle_run}}
-
-3. Re-import the completed bundle using
-  \code{orderly_bundle_import_remote} which sends the zip
-  file to the remote and adds it to the archive.
+\enumerate{
+\item Use \code{orderly_bundle_pack_remote()} to create a local
+copy of a bundle, extracted from a remote. Typically this will
+be run from the system where the bundle will be run (an HPC
+head-node or another powerful computer).
+\item Run the bundle using \code{\link[=orderly_bundle_run]{orderly_bundle_run()}}
+\item Re-import the completed bundle using
+\code{orderly_bundle_import_remote} which sends the zip
+file to the remote and adds it to the archive.
+}
 
 Typically these commands will \emph{not} be run from the orderly
 root. However, the \code{root} argument may still be used to find
 your remote configuration. Alternatively, if your \code{remote}
 argument is an orderly remote (e.g.,
-\code{\link{orderly_remote_path}}, or \code{orderlyweb}'s
+\code{\link[=orderly_remote_path]{orderly_remote_path()}}, or \code{orderlyweb}'s
 \code{orderlyweb::orderlyweb_remote}) then the \code{root} and
 \code{locate} arguments will be ignored and this command can be
 run from anywhere. This is the recommended configuration for

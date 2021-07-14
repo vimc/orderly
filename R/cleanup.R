@@ -2,8 +2,8 @@
 ##' (possibly just for a set of report names) and then deletes
 ##' dangling data sets that are not pointed to by any draft or
 ##' committed reports.  Running cleanup does not affect any reports
-##' that have been committed with \code{\link{orderly_commit}} (i.e.,
-##' the contents of the \code{archive/} directory).
+##' that have been committed with [orderly::orderly_commit()] (i.e.,
+##' the contents of the `archive/` directory).
 ##'
 ##' @title Orderly cleanup
 ##' @param name Optional name; in this case only clean up drafts with this name
@@ -15,7 +15,7 @@
 ##'
 ##' @param failed_only Delete only failed reports (those without the
 ##'   end-of-run metadata).  This will also clean up drafts created by
-##'   \code{\link{orderly_test_start}}
+##'   [orderly::orderly_test_start()]
 ##' @inheritParams orderly_list
 ##' @return No return value, this function is called only for its side effects
 ##' @export

@@ -8,7 +8,7 @@ orderly_batch(name = NULL, parameters = NULL, ...)
 }
 \arguments{
 \item{name}{Name of the report to run (see
-\code{\link{orderly_list}}).  A leading \code{src/} will be
+\code{\link[=orderly_list]{orderly_list()}}).  A leading \verb{src/} will be
 removed if provided, allowing easier use of autocomplete.
 Alternatively, the default of \code{NULL} is useful if you have
 already set the working directory to be the source directory.}
@@ -16,7 +16,7 @@ already set the working directory to be the source directory.}
 \item{parameters}{Data frame of parameters passed to report. Each row
 represents a parameter set to be passed to one report run.}
 
-\item{...}{Additional args passed to \code{\link{orderly_run}}}
+\item{...}{Additional args passed to \code{\link[=orderly_run]{orderly_run()}}}
 }
 \value{
 List of ids of newly created reports
@@ -31,5 +31,5 @@ params <- data.frame(nmin = c(0.2, 0.25))
 ids <- orderly::orderly_batch("other", params, root = path)
 }
 \seealso{
-\code{\link{orderly_run}} for details of report running
+\code{\link[=orderly_run]{orderly_run()}} for details of report running
 }

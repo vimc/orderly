@@ -49,7 +49,7 @@ No return value, this function is called only for its side effects
 \description{
 Migrate an orderly archive.  This is needed periodically when the
 orderly archive version changes.  If you get a message like
-\code{orderly archive needs migrating from a.b.c => x.y.z} then
+\verb{orderly archive needs migrating from a.b.c => x.y.z} then
 you need to run this function.  The archive version is at most
 equal to the package version.
 }

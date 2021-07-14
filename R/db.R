@@ -1,43 +1,39 @@
 ##' Connect to the orderly databases.  These should be treated as as
-##' \emph{read-only}.
+##' *read-only*.
 ##'
 ##' Orderly has several databases:
 ##'
-##' \describe{
+##' * `source`: All of the databases named in the `database` section
+##'   of the `orderly_config.yml`
 ##'
-##' \item{source}{All of the databases named in the \code{database}
-##'   section of the \code{orderly_config.yml}}
+##' * `destination`: The orderly index database (typically a SQLite
+##'   database stored at the orderly root)
 ##'
-##' \item{destination}{The orderly index database (typically a SQLite
-##' database stored at the orderly root)}
+##' * `csv`: The cache of database query results, in csv format
 ##'
-##' \item{csv}{The cache of database query results, in csv format}
-##'
-##' \item{rds}{The cache of database query results, in rds format}
-##'
-##' }
+##' * `rds`: The cache of database query results, in rds format
 ##'
 ##' @title Connect to orderly databases
 ##' @inheritParams orderly_list
 ##'
-##' @param type The type of connection to make (\code{source},
-##'   \code{destination}, \code{csv} or \code{rds}).
+##' @param type The type of connection to make (`source`,
+##'   `destination`, `csv` or `rds`).
 ##'
 ##' @param validate Logical, indicating if the database schema should
-##'   be validated on open (currently only applicable with \code{type
-##'   = "destination"}).  This is primarily intended for internal use.
+##'   be validated on open (currently only applicable with `type
+##'   = "destination"`).  This is primarily intended for internal use.
 ##'
-##' @param instance Used only by \code{type = "source"}, and used to
+##' @param instance Used only by `type = "source"`, and used to
 ##'   select the instance, where multiple instances are configured.
-##'   Use a single \emph{unnamed} character string to indicate an
+##'   Use a single *unnamed* character string to indicate an
 ##'   instance to match.  If given, then this name must be present in
 ##'   all databases where instances are listed in
-##'   \code{orderly_config.yml}, and will be ignored by all database
+##'   `orderly_config.yml`, and will be ignored by all database
 ##'   where instances are not given.  See the "orderly" vignette for
 ##'   further information.
 ##'
 ##' @return A database connection, or list of connections in the case
-##'   of \code{source}.
+##'   of `source`.
 ##'
 ##' @export
 ##' @examples
@@ -125,10 +121,10 @@ orderly_db_args <- function(x, config, name) {
 ##' essentially an index over all the metadata associated with
 ##' reports.  It is used by orderly itself, and can be used by
 ##' applications that extend orderly (e.g.,
-##' \href{https://github.com/vimc/orderly-web}{OrderlyWeb}).  All the
+##' [OrderlyWeb](https://github.com/vimc/orderly-web).  All the
 ##' data in this database can be rebuilt from files stored with the
 ##' committed (archive) orderly reports, using the
-##' \code{orderly_rebuild} function.
+##' `orderly_rebuild` function.
 ##'
 ##' @title Rebuild the report database
 ##'

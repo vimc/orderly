@@ -52,7 +52,7 @@ directory, must exist, and must not already be present in the
 orderly.yml}
 
 \item{name}{Name of the report to modify.  Like
-\code{\link{orderly_develop_start}} this can be \code{NULL} if
+\code{\link[=orderly_develop_start]{orderly_develop_start()}} this can be \code{NULL} if
 you have already set the working directory to be the source
 directory.}
 
@@ -80,8 +80,8 @@ must not already exist in the orderly.yml}
 }
 \value{
 Invisibly, this function returns information about the
-  file it would edit.  This information is primarily for debugging
-  purposes and the format is subject to change.
+file it would edit.  This information is primarily for debugging
+purposes and the format is subject to change.
 }
 \description{
 Add one or more resources to an \code{orderly.yml} file.

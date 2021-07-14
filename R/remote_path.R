@@ -2,7 +2,7 @@
 ##' are hosted at a different path.  This might be useful in cases
 ##' where you have access to an orderly repository via a network mount
 ##' or a synchronised folder (e.g., Dropbox, Box, etc).  More
-##' generally, \code{orderly_remote_path} implements an interface
+##' generally, `orderly_remote_path` implements an interface
 ##' used by orderly to abstract over different ways that orderly
 ##' repositories might be hosted remotely, including over HTTP APIs.
 ##'
@@ -12,14 +12,14 @@
 ##'
 ##' @param name Name of the remote
 ##'
-##' @return An \code{orderly_remote_path} object, with methods that
+##' @return An `orderly_remote_path` object, with methods that
 ##'   orderly will use in order to control this remote
 ##'
 ##' @export
-##' @seealso \code{\link{orderly_pull_dependencies}} and
-##'   \code{\link{orderly_pull_archive}}, which are the primary ways
+##' @seealso [orderly::orderly_pull_dependencies()] and
+##'   [orderly::orderly_pull_archive()], which are the primary ways
 ##'   these remote objects are used.  See also
-##'   \href{https://github.com/vimc/orderly-web}{OrderlyWeb} for a
+##'   [OrderlyWeb](https://github.com/vimc/orderly-web) for a
 ##'   system for hosting orderly repositories over an HTTP API.
 ##'
 ##' @example man-roxygen/example-remote.R
