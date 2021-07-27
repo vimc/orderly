@@ -96,10 +96,13 @@ recipe_validate_artefact1 <- function(artefact, config, filename) {
 
   assert_scalar_character(
     artefact$description,
-    sprintf("%s:artefacts[%d]$description:%s", filename, index))
-  assert_character(
-    artefact$filenames,
-    sprintf("%s:artefacts[%d]$filenames:%s", filename, index))
+    sprintf("%s:artefacts[%d]:description", filename, index))
+  err <- !vlapply(artefact$filenames, is.character)
+  if (any(err)) {
+    stop(sprintf(
+      "%s:artefacts[%d]:description must be character (check entry %s)",
+      filename, index, paste(which(err), collapse = ", ")))
+  }
 
   if (!(artefact$format %in% valid_formats())) {
     stop(sprintf(

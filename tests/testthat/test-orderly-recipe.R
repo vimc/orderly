@@ -1041,5 +1041,8 @@ test_that("Validate empty filenames in artefacts", {
            "    - mygraph.png")
   writeLines(yml, file.path(yml_path))
 
-  orderly_run("example", root = path)
+  expect_error(
+    orderly_recipe$new("example", orderly_config_$new(path)),
+    "orderly.yml:artefacts[1]:description must be character (check entry 1)",
+    fixed = TRUE)
 })
