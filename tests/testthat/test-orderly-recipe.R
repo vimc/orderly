@@ -1022,3 +1022,24 @@ test_that("list README.md as artefact",  {
     orderly_recipe$new("example", orderly_config_$new(path)),
     "README.md should not be listed as an artefact")
 })
+
+
+test_that("Validate empty filenames in artefacts", {
+  path <- test_prepare_orderly_example("minimal")
+  path_example <- file.path(path, "src", "example")
+  yml_path <- file.path(path_example, "orderly.yml")
+
+  yml <- c("data:",
+           "  dat:",
+           "    query: SELECT name, number FROM thing",
+           "script: script.R",
+           "artefacts:",
+           "  staticgraph:",
+           "    description: A graph of things",
+           "    filenames:",
+           "    -",
+           "    - mygraph.png")
+  writeLines(yml, file.path(yml_path))
+
+  orderly_run("example", root = path)
+})
