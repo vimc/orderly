@@ -255,7 +255,7 @@ prepare_orderly_git_example <- function(path = tempfile(), run_report = FALSE,
   git_checkout_branch(branch, root = path)
   git_checkout_branch(branch, root = path_upstream)
 
-  git_run(c("remote", "add", "origin", basename(path_upstream)), path)
+  git_run(c("remote", "add", "origin", normalize_path(path_upstream)), path)
   git_fetch(path)
   git_run(c("branch", "--set-upstream-to", sprintf("origin/%s", branch),
             branch), path)
