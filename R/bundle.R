@@ -209,3 +209,20 @@ orderly_bundle_info <- function(path) {
                    path, e$message), call. = FALSE))
   readRDS(file.path(tmp, "info.rds"))
 }
+
+
+## This is a temporary workaround for zip, which has an issue running
+## zip_list on large archives. Fix for zip will be submitted in a PR
+## soon.
+zip_list2 <- function(path) {
+  tryCatch(zip::zip_list(path),
+           error = function(e)
+             tryCatch(zip_list_base(path),
+                      error = function(e2) stop(e)))
+}
+
+
+zip_list_base <- function(path) {
+  list <- utils::unzip(path, list = TRUE)
+  data.frame(filename = list$Name, stringsAsFactors = FALSE)
+}
