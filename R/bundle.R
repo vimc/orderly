@@ -133,7 +133,7 @@ orderly_bundle_import <- function(path, root = NULL, locate = TRUE) {
 
   name <- info$name
   id <- info$id
-  contents <- zip::zip_list(path)$filename
+  contents <- zip_list2(path)$filename
 
   if (!(sprintf("%s/pack/orderly_run.rds", id) %in% contents)) {
     stop("This does not look like a complete bundle (one that has been run)")
@@ -190,12 +190,12 @@ orderly_bundle_status <- function(path) {
 
 orderly_bundle_complete <- function(path) {
   re <- "^[0-9]{8}-[0-9]{6}-[[:xdigit:]]{8}/pack/orderly_run.rds$"
-  any(grepl(re, zip::zip_list(path)$filename))
+  any(grepl(re, zip_list2(path)$filename))
 }
 
 
 orderly_bundle_info <- function(path) {
-  id <- fs::path_split(zip::zip_list(path)$filename[[1]])[[1]]
+  id <- fs::path_split(zip_list2(path)$filename[[1]])[[1]]
 
   tmp <- tempfile()
   dir_create(tmp)
