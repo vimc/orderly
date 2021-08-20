@@ -211,6 +211,15 @@ recipe_validate_packages <- function(packages, config, filename) {
 recipe_validate_script <- function(script, config, filename) {
   assert_scalar_character(script, sprintf("%s:script", filename))
   assert_file_exists(script, name = "Script file")
+  exprs <- parse(file = script, keep.source = TRUE)
+  for (i in seq_along(exprs)) {
+    if (is_global_rm(exprs[[i]])) {
+      stop(sprintf(
+        "Do not use 'rm(list = ls())' or similar in your script (%s:%s)",
+        script, utils::getSrcLocation(exprs[i], "line")))
+    }
+  }
+
   script
 }
 
@@ -593,4 +602,12 @@ recipe_file_inputs <- function(info) {
     source = file_info(info$sources),
     resource = file_info(info$resources),
     global = file_info(names(info$global_resources)))
+}
+
+
+is_global_rm <- function(expr) {
+  is.recursive(expr) &&
+    identical(expr[[1]], quote(rm)) &&
+    is.recursive(expr[[2]]) &&
+    identical(expr[[2]][[1]], quote(ls))
 }
