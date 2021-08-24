@@ -1153,3 +1153,18 @@ test_that("Can run a report with no fields, when all are optional", {
   on.exit(DBI::dbDisconnect(con, add = TRUE, after = FALSE))
   expect_equal(DBI::dbReadTable(con, "report_version")$id, id)
 })
+
+
+test_that("prevent use of 'rm(list = ls())' at top level", {
+  path <- test_prepare_orderly_example("minimal")
+  on.exit(unlink(path, recursive = TRUE))
+
+  path_src <- file.path(path, "src", "example", "script.R")
+  src <- readLines(path_src)
+  writeLines(c("rm(list = ls(all = TRUE))", src), path_src)
+
+  expect_error(
+    orderly_run("example", root = path),
+    "Do not use 'rm(list = ls())' or similar in your script",
+    fixed = TRUE)
+})

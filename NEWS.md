@@ -1,3 +1,7 @@
+# orderly 1.3.8
+
+* Prevent use of `rm(list = ls())` (or similar) at the top of scripts as this leads to hard-to-track errors, modifies the global environment and is [generally poor practice](https://www.tidyverse.org/blog/2017/12/workflow-vs-script/) (vimc-4810)
+
 # orderly 1.3.5
 
 * Fix backward compatibility with R 3.6.x, in the case of a report with zero of 2+ optional fields used (vimc-4766)
