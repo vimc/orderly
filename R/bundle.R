@@ -133,7 +133,7 @@ orderly_bundle_import <- function(path, root = NULL, locate = TRUE) {
 
   name <- info$name
   id <- info$id
-  contents <- zip::zip_list(path)$filename
+  contents <- zip_list2(path)$filename
 
   if (!(sprintf("%s/pack/orderly_run.rds", id) %in% contents)) {
     stop("This does not look like a complete bundle (one that has been run)")
@@ -190,12 +190,12 @@ orderly_bundle_status <- function(path) {
 
 orderly_bundle_complete <- function(path) {
   re <- "^[0-9]{8}-[0-9]{6}-[[:xdigit:]]{8}/pack/orderly_run.rds$"
-  any(grepl(re, zip::zip_list(path)$filename))
+  any(grepl(re, zip_list2(path)$filename))
 }
 
 
 orderly_bundle_info <- function(path) {
-  id <- fs::path_split(zip::zip_list(path)$filename[[1]])[[1]]
+  id <- fs::path_split(zip_list2(path)$filename[[1]])[[1]]
 
   tmp <- tempfile()
   dir_create(tmp)
@@ -208,4 +208,21 @@ orderly_bundle_info <- function(path) {
       stop(sprintf("Failed to extract bundle info from '%s'\n(%s)",
                    path, e$message), call. = FALSE))
   readRDS(file.path(tmp, "info.rds"))
+}
+
+
+## This is a temporary workaround for zip, which has an issue running
+## zip_list on large archives. Fix for zip will be submitted in a PR
+## soon.
+zip_list2 <- function(path) {
+  tryCatch(zip::zip_list(path),
+           error = function(e)
+             tryCatch(zip_list_base(path),
+                      error = function(e2) stop(e)))
+}
+
+
+zip_list_base <- function(path) {
+  list <- utils::unzip(path, list = TRUE)
+  data.frame(filename = list$Name, stringsAsFactors = FALSE)
 }
