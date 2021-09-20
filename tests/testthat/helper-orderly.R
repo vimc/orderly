@@ -224,5 +224,12 @@ test_prepare_orderly_git_example <- function(...) {
 
 test_prepare_orderly_example <- function(...) {
   skip_on_cran_windows()
+  ## rmarkdown/knitr now does not include markdown, even though it
+  ## seems to really be quite a strong dependency of it. Background is
+  ## here: https://github.com/yihui/knitr/issues/1864 - this situation
+  ## is pretty unfortunate that now every package that uses
+  ## rmarkdown/knitr needds to understand and implement the dependency
+  ## management that should be done elsewhere.
+  skip_if_not_installed("markdown")
   prepare_orderly_example(...)
 }
