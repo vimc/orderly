@@ -377,12 +377,12 @@ resolve_env <- function(x, used_in, error = TRUE, default = NULL) {
 }
 
 is_windows <- function() {
-  Sys.info()[["sysname"]] == "Windows"
+  tolower(Sys.info()[["sysname"]]) == "windows"
 }
 
 
 is_linux <- function() {
-  Sys.info()[["sysname"]] == "Linux"
+  tolower(Sys.info()[["sysname"]]) == "linux"
 }
 
 
