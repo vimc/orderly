@@ -85,7 +85,8 @@ orderly_bundle_pack <- function(path, name, parameters = NULL,
 ##' @rdname orderly_bundle_pack
 ##' @export
 orderly_bundle_run <- function(path, workdir = tempfile(), echo = TRUE,
-                             envir = NULL) {
+                               envir = NULL) {
+  assert_file_exists(path)
   dir_create(workdir)
 
   info <- orderly_bundle_info(path)
@@ -122,6 +123,7 @@ orderly_bundle_run <- function(path, workdir = tempfile(), echo = TRUE,
 ##' @rdname orderly_bundle_pack
 ##' @export
 orderly_bundle_import <- function(path, root = NULL, locate = TRUE) {
+  assert_file_exists(path)
   config <- orderly_config(root, locate)
 
   ## TODO(VIMC-3975): validate the archive before import
@@ -161,6 +163,7 @@ orderly_bundle_import <- function(path, root = NULL, locate = TRUE) {
 ##' @rdname orderly_bundle_pack
 ##' @export
 orderly_bundle_list <- function(path) {
+  assert_file_exists(path)
   f <- function(p) {
     info <- orderly_bundle_info(p)
     status <- orderly_bundle_status(p)
