@@ -28,6 +28,7 @@ RUN install2.r --error \
         ids \
         jsonlite \
         knitr \
+        markdown \
         remotes \
         rmarkdown \
         withr \
