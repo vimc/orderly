@@ -2,6 +2,7 @@ FROM rocker/r-ver:4.1.0
 
 RUN apt-get update && apt-get -y install --no-install-recommends \
   git \
+  libcurl4-openssl-dev \
   libgit2-dev \
   libssl-dev \
   libpq-dev \
@@ -14,7 +15,7 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
 COPY docker/Rprofile.site /usr/local/lib/R/etc/Rprofile.site
 
 # R package dependencies, including a few extras that we'll want handy
-RUN install2.r \
+RUN install2.r --error \
         DBI \
         R6 \
         RPostgres \
@@ -27,6 +28,7 @@ RUN install2.r \
         ids \
         jsonlite \
         knitr \
+        markdown \
         remotes \
         rmarkdown \
         withr \
