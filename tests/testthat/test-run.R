@@ -816,8 +816,7 @@ test_that("orderly_envir is available during run", {
 
   p <- file.path(path, "draft", "example", id)
   expect_equal(readLines(file.path(p, "env")), "a")
-  expect_equal(readRDS(path_orderly_run_rds(p))$env,
-               list(ORDERLY_B = "b"))
+  expect_equal(readRDS(path_orderly_run_rds(p))$env$ORDERLY_B, "b")
 })
 
 test_that("Use secrets in report", {
