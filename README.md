@@ -14,7 +14,7 @@
 > 2. a soldier who carries orders or performs minor tasks for an officer.
 
 
-`orderly` is a package designed to help make analysis more [reproducible](https://en.wikipedia.org/wiki/Reproducibility).  Its principal aim is to automate a series of basic steps in the process of writing analyses, making it easy to:
+`orderly` is a package designed to help make analysis more reproducible.  Its principal aim is to automate a series of basic steps in the process of writing analyses, making it easy to:
 
 * track all inputs into an analysis (packages, code, and data resources)
 * store multiple versions of an analysis where it is repeated
