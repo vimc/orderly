@@ -17,6 +17,7 @@ test_that("pack bundle", {
   workdir <- tempfile()
   zip <- orderly_bundle_run(res$path, workdir, echo = FALSE)
   expect_equal(dir(workdir), basename(zip$path))
+  expect_equal(dir(workdir), zip$filename)
   orderly_bundle_import(zip$path, root = path2)
 
   expect_equal(orderly_list_archive(path2),
@@ -59,6 +60,7 @@ test_that("can run a bundle in place if wanted", {
 
   zip <- orderly_bundle_run(res$path, path_bundles, echo = FALSE)
   expect_true(same_path(zip$path, res$path))
+  expect_equal(zip$filename, basename(zip$path))
 
   l2 <- orderly_bundle_list(path_bundles)
   l1$status <- "complete"
