@@ -857,3 +857,27 @@ test_that("canonical case ignores missing windows truncated elements", {
   expect_equal(file_canonical_case("aaa/BBB~1/ccc"),
                "aaa/BBB~1/ccc")
 })
+
+
+test_that("git_info skips where .git not found", {
+  skip_on_cran()
+  skip_if_not_installed("mockery")
+  mock_git_info_call <- mockery::mock(NULL, cycle = TRUE)
+  mockery::stub(git_info, "git_info_call", mock_git_info_call)
+
+  root <- tempfile()
+  dir.create(root)
+  on.exit(unlink(root, recursive = TRUE))
+  withr::with_options(
+    list(orderly.nogit = FALSE),
+    expect_null(git_info(root)))
+  mockery::expect_called(mock_git_info_call, 0)
+
+  dir.create(file.path(root, ".git"))
+  withr::with_options(
+    list(orderly.nogit = FALSE),
+    expect_null(git_info(root)))
+  mockery::expect_called(mock_git_info_call, 1)
+  expect_equal(mockery::mock_args(mock_git_info_call)[[1]],
+               list(root, c("rev-parse", "HEAD")))
+})

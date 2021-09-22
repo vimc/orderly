@@ -57,7 +57,7 @@ path_local <- orderly::orderly_example("demo")
 # a copy of the report "other", on which it depends:
 try(orderly::orderly_run("use_dependency", root = path_local))
 
-# We can "pull" depenencies of a report before running
+# We can "pull" dependencies of a report before running
 orderly::orderly_pull_dependencies("use_dependency", remote = remote,
                                    root = path_local)
 

@@ -146,6 +146,7 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
 
 orderly_pull_metadata <- function(name, id, root = NULL, locate = TRUE,
                                   remote = NULL) {
+  parameters <- NULL
   info <- pull_info(name, id, root, locate, remote, parameters)
   name <- info$name
   id <- info$id

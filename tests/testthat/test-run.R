@@ -1020,9 +1020,9 @@ test_that("failed run creates failed rds", {
   expect_true(file.exists(path_orderly_fail_rds(draft_dir)))
 
   failed_rds <- readRDS(path_orderly_fail_rds(draft_dir))
-  expect_equal(names(failed_rds),
-               c("session_info", "time", "env", "git", "error", "meta",
-                 "archive_version"))
+  expect_setequal(names(failed_rds),
+                  c("session_info", "time", "env", "git", "error", "meta",
+                    "archive_version"))
 
   expect_s3_class(failed_rds$error$error, "simpleError")
   expect_equal(failed_rds$error$error$message, "some error")

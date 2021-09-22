@@ -1,3 +1,7 @@
+# orderly 1.4.3
+
+* Orderly now only records git information where a `.git` directory is found at the orderly root (vimc-4866)
+
 # orderly 1.3.8
 
 * Prevent use of `rm(list = ls())` (or similar) at the top of scripts as this leads to hard-to-track errors, modifies the global environment and is [generally poor practice](https://www.tidyverse.org/blog/2017/12/workflow-vs-script/) (vimc-4810)
@@ -8,7 +12,7 @@
 
 # orderly 1.3.2
 
-* Allow partial pulling of orderly dependency trees, by passing `recursive = FALSE` to `orderly::orderly_pull_archive` and `orderly::orderly_pull_dependencies`. This can reduce the total amount of data transferred when you do not care as much about the integregity of the local archive (vimc-4320)
+* Allow partial pulling of orderly dependency trees, by passing `recursive = FALSE` to `orderly::orderly_pull_archive` and `orderly::orderly_pull_dependencies`. This can reduce the total amount of data transferred when you do not care as much about the integrity of the local archive (vimc-4320)
 
 # orderly 1.2.41
 

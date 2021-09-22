@@ -14,7 +14,7 @@
 > 2. a soldier who carries orders or performs minor tasks for an officer.
 
 
-`orderly` is a package designed to help make analysis more [reproducible](https://en.wikipedia.org/wiki/Reproducibility).  Its principal aim is to automate a series of basic steps in the process of writing analyses, making it easy to:
+`orderly` is a package designed to help make analysis more reproducible.  Its principal aim is to automate a series of basic steps in the process of writing analyses, making it easy to:
 
 * track all inputs into an analysis (packages, code, and data resources)
 * store multiple versions of an analysis where it is repeated
@@ -70,7 +70,7 @@ Then `orderly`:
 6. then runs the analysis
 7. verifies that the declared artefacts are produced
 
-It then stores metadata alongside the analysis including [md5 hashes](https://en.wikipedia.org/wiki/Hash_function) of all inputs and outputs, copies of data extracted from the database, a record of all R packages loaded at the end of the session, and (if using git) information about the git state (hash, branch and status).
+It then stores metadata alongside the analysis including hashes of all inputs and outputs, copies of data extracted from the database, a record of all R packages loaded at the end of the session, and (if using git) information about the git state (hash, branch and status).
 
 Then if one of the dependencies of a report changes (the used data, code, etc), we have metadata that can be queried to identify the likely source of the change.
 
