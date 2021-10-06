@@ -25,7 +25,7 @@ The OrderlyWeb server software provides a number of things
 
 1. A persistent copy of R running `orderly` that can run reports as needed using the `orderly.server::orderly_runner` function
 2. A web server that exposes a user-friendly web portal showing versions of orderly reports and an http api (this application is written in [Kotlin](https://kotlinlang.org))
-3. A [reverse proxy](https://en.wikipedia.org/wiki/Reverse_proxy) used to secure the application with https
+3. A reverse proxy used to secure the application with https
 
 A [diagram may help show how the pieces fit together](https://raw.githubusercontent.com/vimc/montagu-machine/master/docs/diagrams/OrderlyWeb%20architecture.png)
 

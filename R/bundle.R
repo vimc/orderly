@@ -115,7 +115,7 @@ orderly_bundle_run <- function(path, workdir = tempfile(), echo = TRUE,
 
   zip <- zip_dir(file.path(workdir, id))
   unlink(file.path(workdir, id), recursive = TRUE)
-  list(id = id, path = zip)
+  list(id = id, path = zip, filename = basename(zip))
 }
 
 

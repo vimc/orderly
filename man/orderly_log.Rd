@@ -48,24 +48,6 @@ format, etc.
 # We are going to log things below
 logging_was_enabled <- orderly::orderly_log_on()
 
-path <- orderly::orderly_example("minimal")
-
-# By default we get both orderly log messages (e.g.,
-# "[name] example") and the output of R when it runs the report:
-orderly::orderly_run("example", root = path)
-
-# Passing FALSE to the echo argument suppresses R's output but not
-# orderly messages:
-orderly::orderly_run("example", root = path, echo = FALSE)
-
-# Disabling the log suppresses orderly's messages but still
-# displays R's output:
-orderly::orderly_log_off()
-orderly::orderly_run("example", root = path)
-
-# And using both will prevent all output
-orderly::orderly_run("example", root = path, echo = FALSE)
-
 # About orderly log messages:
 # Orderly log messages have the form "[title] message"
 orderly::orderly_log_on()

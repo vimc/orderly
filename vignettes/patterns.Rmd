@@ -48,7 +48,7 @@ However, we still must synchronise the reports that have been run.  Of course ev
 
 What we want is that after a particular version of a report has been run, it is easy for other people to start depending on it.  To achieve this we need a method for getting the archive from one person's computer to another.
 
-For this discussion we will assume two researchers ["Alice" and "Bob"](https://en.wikipedia.org/wiki/Alice_and_Bob) rather than "Researcher A" and "Researcher B".
+For this discussion we will assume two researchers "Alice" and "Bob" (rather than "Researcher A" and "Researcher B").
 
 Alice develops a report `report-a` on her computer by running `orderly::orderly_new("report-a")` and working with `orderly::orderly_develop_start()` and `orderly::orderly_run()` until she is happy with the results.  She then creates a pull request, and Bob approves it (probably after checking that the report runs on his machine too) and merges it.
 
@@ -66,7 +66,7 @@ remote:
       path: $ORDERLY_PATH_DEFAULT_REMOTE
 ```
 
-This tells `orderly` that we will use a file-based remote source (i.e., a shared copy of orderly) and that the path to this source is determined by the [Environment variable](https://en.wikipedia.org/wiki/Environment_variable) `ORDERLY_PATH_DEFAULT_REMOTE`.  Using an environment variable is necessary here as this path will certainly differ between Alice and Bob.
+This tells `orderly` that we will use a file-based remote source (i.e., a shared copy of orderly) and that the path to this source is determined by the Environment variable `ORDERLY_PATH_DEFAULT_REMOTE`.  Using an environment variable is necessary here as this path will certainly differ between Alice and Bob.
 
 To fill in the environment variable we create a file `orderly_envir.yml` (which should be added to `.gitignore`) containing the path to the shared source.  For Alice, this might look like
 
@@ -112,7 +112,7 @@ As above, we use a single "source tree", kept on GitHub or similar.  However, so
 
 1. A persistent copy of R running `orderly` that can run reports as needed
 2. A web server that exposes a user-friendly web portal showing versions of orderly reports and an HTTP API (this application is written in [Kotlin](https://kotlinlang.org))
-3. A [reverse proxy](https://en.wikipedia.org/wiki/Reverse_proxy) used to secure the application with https
+3. A reverse proxy used to secure the application with https
 
 This [diagram may help show how the pieces fit together](https://raw.githubusercontent.com/vimc/montagu-machine/master/docs/diagrams/OrderlyWeb%20architecture.png).
 

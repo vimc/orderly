@@ -259,8 +259,7 @@ orderly_env <- function() {
 session_info <- function(path = ".") {
   list(session_info = utils::sessionInfo(),
        time = Sys.time(),
-       env = orderly_env(),
-       git = git_info(path))
+       env = orderly_env())
 }
 
 ## Because time handling is a total faff:
@@ -319,6 +318,9 @@ git_info_call <- function(root, args) {
 
 git_info <- function(root) {
   if (isTRUE(getOption("orderly.nogit", FALSE))) {
+    return(NULL)
+  }
+  if (is.null(root) || !file.exists(file.path(root, ".git"))) {
     return(NULL)
   }
   sha <- git_info_call(root, c("rev-parse", "HEAD"))
