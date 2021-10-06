@@ -71,3 +71,19 @@ git_pull <- function(root = NULL) {
   orderly_log("git", "pull")
   git_run("pull", root = root, check = TRUE)
 }
+
+git_show <- function(path, ref = NULL, root = NULL) {
+  if (is.null(ref)) {
+    ref <- "HEAD"
+  }
+  path <- sprintf("%s:%s", ref, path)
+  git_run(c("show", path), root = root, check = TRUE)
+}
+
+git_reports <- function(ref = NULL, root = NULL) {
+  if (is.null(ref)) {
+    ref <- "HEAD"
+  }
+  git_run(c("ls-tree", "--name-only", "-d", sprintf("%s:src/", ref)),
+          root = root, check = TRUE)
+}

@@ -203,3 +203,42 @@ test_that("git into db", {
   expect_equal(d$git_branch, "master")
   expect_equal(d$git_clean, 1)
 })
+
+
+test_that("git show", {
+  path <- unzip_git_demo()
+  yml <- file.path("src/minimal/orderly.yml")
+  out <- git_show(yml, root = path)
+  expect_equal(out$output, readLines(file.path(path, yml)))
+
+  ## Reading from another branch
+  master <- git_checkout_branch("example", root = path, create = TRUE)
+  writeLines("test new line", file.path(path, yml))
+  git_run(c("add", "."), root = path, check = TRUE)
+  git_run(c("commit", "-m", "'add line'"), root = path, check = TRUE)
+  hash <- git_run(c("rev-parse", "--short", "HEAD"), root = path, check = TRUE)
+  contents <- readLines(file.path(path, yml))
+  git_checkout_branch(master, root = path)
+
+  out <- git_show(yml, ref = hash$output, root = path)
+  expect_equal(out$output, contents)
+})
+
+test_that("can list report for a git ref", {
+  path <- unzip_git_demo()
+  reports <- git_reports(root = path)
+  expect_setequal(reports$output, c("global", "minimal"))
+
+  ## List on another branch
+  master <- git_checkout_branch("example", root = path, create = TRUE)
+  dir.create(file.path(path, "src/new_report"))
+  writeLines("test new line", file.path(path, "src/new_report/orderly.yml"))
+  git_run(c("add", "."), root = path, check = TRUE)
+  git_run(c("commit", "-m", "'add line'"), root = path, check = TRUE)
+  hash <- git_run(c("rev-parse", "--short", "HEAD"), root = path, check = TRUE)
+  contents <- readLines(file.path(path, "src/new_report/orderly.yml"))
+  git_checkout_branch(master, root = path)
+
+  reports <- git_reports(root = path, ref = hash$output)
+  expect_setequal(reports$output, c("global", "minimal", "new_report"))
+})

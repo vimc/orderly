@@ -629,3 +629,27 @@ test_that("Sensible error message if query fails", {
                          remote = remote, root = path_local),
     "Failed to find suitable version of 'other' with query:")
 })
+
+test_that("can get upstream dependencies", {
+  path <- prepare_orderly_example("depends", testing = TRUE, git = TRUE)
+
+  deps <- orderly_dependencies(c("example", "depend", "depend2"),
+                               root = path, direction = "upstream")
+  expect_equal(deps, list(
+    example = NULL,
+    depend = "example",
+    depend2 = "example"
+  ))
+})
+
+test_that("can get downstream dependencies", {
+  path <- prepare_orderly_example("depends", testing = TRUE, git = TRUE)
+
+  deps <- orderly_dependencies(c("example", "depend", "depend2"),
+                               root = path, direction = "downstream")
+  expect_equal(deps, list(
+    example = c("depend", "depend2"),
+    depend = NULL,
+    depend2 = "depend3"
+  ))
+})

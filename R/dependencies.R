@@ -105,6 +105,84 @@ orderly_graph <- function(name, id = "latest", root = NULL, locate = TRUE,
 }
 
 
+##' Get the dependencies or dependents of a set of reports from orderly src
+##'
+##' For a set of reports find its immediate dependencies (when
+##' `direction = "upstream"`) i.e. the reports which this report depends on
+##' or its immediate dependents (when `direction = "downstream"`) i.e. the
+##' reports which use this report.
+##'
+##' @inheritParams orderly_list
+##' @param reports Set of report names to get dependencies or dependents of
+##' @param ref Git ref to get dependencies on, if NULL uses currently checked
+##'   out branch
+##' @param direction Downstream to get dependencies of `reports` or upstream
+##'   to get reports which depend on `reports`.
+##'
+##' @return A list with names matching `reports` and values their
+##'   dependencies or dependents
+##' @export
+##'
+##' @examples
+##' path <- orderly::orderly_example("demo")
+##'
+##' orderly::orderly_dependencies("use_dependency_2", root = path)
+##' orderly::orderly_dependencies("use_dependency_2", direction = "upstream")
+orderly_dependencies <- function(reports, root = NULL, locate = TRUE,
+                                 ref = NULL, direction = "downstream") {
+  assert_character(reports)
+  if (!is.null(ref)) {
+    assert_scalar_character(ref)
+  }
+  assert_scalar_character(direction)
+  direction <- match_value(direction, c("upstream", "downstream"))
+
+  config <- orderly_config(root, locate)
+
+  if (direction == "downstream") {
+    get_downstream_dependencies(reports, ref, config)
+  } else {
+    get_upstream_dependencies(reports, ref, config)
+  }
+}
+
+get_downstream_dependencies <- function(reports, ref, config) {
+  all_reports <- git_reports(ref = ref, root = config$root)$output
+  all_deps <- setNames(lapply(all_reports, report_dependencies, ref, config),
+                       all_reports)
+  all_deps <- all_deps[vlapply(all_deps, function(dep) !is.null(dep))]
+  report_dependents <- function(name) {
+    present <- vlapply(all_deps, function(dependencies) {
+      name %in% dependencies
+    })
+    dependents <- names(all_deps)[present]
+    if (length(dependents) == 0) {
+      dependents <- NULL
+    }
+    dependents
+  }
+
+  setNames(lapply(reports, report_dependents), reports)
+}
+
+get_upstream_dependencies <- function(reports, ref, config) {
+  setNames(lapply(reports, report_dependencies, ref, config), reports)
+}
+
+report_dependencies <- function(name, ref, config) {
+  path <- file.path("src", name, "orderly.yml")
+  lines <- git_show(path, ref = ref, root = config$root)
+  depends <- yaml_load(lines$output)$depends
+  if (is.null(depends)) {
+    return(NULL)
+  }
+  ## Deal with yaml weirdness:
+  if (is.null(names(depends))) {
+    depends <- ordered_map_to_list(depends)
+  }
+  unique(names(depends))
+}
+
 orderly_graph_archive <- function(name, id, config, direction = "downstream",
                                   propagate = TRUE, max_depth = Inf,
                                   recursion_limit = 100, show_all = FALSE) {
