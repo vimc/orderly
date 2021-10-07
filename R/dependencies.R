@@ -172,7 +172,9 @@ get_upstream_dependencies <- function(reports, ref, config) {
 report_dependencies <- function(name, ref, config) {
   path <- file.path("src", name, "orderly.yml")
   lines <- git_show(path, ref = ref, root = config$root)
-  depends <- yaml_load(lines$output)$depends
+  raw <- yaml_load(lines$output)
+  yml <- recipe_migrate(raw, config, path)
+  depends <- yml$depends
   if (is.null(depends)) {
     return(NULL)
   }
