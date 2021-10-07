@@ -122,12 +122,6 @@ orderly_graph <- function(name, id = "latest", root = NULL, locate = TRUE,
 ##' @return A list with names matching `reports` and values their
 ##'   dependencies or dependents
 ##' @export
-##'
-##' @examples
-##' path <- orderly::orderly_example("demo")
-##'
-##' orderly::orderly_dependencies("use_dependency_2", root = path)
-##' orderly::orderly_dependencies("use_dependency_2", direction = "upstream")
 orderly_dependencies <- function(reports, root = NULL, locate = TRUE,
                                  ref = NULL, direction = "downstream") {
   assert_character(reports)

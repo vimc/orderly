@@ -40,9 +40,3 @@ For a set of reports find its immediate dependencies (when
 or its immediate dependents (when \code{direction = "downstream"}) i.e. the
 reports which use this report.
 }
-\examples{
-path <- orderly::orderly_example("demo")
-
-orderly::orderly_dependencies("use_dependency_2", root = path)
-orderly::orderly_dependencies("use_dependency_2", direction = "upstream")
-}
