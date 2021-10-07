@@ -133,6 +133,8 @@ orderly_dependencies <- function(reports, root = NULL, locate = TRUE,
   assert_character(reports)
   if (!is.null(ref)) {
     assert_scalar_character(ref)
+  } else {
+    ref <- "HEAD"
   }
   assert_scalar_character(direction)
   direction <- match_value(direction, c("upstream", "downstream"))
@@ -148,6 +150,14 @@ orderly_dependencies <- function(reports, root = NULL, locate = TRUE,
 
 get_downstream_dependencies <- function(reports, ref, config) {
   all_reports <- git_reports(ref = ref, root = config$root)$output
+  missing_reports <- reports[!(reports %in% all_reports)]
+  if (length(missing_reports > 0)) {
+    stop(sprintf("%s %s at git ref '%s' cannot be found.",
+                 ngettext(length(missing_reports), "Report with name",
+                          "Reports with names"),
+                 paste0(paste0("'", missing_reports, "'"), collapse = ", "),
+                 ref))
+  }
   all_deps <- setNames(lapply(all_reports, report_dependencies, ref, config),
                        all_reports)
   all_deps <- all_deps[vlapply(all_deps, function(dep) !is.null(dep))]
@@ -171,7 +181,11 @@ get_upstream_dependencies <- function(reports, ref, config) {
 
 report_dependencies <- function(name, ref, config) {
   path <- file.path("src", name, "orderly.yml")
-  lines <- git_show(path, ref = ref, root = config$root)
+  lines <- git_show(path, ref = ref, root = config$root, check = FALSE)
+  if (!lines$success) {
+    stop(sprintf("Report with name '%s' at git ref '%s' cannot be found.",
+                 name, ref))
+  }
   raw <- yaml_load(lines$output)
   yml <- recipe_migrate(raw, config, path)
   depends <- yml$depends

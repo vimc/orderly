@@ -72,12 +72,12 @@ git_pull <- function(root = NULL) {
   git_run("pull", root = root, check = TRUE)
 }
 
-git_show <- function(path, ref = NULL, root = NULL) {
+git_show <- function(path, ref = NULL, root = NULL, check = FALSE) {
   if (is.null(ref)) {
     ref <- "HEAD"
   }
   path <- sprintf("%s:%s", ref, path)
-  git_run(c("show", path), root = root, check = TRUE)
+  git_run(c("show", path), root = root, check = check)
 }
 
 git_reports <- function(ref = NULL, root = NULL) {

@@ -630,7 +630,7 @@ test_that("Sensible error message if query fails", {
     "Failed to find suitable version of 'other' with query:")
 })
 
-test_that("can get upstream dependencies", {
+test_that("orderly_dependencies: can get upstream dependencies", {
   path <- prepare_orderly_example("depends", testing = TRUE, git = TRUE)
 
   deps <- orderly_dependencies(c("example", "depend", "depend2"),
@@ -640,9 +640,29 @@ test_that("can get upstream dependencies", {
     depend = "example",
     depend2 = "example"
   ))
+
+  ## Setup another report on a branch to check works with different ref
+  master <- git_checkout_branch("example", root = path, create = TRUE)
+  new_report <- file.path(path, "src/depend4")
+  dir.create(new_report)
+  file.copy(list.files(file.path(path, "src/depend2"), full.names = TRUE),
+            file.path(path, "src/depend4"), recursive = TRUE)
+  git_run(c("add", "."), root = path, check = TRUE)
+  git_run(c("commit", "-m", "'Add depend4 report'"), root = path, check = TRUE)
+  hash <- git_run(c("rev-parse", "--short", "HEAD"), root = path, check = TRUE)
+  git_checkout_branch(master, root = path)
+
+  deps <- orderly_dependencies(c("example", "depend", "depend4"),
+                               root = path, ref = hash$output,
+                               direction = "upstream")
+  expect_equal(deps, list(
+    example = NULL,
+    depend = "example",
+    depend4 = "example"
+  ))
 })
 
-test_that("can get downstream dependencies", {
+test_that("orderly_dependencies: can get downstream dependencies", {
   path <- prepare_orderly_example("depends", testing = TRUE, git = TRUE)
 
   deps <- orderly_dependencies(c("example", "depend", "depend2"),
@@ -652,4 +672,41 @@ test_that("can get downstream dependencies", {
     depend = NULL,
     depend2 = "depend3"
   ))
+
+  ## Setup another report on a branch to check works with different ref
+  master <- git_checkout_branch("example", root = path, create = TRUE)
+  new_report <- file.path(path, "src/depend4")
+  dir.create(new_report)
+  file.copy(list.files(file.path(path, "src/depend2"), full.names = TRUE),
+            file.path(path, "src/depend4"), recursive = TRUE)
+  git_run(c("add", "."), root = path, check = TRUE)
+  git_run(c("commit", "-m", "'Add depend4 report'"), root = path, check = TRUE)
+  hash <- git_run(c("rev-parse", "--short", "HEAD"), root = path, check = TRUE)
+  git_checkout_branch(master, root = path)
+
+  deps <- orderly_dependencies(c("example", "depend", "depend4"),
+                               root = path, ref = hash$output,
+                               direction = "downstream")
+  expect_equal(deps, list(
+    example = c("depend", "depend2", "depend4"),
+    depend = NULL,
+    depend4 = NULL
+  ))
+})
+
+test_that("orderly_dependencies fails with missing reports", {
+  path <- prepare_orderly_example("depends", testing = TRUE, git = TRUE)
+
+  expect_error(
+    orderly_dependencies("missing", root = path, direction = "downstream"),
+    "Report with name 'missing' at git ref 'HEAD' cannot be found.")
+
+  expect_error(
+    orderly_dependencies(c("missing", "report"), root = path,
+                         direction = "downstream"),
+    "Reports with names 'missing', 'report' at git ref 'HEAD' cannot be found.")
+
+  expect_error(
+    orderly_dependencies("missing", root = path, direction = "upstream"),
+    "Report with name 'missing' at git ref 'HEAD' cannot be found.")
 })
