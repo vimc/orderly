@@ -1,28 +1,3 @@
-report_vertex <- R6::R6Class(
-  "report_vertex",
-  public = list(
-    parent = NULL,
-    children = list(),
-    name = NULL,
-    id = NULL,
-    out_of_date = NULL,
-    initialize = function(parent, name, id, out_of_date) {
-      # add some type safety here
-      self$parent <- parent
-      self$name <- name
-      self$id <- id
-      self$out_of_date <- out_of_date
-    },
-    add_child = function(child) {
-      self$children <- append(self$children, list(child))
-    },
-    format = function() {
-      sprintf("%s [%s]", self$name, self$id)
-    }
-  )
-)
-
-
 report_tree <- R6::R6Class(
   "report_tree",
   private = list(
@@ -42,7 +17,7 @@ report_tree <- R6::R6Class(
     ##   of the form "│       │   " (i.e. some combination of "│   "
     ##   and "    ")
     ## * tree_string is final printed string (with line breaks and colouring)
-    format_helper = function(vertex, prefix, tree_string, chars) {
+    format_helper = function(name, id, prefix, tree_string, chars) {
       ## if the tree has a warning message, append it to the front in the red
       if (!is.null(private$message)) {
         tree_string <- paste(tree_string, crayon::red(private$message), "\n",
@@ -51,16 +26,17 @@ report_tree <- R6::R6Class(
       }
 
       # append the current vertex to the end of the print string
-      console_colour <- if (vertex$out_of_date) crayon::red else crayon::blue
+      console_colour <- if (FALSE) crayon::red else crayon::blue
       tree_string <- sprintf("%s%s\n", tree_string,
-                                       console_colour(sprintf("%s [%s]", vertex$name, vertex$id)))
+                                       console_colour(sprintf("%s [%s]", name, id)))
 
-      number_children <- length(vertex$children)
+      children <- self$edges[self$edges$name == name & self$edges$id == id, ]
+      number_children <- nrow(children)
       if (number_children > 0) { ## print children in necessary
-        i <- 1 ## we need to keep track of when we are at the last child
-        for (child in vertex$children) {
+        for (i in seq_len(number_children)) {
           is_last <- (i == number_children)
 
+          child <- children[i, ]
           console_colour <-
             if (child$out_of_date) crayon::red else crayon::blue
 
@@ -75,11 +51,10 @@ report_tree <- R6::R6Class(
           prefix <- sprintf("%s%s   ", prefix, vertical)
 
           tree_string <- private$format_helper(
-            child, prefix, tree_string, chars)
+            child$child, child$child_id, prefix, tree_string, chars)
 
           ## decrease the indentation by 4 characters
           prefix <- substr(prefix, 1, nchar(prefix) - 4)
-          i <- i + 1L
         }
       }
       tree_string
@@ -89,23 +64,24 @@ report_tree <- R6::R6Class(
     roots = NULL,
     direction = NULL,
     depth = NULL,
-    edges = data.frame(name = character(0),
-                       id = character(0),
-                       child = character(0),
-                       child_id = character(0),
-                       out_of_date = character(0)),
+    edges = NULL,
     initialize = function(roots, direction, depth) {
       self$roots <- roots
       self$direction <- direction
       self$depth <- depth
+      self$edges <- data.frame(name = character(0),
+                               id = character(0),
+                               child = character(0),
+                               child_id = character(0),
+                               out_of_date = character(0))
     },
     add_edges = function(edges) {
-      if (colnames(edges) != colnames(edges)) {
+      if (!(all(colnames(self$edges) %in% colnames(edges)))) {
         stop("Edges does not match expected colnames, must have columns %s",
              paste0(colnames(edges), collapse = ", "))
       }
-      self$edges <- union(self$edges, edges)
-    }
+      self$edges <- rbind(self$edges, edges)
+    },
     # add_child = function(parent, name, id, out_of_date) {
     #   child <- report_vertex$new(parent, name, id, out_of_date)
     #   parent$add_child(child)
@@ -117,7 +93,14 @@ report_tree <- R6::R6Class(
       old_message
     },
     format = function(utf8 = NULL) {
-      vcapply(self$roots, private$format_helper, "", "", tree_chars(utf8))
+      names <- vcapply(self$roots, "[[", "name")
+      ids <- vcapply(self$roots, "[[", "id")
+      chars <- tree_chars(utf8)
+      chars <- lapply(self$roots, function(x) {
+        chars
+      })
+      strings <- Map(private$format_helper, names, ids, "", "", chars)
+      paste0(strings, collapse = "\n")
     }
   )
 )
