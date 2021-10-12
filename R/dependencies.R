@@ -75,9 +75,9 @@
 ##' @param ref Git ref to use for calculating graph. Only supported when
 ##'   `use = "src"`. If NULL then uses currently checked out branch.
 ##'
-##' @param careful If `TRUE` and `use = "src"` then will build migrate and
+##' @param validate If `TRUE` and `use = "src"` then will build, migrate and
 ##'   validate the full `orderly.yml` for each report. If `FALSE` then
-##'   this is skipped. Not supported when `use = "archive"`.
+##'   validation is skipped. Not supported when `use = "archive"`.
 ##'
 ##' @inheritParams orderly_list
 ##'
@@ -100,15 +100,15 @@ orderly_graph <- function(name, id = "latest", root = NULL, locate = TRUE,
                           direction = "downstream", propagate = TRUE,
                           max_depth = Inf, recursion_limit = 100,
                           show_all = FALSE, use = "archive", ref = NULL,
-                          careful = TRUE) {
+                          validate = TRUE) {
   config <- orderly_config(root, locate)
   use <- match_value(use, c("archive", "src"))
   if (use == "archive") {
     if (!is.null(ref)) {
       stop('Non-null ref arg only supported when use = "src"')
     }
-    if (!careful) {
-      stop(paste0('Building graph with careful = FALSE ',
+    if (!validate) {
+      stop(paste0('Building graph with validate = FALSE ',
                   'not supported when use = "archive"'))
     }
     if (length(name) > 1) {
@@ -120,7 +120,7 @@ orderly_graph <- function(name, id = "latest", root = NULL, locate = TRUE,
   } else {
     ## id, propagate ignored
     orderly_graph_src(name, config, direction, max_depth, recursion_limit,
-                      show_all, ref, careful)
+                      show_all, ref, validate)
   }
 }
 
@@ -532,7 +532,7 @@ build_tree <- function(name, id, depth = 100, limit = 100, parent = NULL,
   ## A remark on `out-of-date-ness`
   ## We only flag a report as out-of-date when it depends on artefacts from
   ## another report and the artefacts it used differ from the artefacts in the
-  ## latest version of the other reprot.
+  ## latest version of the other report.
   ## In particular the following reports will never be flagged as out-of-date
   ## * A report that uses no artefacts
   ## * A report that only uses deterministic artefacts (i.e. artefacts that

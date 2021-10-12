@@ -27,8 +27,6 @@ report_tree <- R6::R6Class(
   "report_tree",
   private = list(
     message = NULL,
-    direction = NULL,
-    vertices = NULL,
     ## recursive tree printer, the output is of the form
     ## report A [20190416-114345-c44facf2]
     ## ├──report B [20190416-130945-4a2ba689]
@@ -55,7 +53,7 @@ report_tree <- R6::R6Class(
       # append the current vertex to the end of the print string
       console_colour <- if (vertex$out_of_date) crayon::red else crayon::blue
       tree_string <- sprintf("%s%s\n", tree_string,
-                                       console_colour(vertex$format()))
+                                       console_colour(sprintf("%s [%s]", vertex$name, vertex$id)))
 
       number_children <- length(vertex$children)
       if (number_children > 0) { ## print children in necessary
@@ -88,48 +86,38 @@ report_tree <- R6::R6Class(
     }
   ),
   public = list(
-    root = NULL,
-    initialize = function(root, direction) {
-      private$vertices <- append(private$vertices, list(root))
-      self$root <- root
-      private$message <- NULL
-      private$direction <- direction
+    roots = NULL,
+    direction = NULL,
+    depth = NULL,
+    edges = data.frame(name = character(0),
+                       id = character(0),
+                       child = character(0),
+                       child_id = character(0),
+                       out_of_date = character(0)),
+    initialize = function(roots, direction, depth) {
+      self$roots <- roots
+      self$direction <- direction
+      self$depth <- depth
     },
-    add_child = function(parent, name, id, out_of_date) {
-      child <- report_vertex$new(parent, name, id, out_of_date)
-      parent$add_child(child)
-      private$vertices <- append(private$vertices, list(child))
-      child
-    },
+    add_edges = function(edges) {
+      if (colnames(edges) != colnames(edges)) {
+        stop("Edges does not match expected colnames, must have columns %s",
+             paste0(colnames(edges), collapse = ", "))
+      }
+      self$edges <- union(self$edges, edges)
+    }
+    # add_child = function(parent, name, id, out_of_date) {
+    #   child <- report_vertex$new(parent, name, id, out_of_date)
+    #   parent$add_child(child)
+    #   child
+    # },
     set_message = function(new_message) {
       old_message <- private$message
       private$message <- new_message
       old_message
     },
-    get_direction = function() {
-      private$direction
-    },
     format = function(utf8 = NULL) {
-
-      private$format_helper(self$root, "", "", tree_chars(utf8))
-    }
-  )
-)
-
-
-multi_tree <- R6::R6Class(
-  "multi_tree",
-  public = list(
-    trees = NULL,
-    initialize = function(report_trees) {
-      self$trees <- report_trees
-    },
-
-    format = function(utf8 = NULL) {
-      strings <- vcapply(self$trees, function(tree) {
-        tree$format(utf8)
-      })
-      paste0(strings, collapse = "\n")
+      vcapply(self$roots, private$format_helper, "", "", tree_chars(utf8))
     }
   )
 )

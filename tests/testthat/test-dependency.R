@@ -387,6 +387,39 @@ test_that("can't get dependencies for nonexistant report", {
   expect_error(
     orderly_graph_src("missing", config, "upstream"),
     "Unknown source report 'missing'")
+
+  expect_error(
+    orderly_graph_src(c("missing1", "example", "missing2"), config, "upstream"),
+    "Unknown source reports 'missing1', 'missing2'.")
+})
+
+
+test_that("error thrown if trying to pass ref in repo without git", {
+  path <- test_prepare_orderly_example("minimal")
+  expect_error(
+    orderly_graph("example", root = path, direction = "upstream", ref = "HEAD"),
+    "Non-null ref arg only supported when use = \"src\"")
+  expect_error(
+    orderly_graph("example", root = path, direction = "upstream", ref = "HEAD",
+                  use = "src"),
+    "git not supported for this orderly repo")
+})
+
+
+test_that("validate only supported when reading graph from src", {
+  path <- test_prepare_orderly_example("minimal")
+  expect_error(
+    orderly_graph("example", root = path, direction = "upstream",
+                  validate = FALSE),
+    "Building graph with validate = FALSE not supported when use = \"archive\"")
+})
+
+
+test_that("building graph from archive only supports 1 report at a time", {
+  path <- test_prepare_orderly_example("minimal")
+  expect_error(
+    orderly_graph(c("example", "minimal"), root = path, direction = "upstream"),
+    "Graph can only be generated for a single report when use = \"archive\"")
 })
 
 
@@ -630,12 +663,12 @@ test_that("Sensible error message if query fails", {
     "Failed to find suitable version of 'other' with query:")
 })
 
-test_that("orderly_dependencies: can get upstream dependencies", {
+test_that("orderly_graph: can get upstream dependencies in quick mode", {
   path <- prepare_orderly_example("depends", testing = TRUE, git = TRUE)
 
   deps <- orderly_graph(c("example", "depend", "depend2"),
                         root = path, direction = "upstream",
-                        use = "src", careful = FALSE)
+                        use = "src", validate = FALSE)
   expect_equal(deps, list(
     example = NULL,
     depend = "example",
@@ -656,7 +689,7 @@ test_that("orderly_dependencies: can get upstream dependencies", {
   deps <- orderly_graph(c("example", "depend", "depend4"),
                         root = path, ref = hash$output,
                         direction = "upstream", use = "src",
-                        careful = FALSE)
+                        validate = FALSE)
   expect_equal(deps, list(
     example = NULL,
     depend = "example",
@@ -667,8 +700,9 @@ test_that("orderly_dependencies: can get upstream dependencies", {
 test_that("orderly_dependencies: can get downstream dependencies", {
   path <- prepare_orderly_example("depends", testing = TRUE, git = TRUE)
 
-  deps <- orderly_dependencies(c("example", "depend", "depend2"),
-                               root = path, direction = "downstream")
+  deps <- orderly_graph(c("example", "depend", "depend2"),
+                        root = path, use = "src",
+                        direction = "downstream", validate = FALSE)
   expect_equal(deps, list(
     example = c("depend", "depend2"),
     depend = NULL,
@@ -686,29 +720,12 @@ test_that("orderly_dependencies: can get downstream dependencies", {
   hash <- git_run(c("rev-parse", "--short", "HEAD"), root = path, check = TRUE)
   git_checkout_branch(master, root = path)
 
-  deps <- orderly_dependencies(c("example", "depend", "depend4"),
-                               root = path, ref = hash$output,
-                               direction = "downstream")
+  deps <- orderly_graph(c("example", "depend", "depend4"),
+                        root = path, use = "src", ref = hash$output,
+                        direction = "downstream", validate = FALSE)
   expect_equal(deps, list(
     example = c("depend", "depend2", "depend4"),
     depend = NULL,
     depend4 = NULL
   ))
-})
-
-test_that("orderly_dependencies fails with missing reports", {
-  path <- prepare_orderly_example("depends", testing = TRUE, git = TRUE)
-
-  expect_error(
-    orderly_dependencies("missing", root = path, direction = "downstream"),
-    "Report with name 'missing' at git ref 'HEAD' cannot be found.")
-
-  expect_error(
-    orderly_dependencies(c("missing", "report"), root = path,
-                         direction = "downstream"),
-    "Reports with names 'missing', 'report' at git ref 'HEAD' cannot be found.")
-
-  expect_error(
-    orderly_dependencies("missing", root = path, direction = "upstream"),
-    "Report with name 'missing' at git ref 'HEAD' cannot be found.")
 })

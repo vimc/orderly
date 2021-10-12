@@ -1,38 +1,43 @@
 orderly_graph_src <- function(name, config, direction = "downstream",
                               max_depth = Inf, recursion_limit = 100,
-                              show_all = FALSE, ref = NULL, careful = TRUE) {
+                              show_all = FALSE, ref = NULL, validate = TRUE) {
   ## Start by reading all the src files; this would ideally be done
   ## with some caching layer I think.  The other option would be to
   ## make sure that we can rip through this really fast by not
   ## validating everything on the recipe read (just migrating) then
   ## dealing with just the depends.
+  if (!is.null(ref)) {
+    assert_has_git(config$root)
+  }
   all_reports <- orderly_list_internal(config, ref)
 
-  missing_reports <- reports[!(reports %in% all_reports)]
+  missing_reports <- name[!(name %in% all_reports)]
   if (length(missing_reports > 0)) {
-    stop(sprintf("%s %s at git ref '%s' cannot be found.",
-                 ngettext(length(missing_reports), "Report with name",
-                          "Reports with names"),
-                 paste0(paste0("'", missing_reports, "'"), collapse = ", "),
-                 ref))
-  }
-
-  missing <- !(name %in% all_reports)
-  if (any(missing)) {
-    stop(sprintf("Unknown source report '%s'",
-                 paste0(name[missing], collapse = ", ")), call. = FALSE)
-  }
-
-  if (careful) {
+    ref_msg <- ""
     if (!is.null(ref)) {
-      stop("Non-null ref not supported when reading yml with careful = TRUE")
+      ref_msg <- sprintf(" at git ref '%s'", ref)
+    }
+    stop(sprintf("%s %s%s.",
+                 ngettext(length(missing_reports), "Unknown source report",
+                          "Unknown source reports"),
+                 paste0(paste0("'", missing_reports, "'"), collapse = ", "),
+                 ref_msg))
+  }
+
+  if (validate) {
+    if (!is.null(ref)) {
+      stop("Non-null ref not supported when reading yml with validate = TRUE")
     }
     src <- lapply(all_reports, orderly_recipe$new, config, develop = TRUE)
     names(src) <- all_reports
     deps <- lapply(src, function(x) unique(x$depends[c("name", "id")]))
   } else {
-    deps <- lapply(all_reports, read_yml_quick, config, ref)
-    names(deps) <- all_reports
+    if (is.null(ref)) {
+      ##TODO
+    } else {
+      deps <- lapply(all_reports, read_yml_quick, config, ref)
+      names(deps) <- all_reports
+    }
   }
 
   ## Conveying the version information here is super difficult; if
@@ -60,11 +65,7 @@ orderly_graph_src <- function(name, config, direction = "downstream",
 
 read_yml_quick <- function(name, config, ref) {
   path <- file.path("src", name, "orderly.yml")
-  lines <- git_show(path, ref = ref, root = config$root, check = FALSE)
-  if (!lines$success) {
-    stop(sprintf("Report with name '%s' at git ref '%s' cannot be found.",
-                 name, ref))
-  }
+  lines <- git_show(path, ref = ref, root = config$root, check = TRUE)
   raw <- yaml_load(lines$output)
   yml <- recipe_migrate(raw, config, path)
   depends <- yml$depends

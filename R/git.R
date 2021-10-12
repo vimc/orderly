@@ -87,3 +87,9 @@ git_reports <- function(ref = NULL, root = NULL) {
   git_run(c("ls-tree", "--name-only", "-d", sprintf("%s:src/", ref)),
           root = root, check = TRUE)$output
 }
+
+assert_has_git <- function(root) {
+  if (is.null(root) || !file.exists(file.path(root, ".git"))) {
+    stop("git not supported for this orderly repo")
+  }
+}
