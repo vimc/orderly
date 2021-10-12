@@ -36,7 +36,15 @@ version_id_re <- "^([0-9]{8}-[0-9]{6})-([[:xdigit:]]{4})([[:xdigit:]]{4})$"
 ##' orderly::orderly_list(path)
 orderly_list <- function(root = NULL, locate = TRUE) {
   config <- orderly_config(root, locate)
-  basename(list_dirs(path_src(config$root)))
+  orderly_list_internal(config)
+}
+
+orderly_list_internal <- function(config, ref = NULL) {
+  if (is.null(ref)) {
+    basename(list_dirs(path_src(config$root)))
+  } else {
+    git_reports(ref, config$root)
+  }
 }
 
 ##' List draft and archived reports.  This returns a data.frame with

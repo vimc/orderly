@@ -110,7 +110,26 @@ report_tree <- R6::R6Class(
       private$direction
     },
     format = function(utf8 = NULL) {
+
       private$format_helper(self$root, "", "", tree_chars(utf8))
+    }
+  )
+)
+
+
+multi_tree <- R6::R6Class(
+  "multi_tree",
+  public = list(
+    trees = NULL,
+    initialize = function(report_trees) {
+      self$trees <- report_trees
+    },
+
+    format = function(utf8 = NULL) {
+      strings <- vcapply(self$trees, function(tree) {
+        tree$format(utf8)
+      })
+      paste0(strings, collapse = "\n")
     }
   )
 )

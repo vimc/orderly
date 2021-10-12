@@ -633,8 +633,9 @@ test_that("Sensible error message if query fails", {
 test_that("orderly_dependencies: can get upstream dependencies", {
   path <- prepare_orderly_example("depends", testing = TRUE, git = TRUE)
 
-  deps <- orderly_dependencies(c("example", "depend", "depend2"),
-                               root = path, direction = "upstream")
+  deps <- orderly_graph(c("example", "depend", "depend2"),
+                        root = path, direction = "upstream",
+                        use = "src", careful = FALSE)
   expect_equal(deps, list(
     example = NULL,
     depend = "example",
@@ -652,9 +653,10 @@ test_that("orderly_dependencies: can get upstream dependencies", {
   hash <- git_run(c("rev-parse", "--short", "HEAD"), root = path, check = TRUE)
   git_checkout_branch(master, root = path)
 
-  deps <- orderly_dependencies(c("example", "depend", "depend4"),
-                               root = path, ref = hash$output,
-                               direction = "upstream")
+  deps <- orderly_graph(c("example", "depend", "depend4"),
+                        root = path, ref = hash$output,
+                        direction = "upstream", use = "src",
+                        careful = FALSE)
   expect_equal(deps, list(
     example = NULL,
     depend = "example",

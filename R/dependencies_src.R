@@ -1,21 +1,39 @@
 orderly_graph_src <- function(name, config, direction = "downstream",
                               max_depth = Inf, recursion_limit = 100,
-                              show_all = FALSE) {
+                              show_all = FALSE, ref = NULL, careful = TRUE) {
   ## Start by reading all the src files; this would ideally be done
   ## with some caching layer I think.  The other option would be to
   ## make sure that we can rip through this really fast by not
   ## validating everything on the recipe read (just migrating) then
   ## dealing with just the depends.
-  nms <- orderly_list(config)
+  all_reports <- orderly_list_internal(config, ref)
 
-  if (!(name %in% nms)) {
-    stop(sprintf("Unknown source report '%s'", name), call. = FALSE)
+  missing_reports <- reports[!(reports %in% all_reports)]
+  if (length(missing_reports > 0)) {
+    stop(sprintf("%s %s at git ref '%s' cannot be found.",
+                 ngettext(length(missing_reports), "Report with name",
+                          "Reports with names"),
+                 paste0(paste0("'", missing_reports, "'"), collapse = ", "),
+                 ref))
   }
 
-  src <- lapply(nms, orderly_recipe$new, config, develop = TRUE)
-  names(src) <- nms
+  missing <- !(name %in% all_reports)
+  if (any(missing)) {
+    stop(sprintf("Unknown source report '%s'",
+                 paste0(name[missing], collapse = ", ")), call. = FALSE)
+  }
 
-  deps <- lapply(src, function(x) unique(x$depends[c("name", "id")]))
+  if (careful) {
+    if (!is.null(ref)) {
+      stop("Non-null ref not supported when reading yml with careful = TRUE")
+    }
+    src <- lapply(all_reports, orderly_recipe$new, config, develop = TRUE)
+    names(src) <- all_reports
+    deps <- lapply(src, function(x) unique(x$depends[c("name", "id")]))
+  } else {
+    deps <- lapply(all_reports, read_yml_quick, config, ref)
+    names(deps) <- all_reports
+  }
 
   ## Conveying the version information here is super difficult; if
   ## we're interested in how 'example' is used in downstream reports
@@ -31,10 +49,37 @@ orderly_graph_src <- function(name, config, direction = "downstream",
   }
 
   ## We then can work with this fairly easily I think
-  root <- report_vertex$new(NULL, name, "latest", FALSE)
-  seen <- new.env()
-  build_tree_src(root, deps, max_depth, recursion_limit, NULL)
-  report_tree$new(root, direction)
+  trees <- lapply(name, function(nm) {
+    root <- report_vertex$new(NULL, nm, "latest", FALSE)
+    build_tree_src(root, deps, max_depth, recursion_limit, NULL)
+    report_tree$new(root, direction)
+  })
+  multi_tree$new(trees)
+}
+
+
+read_yml_quick <- function(name, config, ref) {
+  path <- file.path("src", name, "orderly.yml")
+  lines <- git_show(path, ref = ref, root = config$root, check = FALSE)
+  if (!lines$success) {
+    stop(sprintf("Report with name '%s' at git ref '%s' cannot be found.",
+                 name, ref))
+  }
+  raw <- yaml_load(lines$output)
+  yml <- recipe_migrate(raw, config, path)
+  depends <- yml$depends
+  if (is.null(depends)) {
+    return(NULL)
+  }
+  ## Deal with yaml weirdness:
+  if (is.null(names(depends))) {
+    depends <- ordered_map_to_list(depends)
+  }
+  deps <- lapply(names(depends), function(dep) {
+    list(name = dep,
+         id = depends[[dep]]$id)
+  })
+  do.call(rbind.data.frame, unique(deps))
 }
 
 

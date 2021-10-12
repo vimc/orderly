@@ -46,7 +46,8 @@
 ##'
 ##' @title Print the dependency tree for a given report using orderly log
 ##'
-##' @param name the name of the report
+##' @param name the name or names of the report, multiple reports only
+##'   supported when `use = "src"`
 ##'
 ##' @param id the id of the report, if omitted, use the id of the
 ##'   latest report
@@ -71,6 +72,13 @@
 ##'   default), which reads from archive reports and `src` which
 ##'   reads from the source reports.
 ##'
+##' @param ref Git ref to use for calculating graph. Only supported when
+##'   `use = "src"`. If NULL then uses currently checked out branch.
+##'
+##' @param careful If `TRUE` and `use = "src"` then will build migrate and
+##'   validate the full `orderly.yml` for each report. If `FALSE` then
+##'   this is skipped. Not supported when `use = "archive"`.
+##'
 ##' @inheritParams orderly_list
 ##'
 ##' @return An orderly tree object with the root corresponding to the given
@@ -91,16 +99,28 @@
 orderly_graph <- function(name, id = "latest", root = NULL, locate = TRUE,
                           direction = "downstream", propagate = TRUE,
                           max_depth = Inf, recursion_limit = 100,
-                          show_all = FALSE, use = "archive") {
+                          show_all = FALSE, use = "archive", ref = NULL,
+                          careful = TRUE) {
   config <- orderly_config(root, locate)
   use <- match_value(use, c("archive", "src"))
   if (use == "archive") {
+    if (!is.null(ref)) {
+      stop('Non-null ref arg only supported when use = "src"')
+    }
+    if (!careful) {
+      stop(paste0('Building graph with careful = FALSE ',
+                  'not supported when use = "archive"'))
+    }
+    if (length(name) > 1) {
+      stop(paste0('Graph can only be generated for a single ',
+                  'report when use = "archive"'))
+    }
     orderly_graph_archive(name, id, config, direction, propagate,
                           max_depth, recursion_limit, show_all)
   } else {
     ## id, propagate ignored
     orderly_graph_src(name, config, direction, max_depth, recursion_limit,
-                      show_all)
+                      show_all, ref, careful)
   }
 }
 
@@ -171,26 +191,6 @@ get_downstream_dependencies <- function(reports, ref, config) {
 
 get_upstream_dependencies <- function(reports, ref, config) {
   setNames(lapply(reports, report_dependencies, ref, config), reports)
-}
-
-report_dependencies <- function(name, ref, config) {
-  path <- file.path("src", name, "orderly.yml")
-  lines <- git_show(path, ref = ref, root = config$root, check = FALSE)
-  if (!lines$success) {
-    stop(sprintf("Report with name '%s' at git ref '%s' cannot be found.",
-                 name, ref))
-  }
-  raw <- yaml_load(lines$output)
-  yml <- recipe_migrate(raw, config, path)
-  depends <- yml$depends
-  if (is.null(depends)) {
-    return(NULL)
-  }
-  ## Deal with yaml weirdness:
-  if (is.null(names(depends))) {
-    depends <- ordered_map_to_list(depends)
-  }
-  unique(names(depends))
 }
 
 orderly_graph_archive <- function(name, id, config, direction = "downstream",

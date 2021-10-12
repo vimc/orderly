@@ -85,5 +85,5 @@ git_reports <- function(ref = NULL, root = NULL) {
     ref <- "HEAD"
   }
   git_run(c("ls-tree", "--name-only", "-d", sprintf("%s:src/", ref)),
-          root = root, check = TRUE)
+          root = root, check = TRUE)$output
 }
