@@ -215,6 +215,7 @@ orderly_graph_archive <- function(name, id, config, direction = "downstream",
     stop("This report does not exist")
   }
 
+  ## id <- orderly::orderly_latest()
   dep_tree <- build_tree(name = name, id = id, depth = max_depth,
                          limit = recursion_limit, con = con,
                          direction = direction, show_all = show_all)
@@ -245,42 +246,22 @@ orderly_graph_out_of_date <- function(tree) {
 
 ##' @title Get the dependencies for a given report from the database
 ##'
-##' @param name the name of the report
-##' @param id the id of the report, if omitted, use the id of the latest report
+##' @param id The id of the report
 ##' @param direction A string indicating if we want to move up or down the tree
 ##'        permitted values are upstream, downstream
 ##' @param con A connection to a database
 ##' @noRd
-get_dependencies_db <- function(name, id, direction, con, show_all = FALSE) {
-  ## now construct the SQL query
+get_dependencies_db <- function(id, direction, con) {
   if (direction == "upstream") {
-    filter_query <- sprintf("depends.report_version='%s'", id)
+    query <- read_lines(orderly_file("database/upstream_dependencies.sql"))
   } else {
-    filter_query <- sprintf("report_version.id='%s'", id)
+    query <- read_lines(orderly_file("database/downstream_dependencies.sql"))
   }
-
-  sql_query_file <- read_lines(orderly_file("database/dependency_info.sql"))
-
-  sql_query <- paste(c(sql_query_file, "WHERE", filter_query), collapse = " ")
-
-  query_return <- DBI::dbGetQuery(con, sql_query)
-
+  query <- sprintf(query, id)
   if (nrow(query_return) == 0) {
     return(NULL)
   }
-
-  query_return$is_latest <- vlapply(query_return$report_version,
-                                    is_latest_in_db, con = con)
-  if (!show_all) {
-    query_return <- query_return[which(query_return$is_latest), ]
-  }
-
-  # if we're going uptree
-  if (direction == "upstream") {
-    unique(query_return$id)
-  } else {
-    unique(query_return$report_version)
-  }
+  unique(query_return)
 }
 
 ##' @title All reports with a given name with most recent towards to top
@@ -499,9 +480,9 @@ check_parents <- function(parent_vertex, name) {
 ##'
 ##' @return An R6 tree object
 ##' @noRd
-build_tree <- function(name, id, depth = 100, limit = 100, parent = NULL,
-                       tree = NULL, con, direction = "downstream",
-                       show_all = FALSE) {
+build_tree <- function(con, name, id, depth = 100, limit = 100,
+                       parent = NULL, tree = NULL,
+                       direction = "downstream") {
   ## this should never get triggered - it only exists the prevent an infinite
   ## recursion
   if (limit < 0) {
@@ -512,20 +493,6 @@ build_tree <- function(name, id, depth = 100, limit = 100, parent = NULL,
     if (check_parents(parent, name)) {
       tree$set_message("There appears to be a circular dependency.")
       return(tree)
-    }
-  }
-
-  ## do we need to find the latest version of the report?
-  if (id == "latest") {
-    id <- get_latest_by_name(con, name)
-  } else if (id == "previous") {
-    id <- get_previous_by_name(con, name)
-  } else {
-    id_database <- id_to_name(con, id)
-    if (is.null(id_database)) {
-      stop(sprintf("No report with id %s in the database", id))
-    } else if (name != id_to_name(con, id)) {
-        stop(sprintf("id %s does not match report name %s", id, name))
     }
   }
 
@@ -540,27 +507,23 @@ build_tree <- function(name, id, depth = 100, limit = 100, parent = NULL,
   out_of_date <- is_out_of_date(con, id)
 
   ## if this is no tree, create a tree...
+  v <- list(name = name, id = id, out_of_date = out_of_date)
   if (is.null(tree)) {
-    v <- report_vertex$new(NULL, name, id, out_of_date)
-    tree <- report_tree$new(v, direction)
-  } else { ## ...otherwise add a vertex
-    v <- tree$add_child(parent, name, id, out_of_date)
+    tree <- report_tree$new(v, direction, depth = depth)
   }
   if (depth == 0) {
     return(tree)
   }
+  ## TODO: Add out of date for chilren connection
 
-  dependency_ids <- get_dependencies_db(name = name, id = id, con = con,
-                                        direction = direction,
-                                        show_all = show_all)
-  for (dep_id in dependency_ids) {
-    dependency_name <- id_to_name(id = dep_id, con = con)
-
-    build_tree(name = dependency_name, id = dep_id, depth = depth - 1,
-               limit = limit - 1, parent = v, tree = tree, con,
-               direction = direction, show_all = show_all)
+  dependencies <- get_dependencies_db(id = id, con = con, direction = direction)
+  tree$add_edges(dependencies)
+  for (i in seq_len(nrow(dependencies))) {
+    dep <- dependencies[i, ]
+    build_tree(con, name = dep$child, id = dep$child_id, depth = depth - 1,
+               limit = limit - 1, parent = list(name = name, parent = parent),
+               tree = tree, direction = direction)
   }
-
   tree
 }
 
