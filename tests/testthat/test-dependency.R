@@ -12,23 +12,32 @@ test_that("basic tree example", {
 
   tree <- orderly_graph("example", root = path, show_all = TRUE)
 
-  root <- tree$root
-  readable_root <- root$format()
-  expect_match(readable_root,
-               "example \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
-  expect_true(length(root$children) == 1)
+  roots <- tree$roots
+  expect_length(roots, 1)
+  expect_equal(roots[[1]]$name, "example")
+  expect_match(roots[[1]]$id, "[0-9]{8}-[0-9]{6}-[a-f0-9]{8}")
+  expect_false(roots[[1]]$out_of_date)
 
-  child_1 <- root$children[[1]]
-  readable_child_1 <- child_1$format()
-  expect_match(readable_child_1,
-               "depend2 \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
-  expect_true(length(child_1$children) == 2)
+  tree_list <- tree$get_tree("example")
 
-  child_2 <- child_1$children[[1]]
-  readable_child_2 <- child_2$format()
-  expect_match(readable_child_2,
-               "depend3 \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
-  expect_true(length(child_2$children) == 0)
+  child_1 <- tree_list$dependencies[[1]]
+  expect_equal(child_1$name, "depend2")
+  expect_match(child_1$id, "[0-9]{8}-[0-9]{6}-[a-f0-9]{8}")
+  expect_false(child_1$out_of_date)
+  expect_true(length(child_1$dependencies) == 2)
+
+  child_2 <- child_1$dependencies[[1]]
+  expect_equal(child_2$name, "depend3")
+  expect_match(child_2$id, "[0-9]{8}-[0-9]{6}-[a-f0-9]{8}")
+  expect_false(child_2$out_of_date)
+  expect_true(length(child_2$dependencies) == 0)
+
+  child_3 <- child_1$dependencies[[2]]
+  expect_equal(child_3$name, "depend3")
+  expect_match(child_3$id, "[0-9]{8}-[0-9]{6}-[a-f0-9]{8}")
+  expect_false(child_3$out_of_date)
+  expect_true(length(child_3$dependencies) == 0)
+  expect_true(child_3$id != child_2$id)
 
   bad_reports <- orderly_graph_out_of_date(tree)
   expect_equal(length(bad_reports), 0)
@@ -44,11 +53,13 @@ test_that("no dependendent reports", {
 
   tree <- orderly_graph("example", root = path)
 
-  root <- tree$root
-  readble_root <- root$format()
-  expect_match(readble_root,
-               "example \\[[0-9]{8}-[0-9]{6}-[a-f0-9]{8}\\]")
-  expect_true(length(root$children) == 0)
+  root <- tree$roots
+  expect_length(roots, 1)
+  expect_equal(roots[[1]]$name, "example")
+  expect_match(roots[[1]]$id, "[0-9]{8}-[0-9]{6}-[a-f0-9]{8}")
+  expect_false(roots[[1]]$out_of_date)
+  tree_list <- tree$get_tree("example")
+  expect_length(tree_list$dependencies, 0)
 })
 
 test_that("nonexistant reports ", {
@@ -81,16 +92,16 @@ test_that("has dependencies upstream", {
 
   ## top report so has no dependencies upstream
   tree <- orderly_graph("example", root = path, direction = "upstream")
-  root <- tree$root
-  expect_true(length(root$children) == 0)
+  tree_list <- tree$get_tree("example")
+  expect_true(length(tree_list$dependencies) == 0)
 
   tree <- orderly_graph("depend3", root = path, direction = "upstream")
-  root <- tree$root
-  expect_true(length(root$children) == 1)
-  child_1 <- root$children[[1]]
-  expect_true(length(child_1$children) == 1)
-  child_2 <- child_1$children[[1]]
-  expect_true(length(child_2$children) == 0)
+  tree_list <- tree$get_tree("depend3")
+  expect_true(length(tree_list$dependencies) == 1)
+  child_1 <- tree_list$dependencies[[1]]
+  expect_true(length(child_1$dependencies) == 1)
+  child_2 <- child_1$dependencies[[1]]
+  expect_true(length(child_2$dependencies) == 0)
 })
 
 ## this is a a bit hacky since reports only get flagged as out of date if the
@@ -106,22 +117,21 @@ test_that("out of date dependencies", {
   run_orderly_demo(path)
 
   tree <- orderly_graph("example", id = "previous", root = path)
+  tree_list <- tree$get_tree("example")
 
-  root <- tree$root
   ## this report SHOULD NOT be out of date - there is a newer version of this
   ## report, but none of ancestor reports have changed
-  expect_false(root$out_of_date)
+  expect_false(tree_list$out_of_date)
 
-  dep_1 <- root$children[[1]]
+  dep_1 <- tree_list$dependencies[[1]]
   ## this report should be out of date - this report depends on other which has
   ## been re-run
   expect_true(dep_1$out_of_date)
 
-  dep_2 <- dep_1$children[[1]]
+  dep_2 <- dep_1$dependencies[[1]]
   ## this report should be out of date - this report depends on other which is
-  ## out-of-date and by default we propogate out-of-date status
+  ## out-of-date and by default we propagate out-of-date status
   expect_true(dep_2$out_of_date)
-
 })
 
 test_that("propagate", {
@@ -138,17 +148,17 @@ test_that("propagate", {
   tree <- orderly_graph("example", id = "previous", root = path,
                         propagate = FALSE)
 
-  root <- tree$root
+  tree_list <- tree$get_tree("example")
   ## SHOULD NOT be out of date, although there is a more recent version of this
   ## report - this version does not depend2 on any out-of-date artefacts
-  expect_false(root$out_of_date)
+  expect_false(tree_list$out_of_date)
 
-  dep_1 <- root$children[[1]]
+  dep_1 <- tree_list$dependencies[[1]]
   ## SHOULD be out of date since it depends on a report that has a more recent
   ## version
   expect_true(dep_1$out_of_date)
 
-  dep_2 <- dep_1$children[[1]]
+  dep_2 <- dep_1$dependencies[[1]]
   ## SHOULD NOT be out of date since we did not propagate out of dateness
   expect_false(dep_2$out_of_date)
 
@@ -156,17 +166,17 @@ test_that("propagate", {
   tree <- orderly_graph("depend3", root = path, propagate = FALSE,
                         direction = "upstream")
   ## SHOULD NOT be out of date since we did not propagate out of dateness
-  root <- tree$root
-  expect_false(root$out_of_date)
+  tree_list <- tree$get_tree("depend3")
+  expect_false(tree_list$out_of_date)
 
   ## use_dependency IS out-of-date  since it depends on a report that has a more
   ## recent version
-  dep_1_1 <- root$children[[1]]
+  dep_1_1 <- tree_list$dependencies[[1]]
   expect_true(dep_1_1$out_of_date)
 
   ## other IS NOT out-of-date since this version does not depend2 on anything
   ## else so can never be out of date
-  dep_2_1 <- dep_1_1$children[[1]]
+  dep_2_1 <- dep_1_1$dependencies[[1]]
   expect_false(dep_2_1$out_of_date)
 })
 
@@ -196,7 +206,7 @@ test_that("circular dependency", {
   run_orderly_demo(path)
 
   tree <- orderly_graph("example", id = "previous", root = path)
-  circ_tree <- tree$format()[1]
+  circ_tree <- strsplit(tree$format(), "\n")[[1]][1]
 
   expect_match(circ_tree,
                "There appears to be a circular dependency.")
@@ -241,6 +251,44 @@ test_that("multiple dependencies", {
   expect_match(tree_print, "    `--.*depend3")
 })
 
+test_that("multiple dependencies only shows 1 when show_all FALSE", {
+  path <- test_prepare_orderly_example("depends", testing = TRUE)
+
+  demo <- c("- name: example",
+            "- name: depend2",
+            "- name: depend3",
+            "- name: depend2",
+            "- name: depend3")
+  writeLines(demo, file.path(path, "demo.yml"))
+  run_orderly_demo(path)
+
+  tree <- orderly_graph("example", root = path,
+                        propagate = FALSE, show_all = FALSE)
+  tree_print <- tree$format()
+  tree_lines <- strsplit(tree_print, "\n")[[1]]
+  expect_length(tree_lines, 3)
+  expect_match(tree_lines[1], "example")
+  expect_match(tree_lines[2], "depend2")
+  expect_match(tree_lines[3], "depend3")
+
+  tree_list <- tree$get_tree("example", show_all = FALSE)
+  expect_equal(tree_list$name, "example")
+  expect_length(tree_list$dependencies, 1)
+  expect_equal(tree_list$dependencies[[1]]$name, "depend2")
+  expect_length(tree_list$dependencies[[1]]$dependencies, 1)
+  expect_equal(tree_list$dependencies[[1]]$dependencies[[1]]$name, "depend3")
+
+  tree_list <- tree$get_tree("example", show_all = TRUE)
+  expect_equal(tree_list$name, "example")
+  expect_length(tree_list$dependencies, 2)
+  expect_equal(tree_list$dependencies[[1]]$name, "depend2")
+  expect_length(tree_list$dependencies[[1]]$dependencies, 1)
+  expect_equal(tree_list$dependencies[[2]]$name, "depend2")
+  expect_length(tree_list$dependencies[[2]]$dependencies, 1)
+  expect_equal(tree_list$dependencies[[1]]$dependencies[[1]]$name, "depend3")
+  expect_equal(tree_list$dependencies[[2]]$dependencies[[1]]$name, "depend3")
+})
+
 test_that("List out of date upstream", {
   path <- test_prepare_orderly_example("depends", testing = TRUE)
 
@@ -279,8 +327,8 @@ test_that("List out of date with duplicates", {
 
 test_that("R6 errorMessages", {
   tree <- "Not an R6 object"
-    expect_error(orderly_graph_out_of_date(tree),
-                 "'tree' must be a report_tree")
+  expect_error(orderly_graph_out_of_date(tree),
+               "'tree' must be a report_tree")
 })
 
 test_that("Only one report - previous", {

@@ -120,7 +120,7 @@ orderly_graph <- function(name, id = "latest", root = NULL, locate = TRUE,
   } else {
     ## id, propagate ignored
     orderly_graph_src(name, config, direction, max_depth, recursion_limit,
-                      show_all, ref, validate)
+                      ref, validate)
   }
 }
 
@@ -215,15 +215,36 @@ orderly_graph_archive <- function(name, id, config, direction = "downstream",
     stop("This report does not exist")
   }
 
-  ## id <- orderly::orderly_latest()
-  dep_tree <- build_tree(name = name, id = id, depth = max_depth,
-                         limit = recursion_limit, con = con,
-                         direction = direction, show_all = show_all)
-
-  # propagate out-of-date
-  if (propagate) {
-    propagate(dep_tree$root, direction)
+  ## TODO: Use common code for this part
+  ## we get similar stuff in orderly_info and also
+  ## think about making it work with query orderly_search
+  if (id == "latest") {
+    id <- get_latest_by_name(con, name)
+  } else if (id == "previous") {
+    id <- get_previous_by_name(con, name)
+  } else {
+    id_database <- id_to_name(con, id)
+    if (is.null(id_database)) {
+      stop(sprintf("No report with id %s in the database", id))
+    } else if (name != id_to_name(con, id)) {
+      stop(sprintf("id %s does not match report name %s", id, name))
+    }
   }
+  ## A remark on `out-of-date-ness`
+  ## We only flag a report as out-of-date when it depends on artefacts from
+  ## another report and the artefacts it used differ from the artefacts in the
+  ## latest version of the other report.
+  ## In particular the following reports will never be flagged as out-of-date
+  ## * A report that uses no artefacts
+  ## * A report that only uses deterministic artefacts (i.e. artefacts that
+  ##   never change from version to version).
+  out_of_date <- is_out_of_date(con, id)
+  v <- list(name = name, id = id, out_of_date = out_of_date)
+  tree <- report_tree$new(list(v), direction, depth = max_depth,
+                          show_all = show_all)
+  dep_tree <- build_tree(v, parent = NULL, tree = tree,
+                         depth = max_depth, limit = recursion_limit, con = con,
+                         direction = direction, propagate = propagate)
 
   dep_tree
 }
@@ -239,9 +260,12 @@ orderly_graph_out_of_date <- function(tree) {
   types <- class(tree)
   assert_is(tree, "report_tree")
 
-  reports <- out_of_date_reports(tree$root)
+  out_of_date_children <- tree$edges[tree$edges$out_of_date, "child"]
+  out_of_date_roots <- vlapply(tree$roots, "[[", "out_of_date")
+  root_names <- vcapply(tree$roots, "[[", "name")
+  reports <- c(root_names[out_of_date_roots], out_of_date_children)
 
-  reports
+  unique(reports)
 }
 
 ##' @title Get the dependencies for a given report from the database
@@ -258,6 +282,7 @@ get_dependencies_db <- function(id, direction, con) {
     query <- read_lines(orderly_file("database/downstream_dependencies.sql"))
   }
   query <- sprintf(query, id)
+  query_return <- DBI::dbGetQuery(con, query)
   if (nrow(query_return) == 0) {
     return(NULL)
   }
@@ -359,19 +384,6 @@ id_to_name <- function(con, id) {
   }
 }
 
-##' @title Is the id the latest version of the report in the database
-##'
-##' @param id the id of the report
-##' @param con A connection to a database
-##'
-##' @return A boolean TRUE if the report is the latest version
-##' @noRd
-is_latest_in_db <- function(con, id) {
-  latest <- get_latest_by_name(con, id_to_name(con, id))
-
-  latest == id
-}
-
 ##' Logic for working out if a report is out of date; assume B depends on A
 ##' We find the lastest version of A
 ##' Get the artefact hashes from A
@@ -466,8 +478,8 @@ check_parents <- function(parent_vertex, name) {
 
 ##' @title Recursively builds a tree for a given report
 ##'
-##' @param name the name of the report
-##' @param id the id of the report, if omitted, use the id of the latest report
+##' @param vertex List containing name, id and out_of_date of vertex
+##'   to find leaves of
 ##' @param depth [internal] - The depth of dependencies we want to return
 ##' @param limit [internal] - limit on number of dependencies - used ensure
 ##'              we don't get trapped in an infinite loop
@@ -480,49 +492,39 @@ check_parents <- function(parent_vertex, name) {
 ##'
 ##' @return An R6 tree object
 ##' @noRd
-build_tree <- function(con, name, id, depth = 100, limit = 100,
-                       parent = NULL, tree = NULL,
-                       direction = "downstream") {
+build_tree <- function(con, vertex, parent, depth = 100, limit = 100,
+                       tree = NULL, direction = "downstream", propagate = TRUE) {
   ## this should never get triggered - it only exists the prevent an infinite
   ## recursion
   if (limit < 0) {
     stop("The tree is very large or degenerate.")
   }
 
-  if (!is.null(parent)) {
-    if (check_parents(parent, name)) {
-      tree$set_message("There appears to be a circular dependency.")
-      return(tree)
-    }
-  }
-
-  ## A remark on `out-of-date-ness`
-  ## We only flag a report as out-of-date when it depends on artefacts from
-  ## another report and the artefacts it used differ from the artefacts in the
-  ## latest version of the other report.
-  ## In particular the following reports will never be flagged as out-of-date
-  ## * A report that uses no artefacts
-  ## * A report that only uses deterministic artefacts (i.e. artefacts that
-  ##   never change from version to version).
-  out_of_date <- is_out_of_date(con, id)
-
-  ## if this is no tree, create a tree...
-  v <- list(name = name, id = id, out_of_date = out_of_date)
-  if (is.null(tree)) {
-    tree <- report_tree$new(v, direction, depth = depth)
-  }
   if (depth == 0) {
     return(tree)
   }
-  ## TODO: Add out of date for chilren connection
-
-  dependencies <- get_dependencies_db(id = id, con = con, direction = direction)
-  tree$add_edges(dependencies)
-  for (i in seq_len(nrow(dependencies))) {
-    dep <- dependencies[i, ]
-    build_tree(con, name = dep$child, id = dep$child_id, depth = depth - 1,
-               limit = limit - 1, parent = list(name = name, parent = parent),
-               tree = tree, direction = direction)
+  ## Add this node to parent lists
+  parent <- list(id = vertex$id, name = vertex$name,
+                 out_of_date = vertex$out_of_date, parent = parent)
+  dependencies <- get_dependencies_db(id = vertex$id, con = con,
+                                      direction = direction)
+  if (!is.null(dependencies) && nrow(dependencies) > 0) {
+    for (i in seq_len(nrow(dependencies))) {
+      dep <- dependencies[i, ]
+      dep$out_of_date <- (propagate && parent$out_of_date) ||
+        is_out_of_date(con, dep$child_id)
+      tree$add_edges(dep)
+      if (check_parents(parent, dep$child)) {
+        tree$set_message("There appears to be a circular dependency.")
+        return(tree)
+      }
+      vertex <- list(name = dep$child, id = dep$child_id,
+                     out_of_date = dep$out_of_date)
+      build_tree(con, vertex,
+                 parent, depth = depth - 1,
+                 limit = limit - 1, tree = tree, direction = direction,
+                 propagate = propagate)
+    }
   }
   tree
 }

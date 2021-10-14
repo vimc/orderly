@@ -1,6 +1,6 @@
 orderly_graph_src <- function(name, config, direction = "downstream",
                               max_depth = Inf, recursion_limit = 100,
-                              show_all = FALSE, ref = NULL, validate = TRUE) {
+                              ref = NULL, validate = TRUE) {
   ## Start by reading all the src files; this would ideally be done
   ## with some caching layer I think.  The other option would be to
   ## make sure that we can rip through this really fast by not
@@ -54,12 +54,12 @@ orderly_graph_src <- function(name, config, direction = "downstream",
   }
 
   ## We then can work with this fairly easily I think
-  trees <- lapply(name, function(nm) {
-    root <- report_vertex$new(NULL, nm, "latest", FALSE)
-    build_tree_src(root, deps, max_depth, recursion_limit, NULL)
-    report_tree$new(root, direction)
+  roots <- lapply(name, function(nm) {
+    list(name = name)
   })
-  multi_tree$new(trees)
+  tree <- report_tree$new(roots, direction, depth = max_depth)
+  tree$add_edges(deps)
+  tree
 }
 
 
