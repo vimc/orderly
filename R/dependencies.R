@@ -240,8 +240,8 @@ orderly_graph_archive <- function(name, id, config, direction = "downstream",
   ##   never change from version to version).
   out_of_date <- is_out_of_date(con, id)
   v <- list(name = name, id = id, out_of_date = out_of_date)
-  tree <- report_tree$new(list(v), direction, depth = max_depth,
-                          show_all = show_all)
+  tree <- report_tree$new(list(v), direction, type = "archive",
+                          depth = max_depth, show_all = show_all)
   dep_tree <- build_tree(v, parent = NULL, tree = tree,
                          depth = max_depth, limit = recursion_limit, con = con,
                          direction = direction, propagate = propagate)

@@ -28,16 +28,28 @@ orderly_graph_src <- function(name, config, direction = "downstream",
     if (!is.null(ref)) {
       stop("Non-null ref not supported when reading yml with validate = TRUE")
     }
-    src <- lapply(all_reports, orderly_recipe$new, config, develop = TRUE)
-    names(src) <- all_reports
-    deps <- lapply(src, function(x) unique(x$depends[c("name", "id")]))
+    get_dependencies <- function(name) {
+      deps <- orderly_recipe$new(name, config, develop = TRUE)$depends
+      if (length(deps) > 0) {
+        unique(data_frame(name = name, id = NA_character_, child = deps$name,
+                          date = NA_character_, child_id = deps$id,
+                          out_of_date = FALSE))
+      } else {
+        data_frame(name = character(0), id = character(0), child = character(0),
+                   date = character(0), child_id = character(0),
+                   out_of_date = logical(0))
+      }
+    }
+    deps <- lapply(all_reports, get_dependencies)
+    deps <- do.call(rbind.data.frame, deps)
   } else {
     if (is.null(ref)) {
-      ##TODO
-    } else {
-      deps <- lapply(all_reports, read_yml_quick, config, ref)
-      names(deps) <- all_reports
+      ## TODO: Bypass git here - will be slower than just reading from current
+      ## checked out branch
+      ref <- "HEAD"
     }
+    deps <- lapply(all_reports, read_yml_quick, config, ref)
+    names(deps) <- all_reports
   }
 
   ## Conveying the version information here is super difficult; if
@@ -46,18 +58,21 @@ orderly_graph_src <- function(name, config, direction = "downstream",
   if (direction == "downstream") {
     ## Invert the dependency tree - this leaves ids in a weird place
     ## but I guess that is ok.
-    len <- viapply(deps, NROW, USE.NAMES = FALSE)
-    parent <- unlist(lapply(deps, "[[", "name"), FALSE, FALSE)
-    deps <- split(data_frame(
-      name = rep(names(deps), len),
-      id = unlist(lapply(deps, "[[", "id"), FALSE, FALSE)), parent)
+    deps <- data_frame(
+      name = deps$child,
+      id = deps$child_id,
+      date = deps$date,
+      child = deps$name,
+      child_id = deps$id,
+      out_of_date = FALSE
+    )
   }
 
   ## We then can work with this fairly easily I think
   roots <- lapply(name, function(nm) {
     list(name = name)
   })
-  tree <- report_tree$new(roots, direction, depth = max_depth)
+  tree <- report_tree$new(roots, direction, type = "src", depth = max_depth)
   tree$add_edges(deps)
   tree
 }

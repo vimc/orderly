@@ -22,8 +22,13 @@ report_tree <- R6::R6Class(
     format_helper = function(vertex, prefix, tree_string, chars) {
       # append the current vertex to the end of the print string
       console_colour <- if (FALSE) crayon::red else crayon::blue
+      if (is.null(vertex$id) || is.na(vertex$id)) {
+        id <- ""
+      } else {
+        id <- sprintf(" [%s]", vertex$id)
+      }
       tree_string <- sprintf("%s%s\n", tree_string, console_colour(
-        sprintf("%s [%s]", vertex$name, vertex$id)))
+        sprintf("%s%s", vertex$name, id)))
 
       children <- private$get_children(vertex, self$show_all)
       number_children <- length(children)
@@ -56,8 +61,15 @@ report_tree <- R6::R6Class(
       if (is.na(vertex$name)) {
         return(NULL)
       }
-      children <- self$edges[self$edges$name == vertex$name &
-                               self$edges$id == vertex$id, ]
+      if (self$type == "src") {
+        ## We only care about names in src mode as ids have not
+        ## been generated yet
+        edges_to_keep <- self$edges$name == vertex$name
+      } else {
+        edges_to_keep <- self$edges$name == vertex$name &
+          self$edges$id == vertex$id
+      }
+      children <- self$edges[edges_to_keep, ]
       if (!show_all) {
         child <- unique(children$child)
         latest_children <- lapply(child, function(name) {
@@ -99,17 +111,20 @@ report_tree <- R6::R6Class(
     depth = NULL,
     edges = NULL,
     show_all = TRUE,
-    initialize = function(roots, direction, depth, show_all) {
+    type = NULL,
+    initialize = function(roots, direction, depth, type = NULL,
+                          show_all = TRUE) {
       self$roots <- roots
       self$direction <- direction
       self$depth <- depth
-      self$edges <- data.frame(name = character(0),
+      self$edges <- data_frame(name = character(0),
                                id = character(0),
                                date = character(0),
                                child = character(0),
                                child_id = character(0),
                                out_of_date = logical(0))
       self$show_all <- show_all
+      self$type <- type
     },
 
     add_edges = function(edges) {

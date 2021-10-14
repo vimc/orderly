@@ -403,15 +403,16 @@ test_that("source - downstream", {
   g <- orderly_graph("example", root = path,
                      direction = "downstream", use = "src")
 
-  children <- g$root$children
-  expect_equal(length(children), 2)
-  nms <- vcapply(children, "[[", "name")
+  tree <- g$get_tree("example")
+  deps <- tree$dependencies
+  expect_equal(length(deps), 2)
+  nms <- vcapply(deps, "[[", "name")
   expect_setequal(nms, c("depend", "depend2"))
-  names(children) <- nms
+  names(deps) <- nms
 
-  expect_equal(children$depend$children, list())
-  expect_equal(length(children$depend2$children), 1)
-  expect_equal(children$depend2$children[[1]]$name, "depend3")
+  expect_equal(deps$depend$dependencies, list())
+  expect_equal(length(deps$depend2$dependencies), 1)
+  expect_equal(deps$depend2$dependencies[[1]]$name, "depend3")
 })
 
 
@@ -420,12 +421,12 @@ test_that("source - upstream", {
 
   g <- orderly_graph("depend3", root = path,
                      direction = "upstream", use = "src")
+  tree <- g$get_tree("depend3")
+  expect_equal(length(tree$dependencies), 1)
+  expect_equal(tree$dependencies[[1]]$name, "depend2")
 
-  expect_equal(length(g$root$children), 1)
-  expect_equal(g$root$children[[1]]$name, "depend2")
-
-  expect_equal(length(g$root$children[[1]]$children), 1)
-  expect_equal(g$root$children[[1]]$children[[1]]$name, "example")
+  expect_equal(length(tree$dependencies[[1]]$dependencies), 1)
+  expect_equal(tree$dependencies[[1]]$dependencies[[1]]$name, "example")
 })
 
 
@@ -474,6 +475,9 @@ test_that("building graph from archive only supports 1 report at a time", {
 test_that("prevent excessive recursion", {
   path <- test_prepare_orderly_example("depends", testing = TRUE)
 
+  ## TODO: What does recursion limit mean for us now we have moved this into
+  ## the object? Building src graph as edge matrix requires no recusion until
+  ## we try and print it
   config <- orderly_config_$new(path)
   expect_error(
     orderly_graph_src("depend3", config, "upstream", recursion_limit = 1),
