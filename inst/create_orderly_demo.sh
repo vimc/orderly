@@ -6,4 +6,3 @@ if [ "$#" -ne 1 ]; then
 fi
 DEST=$1
 Rscript -e "orderly:::create_orderly_demo(\"$DEST/demo\", git = TRUE)"
-Rscript -e "orderly:::prepare_orderly_git_example(\"$DEST/git\", TRUE)"
