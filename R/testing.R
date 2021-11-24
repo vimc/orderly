@@ -221,8 +221,8 @@ build_git_demo <- function() {
 
   prev <- git_checkout_branch("other", root = path, create = TRUE)
 
-  file.rename(file.path(path, "extra", "other"),
-              file.path(path, "src", "other"))
+  file.rename(file.path(path, "extra", move),
+              file.path(path, "src", move))
   unlink(file.path(path, "extra"), recursive = TRUE)
   git_run(c("add", "."), root = path)
   git_run(c("commit", "-m", "'add-other'"), root = path)
