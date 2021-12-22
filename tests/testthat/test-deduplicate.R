@@ -184,8 +184,20 @@ test_that("deduplicate fails if file is missing", {
 
   unlink(file.path(path, "archive", "minimal", id1, "script.R"))
 
-  expect_error(orderly_deduplicate_info(orderly_config(path), paste0(
-    "Cannot deduplicate archive as database references files ",
-    "which don't exist, this could be because they have been ",
-    "pulled from an archive with recursive = FALSE ")))
+  expect_error(orderly_deduplicate_info(orderly_config(path), paste(
+    "Cannot deduplicate archive as database references files",
+    "which don't exist.")))
+})
+
+test_that("deduplicate fails if report pulled from remote recursive FALSE", {
+  skip_on_cran()
+  dat <- prepare_orderly_remote_example()
+  id3 <- orderly_run("depend", root = dat$path_remote, echo = FALSE)
+  orderly_commit(id3, root = dat$path_remote)
+
+  orderly_pull_archive("depend", root = dat$config, remote = dat$remote,
+                       recursive = FALSE)
+  expect_error(orderly_deduplicate_info(dat$config), paste(
+    "Cannot deduplicate archive reports have been pulled from",
+    "remote with recursive = FALSE."))
 })
