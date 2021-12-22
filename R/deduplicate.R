@@ -79,6 +79,13 @@ orderly_deduplicate_info <- function(config) {
                           fsep = "/")
 
   paths <- file.path(config$root, "archive", files$path)
+  exists <- vlapply(paths, file.exists)
+  if (any(!exists)) {
+    stop(paste0("Cannot deduplicate archive as database references files ",
+                "which don't exist, this could be because they have been ",
+                "pulled from an archive with recursive = FALSE"))
+  }
+
   ## Information about the physical files, so we can work out which
   ## files are already hardlinked
   files <- cbind(
