@@ -184,9 +184,9 @@ test_that("deduplicate fails if file is missing", {
 
   unlink(file.path(path, "archive", "minimal", id1, "script.R"))
 
-  expect_error(orderly_deduplicate_info(orderly_config(path), paste(
+  expect_error(orderly_deduplicate_info(orderly_config(path)), paste(
     "Cannot deduplicate archive as database references files",
-    "which don't exist.")))
+    "which don't exist."))
 })
 
 test_that("deduplicate fails if report pulled from remote recursive FALSE", {

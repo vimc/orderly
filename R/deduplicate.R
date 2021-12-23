@@ -104,7 +104,7 @@ orderly_deduplicate_info <- function(config) {
 
   ## Quick check:
   can_deduplicate <- all(vlapply(split(files, files$hash), function(x) {
-    all(x$inode_first == x$inode[[1]])
+    isTRUE(all(x$inode_first == x$inode[[1]]))
   }))
   if (!can_deduplicate) {
     stop(paste("Cannot deduplicate archive as database references files",
