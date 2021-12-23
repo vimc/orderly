@@ -103,10 +103,10 @@ orderly_deduplicate_info <- function(config) {
     unname(tapply(files$inode, files$hash, function(x) x[[1L]]))[i]
 
   ## Quick check:
-  cannot_deduplicate <- all(vlapply(split(files, files$hash), function(x) {
+  can_deduplicate <- all(vlapply(split(files, files$hash), function(x) {
     all(x$inode_first == x$inode[[1]])
   }))
-  if (cannot_deduplicate) {
+  if (!can_deduplicate) {
     stop(paste("Cannot deduplicate archive as database references files",
                 "which don't exist."))
   }
