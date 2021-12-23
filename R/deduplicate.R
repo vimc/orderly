@@ -83,6 +83,7 @@ orderly_deduplicate_info <- function(config) {
                           files$filename,
                           fsep = "/")
 
+  paths <- file.path(config$root, "archive", files$path)
   ## Information about the physical files, so we can work out which
   ## files are already hardlinked
   files <- cbind(
