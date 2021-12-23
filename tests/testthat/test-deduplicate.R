@@ -172,3 +172,32 @@ test_that("relink error handling", {
   expect_error(relink(from, to), "Some error linking")
   expect_true(all(fs::file_info(c(from, to))$inode == info))
 })
+
+
+test_that("deduplicate fails if file is missing", {
+  skip_on_cran()
+  path <- orderly_example("demo")
+  id1 <- orderly_run("minimal", root = path, echo = FALSE)
+  id2 <- orderly_run("minimal", root = path, echo = FALSE)
+  orderly_commit(id1, root = path)
+  orderly_commit(id2, root = path)
+
+  unlink(file.path(path, "archive", "minimal", id1, "script.R"))
+
+  expect_error(orderly_deduplicate_info(orderly_config(path)), paste(
+    "Cannot deduplicate archive as database references files",
+    "which don't exist."))
+})
+
+test_that("deduplicate fails if report pulled from remote recursive FALSE", {
+  skip_on_cran()
+  dat <- prepare_orderly_remote_example()
+  id3 <- orderly_run("depend", root = dat$path_remote, echo = FALSE)
+  orderly_commit(id3, root = dat$path_remote)
+
+  orderly_pull_archive("depend", root = dat$config, remote = dat$remote,
+                       recursive = FALSE)
+  expect_error(orderly_deduplicate_info(dat$config), paste(
+    "Cannot deduplicate archive reports have been pulled from",
+    "remote with recursive = FALSE."))
+})

@@ -68,6 +68,11 @@ orderly_deduplicate <- function(root = NULL, locate = TRUE, dry_run = TRUE,
 
 
 orderly_deduplicate_info <- function(config) {
+  report_metadata <- list.files(path_metadata(config$root))
+  if (length(report_metadata) > 0) {
+    stop(paste("Cannot deduplicate archive reports have been pulled from",
+               "remote with recursive = FALSE."))
+  }
   con <- orderly_db("destination", config)
   on.exit(DBI::dbDisconnect(con))
 
@@ -98,8 +103,13 @@ orderly_deduplicate_info <- function(config) {
     unname(tapply(files$inode, files$hash, function(x) x[[1L]]))[i]
 
   ## Quick check:
-  stopifnot(all(vlapply(split(files, files$hash), function(x)
-    all(x$inode_first == x$inode[[1]]))))
+  can_deduplicate <- all(vlapply(split(files, files$hash), function(x) {
+    isTRUE(all(x$inode_first == x$inode[[1]]))
+  }))
+  if (!can_deduplicate) {
+    stop(paste("Cannot deduplicate archive as database references files",
+                "which don't exist."))
+  }
 
   ## Classify the files into different states
   files$state <- rep("distinct", nrow(files))
