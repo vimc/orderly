@@ -1,0 +1,14 @@
+parameters:
+  nmin:
+    default: 0.5
+  disease:
+    default: HepB
+script: script.R
+artefacts:
+  - staticgraph:
+      description: A summary graaph
+      filenames: graph.png
+displayname: default param report
+
+author: Dr Serious
+requester: ACME
