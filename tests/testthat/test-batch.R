@@ -54,3 +54,22 @@ test_that("return useful error if no parameters are passed", {
     orderly_batch("example", NULL),
     "Parameters for a batch must be a data frame with at least one row")
 })
+
+test_that("failure report in batch run does not fail subsequent report runs", {
+  path <- test_prepare_orderly_example("batch", testing = TRUE)
+
+  params <- data_frame(
+    a = c("one", "two", "three"),
+    b = c(1, "2", 3)
+  )
+  batch_id <- ids::random_id()
+  mockery::stub(orderly_batch, "ids::random_id", batch_id)
+  ids <- orderly_batch("example", parameters = params,
+                       root = path, echo = FALSE)
+  data <- lapply(ids, function(id) {
+    readRDS(path_orderly_run_rds(file.path(path, "draft", "example", id)))
+  })
+  invisible(lapply(data, function(d) {
+    expect_equal(d$meta$batch_id, batch_id)
+  }))
+})
