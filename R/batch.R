@@ -28,8 +28,13 @@ orderly_batch <- function(name = NULL, parameters = NULL, ...) {
     stop("Parameters for a batch must be a data frame with at least one row")
   }
   batch_id <- ids::random_id()
-  vcapply(df2list(parameters), function(parameter_set) {
-    orderly_run_internal(name, parameters = parameter_set, ...,
-                         batch_id = batch_id)
+  reports <- lapply(df2list(parameters), function(parameter_set) {
+    id <- orderly_run_internal(name, parameters = parameter_set, ...,
+                               batch_id = batch_id)
+    c(id = id,
+      success = TRUE,
+      as.list(parameter_set))
   })
+  bind_df <- function(...) rbind.data.frame(..., make.row.names = FALSE)
+  do.call(bind_df, reports)
 }

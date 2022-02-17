@@ -9,9 +9,12 @@ test_that("reports can be batch run", {
   )
   batch_id <- ids::random_id()
   mockery::stub(orderly_batch, "ids::random_id", batch_id)
-  ids <- orderly_batch("example", parameters = params,
+  output <- orderly_batch("example", parameters = params,
                        root = path, echo = FALSE)
-  data <- lapply(ids, function(id) {
+  expect_setequal(colnames(output), c("id", "success", "a", "b"))
+  expect_equal(output[, c("a", "b")], params)
+  expect_equal(output$success, rep(TRUE, 3))
+  data <- lapply(output$id, function(id) {
     readRDS(path_orderly_run_rds(file.path(path, "draft", "example", id)))
   })
   invisible(lapply(data, function(d) {
@@ -25,8 +28,11 @@ test_that("batch running with a single param retains name", {
   params <- data.frame(nmin = c(0.2, 0.25))
   batch_id <- ids::random_id()
   mockery::stub(orderly_batch, "ids::random_id", batch_id)
-  ids <- orderly_batch("other", params, root = path, echo = FALSE)
-  data <- lapply(ids, function(id) {
+  output <- orderly_batch("other", params, root = path, echo = FALSE)
+  expect_setequal(colnames(output), c("id", "success", "nmin"))
+  expect_equal(output[, "nmin", drop = FALSE], params)
+  expect_equal(output$success, rep(TRUE, 2))
+  data <- lapply(output$id, function(id) {
     readRDS(path_orderly_run_rds(file.path(path, "draft", "other", id)))
   })
   invisible(lapply(data, function(d) {
@@ -64,9 +70,14 @@ test_that("failure report in batch run does not fail subsequent report runs", {
   )
   batch_id <- ids::random_id()
   mockery::stub(orderly_batch, "ids::random_id", batch_id)
-  ids <- orderly_batch("example", parameters = params,
+  output <- orderly_batch("example", parameters = params,
                        root = path, echo = FALSE)
-  data <- lapply(ids, function(id) {
+  expect_setequal(colnames(output), c("id", "success", "a", "b"))
+  expect_equal(output[, c("a", "b")], params)
+  expect_equal(output$success, c(TRUE, FALSE, TRUE))
+  ## test something about success and batch runs too
+  success_ids <- output[output$success, ]
+  data <- lapply(success_ids, function(id) {
     readRDS(path_orderly_run_rds(file.path(path, "draft", "example", id)))
   })
   invisible(lapply(data, function(d) {
