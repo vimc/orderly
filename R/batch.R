@@ -40,7 +40,6 @@ orderly_batch <- function(name = NULL, parameters = NULL,
     tryCatch({
       id <- orderly_run_internal(name, parameters = parameter_set, ...,
                                  batch_id = batch_id, id_file = id_file)
-      message("\n")
       c(id = id,
         success = TRUE,
         as.list(parameter_set))
