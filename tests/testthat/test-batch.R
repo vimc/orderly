@@ -66,7 +66,7 @@ test_that("failure report in batch run does not fail subsequent report runs", {
 
   params <- data_frame(
     a = c("one", "two", "three"),
-    b = c(1, "2", 3)
+    b = c(1, 2, 3)
   )
   batch_id <- ids::random_id()
   mockery::stub(orderly_batch, "ids::random_id", batch_id)
@@ -75,12 +75,33 @@ test_that("failure report in batch run does not fail subsequent report runs", {
   expect_setequal(colnames(output), c("id", "success", "a", "b"))
   expect_equal(output[, c("a", "b")], params)
   expect_equal(output$success, c(TRUE, FALSE, TRUE))
-  ## test something about success and batch runs too
-  success_ids <- output[output$success, ]
+
+  success_ids <- output[output$success, "id"]
   data <- lapply(success_ids, function(id) {
     readRDS(path_orderly_run_rds(file.path(path, "draft", "example", id)))
   })
   invisible(lapply(data, function(d) {
     expect_equal(d$meta$batch_id, batch_id)
   }))
+
+  failed_ids <- output[!output$success, "id"]
+  data <- lapply(failed_ids, function(id) {
+    readRDS(path_orderly_fail_rds(file.path(path, "draft", "example", id)))
+  })
+  invisible(lapply(data, function(d) {
+    expect_equal(d$meta$batch_id, batch_id)
+  }))
+})
+
+test_that("erroring report stops batch if continue_on_error is FLASE", {
+  path <- test_prepare_orderly_example("batch", testing = TRUE)
+
+  params <- data_frame(
+    a = c("one", "two", "three"),
+    b = c(1, 2, 3)
+  )
+  expect_error(orderly_batch("example", parameters = params,
+                          continue_on_error = FALSE,
+                          root = path, echo = FALSE),
+               "b cannot be 2")
 })

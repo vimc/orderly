@@ -1,5 +1,5 @@
-if (!is.numeric(b)) {
-  stop("b must be numeric")
+if (b == 2) {
+  stop("b cannot be 2")
 }
 
 saveRDS(list(a = a, b = b, c = c),
