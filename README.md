@@ -21,7 +21,7 @@
 * track outputs of an analysis
 * create analyses that depend on the outputs of previous analyses
 
-With `orderly` we have two main hopes:
+With `orderly` we have two main hopes::
 
 * analysts can write code that will straightforwardly run on someone else's machine (or a remote machine)
 * when an analysis that is run several times starts behaving differently it will be easy to see when the outputs started changing, and what inputs started changing at the same time
