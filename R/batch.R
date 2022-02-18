@@ -60,6 +60,7 @@ orderly_batch <- function(name = NULL, parameters = NULL,
     })
   }
   reports <- lapply(df2list(parameters), run_report)
-  bind_df <- function(...) rbind.data.frame(..., make.row.names = FALSE)
+  bind_df <- function(...) rbind.data.frame(..., make.row.names = FALSE,
+                                            stringsAsFactors = FALSE)
   do.call(bind_df, reports)
 }
