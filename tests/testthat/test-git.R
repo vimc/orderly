@@ -153,6 +153,7 @@ test_that("run in detached head", {
 
 test_that("fetch before run", {
   testthat::skip_on_cran()
+  skip_on_windows_ci()
   path <- test_prepare_orderly_git_example()
   path1 <- path[["origin"]]
   path2 <- path[["local"]]
