@@ -146,6 +146,7 @@ test_that("run: ref", {
 
 test_that("run: fetch", {
   testthat::skip_on_cran()
+  skip_on_windows_ci()
   path <- test_prepare_orderly_git_example()
   path_local <- path[["local"]]
   path_origin <- path[["origin"]]
