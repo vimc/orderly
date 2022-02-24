@@ -614,7 +614,11 @@ test_that("batch", {
   expect_equal(res$options$parameters, data_frame(nmin = c(0, 0.2)))
   expect_equal(res$target, main_do_batch)
 
-  expect_message(res$target(res), "ids:[\\w\\d-]*")
+  messages <- capture_messages(res$target(res))
+  expect_match(messages[1], "id: [\\w\\d-]{24}, success: TRUE, nmin: 0\\n",
+               perl = TRUE)
+  expect_match(messages[2], "id: [\\w\\d-]{24}, success: TRUE, nmin: 0\\.2\\n",
+               perl = TRUE)
 
   d <- orderly_list_archive(path)
   expect_equal(nrow(d), 2L)

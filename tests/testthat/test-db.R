@@ -420,9 +420,9 @@ test_that("add batch info to db", {
   )
   batch_id <- ids::random_id()
   mockery::stub(orderly_batch, "ids::random_id", batch_id)
-  ids <- orderly_batch("example", parameters = params,
+  output <- orderly_batch("example", parameters = params,
                        root = path, echo = FALSE)
-  p <- lapply(ids, function(id) {
+  p <- lapply(output$id, function(id) {
     orderly_commit(id, root = path)
   })
 
@@ -433,7 +433,7 @@ test_that("add batch info to db", {
     data_frame(id = batch_id))
   expect_equal(
     DBI::dbReadTable(con, "report_version_batch"),
-    data_frame(report_version = ids, report_batch = rep(batch_id, 3)))
+    data_frame(report_version = output$id, report_batch = rep(batch_id, 3)))
 })
 
 

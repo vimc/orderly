@@ -373,16 +373,23 @@ main_do_batch <- function(x) {
   git_pull_ref(pull, ref, config, message =
                  "Can't use --pull with --ref; perhaps you meant --fetch ?")
 
-  ids <- orderly_batch(name, parameters, root = config, instance = instance,
+  output <- orderly_batch(name, parameters, root = config, instance = instance,
                     ref = ref, fetch = fetch, message = message)
-  lapply(ids, function(id) {
+  lapply(output$id, function(id) {
     orderly_commit(id, name, config)
     path_rds <- path_orderly_run_rds(
       file.path(config$root, "archive", name, id))
     post_success(readRDS(path_rds), config)
   })
 
-  message("ids:", paste(ids, collapse = ", "))
+  col_names <- colnames(output)
+  for (row_num in seq_len(nrow(output))) {
+    row <- output[row_num, ]
+    out_text <- vcapply(seq_along(col_names), function(col_no) {
+      sprintf("%s: %s", col_names[col_no], row[col_no])
+    })
+    message(paste0(out_text, collapse = ", "))
+  }
 }
 
 
