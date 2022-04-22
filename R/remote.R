@@ -676,8 +676,9 @@ pull_info <- function(name, id, root, locate, remote, parameters) {
 ##' @inheritParams orderly_pull_dependencies
 ##'
 ##' @return List with names as report keys and values are lists containing
-##'   `killed` - boolean TRUE if report successfully cancelled, FALSE otherwise
-##'   `message` - string detailing reason why cancellation failed
+##'   * `killed` - boolean TRUE if report successfully cancelled, FALSE
+##'   otherwise
+##'   * `message` - string detailing reason why cancellation failed
 ##'
 ##' @export
 orderly_cancel_remote <- function(keys, root = NULL, locate = TRUE,

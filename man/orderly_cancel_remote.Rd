@@ -29,8 +29,11 @@ first listed remote.}
 }
 \value{
 List with names as report keys and values are lists containing
-\code{killed} - boolean TRUE if report successfully cancelled, FALSE otherwise
-\code{message} - string detailing reason why cancellation failed
+\itemize{
+\item \code{killed} - boolean TRUE if report successfully cancelled, FALSE
+otherwise
+\item \code{message} - string detailing reason why cancellation failed
+}
 }
 \description{
 The action will depend on the status of the report:
