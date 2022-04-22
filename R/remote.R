@@ -662,3 +662,28 @@ pull_info <- function(name, id, root, locate, remote, parameters) {
        config = config,
        remote = remote)
 }
+
+
+##' Cancel a report
+##'
+##' The action will depend on the status of the report:
+##'   * queued - report run will be deleted
+##'   * running - report run will be cancelled
+##'   * complete/errored - no effect
+##'
+##' @param keys The key or keys for the reports to cancel
+##'
+##' @inheritParams orderly_pull_dependencies
+##'
+##' @return List with names as report keys and values are lists containing
+##'   `killed` - boolean TRUE if report successfully cancelled, FALSE otherwise
+##'   `message` - string detailing reason why cancellation failed
+##'
+##' @export
+orderly_cancel_remote <- function(keys, root = NULL, locate = TRUE,
+                                  remote = NULL) {
+  remote <- get_remote(remote, orderly_config(root, locate))
+  out <- lapply(keys, remote$kill)
+  names(out) <- keys
+  out
+}

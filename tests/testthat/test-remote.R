@@ -490,3 +490,40 @@ test_that("Can't pull incompatible metadata", {
                           remote = dat$remote),
     "Report was created with orderly more recent than this, upgrade!")
 })
+
+
+test_that("reports can be cancelled", {
+  path_local <- test_prepare_orderly_example("demo")
+
+  res_1 <- list(
+    killed = TRUE,
+    message = NULL
+  )
+  res_2 <- list(
+    killed = FALSE,
+    message = "Could not kill task, already complete"
+  )
+  mock_kill <- mockery::mock(res_1, res_2)
+  ## Create a minimal remote class which will satisfy implements_remote
+  mock_remote <- R6::R6Class(
+    "orderly_mock_remote",
+    lock_objects = FALSE,
+    public = list(
+      list_reports = function() TRUE,
+      list_versions = function() TRUE,
+      pull = function() TRUE,
+      run = function() TRUE,
+      url_report = function() TRUE,
+      queue_status = function() TRUE,
+      kill = function(key) mock_kill()
+    )
+  )
+
+  remote <- mock_remote$new()
+  res <- orderly_cancel_remote(
+    c("fungiform_kiwi", "lithe_iaerismetalmark"), remote = remote)
+  mockery::expect_called(mock_kill, 2)
+  expect_equal(names(res), c("fungiform_kiwi", "lithe_iaerismetalmark"))
+  expect_equal(res$fungiform_kiwi, res_1)
+  expect_equal(res$lithe_iaerismetalmark, res_2)
+})

@@ -1,3 +1,7 @@
+# orderly 1.4.7
+
+* Add `orderly_cancel_remote` which can be used to cancel one or more reports running on a remote via its key (mrc-3167)
+
 # orderly 1.4.3
 
 * Orderly now only records git information where a `.git` directory is found at the orderly root (vimc-4866)
