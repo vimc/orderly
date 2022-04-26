@@ -247,8 +247,8 @@ unzip_git_demo <- function(path = tempfile()) {
   path
 }
 
-prepare_orderly_git_example <- function(path = tempfile(), run_report = FALSE,
-                                        branch = "master") {
+prepare_orderly_git_example <- function(path = tempfile(), run_minimal = FALSE,
+                                        run_other = FALSE, branch = "master") {
   path_upstream <- file.path(path, "upstream")
   unzip_git_demo(path)
   unzip_git_demo(path_upstream)
@@ -261,14 +261,22 @@ prepare_orderly_git_example <- function(path = tempfile(), run_report = FALSE,
   git_run(c("branch", "--set-upstream-to", sprintf("origin/%s", branch),
             branch), path)
 
-  writeLines("new", file.path(path_upstream, "new"))
-  git_run(c("add", "."), path_upstream)
-  git_run(c("commit", "-m", "orderly"), path_upstream)
-
-  if (run_report) {
+  if (run_minimal) {
     id <- orderly_run("minimal", root = path)
     orderly_commit(id, root = path)
   }
+  if (run_other) {
+    git_checkout_branch("other", root = path)
+    run_orderly_demo(path, quiet = TRUE)
+    git_run(c("add", "."), root = path)
+    git_run(c("commit", "-m", '"run demo reports"'), root = path)
+    git_run(c("push", "--set-upstream", "origin", "other"), root = path)
+    git_checkout_branch(branch, root = path)
+  }
+
+  writeLines("new", file.path(path_upstream, "new"))
+  git_run(c("add", "."), path_upstream)
+  git_run(c("commit", "-m", "orderly"), path_upstream)
 
   c(origin = path_upstream, local = path)
 }

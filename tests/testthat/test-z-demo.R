@@ -26,13 +26,21 @@ test_that("orderly_demo", {
 
 test_that("git demo", {
   testthat::skip_on_cran()
-  path1 <- test_prepare_orderly_git_example(run_report = FALSE)
-  capture.output(path2 <- test_prepare_orderly_git_example(run_report = TRUE))
+  path1 <- test_prepare_orderly_git_example(run_minimal = FALSE)
+  capture.output(path2 <- test_prepare_orderly_git_example(run_minimal = TRUE))
+  capture.output(path3 <- test_prepare_orderly_git_example(run_other = TRUE))
 
   expect_equal(
     nrow(orderly_list2(root = path1[["local"]], draft = FALSE)), 0)
   expect_equal(
     nrow(orderly_list2(root = path2[["local"]], draft = FALSE)), 1)
+  expect_true(
+    nrow(orderly_list2(root = path3[["local"]], draft = FALSE)) > 20)
+  expect_true(all(
+    c("minimal", "other", "global", "use_dependency", "changelog",
+      "use_resource", "multi-artefact", "multifile-artefact", "html",
+      "interactive", "use_resource_dir", "connection", "spaces", "view") %in%
+      orderly_list2(root = path3[["local"]], draft = FALSE)$name))
 })
 
 
