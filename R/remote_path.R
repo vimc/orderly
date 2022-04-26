@@ -96,5 +96,9 @@ orderly_remote_path_ <- R6::R6Class(
 
     bundle_import = function(path) {
       orderly_bundle_import(path, root = self$config, locate = FALSE)
+    },
+
+    kill = function(...) {
+      stop("'orderly_remote_path' remotes do not kill")
     }
   ))

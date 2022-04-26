@@ -318,3 +318,11 @@ test_that("bundle pack and import", {
 
   expect_equal(remote$list_versions("example"), ans$id)
 })
+
+
+test_that("orderly_cancel_remote", {
+  dat <- prepare_orderly_remote_example()
+  expect_error(
+    orderly_cancel_remote("example", root = dat$config),
+    "'orderly_remote_path' remotes do not kill")
+})

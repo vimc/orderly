@@ -269,7 +269,8 @@ test_that("orderly run remote passes instance to run", {
       list_reports = function() TRUE,
       list_versions = function() TRUE,
       pull = function() TRUE,
-      url_report = function() TRUE
+      url_report = function() TRUE,
+      kill = function() TRUE
     )
   )
 
@@ -334,7 +335,8 @@ test_that("orderly run remote passes ref to run", {
       list_reports = function() TRUE,
       list_versions = function() TRUE,
       pull = function() TRUE,
-      url_report = function() TRUE
+      url_report = function() TRUE,
+      kill = function() TRUE
     )
   )
 
@@ -379,6 +381,7 @@ test_that("can get status of remote queue", {
       pull = function() TRUE,
       run = function() TRUE,
       url_report = function() TRUE,
+      kill = function() TRUE,
       queue_status = function() mock_status()
     )
   )
