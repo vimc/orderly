@@ -59,6 +59,7 @@ reference:
       - orderly_default_remote_get
       - orderly_default_remote_set
       - orderly_run_remote
+      - orderly_cancel_remote
 
   - title: Advanced - bundles
     desc: >-
