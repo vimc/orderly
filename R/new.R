@@ -3,7 +3,7 @@
 ##' Details below for how these are configured and discovered by
 ##' orderly.
 ##'
-##' To create a custom template, create a directory `templates`
+##' To create a custom template, create a directory `template`
 ##' within your orderly root.  Within that directory create
 ##' directories containing all the files that you would like a report
 ##' to contain.  This *must* contain a file
@@ -29,7 +29,7 @@
 ##'
 ##' @param template The name of a template.  If `NULL` orderly
 ##'   will search for a template (see Details).  If given it must be
-##'   the name of a directory within a directory `templates` in
+##'   the name of a directory within a directory `template` in
 ##'   your project root.  The special label "orderly" will use
 ##'   orderly's builtin template.
 ##'
