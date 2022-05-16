@@ -23,7 +23,7 @@ be suppressed.}
 
 \item{template}{The name of a template.  If \code{NULL} orderly
 will search for a template (see Details).  If given it must be
-the name of a directory within a directory \code{templates} in
+the name of a directory within a directory \code{template} in
 your project root.  The special label "orderly" will use
 orderly's builtin template.}
 }
@@ -37,7 +37,7 @@ Details below for how these are configured and discovered by
 orderly.
 }
 \details{
-To create a custom template, create a directory \code{templates}
+To create a custom template, create a directory \code{template}
 within your orderly root.  Within that directory create
 directories containing all the files that you would like a report
 to contain.  This \emph{must} contain a file
