@@ -605,7 +605,7 @@ test_that("disallow both master_only and default_branch_only", {
                   default_branch_only = TRUE,
                   args = list(root = path))))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
-  expect_warning(
+  expect_error(
     orderly_config_$new(path),
     "Can't specify both 'master_only' and 'default_branch_only'")
 })
