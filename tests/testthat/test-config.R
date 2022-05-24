@@ -126,7 +126,7 @@ test_that("support declaring api server", {
                 main = list(
                   driver = "orderly::orderly_remote_path",
                   primary = TRUE,
-                  master_only = TRUE,
+                  default_branch_only = TRUE,
                   args = list(root = path)),
                 other = list(
                   driver = "orderly::orderly_remote_path",
@@ -145,7 +145,8 @@ test_that("support declaring api server", {
   expect_null(cfg$remote$other$identity)
   expect_equal(
     cfg$server_options(),
-    list(primary = TRUE, master_only = TRUE, name = "main"))
+    list(primary = TRUE, default_branch_only = TRUE,
+         default_branch = "master", name = "main"))
 
   cfg <- withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = "other"),
@@ -154,7 +155,8 @@ test_that("support declaring api server", {
   expect_true(cfg$remote$other$identity)
   expect_equal(
     cfg$server_options(),
-    list(primary = FALSE, master_only = FALSE, name = "other"))
+    list(primary = FALSE, default_branch_only = FALSE,
+         default_branch = "master", name = "other"))
 
   cfg <- withr::with_envvar(
     c("ORDERLY_API_SERVER_IDENTITY" = NA),
@@ -203,11 +205,11 @@ test_that("remote parse check", {
                   driver = "orderly::orderly_remote_path",
                   primary = TRUE,
                   args = list(root = path),
-                  master_only = "yeah")))
+                  default_branch_only = "yeah")))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
   expect_error(
     orderly_config_$new(path),
-    "'orderly_config.yml:remote:myhost:master_only' must be logical")
+    "'orderly_config.yml:remote:myhost:default_branch_only' must be logical")
 })
 
 test_that("no global folder", {
@@ -554,4 +556,56 @@ test_that("adding new fields in new versions gives good errors", {
   expect_error(
     orderly_config_$new(path),
     "Orderly version '9.9.9' is required, but only '.+' installed")
+})
+
+
+test_that("can configure default branch for a remote", {
+  path <- tempfile()
+  dir.create(path)
+  dat <- list(remote = list(
+                main = list(
+                  driver = "orderly::orderly_remote_path",
+                  primary = TRUE,
+                  default_branch_only = TRUE,
+                  default_branch = "main",
+                  args = list(root = path))))
+  writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
+  cfg <- orderly_config_$new(path)
+  expect_true(cfg$remote$main$default_branch_only)
+  expect_equal(cfg$remote$main$default_branch, "main")
+})
+
+
+test_that("migrate master_only", {
+  path <- tempfile()
+  dir.create(path)
+  dat <- list(remote = list(
+                main = list(
+                  driver = "orderly::orderly_remote_path",
+                  primary = TRUE,
+                  master_only = TRUE,
+                  args = list(root = path))))
+  writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
+  expect_warning(
+    cfg <- orderly_config_$new(path),
+    "The 'master_only' field.*deprecated")
+  expect_true(cfg$remote$main$default_branch_only)
+  expect_equal(cfg$remote$main$default_branch, "master")
+})
+
+
+test_that("disallow both master_only and default_branch_only", {
+  path <- tempfile()
+  dir.create(path)
+  dat <- list(remote = list(
+                main = list(
+                  driver = "orderly::orderly_remote_path",
+                  primary = TRUE,
+                  master_only = TRUE,
+                  default_branch_only = TRUE,
+                  args = list(root = path))))
+  writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
+  expect_warning(
+    orderly_config_$new(path),
+    "Can't specify both 'master_only' and 'default_branch_only'")
 })

@@ -298,7 +298,9 @@ config_validate_remote <- function(remote, filename) {
     d <- remote[[name]]
     check_fields(d, sprintf("%s:remote:%s", filename, name),
                  c("driver", "args"),
-                 c("url", "slack_url", "teams_url", "primary", "master_only"))
+                 c("url", "slack_url", "teams_url", "primary",
+                   "master_only", "default_branch_only",
+                   "default_branch"))
     field_name <- function(nm) {
       sprintf("%s:remote:%s:%s", filename, name, nm)
     }
@@ -318,10 +320,36 @@ config_validate_remote <- function(remote, filename) {
     } else {
       assert_scalar_logical(d$primary, field_name("primary"))
     }
-    if (is.null(d$master_only)) {
-      d$master_only <- FALSE
+
+    if (!is.null(d$master_only)) {
+      if (!is.null(d$default_branch_only)) {
+        msg <- c("Can't specify both 'master_only' and 'default_branch_only': ",
+                 sprintf("see %s:remote:%s", filename, name))
+        stop(msg)
+      }
+      msg <- c("The 'master_only' field (used in",
+               sprintf("%s:remote:%s", filename, name),
+               "is deprecated and replaced with 'default_branch_only'",
+               "and will be dropped in a future version of",
+               "orderly.  Please rename it in your orderly_config.yml")
+      orderly_warning(flow_text(msg))
+      d$default_branch_only <- d$master_only
+      d$master_only <- NULL
+    }
+
+    if (is.null(d$default_branch_only)) {
+      d$default_branch_only <- FALSE
     } else {
-      assert_scalar_logical(d$master_only, field_name("master_only"))
+      assert_scalar_logical(d$default_branch_only,
+                            field_name("default_branch_only"))
+    }
+
+    ## use '[[' not '$' here to avoid partial matches.
+    if (is.null(d[["default_branch"]])) {
+      d[["default_branch"]] <- "master"
+    } else {
+      assert_scalar_character(d[["default_branch"]],
+                              field_name("default_branch"))
     }
 
     d$driver <- check_symbol_from_str(d$driver, field_name("driver"))
