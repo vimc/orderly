@@ -248,10 +248,22 @@ unzip_git_demo <- function(path = tempfile()) {
 }
 
 prepare_orderly_git_example <- function(path = tempfile(), run_report = FALSE,
-                                        branch = "master") {
+                                        branch = default_branch,
+                                        default_branch = "master") {
   path_upstream <- file.path(path, "upstream")
   unzip_git_demo(path)
   unzip_git_demo(path_upstream)
+
+  ## If git changes it's mind about what the default branch is called,
+  ## this will fail, we should probably detect this, but it's likely
+  ## that will break the unzip_git_demo/build_git functions too.
+  if (default_branch != "master") {
+    gert::git_branch_move("master", default_branch, force = TRUE,
+                          repo = path)
+    gert::git_branch_move("master", default_branch, force = TRUE,
+                          repo = path_upstream)
+  }
+
   git_checkout_branch(branch, root = path)
   git_checkout_branch(branch, root = path_upstream)
 
