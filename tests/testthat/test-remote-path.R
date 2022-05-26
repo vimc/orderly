@@ -173,7 +173,8 @@ test_that("push report (path)", {
 
   remote <- orderly_remote_path(theirs)
   res <- testthat::evaluate_promise(
-    orderly_push_archive("multifile-artefact", "latest", ours, remote = remote))
+    orderly_push_archive("multifile-artefact", "latest",
+                         root = ours, remote = remote))
 
   re <- "^\\[ push\\s+\\]  multifile-artefact:[0-9]{8}-[0-9]{6}-[[:xdigit:]]{8}"
   expect_match(crayon::strip_style(res$messages), paste0(re, "\\n$"))
@@ -183,7 +184,8 @@ test_that("push report (path)", {
   expect_equal(d$id, id)
 
   res <- testthat::evaluate_promise(
-    orderly_push_archive("multifile-artefact", "latest", ours, remote = remote))
+    orderly_push_archive("multifile-artefact", "latest",
+                         root = ours, remote = remote))
   expect_match(crayon::strip_style(res$messages),
                paste(re, "already exists, skipping\\n$"))
 })
@@ -203,7 +205,8 @@ test_that("push report & deps", {
 
   remote <- orderly_remote_path(theirs)
   res <- testthat::evaluate_promise(
-    orderly_push_archive("depend3", "latest", ours, remote = remote))
+    orderly_push_archive("depend3", "latest",
+                         root = ours, remote = remote))
 
   ## All ended up in the archive:
   d <- orderly_list_archive(theirs)
@@ -225,6 +228,54 @@ test_that("push report & deps", {
 })
 
 
+test_that("push report with explicit ID", {
+  skip_on_cran_windows()
+  ours <- test_prepare_orderly_example("demo")
+  id <- orderly_run("multifile-artefact", root = ours, echo = FALSE)
+  orderly_commit(id, root = ours)
+
+  theirs <- test_prepare_orderly_example("demo")
+
+  remote <- orderly_remote_path(theirs)
+  res <- testthat::evaluate_promise(
+    orderly_push_archive("multifile-artefact", id,
+                         root = ours, remote = remote))
+
+  re <- sprintf("^\\[ push\\s+\\]  multifile-artefact:%s\\n$", id)
+  expect_match(crayon::strip_style(res$messages), re)
+
+  d <- orderly_list_archive(theirs)
+  expect_equal(d$name, "multifile-artefact")
+  expect_equal(d$id, id)
+})
+
+
+test_that("push report with search query", {
+  skip_on_cran_windows()
+  ours <- test_prepare_orderly_example("demo")
+  id1 <- orderly_run("other", parameters = list(nmin= 0.25),
+                     root = ours, echo = FALSE)
+  id2 <- orderly_run("other", parameters = list(nmin= 0.5),
+                    root = ours, echo = FALSE)
+  orderly_commit(id1, root = ours)
+  orderly_commit(id2, root = ours)
+
+  theirs <- test_prepare_orderly_example("demo")
+
+  remote <- orderly_remote_path(theirs)
+  res <- testthat::evaluate_promise(
+    orderly_push_archive("other", "latest(parameter:nmin == 0.25)",
+                         root = ours, remote = remote))
+
+  re <- sprintf("^\\[ push\\s+\\]  other:%s\\n$", id1)
+  expect_match(crayon::strip_style(res$messages), re)
+
+  d <- orderly_list_archive(theirs)
+  expect_equal(d$name, "other")
+  expect_equal(d$id, id1)
+})
+
+
 test_that("Fail to push if not supported", {
   skip_on_cran_windows()
   ours <- test_prepare_orderly_example("demo")
@@ -234,7 +285,8 @@ test_that("Fail to push if not supported", {
   remote$push <- NULL
 
   expect_error(
-    orderly_push_archive("multifile-artefact", "latest", ours, remote = remote),
+    orderly_push_archive("multifile-artefact", "latest",
+                         root = ours, remote = remote),
     "'push' is not supported by this remote")
 })
 

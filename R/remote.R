@@ -104,8 +104,10 @@ orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
 ##' @export
 ##' @rdname orderly_pull_dependencies
 ##'
-##' @param id The identifier (for `orderly_pull_archive`).  The default is
-##'   to use the latest report.
+##' @param id The report identifier (for `orderly_pull_archive` and
+##'   `orderly_push_archive`). Can be a specific report `id`, `latest` to get
+##'   most recent or full search query see [orderly::orderly_search()].
+##'   Defaults to using the latest report.
 orderly_pull_archive <- function(name, id = "latest", root = NULL,
                                  locate = TRUE, remote = NULL,
                                  parameters = NULL, recursive = TRUE) {
@@ -180,8 +182,8 @@ orderly_pull_metadata <- function(name, id, root = NULL, locate = TRUE,
 
 ##' @rdname orderly_pull_dependencies
 ##' @export
-orderly_push_archive <- function(name, id = "latest", root = NULL,
-                                 locate = TRUE, remote = NULL) {
+orderly_push_archive <- function(name, id = "latest", parameters = NULL,
+                                 root = NULL, locate = TRUE, remote = NULL) {
   config <- orderly_config(root, locate)
   config <- check_orderly_archive_version(config)
   remote <- get_remote(remote, config)
@@ -191,6 +193,18 @@ orderly_push_archive <- function(name, id = "latest", root = NULL,
 
   if (id == "latest") {
     id <- orderly_latest(name, config, FALSE)
+  } else if (id_is_query(id)) {
+    query <- id
+    id <- orderly_search(id, name, parameters, root = root)
+    if (is.na(id)) {
+      msg <- c(
+        sprintf("Failed to find suitable version of '%s' with query:", name),
+        sprintf("  '%s'", query),
+        "and parameters",
+        sprintf("  - %s: %s", names(parameters),
+                vcapply(parameters, as.character)))
+      stop(paste(msg, collapse = "\n"), call. = FALSE)
+    }
   }
 
   v <- remote_report_versions(name, config, FALSE, remote)
