@@ -1,3 +1,8 @@
+# orderly 1.4.9
+
+* Remove `parameters` arg from `orderly_pull_archive` as it was causing confusion for users (vimc-6487)
+* Add support for calling `orderly_push_archive` with a search query as the `id` (vimc-6487)
+
 # orderly 1.4.7
 
 * Add `orderly_cancel_remote` which can be used to cancel one or more reports running on a remote via its key (mrc-3167)

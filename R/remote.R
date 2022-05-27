@@ -106,9 +106,10 @@ orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
 ##' @rdname orderly_pull_dependencies
 ##'
 ##' @param id The report identifier (for `orderly_pull_archive` and
-##'   `orderly_push_archive`). Can be a specific report `id`, `latest` to get
-##'   most recent or full search query see [orderly::orderly_search()].
-##'   Defaults to using the latest report.
+##'   `orderly_push_archive`). Can be a specific report `id` or `latest` to get
+##'   the most recent version or a full search query see
+##'   [orderly::orderly_search()] for details. Defaults to using the
+##'   latest report.
 orderly_pull_archive <- function(name, id = "latest", root = NULL,
                                  locate = TRUE, remote = NULL,
                                  recursive = TRUE) {

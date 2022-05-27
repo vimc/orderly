@@ -21,7 +21,6 @@ orderly_pull_archive(
   root = NULL,
   locate = TRUE,
   remote = NULL,
-  parameters = NULL,
   recursive = TRUE
 )
 
@@ -70,8 +69,11 @@ the direct reports, along with metadata for the dependencies;
 this will be potentially much faster, but leaves your archive in
 a more fragile state.}
 
-\item{id}{The identifier (for \code{orderly_pull_archive}).  The default is
-to use the latest report.}
+\item{id}{The report identifier (for \code{orderly_pull_archive} and
+\code{orderly_push_archive}). Can be a specific report \code{id} or \code{latest} to get
+the most recent version or a full search query see
+\code{\link[=orderly_search]{orderly_search()}} for details. Defaults to using the
+latest report.}
 }
 \value{
 No return value, these functions are called only for their
