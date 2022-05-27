@@ -158,7 +158,8 @@ orderly_pull_archive_internal <- function(name, id = "latest", root = NULL,
 
 orderly_pull_metadata <- function(name, id, root = NULL, locate = TRUE,
                                   remote = NULL) {
-  info <- pull_info(name, id, root, locate, remote)
+  parameters <- NULL
+  info <- pull_info(name, id, root, locate, remote, parameters)
   name <- info$name
   id <- info$id
   config <- info$config
