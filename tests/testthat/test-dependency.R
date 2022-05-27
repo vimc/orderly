@@ -624,8 +624,19 @@ test_that("Sensible error message if query fails", {
     "Failed to find suitable version of 'other' with query:")
 
   expect_error(
-    orderly_pull_archive("other", "latest(parameter:nmin < x)",
-                         parameters = list(x = 0.05),
+    orderly_pull_archive("other", "latest(parameter:nmin < 0.05)",
                          remote = remote, root = path_local),
-    "Failed to find suitable version of 'other' with query:")
+    paste0("Failed to find suitable version of 'other' with query:\n",
+           "  'latest(parameter:nmin < 0.05)'"),
+    fixed = TRUE)
+
+  expect_error(
+    orderly_pull_archive_internal("other", "latest(parameter:nmin < x)",
+                                  parameters = list(x = 0.05),
+                                  remote = remote, root = path_local),
+    paste0("Failed to find suitable version of 'other' with query:\n",
+           "  'latest(parameter:nmin < x)'\n",
+           "and parameters\n",
+           "  - x: 0.05"),
+    fixed = TRUE)
 })

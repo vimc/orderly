@@ -93,8 +93,9 @@ orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
   if (!is.null(depends)) {
     for (i in seq_len(nrow(depends))) {
       if (!isTRUE(depends$draft[[i]])) {
-        orderly_pull_archive(depends$name[[i]], depends$id[[i]], config,
-                             FALSE, remote, parameters, recursive)
+        orderly_pull_archive_internal(depends$name[[i]], depends$id[[i]],
+                                      config, FALSE, remote, parameters,
+                                      recursive)
       }
     }
   }
@@ -110,7 +111,15 @@ orderly_pull_dependencies <- function(name = NULL, root = NULL, locate = TRUE,
 ##'   Defaults to using the latest report.
 orderly_pull_archive <- function(name, id = "latest", root = NULL,
                                  locate = TRUE, remote = NULL,
-                                 parameters = NULL, recursive = TRUE) {
+                                 recursive = TRUE) {
+  orderly_pull_archive_internal(name, id, root = root,
+                                locate = locate, remote = remote,
+                                parameters = NULL, recursive = recursive)
+}
+
+orderly_pull_archive_internal <- function(name, id = "latest", root = NULL,
+                                          locate = TRUE, remote = NULL,
+                                          parameters = NULL, recursive = TRUE) {
   info <- pull_info(name, id, root, locate, remote, parameters)
   name <- info$name
   id <- info$id
@@ -148,8 +157,7 @@ orderly_pull_archive <- function(name, id = "latest", root = NULL,
 
 orderly_pull_metadata <- function(name, id, root = NULL, locate = TRUE,
                                   remote = NULL) {
-  parameters <- NULL
-  info <- pull_info(name, id, root, locate, remote, parameters)
+  info <- pull_info(name, id, root, locate, remote)
   name <- info$name
   id <- info$id
   config <- info$config
@@ -182,8 +190,8 @@ orderly_pull_metadata <- function(name, id, root = NULL, locate = TRUE,
 
 ##' @rdname orderly_pull_dependencies
 ##' @export
-orderly_push_archive <- function(name, id = "latest", parameters = NULL,
-                                 root = NULL, locate = TRUE, remote = NULL) {
+orderly_push_archive <- function(name, id = "latest", root = NULL,
+                                 locate = TRUE, remote = NULL) {
   config <- orderly_config(root, locate)
   config <- check_orderly_archive_version(config)
   remote <- get_remote(remote, config)
@@ -195,14 +203,11 @@ orderly_push_archive <- function(name, id = "latest", parameters = NULL,
     id <- orderly_latest(name, config, FALSE)
   } else if (id_is_query(id)) {
     query <- id
-    id <- orderly_search(id, name, parameters, root = root)
+    id <- orderly_search(id, name, root = root)
     if (is.na(id)) {
       msg <- c(
         sprintf("Failed to find suitable version of '%s' with query:", name),
-        sprintf("  '%s'", query),
-        "and parameters",
-        sprintf("  - %s: %s", names(parameters),
-                vcapply(parameters, as.character)))
+        sprintf("  '%s'", query))
       stop(paste(msg, collapse = "\n"), call. = FALSE)
     }
   }
@@ -652,10 +657,14 @@ pull_info <- function(name, id, root, locate, remote, parameters) {
     if (is.na(id)) {
       msg <- c(
         sprintf("Failed to find suitable version of '%s' with query:", name),
-        sprintf("  '%s'", query),
-        "and parameters",
-        sprintf("  - %s: %s", names(parameters),
-                vcapply(parameters, as.character)))
+        sprintf("  '%s'", query))
+      if (!is.null(parameters)) {
+        msg <- c(
+          msg,
+          "and parameters",
+          sprintf("  - %s: %s", names(parameters),
+                  vcapply(parameters, as.character)))
+      }
       stop(paste(msg, collapse = "\n"), call. = FALSE)
     }
   } else {
