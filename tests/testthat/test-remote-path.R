@@ -253,9 +253,9 @@ test_that("push report with explicit ID", {
 test_that("push report with search query", {
   skip_on_cran_windows()
   ours <- test_prepare_orderly_example("demo")
-  id1 <- orderly_run("other", parameters = list(nmin= 0.25),
+  id1 <- orderly_run("other", parameters = list(nmin = 0.25),
                      root = ours, echo = FALSE)
-  id2 <- orderly_run("other", parameters = list(nmin= 0.5),
+  id2 <- orderly_run("other", parameters = list(nmin = 0.5),
                     root = ours, echo = FALSE)
   orderly_commit(id1, root = ours)
   orderly_commit(id2, root = ours)
