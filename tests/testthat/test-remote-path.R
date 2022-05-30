@@ -291,6 +291,21 @@ test_that("Fail to push if not supported", {
 })
 
 
+test_that("fail to push when version not found", {
+  skip_on_cran_windows()
+  ours <- test_prepare_orderly_example("demo")
+  theirs <- test_prepare_orderly_example("demo")
+
+  remote <- orderly_remote_path(theirs)
+  expect_error(
+    orderly_push_archive("other", "latest(parameter:nmin == 0.25)",
+                         root = ours, remote = remote),
+    paste0("Failed to find suitable version of 'other' with query:\n",
+           "  'latest(parameter:nmin == 0.25)'"),
+    fixed = TRUE)
+})
+
+
 test_that("fetch remote metadata", {
   dat <- prepare_orderly_remote_example()
   base <- normalizePath(file.path(dat$path_remote, "archive"))
