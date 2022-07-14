@@ -241,7 +241,7 @@ orderly_push_archive <- function(name, id = "latest", root = NULL,
 ##'   be included.
 ##'
 ##' @param ref Optional reference, indicating which branch should be
-##'   used.  This cannot be used if the remote has `master_only`
+##'   used.  This cannot be used if the remote has `default_branch_only`
 ##'   set.
 ##'
 ##' @param instance Select instance of the source database to be used,
