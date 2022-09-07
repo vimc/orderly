@@ -27,7 +27,7 @@ orderly_run_remote(
 \item{parameters}{Parameters for the report}
 
 \item{ref}{Optional reference, indicating which branch should be
-used.  This cannot be used if the remote has \code{master_only}
+used.  This cannot be used if the remote has \code{default_branch_only}
 set.}
 
 \item{timeout}{Time to tell the server to wait before killing the

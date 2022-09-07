@@ -234,7 +234,7 @@ build_git_demo <- function() {
   archive
 }
 
-unzip_git_demo <- function(path = tempfile()) {
+unzip_git_demo <- function(path = tempfile(), default_branch = "master") {
   tmp <- tempfile()
   dir.create(tmp, FALSE, TRUE)
   demo <- getOption("orderly.server.demo", build_git_demo())
@@ -244,14 +244,23 @@ unzip_git_demo <- function(path = tempfile()) {
              no.. = TRUE)
   file_copy(src, path, recursive = TRUE)
   unlink(tmp, recursive = TRUE)
+  if (default_branch != "master") {
+    ## If git changes it's mind about what the default branch is called,
+    ## this will fail, we should probably detect this, but it's likely
+    ## that will break build_git_demo too
+    gert::git_branch_move("master", default_branch, force = TRUE,
+                          repo = path)
+  }
   path
 }
 
 prepare_orderly_git_example <- function(path = tempfile(), run_report = FALSE,
-                                        branch = "master") {
+                                        branch = default_branch,
+                                        default_branch = "master") {
   path_upstream <- file.path(path, "upstream")
-  unzip_git_demo(path)
-  unzip_git_demo(path_upstream)
+  unzip_git_demo(path, default_branch)
+  unzip_git_demo(path_upstream, default_branch)
+
   git_checkout_branch(branch, root = path)
   git_checkout_branch(branch, root = path_upstream)
 
