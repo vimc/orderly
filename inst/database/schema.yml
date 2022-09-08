@@ -39,8 +39,6 @@ report_version:
     - git_sha: {type: TEXT, nullable: true}
     - git_branch: {type: TEXT, nullable: true}
     - git_clean: {type: BOOLEAN, nullable: true}
-    # NOTE: fields listed in orderly_config.yml will also be
-    # included here.
 
 # Custom fields - all coerced into text.
 report_version_custom_fields:
