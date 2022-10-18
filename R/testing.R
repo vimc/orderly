@@ -51,6 +51,16 @@ create_orderly_demo <- function(path = tempfile(), quiet = FALSE,
 }
 
 
+prepare_git_example_from_source <- function(source_path, path) {
+  temp <- file.path(tempfile(), "demo")
+  fs::dir_copy(source_path, temp)
+  generate_source_db(temp)
+  run_orderly_demo(temp)
+  build_git_demo(temp)
+  prepare_orderly_git_example(path, run_report = FALSE)
+}
+
+
 run_orderly_demo <- function(path, quiet = FALSE) {
   if (quiet) {
     oo <- options(orderly.nolog = TRUE)
@@ -78,6 +88,7 @@ run_orderly_demo <- function(path, quiet = FALSE) {
 
   path
 }
+
 
 ## This is a really rubbish set of test data.  It requires an open
 ## "source" database and will write out two tables.  This is used by
@@ -115,6 +126,17 @@ prepare_orderly_example <- function(name, path = tempfile(), testing = FALSE,
   src_files <- dir(src, full.names = TRUE)
   file_copy(src_files, path, overwrite = TRUE, recursive = TRUE)
 
+  generate_source_db(path)
+
+  if (git) {
+    prepare_basic_git(path, quiet = TRUE)
+  }
+
+  path
+}
+
+
+generate_source_db <- function(path) {
   if (file.exists(file.path(path, "source.R"))) {
     generator <- source(file.path(path, "source.R"), local = TRUE)$value
   } else {
@@ -125,12 +147,6 @@ prepare_orderly_example <- function(name, path = tempfile(), testing = FALSE,
   if (length(con) > 0L) {
     generator(con)
   }
-
-  if (git) {
-    prepare_basic_git(path, quiet = TRUE)
-  }
-
-  path
 }
 
 
@@ -196,8 +212,10 @@ demo_change_time <- function(id, time, path) {
 ## extendable...
 ##
 ## After building this we have two branches 'master' with
-build_git_demo <- function() {
-  path <- prepare_orderly_example("demo", file.path(tempfile(), "demo"))
+build_git_demo <- function(path = NULL) {
+  if (is.null(path)) {
+    path <- prepare_orderly_example("demo", file.path(tempfile(), "demo"))
+  }
   dir.create(file.path(path, "extra"))
   move <- setdiff(dir(file.path(path, "src"), pattern = "^[^.]+$"),
                   c("minimal", "global"))

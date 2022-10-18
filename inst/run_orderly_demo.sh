@@ -1,0 +1,9 @@
+#!/bin/sh
+set -ex
+if [ "$#" -ne 2 ]; then
+    echo "Expected two arguments (source_path, dest_path)"
+    exit 1
+fi
+SRC=$1
+DEST=$2
+Rscript -e "orderly:::prepare_git_example_from_source(\"$SRC\", \"$DEST\")"
