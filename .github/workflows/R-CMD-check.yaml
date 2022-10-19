@@ -110,3 +110,14 @@ jobs:
         with:
           name: ${{ runner.os }}-r${{ matrix.config.r }}-results
           path: check
+
+      - name: Check orderly.server build
+        env:
+          GITHUB_TOKEN: ${{ secrets.REPO_DISPATCH_TOKEN }}
+          EVENT: orderly-downstream
+        run: |
+          curl \
+            -d "{\"event_type\": \"${EVENT}\", \"client_payload\": {\"orderly_version\": \"${GITHUB_REF}\"}}" \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/application/vnd.github+json" \
+            "https://api.github.com/repos/vimc/orderly.server/dispatches"
