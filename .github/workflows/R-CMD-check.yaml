@@ -10,7 +10,7 @@ on:
       - main
       - master
 
-name: R-CMD-check
+name: Check
 
 jobs:
   R-CMD-check:
@@ -77,6 +77,12 @@ jobs:
         run: |
           brew install libgit2
 
+      - name: Install openssl (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          install.packages("openssl", type = "binary")
+        shell: Rscript {0}
+
       - name: Install dependencies
         run: |
           remotes::install_deps(dependencies = TRUE)
@@ -111,13 +117,18 @@ jobs:
           name: ${{ runner.os }}-r${{ matrix.config.r }}-results
           path: check
 
-      - name: Check orderly.server build
-        env:
-          GITHUB_TOKEN: ${{ secrets.REPO_DISPATCH_TOKEN }}
-          EVENT: orderly-downstream
-        run: |
-          curl \
-            -d "{\"event_type\": \"${EVENT}\", \"client_payload\": {\"orderly_version\": \"${GITHUB_REF}\"}}" \
-            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            -H "Accept: application/application/vnd.github+json" \
-            "https://api.github.com/repos/vimc/orderly.server/dispatches"
+  check-orderly-server:
+
+    runs-on: ubuntu-20.04
+
+    needs: R-CMD-check
+
+    steps:
+      - uses: convictional/trigger-workflow-and-wait@v1.6.1
+        with:
+          owner: vimc
+          repo: orderly.server
+          ref: master
+          github_token: ${{ secrets.REPO_DISPATCH_TOKEN }}
+          client_payload: '{"orderly_version": "${GITHUB_REF}"}'
+          workflow_file_name: R-CMD-check.yaml
