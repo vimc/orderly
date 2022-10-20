@@ -57,7 +57,10 @@ prepare_git_example_from_source <- function(source_path, path) {
   generate_source_db(temp)
   run_orderly_demo(temp)
   build_git_demo(temp)
-  prepare_orderly_git_example(path, run_report = FALSE)
+  res <- prepare_orderly_git_example(path, run_report = FALSE)
+  options(orderly.server.demo = NULL)
+  unlink(temp, recursive = TRUE)
+  res
 }
 
 
