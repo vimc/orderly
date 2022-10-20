@@ -1,7 +1,7 @@
 # orderly 1.5.0
 
 * Add `prepare_git_example_from_source` which can be used to generate a git controlled orderly directory
-from a source, and another entrypoint `run_orderly_demo.sh` that exposes this function, for use in testing OrderlyWeb (mrc-3665)
+from a source, and another entrypoint `run_orderly_demo` that exposes this function, for use in testing OrderlyWeb (mrc-3665)
 
 # orderly 1.4.7
 
