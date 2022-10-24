@@ -39,4 +39,4 @@ steps:
     build:
       branch: !master
       env:
-        ORDERLY_VERSION: "${BUIDLKITE_COMMIT}"
+        ORDERLY_VERSION: "${BUILDKITE_COMMIT}"
