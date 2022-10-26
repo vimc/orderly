@@ -53,6 +53,7 @@ COPY . /orderly
 RUN R CMD INSTALL /orderly && \
   Rscript -e 'orderly:::write_script("/usr/bin")' && \
   cp /orderly/inst/create_orderly_demo.sh /usr/bin/ && \
+  cp /orderly/inst/run_orderly_demo /usr/bin/ && \
   rm -rf /orderly
 
 ENTRYPOINT ["/usr/bin/orderly"]

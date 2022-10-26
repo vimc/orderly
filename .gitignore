@@ -13,3 +13,6 @@ tests/testthat/montagu-reports
 tests/testthat/reference/*.zip
 orderly_*.tar.gz
 tests/testthat/tmp
+/doc/
+/Meta/
+.idea
