@@ -130,5 +130,5 @@ jobs:
           repo: orderly.server
           ref: master
           github_token: ${{ secrets.REPO_DISPATCH_TOKEN }}
-          client_payload: '{"orderly_version": "${GITHUB_HEAD_REF}"}'
+          client_payload: "{\"orderly_version\": \"${{ github.event_name == 'push' && 'master' || github.head_ref }}\"}"
           workflow_file_name: R-CMD-check.yaml
