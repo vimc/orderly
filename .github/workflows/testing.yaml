@@ -22,7 +22,7 @@ jobs:
       
     steps:
       - uses: convictional/trigger-workflow-and-wait@v1.6.1
-        if: ${{ github.head_ref == 'master' }}
+        if: ${{ github.event_name == 'push' }}
         with:
           owner: vimc
           repo: workflow-test
