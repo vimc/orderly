@@ -1,0 +1,31 @@
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+      
+      
+name: test
+
+jobs:
+  test:
+    runs-on: unbutu-20.04
+
+    name: testing
+    
+    strategy:
+      fail-fast: false
+      
+    steps:
+      - uses: convictional/trigger-workflow-and-wait@v1.6.1
+        with:
+          owner: mrc-ide
+          repo: workflow-test
+          ref: main
+          github_token: ${{ secrets.REPO_DISPATCH_TOKEN }}
+          client_payload: "{\"orderly_version\": \"${{ github.ref_name }}\"}"
+          workflow_file_name: trigger-me.yaml
