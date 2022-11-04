@@ -33,3 +33,10 @@ steps:
     branches: "master"
     build:
       branch: master
+
+  - trigger: "orderly-dot-server-test"
+    label: ":rocket: orderly.server (from orderly) :cloud:"
+    build:
+      branch: !master
+      env:
+        ORDERLY_VERSION: "${BUILDKITE_COMMIT:0:7}"
