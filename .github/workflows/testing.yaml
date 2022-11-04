@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: convictional/trigger-workflow-and-wait@v1.6.1
         with:
-          owner: mrc-ide
+          owner: vimc
           repo: workflow-test
           ref: main
           github_token: ${{ secrets.REPO_DISPATCH_TOKEN }}
