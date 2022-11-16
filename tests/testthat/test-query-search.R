@@ -436,3 +436,23 @@ test_that("run query on remote", {
                    draft = "newer", remote = remote, root = root),
     "Can't use 'draft' along with 'remote'")
 })
+
+
+test_that("can cope with empty latest", {
+  dat <- prepare_orderly_query_example()
+  root <- dat$root
+  ids <- dat$ids
+  expect_equal(orderly_search("latest", "other", root = root), last(ids))
+  expect_equal(orderly_search("latest()", "other", root = root), last(ids))
+})
+
+
+test_that("meaningful error on multi-arg latest", {
+  dat <- prepare_orderly_query_example()
+  root <- dat$root
+  ids <- dat$ids
+  expect_error(
+    orderly_search("latest(a, b)", "other", root = root),
+    "Unexpected query 'latest(a, b)'; expected at most one argument to latest",
+    fixed = TRUE)
+})

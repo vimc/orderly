@@ -229,15 +229,26 @@ parse_query <- function(x, parameters) {
   }
   expr <- expr[[1L]]
 
-  latest <- is_call(expr, "latest")
+  test <- c("parameter", "tag")
+
+  latest <- is_call(expr, "latest") || identical(expr, as.name("latest"))
   if (latest) {
-    stopifnot(length(expr) == 2L)
-    expr <- expr[[2L]]
+    if (length(expr) == 1L) {
+      ## Special exit to make latest() work; this is done better in
+      ## outpack.
+      return(list(latest = TRUE,
+                  use = set_names(as.list(rep(FALSE, length(test))), test),
+                  expr = TRUE))
+    } else if (length(expr) == 2L) {
+      expr <- expr[[2L]]
+    } else {
+      stop(sprintf(
+        "Unexpected query '%s'; expected at most one argument to latest", x))
+    }
   }
 
   dat <- parse_query_expr(expr, parameters)
 
-  test <- c("parameter", "tag")
   use <- set_names(as.list(test %in% dat$namespace), test)
   expr <- dat$expr
   list(latest = latest, use = use, expr = expr)
