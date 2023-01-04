@@ -1,3 +1,7 @@
+# orderly 1.5.2
+
+* `orderly_batch` will now attempt to run all parameter sets when `continue_on_error` is `TRUE`. Previously it would fail early if dependency resolution failed. However we want to attempt these in the case that a user has a parameterised dependency.
+
 # orderly 1.5.0
 
 * Add `prepare_git_example_from_source` which can be used to generate a git controlled orderly directory

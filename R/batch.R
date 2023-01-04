@@ -13,9 +13,7 @@
 ##'
 ##' @param continue_on_error If FALSE then if one report run fails the
 ##'   function will not attempt to run subsequent reports in the batch. If
-##'   TRUE subsequent parameter sets will be run. If the report run fails
-##'   during preparation e.g. because of missing parameters this will
-##'   error and stop all subsequent parameter sets.
+##'   TRUE subsequent parameter sets will be run.
 ##'
 ##' @param ... Additional args passed to [orderly::orderly_run()]
 ##'
@@ -34,6 +32,7 @@ orderly_batch <- function(name = NULL, parameters = NULL,
   if (NROW(parameters) < 1) {
     stop("Parameters for a batch must be a data frame with at least one row")
   }
+  assert_named(parameters)
   batch_id <- ids::random_id()
   run_report <- function(parameter_set) {
     id_file <- tempfile()
@@ -44,16 +43,15 @@ orderly_batch <- function(name = NULL, parameters = NULL,
         success = TRUE,
         as.list(parameter_set))
     }, error = function(e) {
-      if (!file.exists(id_file) || !continue_on_error) {
-        ## In this case that id_file doesn't exist it means run has
-        ## failed during run_read so some issue with args to
-        ## orderly_run_internal which have caused error before
-        ## ID can even be generated. Error early so  user can fix
-        ## issue with inputs.
+      if (!continue_on_error) {
         stop(e)
       }
       message(sprintf("Report run failed: %s\n", e$message))
-      id <- readLines(id_file)
+      if (file.exists(id_file)) {
+        id <- readLines(id_file)
+      } else {
+        id <- NA_character_
+      }
       c(id = id,
         success = FALSE,
         as.list(parameter_set))

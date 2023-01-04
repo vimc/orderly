@@ -47,8 +47,24 @@ test_that("return useful error if params passed without names", {
     c("one", "two", "three"),
     c(1, 2, 3)
   )
+  colnames(params) <- NULL
   expect_error(
     orderly_batch("example", parameters = params, root = path, echo = FALSE),
+    "'parameters' must be named",
+    fixed = TRUE
+  )
+})
+
+test_that("return useful error if params are missing", {
+  path <- test_prepare_orderly_example("parameters", testing = TRUE)
+
+  params <- data_frame(
+    param1 = c("one", "two", "three"),
+    param2 = c(1, 2, 3)
+  )
+  expect_error(
+    orderly_batch("example", parameters = params, root = path, echo = FALSE,
+                  continue_on_error = FALSE),
     "Missing parameters: 'a', 'b'",
     fixed = TRUE
   )
@@ -91,6 +107,31 @@ test_that("failure report in batch run does not fail subsequent report runs", {
   invisible(lapply(data, function(d) {
     expect_equal(d$meta$batch_id, batch_id)
   }))
+})
+
+test_that("failure report in batch run does not fail subsequent report runs when id unknown", {
+  dat <- prepare_orderly_query_example()
+  root <- dat$root
+
+  config <- orderly_config_$new(root)
+
+  p <- file.path(root, "src", "use_dependency", "orderly.yml")
+  txt <- readLines(p)
+  txt <- sub("latest", "latest(parameter:nmin == x)", txt, fixed = TRUE)
+  txt <- c(txt, c("parameters:",
+                  "  x:",
+                  "    default: 0.25"))
+  writeLines(txt, p)
+
+  params <- data_frame(
+    x = c(0.2, 0.9)
+  )
+  output <- orderly_batch("use_dependency", parameters = params,
+                          root = root, echo = FALSE)
+  expect_setequal(colnames(output), c("id", "success", "x"))
+  expect_equal(output[, "x", drop = FALSE], params)
+  expect_equal(output$success, c(TRUE, FALSE))
+  expect_equal(output$id[2], NA_character_)
 })
 
 test_that("erroring report stops batch if continue_on_error is FLASE", {

@@ -18,9 +18,7 @@ represents a parameter set to be passed to one report run.}
 
 \item{continue_on_error}{If FALSE then if one report run fails the
 function will not attempt to run subsequent reports in the batch. If
-TRUE subsequent parameter sets will be run. If the report run fails
-during preparation e.g. because of missing parameters this will
-error and stop all subsequent parameter sets.}
+TRUE subsequent parameter sets will be run.}
 
 \item{...}{Additional args passed to \code{\link[=orderly_run]{orderly_run()}}}
 }
