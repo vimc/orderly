@@ -109,10 +109,9 @@ test_that("failure report in batch run does not fail subsequent report runs", {
   }))
 })
 
-test_that("orderly_batch attempts subsequent report runs even when id unknown", {
+test_that("batch attempts subsequent report runs even when id unknown", {
   dat <- prepare_orderly_query_example()
   root <- dat$root
-
   config <- orderly_config_$new(root)
 
   p <- file.path(root, "src", "use_dependency", "orderly.yml")
