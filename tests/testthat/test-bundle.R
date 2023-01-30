@@ -344,8 +344,9 @@ test_that("Failure output written if a bundle fails", {
 
   tryCatch({
     orderly::orderly_bundle_run(bundle_path, "output")
-    }, error = function(e) {}
-  )
+  }, error = function(e) {
+    invisible()
+  })
 
   expect_true(file.exists(file.path(getwd(), "output", bundle$id, "pack",
                                     "orderly_fail.rds")))
