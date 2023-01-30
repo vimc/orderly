@@ -1,3 +1,7 @@
+# orderly 1.5.2
+
+* Fix issue writing failure data from a failed orderly bundle.
+
 # orderly 1.5.0
 
 * Add `prepare_git_example_from_source` which can be used to generate a git controlled orderly directory

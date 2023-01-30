@@ -321,6 +321,35 @@ test_that("failed bundle run writes out failed rds", {
                'stop\\("some error"\\)')
 })
 
+test_that("Failure output written if a bundle fails", {
+  path <- test_prepare_orderly_example("demo")
+  on.exit(unlink(path, recursive = TRUE))
+
+  # Make parameter less than zero cause a crash
+
+  test_script <- file.path(path, "src", "other", "script.R")
+  script <- readLines(test_script)
+  script <- c("if (nmin < 0) stop('Invalid parameter')", script)
+  writeLines(script, test_script)
+
+  # Prepare to run two jobs, one fails, one succeeds
+
+  path_bundles <- file.path(path, "bundles")
+  bundle <- orderly::orderly_bundle_pack(path_bundles, "other",
+                                          parameters = list(nmin = -1),
+                                         root = path)
+
+
+  bundle_path <- file.path(path, "bundles", basename(bundle$path))
+
+  tryCatch({
+    orderly::orderly_bundle_run(bundle_path, "output")
+    }, error = function(e) {}
+  )
+
+  expect_true(file.exists(file.path(getwd(), "output", bundle$id, "pack",
+                                    "orderly_fail.rds")))
+})
 
 test_that("zip list helper safely lists", {
   skip_on_cran()

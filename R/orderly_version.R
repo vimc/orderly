@@ -537,6 +537,7 @@ orderly_version <- R6::R6Class(
         private[[v]] <- info[[v]]
       }
 
+      currentwd <- getwd()
       withCallingHandlers({
         ## Refetch the preflight info here: we want to keep git but
         ## replace everything else I think.  We might save the random
@@ -548,6 +549,7 @@ orderly_version <- R6::R6Class(
         self$run_execute(echo)
         self$run_cleanup()
       }, error = function(e) {
+        setwd(currentwd)
         self$run_failed_cleanup(e)
       })
     },
