@@ -332,11 +332,11 @@ test_that("Failure output written if a bundle fails", {
   script <- c("if (nmin < 0) stop('Invalid parameter')", script)
   writeLines(script, test_script)
 
-  # Prepare to run two jobs, one fails, one succeeds
+  # Run a failing bundle
 
   path_bundles <- file.path(path, "bundles")
   bundle <- orderly::orderly_bundle_pack(path_bundles, "other",
-                                          parameters = list(nmin = -1),
+                                         parameters = list(nmin = -1),
                                          root = path)
 
 
