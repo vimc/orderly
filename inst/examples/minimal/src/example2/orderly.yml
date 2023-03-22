@@ -6,4 +6,5 @@ artefacts:
   staticgraph:
     description: A graph of things
     filenames: mygraph.png
-
+packages:
+  - withr

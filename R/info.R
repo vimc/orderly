@@ -80,7 +80,7 @@ orderly_info <- function(id, name, root = NULL, locate = TRUE) {
 ##' @export
 ##'
 ##' @examples
-##' orderly::orderly_packages()
+##' path <- orderly::orderly_example("minimal")
 ##' orderly::orderly_packages(root = path)
 orderly_packages <- function(root = NULL, locate = TRUE) {
   cfg <- orderly_config(root, locate)
