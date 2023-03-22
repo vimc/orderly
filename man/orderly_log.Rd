@@ -20,10 +20,12 @@ orderly_log(topic, value)
 \value{
 \code{orderly_log_on} and \code{orderly_log_off} invisibly
 returns a logical indicating if logging was previously enabled.
-This allows patterns like:\preformatted{if (!orderly::orderly_log_off()) \{
+This allows patterns like:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{if (!orderly::orderly_log_off()) \{
   on.exit(orderly::orderly_log_on())
 \}
-}
+}\if{html}{\out{</div>}}
 
 to disable logging within a function (the \code{on.exit} block
 will be run when the function exits).

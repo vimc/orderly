@@ -1,0 +1,9 @@
+packages:
+  - dplyr
+  - readr
+  - stringr
+script: script.R
+artefacts:
+  staticgraph:
+    description: A graph of things
+    filenames: mygraph.png

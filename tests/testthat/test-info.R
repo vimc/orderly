@@ -74,3 +74,20 @@ test_that("info errors if fails to find report rds", {
       id),
     fixed = TRUE)
 })
+
+test_that("can retrieve package info", {
+  path <- test_prepare_orderly_example("packages", testing = TRUE)
+  packages <- orderly_packages(path)
+  expect_length(packages, 3)
+  expect_equal(class(packages), "list")
+  expect_equal(packages[[1]], "dplyr")
+  expect_equal(packages[[2]], "readr")
+  expect_equal(packages[[3]], "stringr")
+})
+
+test_that("can retrieve empty package info", {
+  path <- test_prepare_orderly_example("changelog", testing = TRUE)
+  packages <- orderly_packages(path)
+  expect_length(packages, 0)
+  expect_equal(class(packages), "list")
+})
