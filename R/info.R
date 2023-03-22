@@ -85,6 +85,7 @@ orderly_info <- function(id, name, root = NULL, locate = TRUE) {
 orderly_packages <- function(root = NULL, locate = TRUE) {
   cfg <- orderly_config(root, locate)
   names <- basename(list_dirs(path_src(cfg$root)))
-  packages <- unlist(lapply(names, function(name) orderly_recipe$new(name, cfg)$packages))
-  unique(as.list(packages))
+  packages <- lapply(names,
+                     function(name) orderly_recipe$new(name, cfg)$packages)
+  unique(as.list(unlist(packages)))
 }
