@@ -15,7 +15,7 @@ test_that("run", {
   expect_identical(res$target, main_do_run)
 
   capture.output(res$target(res))
-  expect_equal(orderly_list(path), "example")
+  expect_equal(orderly_list(path), c("example", "example2"))
   expect_equal(nrow(orderly_list_archive(path)), 1)
 })
 
@@ -36,7 +36,7 @@ test_that("run: id-file", {
   expect_identical(res$target, main_do_run)
 
   capture.output(res$target(res))
-  expect_equal(orderly_list(path), "example")
+  expect_equal(orderly_list(path), c("example", "example2"))
 
   expect_true(file.exists(id_file))
   id <- readLines(id_file)
@@ -302,7 +302,7 @@ test_that("list", {
   args <- c("--root", path, "list")
   res <- cli_args_process(args)
 
-  expect_output(res$target(res), "^example$")
+  expect_output(res$target(res), "^example\\nexample2$")
 
   for (i in c("names", "drafts", "archive")) {
     expect_equal(
@@ -420,7 +420,7 @@ test_that("list", {
   orderly_commit(id2, root = path)
 
   res <- cli_args_process(c("--root", path, "list", "names"))
-  expect_equal(capture.output(res$target(res)), "example")
+  expect_equal(capture.output(res$target(res)), c("example", "example2"))
 
   res <- cli_args_process(c("--root", path, "list", "drafts"))
   out1 <- capture.output(res$target(res))
@@ -697,7 +697,7 @@ test_that("run can save workflow metadata", {
   expect_equal(res$options$workflow_id, "123")
 
   capture.output(res$target(res))
-  expect_equal(orderly_list(path), "example")
+  expect_equal(orderly_list(path), c("example", "example2"))
   expect_equal(nrow(orderly_list_archive(path)), 1)
   id <- orderly_list_archive(path)$id
   rds <- path_orderly_run_rds(file.path(path, "archive", "example", id))

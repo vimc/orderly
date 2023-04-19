@@ -66,15 +66,15 @@ connection args for (possibly multiple) databases}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{orderly_config_$new()}}
-\item \href{#method-server_options}{\code{orderly_config_$server_options()}}
-\item \href{#method-add_run_option}{\code{orderly_config_$add_run_option()}}
-\item \href{#method-get_run_option}{\code{orderly_config_$get_run_option()}}
+\item \href{#method-orderly_config-new}{\code{orderly_config_$new()}}
+\item \href{#method-orderly_config-server_options}{\code{orderly_config_$server_options()}}
+\item \href{#method-orderly_config-add_run_option}{\code{orderly_config_$add_run_option()}}
+\item \href{#method-orderly_config-get_run_option}{\code{orderly_config_$get_run_option()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-orderly_config-new"></a>}}
+\if{latex}{\out{\hypertarget{method-orderly_config-new}{}}}
 \subsection{Method \code{new()}}{
 Create an object representing orderly config
 \subsection{Usage}{
@@ -94,8 +94,8 @@ for each of the cfg fields}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-server_options"></a>}}
-\if{latex}{\out{\hypertarget{method-server_options}{}}}
+\if{html}{\out{<a id="method-orderly_config-server_options"></a>}}
+\if{latex}{\out{\hypertarget{method-orderly_config-server_options}{}}}
 \subsection{Method \code{server_options()}}{
 Get connection options for the current server. This is
 the details from the "remote" section for the server
@@ -111,8 +111,8 @@ otherwise NULL
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-add_run_option"></a>}}
-\if{latex}{\out{\hypertarget{method-add_run_option}{}}}
+\if{html}{\out{<a id="method-orderly_config-add_run_option"></a>}}
+\if{latex}{\out{\hypertarget{method-orderly_config-add_run_option}{}}}
 \subsection{Method \code{add_run_option()}}{
 Add a key-value pair run option
 \subsection{Usage}{
@@ -130,8 +130,8 @@ Add a key-value pair run option
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-get_run_option"></a>}}
-\if{latex}{\out{\hypertarget{method-get_run_option}{}}}
+\if{html}{\out{<a id="method-orderly_config-get_run_option"></a>}}
+\if{latex}{\out{\hypertarget{method-orderly_config-get_run_option}{}}}
 \subsection{Method \code{get_run_option()}}{
 Retrieve value of a run option
 \subsection{Usage}{
