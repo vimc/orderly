@@ -71,3 +71,21 @@ orderly_info <- function(id, name, root = NULL, locate = TRUE) {
     error = error
   )
 }
+
+##' Return details of packages required by all src reports in this orderly repo
+##'
+##' @inheritParams orderly_list
+##'
+##' @return List of packages required by all src reports
+##' @export
+##'
+##' @examples
+##' path <- orderly::orderly_example("minimal")
+##' orderly::orderly_packages(root = path)
+orderly_packages <- function(root = NULL, locate = TRUE) {
+  cfg <- orderly_config(root, locate)
+  names <- basename(list_dirs(path_src(cfg$root)))
+  packages <- lapply(names,
+                     function(name) orderly_recipe$new(name, cfg)$packages)
+  unique(as.list(unlist(packages)))
+}

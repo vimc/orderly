@@ -99,6 +99,7 @@ reference:
     contents:
       - orderly_example
       - orderly_run_info
+      - orderly_packages
       - orderly_log
       - orderly_log_off
       - orderly_log_on

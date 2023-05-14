@@ -4,7 +4,7 @@ test_that("cleanup nothing", {
   path <- test_prepare_orderly_example("minimal")
   out <- capture_logs(orderly_cleanup(root = path))
   expect_null(out$result)
-  expect_equal(orderly_list(root = path), "example")
+  expect_equal(orderly_list(root = path), c("example", "example2"))
   expect_match(out$messages, "Found 0 draft reports", all = FALSE)
   expect_match(out$messages, "Found 0 csv files", all = FALSE)
   expect_match(out$messages, "Found 0 rds files", all = FALSE)

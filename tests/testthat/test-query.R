@@ -15,13 +15,13 @@ test_that("empty", {
 
 test_that("non-empty", {
   path <- test_prepare_orderly_example("minimal")
-  expect_equal(orderly_list(path), "example")
+  expect_equal(orderly_list(path), c("example", "example2"))
 })
 
 test_that("query through lifecycle", {
   skip_on_cran_windows()
   path <- test_prepare_orderly_example("minimal")
-  expect_equal(orderly_list(root = path), "example")
+  expect_equal(orderly_list(root = path), c("example", "example2"))
 
   empty <- data.frame(name = character(0), id = character(0),
                       stringsAsFactors = FALSE)

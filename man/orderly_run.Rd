@@ -90,8 +90,10 @@ successfully run you can use \code{\link[=orderly_commit]{orderly_commit()}} to 
 it to the \code{archive} directory.
 }
 \details{
-Parameters are passed to the report as a named list, for example\preformatted{id <- orderly::orderly_run("other", list(nmin = 0.2), root = path)
-}
+Parameters are passed to the report as a named list, for example
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{id <- orderly::orderly_run("other", list(nmin = 0.2), root = path)
+}\if{html}{\out{</div>}}
 
 (see the examples).  The names of the parameters (here,
 \code{nmin}) must correspond to declared parameters in the

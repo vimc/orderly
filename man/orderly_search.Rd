@@ -68,22 +68,26 @@ this query string in a \verb{depends:} section will let you select
 a report that matches some criteria.  For example, suppose that
 you have report \code{A} that takes a parameter "fruit" with
 values like "apple", "banana", and a report \code{B} that depends
-on A.  You could then write:\preformatted{depends:
+on A.  You could then write:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{depends:
   A:
     id: latest(parameter:fruit == "apple")
     uses:
       summary.csv: summary.csv
-}
+}\if{html}{\out{</div>}}
 
 To get the \code{summary.csv} file out of the latest report
 \code{A} that was run with the "fruit" parameter set to "apple".
 If "B" itself takes parameters, you can use those parameters in
-these query expressions like\preformatted{depends:
+these query expressions like
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{depends:
   A:
     id: latest(parameter:fruit == target_fruit)
     uses:
       summary.csv: summary.csv
-}
+}\if{html}{\out{</div>}}
 
 (assuming that \code{B} takes a parameter \code{target_fruit}).
 
@@ -92,8 +96,10 @@ test for presence of a tag called "tagname".
 
 Search queries can be joined by \code{&&} and \code{||} and
 grouped using parentheses, these groups (or tags) can be negated
-with \code{!}, so a complicated query expression might look like:\preformatted{(parameter:fruit == "apple" && !tag:weekly) || parameter:fruit == "banana"
-}
+with \code{!}, so a complicated query expression might look like:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{(parameter:fruit == "apple" && !tag:weekly) || parameter:fruit == "banana"
+}\if{html}{\out{</div>}}
 
 Be careful of comparing floating point numbers with \code{==} or
 \code{!=} as they may not always return what you expect (for example
