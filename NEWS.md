@@ -1,4 +1,4 @@
-# orderly 1.5.2
+# orderly 1.6.1
 
 * Fix issue writing failure data from a failed orderly bundle.
 
