@@ -532,7 +532,10 @@ orderly_version <- R6::R6Class(
     bundle_run = function(recipe, info, echo = TRUE, envir = NULL) {
       private$recipe <- recipe
       private$envir <- orderly_environment(envir)
-      private$workdir <- recipe$path
+      ## We need to get the absolute path here so that the error
+      ## handling works as expected; it's quite possible that should
+      ## be done at the recipe level really.
+      private$workdir <- normalizePath(recipe$path, mustWork = TRUE)
       for (v in names(info)) {
         private[[v]] <- info[[v]]
       }

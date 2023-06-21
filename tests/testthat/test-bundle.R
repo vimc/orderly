@@ -321,6 +321,58 @@ test_that("failed bundle run writes out failed rds", {
                'stop\\("some error"\\)')
 })
 
+test_that("Failure output written if a bundle fails", {
+  path <- test_prepare_orderly_example("demo")
+  on.exit(unlink(path, recursive = TRUE))
+
+  # Make parameter less than zero cause a crash
+  test_script <- file.path(path, "src", "other", "script.R")
+  script <- readLines(test_script)
+  script <- c("if (nmin < 0) stop('Invalid parameter')", script)
+  writeLines(script, test_script)
+
+  # Run a failing bundle
+  path_bundles <- file.path(path, "bundles")
+  bundle <- orderly_bundle_pack(path_bundles, "other",
+                                parameters = list(nmin = -1),
+                                root = path)
+  bundle_path <- file.path(path, "bundles", basename(bundle$path))
+  workdir <- tempfile()
+  expect_error(orderly_bundle_run(bundle_path, workdir, FALSE),
+               "Invalid parameter")
+
+  expect_true(file.exists(file.path(workdir, bundle$id, "pack",
+                                    "orderly_fail.rds")))
+})
+
+
+test_that("Failure output written if bundle fails in relative path", {
+  path <- test_prepare_orderly_example("demo")
+  on.exit(unlink(path, recursive = TRUE))
+
+  # Make parameter less than zero cause a crash
+  test_script <- file.path(path, "src", "other", "script.R")
+  script <- readLines(test_script)
+  script <- c("if (nmin < 0) stop('Invalid parameter')", script)
+  writeLines(script, test_script)
+
+  path_bundles <- file.path(path, "bundles")
+  bundle <- orderly_bundle_pack(path_bundles, "other",
+                                parameters = list(nmin = -1),
+                                root = path)
+
+  bundle_path <- file.path(path, "bundles", basename(bundle$path))
+  workdir <- tempfile()
+
+  expect_error(
+    withr::with_dir(
+      dirname(workdir),
+      orderly_bundle_run(bundle_path, basename(workdir), echo = FALSE)),
+    "Invalid parameter")
+
+  expect_true(file.exists(file.path(workdir, bundle$id, "pack",
+                                    "orderly_fail.rds")))
+})
 
 test_that("zip list helper safely lists", {
   skip_on_cran()
