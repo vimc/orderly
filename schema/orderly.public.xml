@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<database name="orderly" schema="public" type="PostgreSQL - 10.4 (Debian 10.4-2.pgdg90+1)">
+   <tables>
+      <table name="artefact_format" numRows="5" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="name" nullable="false" remarks="" size="2147483647" type="text">
+            <child column="format" foreignKey="report_version_artefact_format_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version_artefact"/>
+         </column>
+         <primaryKey column="name" sequenceNumberInPK="1"/>
+         <index name="artefact_format_pkey" unique="true">
+            <column ascending="true" name="name"/>
+         </index>
+      </table>
+      <table name="changelog" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="1" name="report_version" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="id" foreignKey="changelog_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="report_version_public" nullable="true" remarks="" size="2147483647" type="text">
+            <parent column="id" foreignKey="changelog_report_version_public_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="3" name="label" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="id" foreignKey="changelog_label_fkey" implied="false" onDeleteCascade="false" schema="public" table="changelog_label"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="4" name="value" nullable="false" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="5" name="from_file" nullable="false" remarks="" size="1" type="bool"/>
+         <column autoUpdated="false" digits="0" id="6" name="ordering" nullable="false" remarks="" size="10" type="int4"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="changelog_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="changelog_label" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="text">
+            <child column="label" foreignKey="changelog_label_fkey" implied="false" onDeleteCascade="false" schema="public" table="changelog"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="public" nullable="false" remarks="" size="1" type="bool"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="changelog_label_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="custom_fields" numRows="3" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="text">
+            <child column="key" foreignKey="report_version_custom_fields_key_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version_custom_fields"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="description" nullable="true" remarks="" size="2147483647" type="text"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="custom_fields_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="data" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="hash" nullable="false" remarks="" size="2147483647" type="text">
+            <child column="hash" foreignKey="report_version_data_hash_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version_data"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="size_csv" nullable="false" remarks="" size="19" type="int8"/>
+         <column autoUpdated="false" digits="0" id="2" name="size_rds" nullable="false" remarks="" size="19" type="int8"/>
+         <primaryKey column="hash" sequenceNumberInPK="1"/>
+         <index name="data_pkey" unique="true">
+            <column ascending="true" name="hash"/>
+         </index>
+      </table>
+      <table name="depends" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('depends_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial"/>
+         <column autoUpdated="false" digits="0" id="1" name="report_version" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="id" foreignKey="depends_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="use" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="depends_use_fkey" implied="false" onDeleteCascade="false" schema="public" table="file_artefact"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="3" name="as" nullable="false" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="4" name="is_pinned" nullable="false" remarks="" size="1" type="bool"/>
+         <column autoUpdated="false" digits="0" id="5" name="is_latest" nullable="false" remarks="" size="1" type="bool"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="depends_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="file" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="hash" nullable="false" remarks="" size="2147483647" type="text">
+            <child column="file_hash" foreignKey="file_artefact_file_hash_fkey" implied="false" onDeleteCascade="false" schema="public" table="file_artefact"/>
+            <child column="file_hash" foreignKey="file_input_file_hash_fkey" implied="false" onDeleteCascade="false" schema="public" table="file_input"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="size" nullable="false" remarks="" size="19" type="int8"/>
+         <primaryKey column="hash" sequenceNumberInPK="1"/>
+         <index name="file_pkey" unique="true">
+            <column ascending="true" name="hash"/>
+         </index>
+      </table>
+      <table name="file_artefact" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('file_artefact_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial">
+            <child column="use" foreignKey="depends_use_fkey" implied="false" onDeleteCascade="false" schema="public" table="depends"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="artefact" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="file_artefact_artefact_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version_artefact"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="file_hash" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="hash" foreignKey="file_artefact_file_hash_fkey" implied="false" onDeleteCascade="false" schema="public" table="file"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="3" name="filename" nullable="false" remarks="" size="2147483647" type="text"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="file_artefact_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="file_input" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('file_input_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial">
+            <child column="file_input" foreignKey="file_input_global_file_input_fkey" implied="false" onDeleteCascade="false" schema="public" table="file_input_global"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="report_version" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="id" foreignKey="file_input_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="file_hash" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="hash" foreignKey="file_input_file_hash_fkey" implied="false" onDeleteCascade="false" schema="public" table="file"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="3" name="filename" nullable="false" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="4" name="file_purpose" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="name" foreignKey="file_input_file_purpose_fkey" implied="false" onDeleteCascade="false" schema="public" table="file_purpose"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="file_input_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="file_input_global" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('file_input_global_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial"/>
+         <column autoUpdated="false" digits="0" id="1" name="file_input" nullable="false" remarks="" size="10" type="int4">
+            <parent column="id" foreignKey="file_input_global_file_input_fkey" implied="false" onDeleteCascade="false" schema="public" table="file_input"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="filename" nullable="false" remarks="" size="2147483647" type="text"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="file_input_global_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="file_purpose" numRows="6" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="name" nullable="false" remarks="" size="2147483647" type="text">
+            <child column="file_purpose" foreignKey="file_input_file_purpose_fkey" implied="false" onDeleteCascade="false" schema="public" table="file_input"/>
+         </column>
+         <primaryKey column="name" sequenceNumberInPK="1"/>
+         <index name="file_purpose_pkey" unique="true">
+            <column ascending="true" name="name"/>
+         </index>
+      </table>
+      <table name="orderly_schema" numRows="1" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="schema_version" nullable="false" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="1" name="orderly_version" nullable="false" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="6" id="2" name="created" nullable="false" remarks="" size="29" type="timestamp"/>
+         <primaryKey column="schema_version" sequenceNumberInPK="1"/>
+         <index name="orderly_schema_pkey" unique="true">
+            <column ascending="true" name="schema_version"/>
+         </index>
+      </table>
+      <table name="orderly_schema_tables" numRows="29" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="name" nullable="false" remarks="" size="2147483647" type="text"/>
+         <primaryKey column="name" sequenceNumberInPK="1"/>
+         <index name="orderly_schema_tables_pkey" unique="true">
+            <column ascending="true" name="name"/>
+         </index>
+      </table>
+      <table name="parameters" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('parameters_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial"/>
+         <column autoUpdated="false" digits="0" id="1" name="report_version" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="id" foreignKey="parameters_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="name" nullable="false" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="3" name="type" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="name" foreignKey="parameters_type_fkey" implied="false" onDeleteCascade="false" schema="public" table="parameters_type"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="4" name="value" nullable="false" remarks="" size="2147483647" type="text"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="parameters_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="parameters_type" numRows="3" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="name" nullable="false" remarks="" size="2147483647" type="text">
+            <child column="type" foreignKey="parameters_type_fkey" implied="false" onDeleteCascade="false" schema="public" table="parameters"/>
+         </column>
+         <primaryKey column="name" sequenceNumberInPK="1"/>
+         <index name="parameters_type_pkey" unique="true">
+            <column ascending="true" name="name"/>
+         </index>
+      </table>
+      <table name="report" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="name" nullable="false" remarks="" size="2147483647" type="text">
+            <child column="report" foreignKey="report_version_report_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="latest" nullable="true" remarks="" size="2147483647" type="text">
+            <parent column="id" foreignKey="report_latest_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version"/>
+         </column>
+         <primaryKey column="name" sequenceNumberInPK="1"/>
+         <index name="report_pkey" unique="true">
+            <column ascending="true" name="name"/>
+         </index>
+      </table>
+      <table name="report_batch" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="text">
+            <child column="report_batch" foreignKey="report_version_batch_report_batch_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version_batch"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="report_batch_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="report_version" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="text">
+            <child column="report_version" foreignKey="changelog_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="changelog"/>
+            <child column="report_version_public" foreignKey="changelog_report_version_public_fkey" implied="false" onDeleteCascade="false" schema="public" table="changelog"/>
+            <child column="report_version" foreignKey="depends_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="depends"/>
+            <child column="report_version" foreignKey="file_input_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="file_input"/>
+            <child column="report_version" foreignKey="parameters_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="parameters"/>
+            <child column="latest" foreignKey="report_latest_fkey" implied="false" onDeleteCascade="false" schema="public" table="report"/>
+            <child column="report_version" foreignKey="report_version_artefact_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version_artefact"/>
+            <child column="report_version" foreignKey="report_version_batch_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version_batch"/>
+            <child column="report_version" foreignKey="report_version_custom_fields_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version_custom_fields"/>
+            <child column="report_version" foreignKey="report_version_data_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version_data"/>
+            <child column="report_version" foreignKey="report_version_instance_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version_instance"/>
+            <child column="report_version" foreignKey="report_version_package_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version_package"/>
+            <child column="report_version" foreignKey="report_version_tag_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version_tag"/>
+            <child column="report_version" foreignKey="report_version_view_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version_view"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="report" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="name" foreignKey="report_version_report_fkey" implied="false" onDeleteCascade="false" schema="public" table="report"/>
+         </column>
+         <column autoUpdated="false" digits="6" id="2" name="date" nullable="false" remarks="" size="29" type="timestamp"/>
+         <column autoUpdated="false" digits="0" id="3" name="displayname" nullable="true" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="4" name="description" nullable="true" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="5" name="connection" nullable="false" remarks="" size="1" type="bool"/>
+         <column autoUpdated="false" digits="0" id="6" name="published" nullable="false" remarks="" size="1" type="bool"/>
+         <column autoUpdated="false" digits="17" id="7" name="elapsed" nullable="false" remarks="" size="17" type="float8"/>
+         <column autoUpdated="false" digits="0" id="8" name="git_sha" nullable="true" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="9" name="git_branch" nullable="true" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="10" name="git_clean" nullable="true" remarks="" size="1" type="bool"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="report_version_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="report_version_artefact" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('report_version_artefact_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial">
+            <child column="artefact" foreignKey="file_artefact_artefact_fkey" implied="false" onDeleteCascade="false" schema="public" table="file_artefact"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="report_version" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="id" foreignKey="report_version_artefact_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="format" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="name" foreignKey="report_version_artefact_format_fkey" implied="false" onDeleteCascade="false" schema="public" table="artefact_format"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="3" name="description" nullable="false" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="4" name="order" nullable="false" remarks="" size="10" type="int4"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="report_version_artefact_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="report_version_batch" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="report_version" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="id" foreignKey="report_version_batch_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="1" name="report_batch" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="id" foreignKey="report_version_batch_report_batch_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_batch"/>
+         </column>
+         <primaryKey column="report_version" sequenceNumberInPK="1"/>
+         <index name="report_version_batch_pkey" unique="true">
+            <column ascending="true" name="report_version"/>
+         </index>
+      </table>
+      <table name="report_version_custom_fields" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('report_version_custom_fields_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial"/>
+         <column autoUpdated="false" digits="0" id="1" name="report_version" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="id" foreignKey="report_version_custom_fields_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="key" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="id" foreignKey="report_version_custom_fields_key_fkey" implied="false" onDeleteCascade="false" schema="public" table="custom_fields"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="3" name="value" nullable="false" remarks="" size="2147483647" type="text"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="report_version_custom_fields_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="report_version_data" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('report_version_data_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial"/>
+         <column autoUpdated="false" digits="0" id="1" name="report_version" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="id" foreignKey="report_version_data_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="name" nullable="false" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="3" name="database" nullable="false" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="4" name="query" nullable="false" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="5" name="hash" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="hash" foreignKey="report_version_data_hash_fkey" implied="false" onDeleteCascade="false" schema="public" table="data"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="report_version_data_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="report_version_instance" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('report_version_instance_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial"/>
+         <column autoUpdated="false" digits="0" id="1" name="report_version" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="id" foreignKey="report_version_instance_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="type" nullable="false" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="3" name="instance" nullable="false" remarks="" size="2147483647" type="text"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="report_version_instance_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="report_version_package" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('report_version_package_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial"/>
+         <column autoUpdated="false" digits="0" id="1" name="report_version" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="id" foreignKey="report_version_package_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="package_name" nullable="false" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="3" name="package_version" nullable="false" remarks="" size="2147483647" type="text"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="report_version_package_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="report_version_tag" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('report_version_tag_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial"/>
+         <column autoUpdated="false" digits="0" id="1" name="report_version" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="id" foreignKey="report_version_tag_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="tag" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="id" foreignKey="report_version_tag_tag_fkey" implied="false" onDeleteCascade="false" schema="public" table="tag"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="report_version_tag_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="report_version_view" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="nextval('report_version_view_id_seq'::regclass)" digits="0" id="0" name="id" nullable="false" remarks="" size="10" type="serial"/>
+         <column autoUpdated="false" digits="0" id="1" name="report_version" nullable="false" remarks="" size="2147483647" type="text">
+            <parent column="id" foreignKey="report_version_view_report_version_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version"/>
+         </column>
+         <column autoUpdated="false" digits="0" id="2" name="name" nullable="false" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="3" name="database" nullable="false" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="4" name="query" nullable="false" remarks="" size="2147483647" type="text"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="report_version_view_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="report_version_workflow" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="report_version" nullable="false" remarks="" size="2147483647" type="text"/>
+         <column autoUpdated="false" digits="0" id="1" name="workflow_id" nullable="false" remarks="" size="2147483647" type="text"/>
+         <primaryKey column="report_version" sequenceNumberInPK="1"/>
+         <index name="report_version_workflow_pkey" unique="true">
+            <column ascending="true" name="report_version"/>
+         </index>
+      </table>
+      <table name="tag" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="text">
+            <child column="tag" foreignKey="report_version_tag_tag_fkey" implied="false" onDeleteCascade="false" schema="public" table="report_version_tag"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="tag_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="workflow" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="text"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="workflow_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+   </tables>
+</database>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>orderly Database</title>
+  <!-- Tell the browser to be responsive to screen width -->
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+  <!-- Bootstrap 3.3.5 -->
+  <link rel="stylesheet" href="bower/admin-lte/bootstrap/css/bootstrap.min.css">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="bower/font-awesome/css/font-awesome.min.css">
+  <!-- Ionicons -->
+  <link rel="stylesheet" href="bower/ionicons/css/ionicons.min.css">
+  <!-- DataTables -->
+  <link rel="stylesheet" href="bower/datatables.net-bs/css/dataTables.bootstrap.min.css">
+  <link rel="stylesheet" href="bower/datatables.net-buttons-bs/css/buttons.bootstrap.min.css">
+  <!-- Code Mirror -->
+  <link rel="stylesheet" href="bower/codemirror/codemirror.css">
+  <!-- Fonts -->
+  <link href='fonts/indieflower/indie-flower.css' rel='stylesheet' type='text/css'>
+  <link href='fonts/source-sans-pro/source-sans-pro.css' rel='stylesheet' type='text/css'>
+
+  <!-- Theme style -->
+  <link rel="stylesheet" href="bower/admin-lte/dist/css/AdminLTE.min.css">
+  <!-- Salvattore -->
+  <link rel="stylesheet" href="bower/salvattore/salvattore.css">
+  <!-- AdminLTE Skins. Choose a skin from the css/skins
+       folder instead of downloading all of them to reduce the load. -->
+  <link rel="stylesheet" href="bower/admin-lte/dist/css/skins/_all-skins.min.css">
+  <!-- SchemaSpy -->
+  <link rel="stylesheet" href="schemaSpy.css">
+  
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+  <script src="bower/html5shiv/html5shiv.min.js"></script>
+  <script src="bower/respond/respond.min.js"></script>
+  <![endif]-->
+</head>
+<!-- ADD THE CLASS layout-top-nav TO REMOVE THE SIDEBAR. -->
+<body class="hold-transition skin-blue layout-top-nav">
+<div class="wrapper">
+  <header class="main-header">
+    <nav class="navbar navbar-static-top">
+      <div class="container">
+        <div class="navbar-header">
+          <a href="index.html" class="navbar-brand"><b>orderly</b> Database</a>
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
+            <i class="fa fa-bars"></i>
+          </button>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse pull-left" id="navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="index.html">Tables <span class="sr-only">(current)</span></a></li>            
+			<!--<li><a href="components.html" title="List of system components">Components</a></li>-->
+			<li><a href="columns.html" title="All of the columns in the schema">Columns</a></li>
+			<li><a href="constraints.html" title="Useful for diagnosing error messages that just give constraint name or number">Constraints</a></li>
+			<li><a href="relationships.html" title="Diagram of table relationships">Relationships</a></li>
+			<li><a href="orphans.html" title="View of tables with neither parents nor children">Orphan&nbsp;Tables</a></li>				
+			<li><a href="anomalies.html" title="Things that might not be quite right">Anomalies</a></li>
+          </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+        <!-- Navbar Right Menu -->
+
+      </div>
+      <!-- /.container-fluid -->
+    </nav>
+  </header>
+  <!-- Main content -->
+  <!-- Full Width Column -->
+  <div class="content-wrapper">
+          <!-- Content Header (Page header) -->
+      <section class="content-header">
+        <h1>All Relationships</h1>
+      </section>
+      <!-- Main content -->
+      <section class="content">
+				<div class="box box-primary">		
+			<div class="box-header with-border">
+              <i class="fa fa-code-fork"></i>
+              <h3 class="box-title">Diagrams</h3>
+            </div>	
+			<div class="box-body">	
+			<div class="nav-tabs-custom" style="cursor: move;">
+            <!-- Tabs within a box -->
+			<h5>By default only columns that are primary keys, foreign keys or indexes are shown.</h5>
+            <ul class="nav nav-tabs pull-left ui-sortable-handle">
+			  			              <li class="active"><a href="#compactDegreeImg-chart" data-toggle="tab" aria-expanded="true">Compact</a></li>			  			 
+			  			              <li class=""><a href="#largeDegreeImg-chart" data-toggle="tab" aria-expanded="true">Large</a></li>			  			 
+            </ul>
+            <div class="tab-content no-padding">            
+				<div class="chart tab-pane active" id="compactDegreeImg-chart" style="position: relative; overflow-x:auto;">
+																					<map id="compactRelationshipsDiagram" name="compactRelationshipsDiagram">
+<area shape="rect" id="node1" href="tables/artefact_format.html" title="artefact_format" alt="" coords="204,64,423,157">
+<area shape="rect" id="node2" href="tables/changelog.html" title="changelog" alt="" coords="515,199,757,404">
+<area shape="rect" id="node3" href="tables/changelog_label.html" title="changelog_label" alt="" coords="203,287,424,404">
+<area shape="rect" id="node16" href="tables/report_version.html" title="report_version" alt="" coords="209,821,418,968">
+<area shape="rect" id="node4" href="tables/custom_fields.html" title="custom_fields" alt="" coords="212,1512,415,1629">
+<area shape="rect" id="node5" href="tables/data.html" title="data" alt="" coords="247,1705,379,1823">
+<area shape="rect" id="node6" href="tables/depends.html" title="depends" alt="" coords="1099,376,1279,552">
+<area shape="rect" id="node8" href="tables/file_artefact.html" title="file_artefact" alt="" coords="844,457,1033,633">
+<area shape="rect" id="node7" href="tables/file.html" title="file" alt="" coords="570,657,702,775">
+<area shape="rect" id="node17" href="tables/report_version_artefact.html" title="report_version_artefact" alt="" coords="495,5,777,181">
+<area shape="rect" id="node9" href="tables/file_input.html" title="file_input" alt="" coords="849,651,1029,856">
+<area shape="rect" id="node11" href="tables/file_purpose.html" title="file_purpose" alt="" coords="541,2009,731,2103">
+<area shape="rect" id="node10" href="tables/file_input_global.html" title="file_input_global" alt="" coords="1077,621,1300,768">
+<area shape="rect" id="node12" href="tables/parameters.html" title="parameters" alt="" coords="543,1120,729,1296">
+<area shape="rect" id="node13" href="tables/parameters_type.html" title="parameters_type" alt="" coords="199,1179,428,1272">
+<area shape="rect" id="node14" href="tables/report.html" title="report" alt="" coords="7,821,155,944">
+<area shape="rect" id="node15" href="tables/report_batch.html" title="report_batch" alt="" coords="216,1343,411,1436">
+<area shape="rect" id="node18" href="tables/report_version_batch.html" title="report_version_batch" alt="" coords="505,1313,767,1436">
+<area shape="rect" id="node19" href="tables/report_version_custom_fields.html" title="report_version_custom_fields" alt="" coords="472,1453,800,1629">
+<area shape="rect" id="node20" href="tables/report_version_data.html" title="report_version_data" alt="" coords="509,1647,763,1823">
+<area shape="rect" id="node21" href="tables/report_version_instance.html" title="report_version_instance" alt="" coords="493,792,779,939">
+<area shape="rect" id="node22" href="tables/report_version_package.html" title="report_version_package" alt="" coords="493,956,779,1103">
+<area shape="rect" id="node23" href="tables/report_version_tag.html" title="report_version_tag" alt="" coords="515,1840,757,1992">
+<area shape="rect" id="node25" href="tables/tag.html" title="tag" alt="" coords="247,1899,379,1992">
+<area shape="rect" id="node24" href="tables/report_version_view.html" title="report_version_view" alt="" coords="509,457,763,604">
+</map>
+
+					<a name='diagram'><img id='compactDegreeImg' src='diagrams/summary/relationships.real.compact.png' usemap='#compactRelationshipsDiagram' class='diagram' border='0' alt='' align='left'></a>							
+				</div>
+				<div class="chart tab-pane " id="largeDegreeImg-chart" style="position: relative; overflow-x:auto;">
+																					<map id="largeRelationshipsDiagram" name="largeRelationshipsDiagram">
+<area shape="rect" id="node1" href="tables/artefact_format.html" title="artefact_format" alt="" coords="204,64,423,157">
+<area shape="rect" id="node2" href="tables/changelog.html" title="changelog" alt="" coords="515,233,757,503">
+<area shape="rect" id="node3" href="tables/changelog_label.html" title="changelog_label" alt="" coords="203,321,424,444">
+<area shape="rect" id="node16" href="tables/report_version.html" title="report_version" alt="" coords="209,989,418,1376">
+<area shape="rect" id="node4" href="tables/custom_fields.html" title="custom_fields" alt="" coords="212,1784,415,1907">
+<area shape="rect" id="node5" href="tables/data.html" title="data" alt="" coords="247,2071,379,2223">
+<area shape="rect" id="node6" href="tables/depends.html" title="depends" alt="" coords="1099,463,1279,703">
+<area shape="rect" id="node8" href="tables/file_artefact.html" title="file_artefact" alt="" coords="844,556,1033,737">
+<area shape="rect" id="node7" href="tables/file.html" title="file" alt="" coords="570,820,702,943">
+<area shape="rect" id="node17" href="tables/report_version_artefact.html" title="report_version_artefact" alt="" coords="495,5,777,216">
+<area shape="rect" id="node9" href="tables/file_input.html" title="file_input" alt="" coords="849,761,1029,972">
+<area shape="rect" id="node11" href="tables/file_purpose.html" title="file_purpose" alt="" coords="541,2351,731,2444">
+<area shape="rect" id="node10" href="tables/file_input_global.html" title="file_input_global" alt="" coords="1077,732,1300,884">
+<area shape="rect" id="node12" href="tables/parameters.html" title="parameters" alt="" coords="543,1357,729,1568">
+<area shape="rect" id="node13" href="tables/parameters_type.html" title="parameters_type" alt="" coords="199,1445,428,1539">
+<area shape="rect" id="node14" href="tables/report.html" title="report" alt="" coords="7,989,155,1112">
+<area shape="rect" id="node15" href="tables/report_batch.html" title="report_batch" alt="" coords="216,1615,411,1708">
+<area shape="rect" id="node18" href="tables/report_version_batch.html" title="report_version_batch" alt="" coords="505,1585,767,1708">
+<area shape="rect" id="node19" href="tables/report_version_custom_fields.html" title="report_version_custom_fields" alt="" coords="472,1725,800,1907">
+<area shape="rect" id="node20" href="tables/report_version_data.html" title="report_version_data" alt="" coords="509,1924,763,2164">
+<area shape="rect" id="node21" href="tables/report_version_instance.html" title="report_version_instance" alt="" coords="493,960,779,1141">
+<area shape="rect" id="node22" href="tables/report_version_package.html" title="report_version_package" alt="" coords="493,1159,779,1340">
+<area shape="rect" id="node23" href="tables/report_version_tag.html" title="report_version_tag" alt="" coords="515,2181,757,2333">
+<area shape="rect" id="node25" href="tables/tag.html" title="tag" alt="" coords="247,2240,379,2333">
+<area shape="rect" id="node24" href="tables/report_version_view.html" title="report_version_view" alt="" coords="509,556,763,767">
+</map>
+
+					<a name='diagram'><img id='largeDegreeImg' src='diagrams/summary/relationships.real.large.png' usemap='#largeRelationshipsDiagram' class='diagram' border='0' alt='' align='left'></a>							
+				</div>
+			  			</div>
+			</div>
+		  </div><!-- /.box-body -->
+		</div>
+		      </section>    
+  </div>
+  <!-- /.content-wrapper -->
+  <footer class="main-footer">
+    <div>
+      <div class="pull-right hidden-xs">
+        <a href="https://github.com/schemaspy/schemaspy" title="GitHub for SchemaSpy"><i class="fa fa-github-square fa-2x"></i></a>
+        <a href="http://stackoverflow.com/questions/tagged/schemaspy" title="StackOverflow for SchemaSpy"><i class="fa fa-stack-overflow fa-2x"></i></a>
+      </div>
+      <strong>Generated by <a href="http://schemaspy.org/" class="logo-text"><i class="fa fa-database"></i> SchemaSpy 6.0.0-rc2</a></strong>
+    </div>
+    <!-- /.container -->
+  </footer>
+</div>
+<!-- ./wrapper -->
+
+<!-- jQuery 2.2.3 -->
+<script src="bower/admin-lte/plugins/jQuery/jquery-2.2.3.min.js"></script>
+<script src="bower/admin-lte/plugins/jQueryUI/jquery-ui.min.js"></script>
+<!-- Bootstrap 3.3.5 -->
+<script src="bower/admin-lte/bootstrap/js/bootstrap.min.js"></script>
+<!-- DataTables -->
+<script src="bower/datatables.net/jquery.dataTables.min.js"></script>
+<script src="bower/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+<script src="bower/datatables.net-buttons/dataTables.buttons.min.js"></script>
+<script src="bower/datatables.net-buttons-bs/js/buttons.bootstrap.min.js"></script>
+<script src="bower/datatables.net-buttons/buttons.html5.min.js"></script>
+<script src="bower/datatables.net-buttons/buttons.print.min.js"></script>
+<script src="bower/datatables.net-buttons/buttons.colVis.min.js"></script>
+
+<!-- SlimScroll -->
+<script src="bower/admin-lte/plugins/slimScroll/jquery.slimscroll.min.js"></script>
+<!-- FastClick -->
+<script src="bower/admin-lte/plugins/fastclick/fastclick.js"></script>
+<!-- Salvattore -->
+<script src="bower/salvattore/salvattore.min.js"></script>
+<!-- AnchorJS -->
+<script src="bower/anchor-js/anchor.min.js"></script>
+<!-- CodeMirror -->
+<script src="bower/codemirror/codemirror.js"></script>
+<script src="bower/codemirror/sql.js"></script>
+<!-- AdminLTE App -->
+<script src="bower/admin-lte/dist/js/app.min.js"></script>
+<script src="relationships.js"></script>
+<script src="schemaSpy.js"></script>
+</body>
+</html>
