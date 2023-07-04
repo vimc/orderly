@@ -38,13 +38,13 @@
 ##' @export
 ##' @examples
 ##' # Create an orderly that has a single commited report:
-##' path <- orderly::orderly_example("minimal")
-##' id <- orderly::orderly_run("example", root = path)
-##' orderly::orderly_commit(id, root = path)
+##' path <- orderly1::orderly_example("minimal")
+##' id <- orderly1::orderly_run("example", root = path)
+##' orderly1::orderly_commit(id, root = path)
 ##'
 ##' # The source database holds the data that might be accessible via
 ##' # the 'data' entry in orderly.yml:
-##' db <- orderly::orderly_db("source", root = path)
+##' db <- orderly1::orderly_db("source", root = path)
 ##' # This is a list, with one connection per database listed in the
 ##' # orderly_config.yml (an empty list if none are specified):
 ##' db
@@ -54,7 +54,7 @@
 ##'
 ##' # The destination database holds information about the archived
 ##' # reports:
-##' db <- orderly::orderly_db("destination", root = path)
+##' db <- orderly1::orderly_db("destination", root = path)
 ##' DBI::dbListTables(db)
 ##'
 ##' # These tables are documented online:
@@ -141,11 +141,11 @@ orderly_db_args <- function(x, config, name) {
 ##' @export
 ##' @return No return value, this function is called only for its side effects
 ##' @examples
-##' path <- orderly::orderly_example("minimal")
-##' id <- orderly::orderly_run("example", root = path)
-##' orderly::orderly_commit(id, root = path)
+##' path <- orderly1::orderly_example("minimal")
+##' id <- orderly1::orderly_run("example", root = path)
+##' orderly1::orderly_commit(id, root = path)
 ##'
-##' con <- orderly::orderly_db("destination", root = path)
+##' con <- orderly1::orderly_db("destination", root = path)
 ##' DBI::dbReadTable(con, "report_version")
 ##' DBI::dbDisconnect(con)
 ##'
@@ -154,15 +154,15 @@ orderly_db_args <- function(x, config, name) {
 ##' # your own fields - only the fields that orderly looks after can
 ##' # be recovered!)
 ##' file.remove(file.path(path, "orderly.sqlite"))
-##' orderly::orderly_rebuild(path)
+##' orderly1::orderly_rebuild(path)
 ##' file.exists(file.path(path, "orderly.sqlite"))
-##' con <- orderly::orderly_db("destination", root = path)
+##' con <- orderly1::orderly_db("destination", root = path)
 ##' DBI::dbReadTable(con, "report_version")
 ##' DBI::dbDisconnect(con)
 ##'
 ##' # It is safe to rebuild a database repeatedly, though this can be
 ##' # slow with larger databases.
-##' orderly::orderly_rebuild(path)
+##' orderly1::orderly_rebuild(path)
 orderly_rebuild <- function(root = NULL, locate = TRUE, verbose = TRUE,
                             if_schema_changed = FALSE) {
   ## We'll skip warnings here - they'll come out as messages rather

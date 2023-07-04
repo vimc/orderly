@@ -22,8 +22,8 @@ orderly_log(topic, value)
 returns a logical indicating if logging was previously enabled.
 This allows patterns like:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{if (!orderly::orderly_log_off()) \{
-  on.exit(orderly::orderly_log_on())
+\if{html}{\out{<div class="sourceCode">}}\preformatted{if (!orderly1::orderly_log_off()) \{
+  on.exit(orderly1::orderly_log_on())
 \}
 }\if{html}{\out{</div>}}
 
@@ -48,20 +48,20 @@ format, etc.
 }
 \examples{
 # We are going to log things below
-logging_was_enabled <- orderly::orderly_log_on()
+logging_was_enabled <- orderly1::orderly_log_on()
 
 # About orderly log messages:
 # Orderly log messages have the form "[title] message"
-orderly::orderly_log_on()
-orderly::orderly_log("title", "message")
+orderly1::orderly_log_on()
+orderly1::orderly_log("title", "message")
 
 # If logging is disabled they are not printed:
-orderly::orderly_log_off()
-orderly::orderly_log("title", "message")
+orderly1::orderly_log_off()
+orderly1::orderly_log("title", "message")
 
 # Restore to previous settings:
 if (logging_was_enabled) {
-  orderly::orderly_log_on()
+  orderly1::orderly_log_on()
 }
 }
 \seealso{

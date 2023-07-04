@@ -7,9 +7,9 @@
 ##'
 ##' @examples
 ##' # The orderly demo, with lots of potential reports:
-##' path <- orderly::orderly_example("demo")
+##' path <- orderly1::orderly_example("demo")
 ##'
-##' orderly::orderly_config(path)
+##' orderly1::orderly_config(path)
 orderly_config <- function(root = NULL, locate = TRUE) {
   if (inherits(root, "orderly_config")) {
     root

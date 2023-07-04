@@ -14,7 +14,7 @@
 ##'   orderly.yml
 ##'
 ##' @param name Name of the report to modify.  Like
-##'   [orderly::orderly_develop_start()] this can be `NULL` if
+##'   [orderly1::orderly_develop_start()] this can be `NULL` if
 ##'   you have already set the working directory to be the source
 ##'   directory.
 ##'
@@ -37,7 +37,7 @@
 ##' @export
 ##' @rdname orderly_use
 ##' @examples
-##' path <- orderly::orderly_example("minimal")
+##' path <- orderly1::orderly_example("minimal")
 ##'
 ##' # Suppose we wanted to use the mtcars data within our report.
 ##' # First, the file must exist:
@@ -45,10 +45,10 @@
 ##'           row.names = FALSE)
 ##'
 ##' # Preview expected changes
-##' orderly::orderly_use_resource("mtcars.csv", "example", path, edit = FALSE)
+##' orderly1::orderly_use_resource("mtcars.csv", "example", path, edit = FALSE)
 ##'
 ##' # Modify the orderly.yml file within src/example:
-##' orderly::orderly_use_resource("mtcars.csv", "example", path, prompt = FALSE)
+##' orderly1::orderly_use_resource("mtcars.csv", "example", path, prompt = FALSE)
 ##'
 ##' # The result is a file that now has a 'resources' section
 ##' # containing our new file

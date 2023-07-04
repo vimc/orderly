@@ -43,20 +43,20 @@ report is always the most recently run report that has been
 committed (regardless of the order in which they were committed).
 }
 \examples{
-path <- orderly::orderly_example("minimal")
-id1 <- orderly::orderly_run("example", root = path, echo = FALSE)
-id2 <- orderly::orderly_run("example", root = path, echo = FALSE)
+path <- orderly1::orderly_example("minimal")
+id1 <- orderly1::orderly_run("example", root = path, echo = FALSE)
+id2 <- orderly1::orderly_run("example", root = path, echo = FALSE)
 
 # With no reports committed there is no latest report:
-orderly::orderly_latest("example", root = path, must_work = FALSE)
+orderly1::orderly_latest("example", root = path, must_work = FALSE)
 
 # Commit the first report and it will be reported as latest:
-orderly::orderly_commit(id1, root = path)
-orderly::orderly_latest("example", root = path)
+orderly1::orderly_commit(id1, root = path)
+orderly1::orderly_latest("example", root = path)
 
 # Commit the second report and it will be reported as latest instead:
-orderly::orderly_commit(id2, root = path)
-orderly::orderly_latest("example", root = path)
+orderly1::orderly_commit(id2, root = path)
+orderly1::orderly_latest("example", root = path)
 }
 \seealso{
 \link{orderly_list} and

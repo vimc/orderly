@@ -151,7 +151,7 @@ report_db_open_existing <- function(con, config) {
   version_db <- DBI::dbReadTable(con, orderly_schema_table)$schema_version
   version_package <- orderly_schema_version
   if (numeric_version(version_db) < numeric_version(version_package)) {
-    stop("orderly db needs rebuilding with orderly::orderly_rebuild()",
+    stop("orderly db needs rebuilding with orderly1::orderly_rebuild()",
          call. = FALSE)
   }
 
@@ -175,7 +175,7 @@ report_db_open_existing <- function(con, config) {
               config$changelog$public %||% logical(0))
   if (!ok) {
     stop(
-      "changelog labels have changed: rebuild with orderly::orderly_rebuild()",
+      "changelog labels have changed: rebuild with orderly1::orderly_rebuild()",
       call. = FALSE)
   }
 
@@ -183,7 +183,7 @@ report_db_open_existing <- function(con, config) {
   ok <- setequal(tag, config$tags)
   if (!ok) {
     stop(
-      "tags have changed: rebuild with orderly::orderly_rebuild()",
+      "tags have changed: rebuild with orderly1::orderly_rebuild()",
       call. = FALSE)
   }
 }

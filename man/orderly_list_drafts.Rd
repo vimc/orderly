@@ -35,29 +35,29 @@ columns \code{name} (see \code{\link[=orderly_list]{orderly_list()}}) and \code{
 }
 \examples{
 # The orderly demo, with lots of potential reports:
-path <- orderly::orderly_example("demo")
+path <- orderly1::orderly_example("demo")
 
 # Reports that _could_ be run:
-orderly::orderly_list(path)
+orderly1::orderly_list(path)
 
 # Run a report twice:
-id1 <- orderly::orderly_run("minimal", root = path)
-id2 <- orderly::orderly_run("minimal", root = path)
+id1 <- orderly1::orderly_run("minimal", root = path)
+id2 <- orderly1::orderly_run("minimal", root = path)
 
 # We can see both drafts:
-orderly::orderly_list_drafts(path)
+orderly1::orderly_list_drafts(path)
 
 # Nothing is in the archive:
-orderly::orderly_list_archive(path)
+orderly1::orderly_list_archive(path)
 
 # Commit a report:
-orderly::orderly_commit(id2, root = path)
+orderly1::orderly_commit(id2, root = path)
 
 # Only one draft now
-orderly::orderly_list_drafts(path)
+orderly1::orderly_list_drafts(path)
 
 # And the second report is in the archive:
-orderly::orderly_list_archive(path)
+orderly1::orderly_list_archive(path)
 }
 \seealso{
 \code{\link[=orderly_list]{orderly_list()}}, which lists the names of

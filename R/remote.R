@@ -17,7 +17,7 @@
 ##' Pulling an archive report from a remote also pulls its
 ##' dependencies (recursively), and adds all of these to the local
 ##' database.  This may require migrating old orderly archives
-##' ([orderly::orderly_migrate()]).  Note that this migration will
+##' ([orderly1::orderly_migrate()]).  Note that this migration will
 ##' likely fail for remote orderly versions older than 0.6.8 because
 ##' the migration needs to read data files on disk that are not
 ##' included in the downloaded archive in order to collect all the
@@ -26,7 +26,7 @@
 ##' archive, and then re-pull.
 ##'
 ##' Pushing an archive is possible only if the remote supports it.
-##' Currently this is supported by [orderly::orderly_remote_path()]
+##' Currently this is supported by [orderly1::orderly_remote_path()]
 ##' remotes, though not by orderlyweb remotes.  There is no control
 ##' over what will *accept* a push at this point, nor any check
 ##' that what you've pushed is "good" except that it exists in your
@@ -44,7 +44,7 @@
 ##'   character string indicating a remote specified in the
 ##'   `remotes` block of your `orderly_config.yml`.  It is
 ##'   also possible to pass in a directly created remote object (e.g.,
-##'   using [orderly::orderly_remote_path()], or one provided by
+##'   using [orderly1::orderly_remote_path()], or one provided by
 ##'   another package).  If left `NULL`, then the default remote
 ##'   for this orderly repository is used - by default that is the
 ##'   first listed remote.
@@ -69,7 +69,7 @@
 ##' @return No return value, these functions are called only for their
 ##'   side effects
 ##'
-##' @seealso [orderly::orderly_remote_path()], which implements the
+##' @seealso [orderly1::orderly_remote_path()], which implements the
 ##'   remote interface for orderly repositories at a local path.  See
 ##'   also [OrderlyWeb](https://github.com/vimc/orderly-web) for a
 ##'   system for hosting orderly repositories over an HTTP API.
@@ -254,11 +254,11 @@ orderly_push_archive <- function(name, id = "latest", root = NULL,
 ##' @export
 ##' @return No return value, this function is called only for its side effects
 ##' @examples
-##' path_remote <- orderly::orderly_example("demo")
-##' path_local <- orderly::orderly_example("demo")
-##' remote <- orderly::orderly_remote_path(path_remote)
+##' path_remote <- orderly1::orderly_example("demo")
+##' path_local <- orderly1::orderly_example("demo")
+##' remote <- orderly1::orderly_remote_path(path_remote)
 ##' # Currently, path remotes don't support run
-##' try(orderly::orderly_run_remote(
+##' try(orderly1::orderly_run_remote(
 ##'   "minimal", remote = remote, root = path_local))
 orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
                                timeout = NULL, wait = 3600, poll = 1,
@@ -302,32 +302,32 @@ orderly_run_remote <- function(name, parameters = NULL, ref = NULL,
 ##' @rdname orderly_default_remote
 ##' @examples
 ##' # Same setup as in orderly_remote_path, with a remote orderly:
-##' path_remote <- orderly::orderly_example("demo")
-##' id <- orderly::orderly_run("other", list(nmin = 0),
+##' path_remote <- orderly1::orderly_example("demo")
+##' id <- orderly1::orderly_run("other", list(nmin = 0),
 ##'                            root = path_remote, echo = FALSE)
-##' orderly::orderly_commit(id, root = path_remote)
-##' id <- orderly::orderly_run("use_dependency",
+##' orderly1::orderly_commit(id, root = path_remote)
+##' id <- orderly1::orderly_run("use_dependency",
 ##'                            root = path_remote, echo = FALSE)
-##' orderly::orderly_commit(id, root = path_remote)
+##' orderly1::orderly_commit(id, root = path_remote)
 ##'
 ##' # And a local orderly
-##' path_local <- orderly::orderly_example("demo")
+##' path_local <- orderly1::orderly_example("demo")
 ##'
 ##' # We'll create an object to interact with this remote using
 ##' # orderly_remote_path.
-##' remote <- orderly::orderly_remote_path(path_remote)
+##' remote <- orderly1::orderly_remote_path(path_remote)
 ##'
 ##' # There is no remote set by default:
-##' try(orderly::orderly_default_remote_get(root = path_local))
+##' try(orderly1::orderly_default_remote_get(root = path_local))
 ##'
 ##' # We can set one:
-##' orderly::orderly_default_remote_set(remote, root = path_local)
+##' orderly1::orderly_default_remote_set(remote, root = path_local)
 ##'
 ##' # and now we can retrieve it:
-##' orderly::orderly_default_remote_get(root = path_local)
+##' orderly1::orderly_default_remote_get(root = path_local)
 ##'
 ##' # Note that this has not affected the other orderly:
-##' try(orderly::orderly_default_remote_get(root = path_remote))
+##' try(orderly1::orderly_default_remote_get(root = path_remote))
 orderly_default_remote_set <- function(value, root = NULL, locate = TRUE) {
   config <- orderly_config(root, locate)
 
@@ -353,7 +353,7 @@ orderly_default_remote_get <- function(root = NULL, locate = TRUE) {
     return(get_remote(names(config$remote)[[1L]], config))
   }
   msg <- paste("default remote has not been set yet:",
-               "use 'orderly::orderly_default_remote_set'")
+               "use 'orderly1::orderly_default_remote_set'")
   stop(msg)
 }
 
@@ -371,7 +371,7 @@ orderly_default_remote_get <- function(root = NULL, locate = TRUE) {
 ##'   `orderly_config.yml` - if no remotes are configured, or if
 ##'   the requested remote does not exist, an error will be thrown.
 ##'
-##' @seealso [orderly::orderly_pull_dependencies()] which provides a
+##' @seealso [orderly1::orderly_pull_dependencies()] which provides a
 ##'   higher-level interface to pulling from a remote (including
 ##'   adding the downloaded archive into your orderly repository), and
 ##'   see the documentation underlying the orderly remote driver that
@@ -532,7 +532,7 @@ remote_report_update_metadata <- function(name, remote, config) {
 
 
 ##' Pack a bundle on a remote. This is like calling
-##' [orderly::orderly_bundle_pack()] on the remote and can be used to
+##' [orderly1::orderly_bundle_pack()] on the remote and can be used to
 ##' extract a long-running report from a server to run (say) on an HPC
 ##' system.
 ##'
@@ -543,7 +543,7 @@ remote_report_update_metadata <- function(name, remote, config) {
 ##'    be run from the system where the bundle will be run (an HPC
 ##'    head-node or another powerful computer).
 ##'
-##' 2. Run the bundle using [orderly::orderly_bundle_run()]
+##' 2. Run the bundle using [orderly1::orderly_bundle_run()]
 ##'
 ##' 3. Re-import the completed bundle using
 ##'   `orderly_bundle_import_remote` which sends the zip
@@ -553,7 +553,7 @@ remote_report_update_metadata <- function(name, remote, config) {
 ##' root. However, the `root` argument may still be used to find
 ##' your remote configuration. Alternatively, if your `remote`
 ##' argument is an orderly remote (e.g.,
-##' [orderly::orderly_remote_path()], or `orderlyweb`'s
+##' [orderly1::orderly_remote_path()], or `orderlyweb`'s
 ##' `orderlyweb::orderlyweb_remote`) then the `root` and
 ##' `locate` arguments will be ignored and this command can be
 ##' run from anywhere. This is the recommended configuration for

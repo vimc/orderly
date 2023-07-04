@@ -30,8 +30,8 @@ result of doing \code{\link[=orderly_pull_archive]{orderly_pull_archive()}} with
 downloaded and not the report contents itself.
 }
 \examples{
-path <- orderly::orderly_example("minimal")
+path <- orderly1::orderly_example("minimal")
 # No metadata-only reports will be present, unless you have run
-# orderly::orderly_pull_archive(..., recursive = FALSE)
-orderly::orderly_list_metadata(path)
+# orderly1::orderly_pull_archive(..., recursive = FALSE)
+orderly1::orderly_list_metadata(path)
 }

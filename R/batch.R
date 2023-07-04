@@ -3,7 +3,7 @@
 ##' Run one report multiple times with different sets of parameters.
 ##'
 ##' @param name Name of the report to run (see
-##'   [orderly::orderly_list()]).  A leading `src/` will be
+##'   [orderly1::orderly_list()]).  A leading `src/` will be
 ##'   removed if provided, allowing easier use of autocomplete.
 ##'   Alternatively, the default of `NULL` is useful if you have
 ##'   already set the working directory to be the source directory.
@@ -17,18 +17,18 @@
 ##'   during preparation e.g. because of missing parameters this will
 ##'   error and stop all subsequent parameter sets.
 ##'
-##' @param ... Additional args passed to [orderly::orderly_run()]
+##' @param ... Additional args passed to [orderly1::orderly_run()]
 ##'
-##' @seealso [orderly::orderly_run()] for details of report running
+##' @seealso [orderly1::orderly_run()] for details of report running
 ##'
 ##' @export
 ##' @return List of ids of newly created reports
 ##'
 ##' @examples
 ##'
-##' path <- orderly::orderly_example("demo")
+##' path <- orderly1::orderly_example("demo")
 ##' params <- data.frame(nmin = c(0.2, 0.25))
-##' ids <- orderly::orderly_batch("other", params, root = path)
+##' ids <- orderly1::orderly_batch("other", params, root = path)
 orderly_batch <- function(name = NULL, parameters = NULL,
                           continue_on_error = TRUE, ...) {
   if (NROW(parameters) < 1) {

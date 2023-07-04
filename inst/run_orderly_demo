@@ -6,4 +6,4 @@ if [ "$#" -ne 2 ]; then
 fi
 SRC=$1
 DEST=$2
-Rscript -e "orderly:::prepare_git_example_from_source(\"$SRC\", \"$DEST\")"
+Rscript -e "orderly1:::prepare_git_example_from_source(\"$SRC\", \"$DEST\")"

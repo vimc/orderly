@@ -25,9 +25,9 @@ Retrieve orderly config object.
 }
 \examples{
 # The orderly demo, with lots of potential reports:
-path <- orderly::orderly_example("demo")
+path <- orderly1::orderly_example("demo")
 
-orderly::orderly_config(path)
+orderly1::orderly_config(path)
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}

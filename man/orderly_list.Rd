@@ -28,10 +28,10 @@ will not appear here, as this is simply the set of reports in the
 }
 \examples{
 # The orderly demo, with lots of potential reports:
-path <- orderly::orderly_example("demo")
+path <- orderly1::orderly_example("demo")
 
 # Reports that _could_ be run:
-orderly::orderly_list(path)
+orderly1::orderly_list(path)
 }
 \seealso{
 \code{\link[=orderly_list_archive]{orderly_list_archive()}} and

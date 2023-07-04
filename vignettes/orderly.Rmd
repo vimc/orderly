@@ -20,7 +20,7 @@ orderly_file <- function(...) {
   system.file(..., package = "orderly", mustWork = TRUE)
 }
 
-path <- orderly:::prepare_orderly_example("nodata")
+path <- orderly1:::prepare_orderly_example("nodata")
 path_example <- file.path(path, "src", "example")
 ## Even simpler
 unlink(file.path(path, "archive"), recursive = TRUE)
@@ -112,7 +112,7 @@ Then if one of the dependencies of a report changes (the used data, code, etc), 
 
 ## Example
 
-To illustrate, we will start with a minimal example (you can use `orderly::orderly_init` to create a similar structure directly), and we will build it up to demonstrate `orderly` features. In the most minimal example, we want to run a script that creates a graph.  It uses no external resources.
+To illustrate, we will start with a minimal example (you can use `orderly1::orderly_init` to create a similar structure directly), and we will build it up to demonstrate `orderly` features. In the most minimal example, we want to run a script that creates a graph.  It uses no external resources.
 
 ``` {r comment = NA, echo = FALSE}
 dir_tree(path)
@@ -140,10 +140,10 @@ it can be formatted freely (there are no magic comments, etc).  There are no res
 
 ### Running the report
 
-To run the report, use `orderly::orderly_run` (typically one would be in the `orderly` root and so the `root` directory could be omitted, but within this vignette we use a temporary directory):
+To run the report, use `orderly1::orderly_run` (typically one would be in the `orderly` root and so the `root` directory could be omitted, but within this vignette we use a temporary directory):
 
 ```{r}
-id <- orderly::orderly_run("example", root = path)
+id <- orderly1::orderly_run("example", root = path)
 ```
 
 The return value is the id of the report (also printed on the
@@ -176,7 +176,7 @@ there are the files:
 
 Every time a report is run it will create a new directory at this
 level with a new id.  Running the report again now might create the
-directory ``r file.path("example", orderly:::new_report_id())``
+directory ``r file.path("example", orderly1:::new_report_id())``
 
 We store the copies of files as run by `orderly` so that even if the
 input files change we can still easily get back to previous
@@ -186,13 +186,13 @@ from any changes to the underlying source.
 You can see the list of draft reports like so:
 
 ``` {r }
-orderly::orderly_list_drafts(root = path)
+orderly1::orderly_list_drafts(root = path)
 ```
 
 Once you're happy with a report, then "commit" it with
 
 ``` {r collapse = TRUE}
-orderly::orderly_commit(id, root = path)
+orderly1::orderly_commit(id, root = path)
 ```
 
 After this step our directory structure looks like:
@@ -205,10 +205,10 @@ This looks very like the previous, but files have been moved from being within `
 
 ## Creating a report
 
-First, run `orderly::orderly_new` to create a directory within `src`.  The name is important and should not contain spaces (nor should it change as this will change the key report id and you'll lose a chain of history), then edit the file `orderly.yml` within that directory.
+First, run `orderly1::orderly_new` to create a directory within `src`.  The name is important and should not contain spaces (nor should it change as this will change the key report id and you'll lose a chain of history), then edit the file `orderly.yml` within that directory.
 
 ``` {r }
-orderly::orderly_new("new", root = path)
+orderly1::orderly_new("new", root = path)
 ```
 
 which results in a directory structure like:
@@ -388,7 +388,7 @@ parameters:
 This would declare that a report takes two parameters `a` (with a default of 1), and `b` (with no default).  Running the report would then look like:
 
 ```r
-orderly::orderly_run("reportname", list(a = 10, b = 100))
+orderly1::orderly_run("reportname", list(a = 10, b = 100))
 ```
 
 These parameters are then present in the environment of the report, so the code can use values `a` and `b`.
@@ -440,7 +440,7 @@ versions.
 This process can be automated by running
 
 ```{r}
-orderly::orderly_use_gitignore(root = path, prompt = FALSE)
+orderly1::orderly_use_gitignore(root = path, prompt = FALSE)
 ```
 
 (the default, `prompt = TRUE` will request user confirmation before writing the `.gitignore` file).
@@ -565,7 +565,7 @@ session).  This will likely be more pleasant to work with.
 The advantage of using environment variables is that you can add the
 `orderly_envir.yml` file to your `.gitignore` and avoid committing
 system-dependent data to the central repository (see
-`orderly::orderly_use_gitignore`) to help automate this.
+`orderly1::orderly_use_gitignore`) to help automate this.
 
 To avoid leaving passwords in plain text, you can use [`vault`](https://www.vaultproject.io) (along with the R client [`vaultr`](https://cran.r-project.org/package=vaultr)) to
 retrieve them.
@@ -646,16 +646,16 @@ database:
     default_instance: $DEFAULT_INSTANCE
 ```
 
-Here - staging and production have different hostnames (`production.example.org` and `staging.example.org`) and different passwords (retrieved using environment variables) and the default instance is set with another environment variable (`$DEFAULT_INSTANCE`, which must be one of `production` or `staging`).  To switch between databases, you can set that variable, or pass the `instance` argument to `orderly::orderly_run` and friends, as:
+Here - staging and production have different hostnames (`production.example.org` and `staging.example.org`) and different passwords (retrieved using environment variables) and the default instance is set with another environment variable (`$DEFAULT_INSTANCE`, which must be one of `production` or `staging`).  To switch between databases, you can set that variable, or pass the `instance` argument to `orderly1::orderly_run` and friends, as:
 
 ```r
-orderly::orderly_run(name, instance = "production")
+orderly1::orderly_run(name, instance = "production")
 ```
 
 or
 
 ```r
-orderly::orderly_run(name, instance = "staging")
+orderly1::orderly_run(name, instance = "staging")
 ```
 
 If there is more than one database configured, then the interpretation of `instance` is a little more nuanced.  For example, suppose we have this (abridged) database configuration:
@@ -682,7 +682,7 @@ database:
 Then we can pass in a string like `production` in as the instance, e.g.,
 
 ```
-orderly::orderly_run(name, instance = "production")
+orderly1::orderly_run(name, instance = "production")
 ```
 
 as the `source` database will select the `production` instance and as there are no instances configured for the `extra` database we will ignore the argument when connecting to `extra`.
@@ -716,7 +716,7 @@ database:
 Then it is possible to select *different* instances for each database, such as:
 
 ```
-orderly::orderly_run(name,
+orderly1::orderly_run(name,
                       instance = c(source = "production", extra = "staging"))
 ```
 
@@ -766,9 +766,9 @@ Because orderly works in a directory that is not the same as the source director
 
 In order to make this easier, orderly has a set of functions to help develop a report within the source directory.  These functions are:
 
-* `orderly::orderly_develop_start` which copies files *into* your source copy
-* `orderly::orderly_develop_status` which reports on the status of your source
-* `orderly::orderly_develop_clean` which cleans up files that orderly copied
+* `orderly1::orderly_develop_start` which copies files *into* your source copy
+* `orderly1::orderly_develop_status` which reports on the status of your source
+* `orderly1::orderly_develop_clean` which cleans up files that orderly copied
 
 This section illustrates the idea, creating a new report that will depend on an artefact from a previous report.  Here is the state of our orderly tree from before:
 
@@ -807,10 +807,10 @@ The new report has an `orderly.yml` containing
 yaml_output(readLines(file.path(path_new, "orderly.yml")))
 ```
 
-In order to run this report, we need the file `data.csv` (which contains the output `mydata.csv` from the latest version of the `example` report) to exist.  If we wanted to interactively develop the `script.R` we'd have to run `orderly::orderly_run` repeatedly, which will be annoying - and impractical if the report is slow to run.  So we can run instead:
+In order to run this report, we need the file `data.csv` (which contains the output `mydata.csv` from the latest version of the `example` report) to exist.  If we wanted to interactively develop the `script.R` we'd have to run `orderly1::orderly_run` repeatedly, which will be annoying - and impractical if the report is slow to run.  So we can run instead:
 
 ```{r}
-orderly::orderly_develop_start("new", root = path)
+orderly1::orderly_develop_start("new", root = path)
 ```
 
 which copies in the required artefact and we can then change the directory (using something like `setwd("src/new")`) and start working on the report directly.
@@ -818,15 +818,15 @@ which copies in the required artefact and we can then change the directory (usin
 You can see the status of the directory by running
 
 ```{r}
-orderly::orderly_develop_status("new", root = path)
+orderly1::orderly_develop_status("new", root = path)
 ```
 
-(the output of this object is likely to change in future versions), which shows that `data.csv` is present, and that it is _derived_ - by which means that orderly knows that it should not persist in the source tree.  Files marked as `derived` as `TRUE` are liable for deletion by `orderly::orderly_develop_clean`.  The output also shows that `mean.txt` is not present.
+(the output of this object is likely to change in future versions), which shows that `data.csv` is present, and that it is _derived_ - by which means that orderly knows that it should not persist in the source tree.  Files marked as `derived` as `TRUE` are liable for deletion by `orderly1::orderly_develop_clean`.  The output also shows that `mean.txt` is not present.
 
 If you have changed directly into the path under development (via `setwd(file.path(path, "src/new"))`) the you can omit the arguments and simply call
 
 ```{r, with_path = TRUE, with_path_value = path_new}
-orderly::orderly_develop_status()
+orderly1::orderly_develop_status()
 ```
 
 You can then run your script as if it was a normal R script:
@@ -840,15 +840,15 @@ source("script.R", echo = TRUE)
 After which the `data.csv` is present
 
 ```{r, with_path = TRUE, with_path_value = path_new}
-orderly::orderly_develop_status()
+orderly1::orderly_develop_status()
 ```
 
-If a newer version of the upstream dependency has become available, you can update the file by running `orderly::orderly_develop_start()` again
+If a newer version of the upstream dependency has become available, you can update the file by running `orderly1::orderly_develop_start()` again
 
 ```{r, with_path = TRUE, with_path_value = path_new}
-id <- orderly::orderly_run("example", root = path)
-orderly::orderly_commit(id, root = path)
-orderly::orderly_develop_start()
+id <- orderly1::orderly_run("example", root = path)
+orderly1::orderly_commit(id, root = path)
+orderly1::orderly_develop_start()
 ```
 
 (note that this has updated `data.csv` to use this new id `r id`).
@@ -856,8 +856,8 @@ orderly::orderly_develop_start()
 Finally, you can delete the files that orderly has copied into the source tree:
 
 ```{r, with_path = TRUE, with_path_value = path_new, collapse = TRUE}
-orderly::orderly_develop_clean()
-orderly::orderly_develop_status()
+orderly1::orderly_develop_clean()
+orderly1::orderly_develop_status()
 ```
 
 (this function also accepts `name` and `root` as above, required if not working in the source directory)

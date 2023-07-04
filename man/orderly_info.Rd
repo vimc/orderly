@@ -32,7 +32,7 @@ look for the report with \code{id} in archive first and then look in drafts
 if it can't be found from archive.
 }
 \examples{
-path <- orderly::orderly_example("demo")
-id <- orderly::orderly_run("minimal", root = path)
-orderly::orderly_info(id, "minimal", root = path)
+path <- orderly1::orderly_example("demo")
+id <- orderly1::orderly_run("minimal", root = path)
+orderly1::orderly_info(id, "minimal", root = path)
 }

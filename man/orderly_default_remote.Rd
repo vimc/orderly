@@ -36,30 +36,30 @@ projects.
 }
 \examples{
 # Same setup as in orderly_remote_path, with a remote orderly:
-path_remote <- orderly::orderly_example("demo")
-id <- orderly::orderly_run("other", list(nmin = 0),
+path_remote <- orderly1::orderly_example("demo")
+id <- orderly1::orderly_run("other", list(nmin = 0),
                            root = path_remote, echo = FALSE)
-orderly::orderly_commit(id, root = path_remote)
-id <- orderly::orderly_run("use_dependency",
+orderly1::orderly_commit(id, root = path_remote)
+id <- orderly1::orderly_run("use_dependency",
                            root = path_remote, echo = FALSE)
-orderly::orderly_commit(id, root = path_remote)
+orderly1::orderly_commit(id, root = path_remote)
 
 # And a local orderly
-path_local <- orderly::orderly_example("demo")
+path_local <- orderly1::orderly_example("demo")
 
 # We'll create an object to interact with this remote using
 # orderly_remote_path.
-remote <- orderly::orderly_remote_path(path_remote)
+remote <- orderly1::orderly_remote_path(path_remote)
 
 # There is no remote set by default:
-try(orderly::orderly_default_remote_get(root = path_local))
+try(orderly1::orderly_default_remote_get(root = path_local))
 
 # We can set one:
-orderly::orderly_default_remote_set(remote, root = path_local)
+orderly1::orderly_default_remote_set(remote, root = path_local)
 
 # and now we can retrieve it:
-orderly::orderly_default_remote_get(root = path_local)
+orderly1::orderly_default_remote_get(root = path_local)
 
 # Note that this has not affected the other orderly:
-try(orderly::orderly_default_remote_get(root = path_remote))
+try(orderly1::orderly_default_remote_get(root = path_remote))
 }

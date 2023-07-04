@@ -109,15 +109,15 @@ is missing and we'll try and build it out.
 }
 
 \examples{
-path <- orderly::orderly_example("demo")
+path <- orderly1::orderly_example("demo")
 
-id <- orderly::orderly_run("other", root = path, parameters=list(nmin=0))
-orderly::orderly_commit(id, root = path)
-id <- orderly::orderly_run("use_dependency", root = path)
-orderly::orderly_commit(id, root = path)
-id <- orderly::orderly_run("use_dependency_2", root = path)
-orderly::orderly_commit(id, root = path)
-orderly::orderly_graph("other", root = path)
-orderly::orderly_graph("use_dependency_2", root = path,
+id <- orderly1::orderly_run("other", root = path, parameters=list(nmin=0))
+orderly1::orderly_commit(id, root = path)
+id <- orderly1::orderly_run("use_dependency", root = path)
+orderly1::orderly_commit(id, root = path)
+id <- orderly1::orderly_run("use_dependency_2", root = path)
+orderly1::orderly_commit(id, root = path)
+orderly1::orderly_graph("other", root = path)
+orderly1::orderly_graph("use_dependency_2", root = path,
                                  direction = "upstream")
 }
