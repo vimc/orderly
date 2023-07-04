@@ -188,7 +188,7 @@ test_that("archive directory is created when needed", {
 test_that("onload can be rerun", {
   v <- cache$current_archive_version
   cache$current_archive_version <- NULL
-  orderly:::.onLoad()
+  orderly1:::.onLoad()
   expect_equal(cache$current_archive_version, v)
 })
 

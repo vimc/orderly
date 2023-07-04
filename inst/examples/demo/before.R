@@ -5,9 +5,9 @@ other_change_script <- function() {
 }
 
 update_db <- function() {
-  con <- orderly::orderly_db("source")
+  con <- orderly1::orderly_db("source")
   on.exit(DBI::dbDisconnect(con$source))
-  orderly:::fake_db(con)
+  orderly1:::fake_db(con)
 }
 
 add_changelog <- function() {

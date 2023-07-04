@@ -51,7 +51,7 @@ ENV ORDERLY_VERSION $ORDERLY_VERSION
 
 COPY . /orderly
 RUN R CMD INSTALL /orderly && \
-  Rscript -e 'orderly:::write_script("/usr/bin")' && \
+  Rscript -e 'orderly1:::write_script("/usr/bin")' && \
   cp /orderly/inst/create_orderly_demo.sh /usr/bin/ && \
   cp /orderly/inst/run_orderly_demo /usr/bin/ && \
   rm -rf /orderly

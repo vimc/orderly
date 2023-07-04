@@ -54,7 +54,7 @@ does not exist when a report is run.
 }
 \examples{
 # Initialise a new orderly repository in an temporary directory:
-path <- orderly::orderly_init(tempfile())
+path <- orderly1::orderly_init(tempfile())
 
 # This has created the directory skeleton that you need to get
 # started using orderly:

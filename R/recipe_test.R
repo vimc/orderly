@@ -5,7 +5,7 @@
 ##' the report hands back to the user.
 ##'
 ##' Previous versions of orderly changed into the created directory
-##' when using `orderly::orderly_test_start`, which allowed
+##' when using `orderly1::orderly_test_start`, which allowed
 ##' interactive testing of a report, including ensuring that it has
 ##' created all expected outputs.  However, CRAN rules do not allow
 ##' changing the working directory, which significantly reduces the
@@ -25,7 +25,7 @@
 ##' @title Prepare a directory for orderly to use
 ##'
 ##' @param name Name of the report to run (see
-##'   [orderly::orderly_list()]).  A leading `src/` will be
+##'   [orderly1::orderly_list()]).  A leading `src/` will be
 ##'   removed if provided, allowing easier use of autocomplete.
 ##'
 ##' @inheritParams orderly_run
@@ -33,14 +33,14 @@
 ##' @export
 ##' @examples
 ##'
-##' path <- orderly::orderly_example("minimal")
-##' p <- orderly::orderly_test_start("example", root = path)
+##' path <- orderly1::orderly_example("minimal")
+##' p <- orderly1::orderly_test_start("example", root = path)
 ##'
 ##' # The data in the orderly example is now available to use
 ##' dat
 ##'
 ##' # Check to see which artefacts have been created so far:
-##' orderly::orderly_test_check(p)
+##' orderly1::orderly_test_check(p)
 ##'
 ##' # Manually the code that this report has in its script
 ##' png(file.path(p, "mygraph.png"))
@@ -48,7 +48,7 @@
 ##' dev.off()
 ##'
 ##' # We now confirm that the artefact has been created:
-##' orderly::orderly_test_check(p)
+##' orderly1::orderly_test_check(p)
 orderly_test_start <- function(name, parameters = NULL, envir = parent.frame(),
                                root = NULL, locate = TRUE, instance = NULL,
                                use_draft = FALSE, remote = NULL) {
@@ -71,7 +71,7 @@ orderly_test_start <- function(name, parameters = NULL, envir = parent.frame(),
            "",
            sprintf('    setwd("%s")', clean_path(getwd())),
            "",
-           "Please see the documentation ?orderly::orderly_test_start for",
+           "Please see the documentation ?orderly1::orderly_test_start for",
            "more details")
   message(paste(msg, collapse = "\n"))
 

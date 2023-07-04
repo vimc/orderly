@@ -16,8 +16,8 @@
 ##'   orderly will use in order to control this remote
 ##'
 ##' @export
-##' @seealso [orderly::orderly_pull_dependencies()] and
-##'   [orderly::orderly_pull_archive()], which are the primary ways
+##' @seealso [orderly1::orderly_pull_dependencies()] and
+##'   [orderly1::orderly_pull_archive()], which are the primary ways
 ##'   these remote objects are used.  See also
 ##'   [OrderlyWeb](https://github.com/vimc/orderly-web) for a
 ##'   system for hosting orderly repositories over an HTTP API.

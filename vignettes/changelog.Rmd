@@ -41,7 +41,7 @@ unaltered.
 
 Messages can be provided to `orderly_run` (or `orderly run` on the command line) and these are required to be in the format `[label] value`.
 
-Once a report is run (via `orderly::orderly_run()`, or via `orderly run` on the command line), the given changelog, along with any
+Once a report is run (via `orderly1::orderly_run()`, or via `orderly run` on the command line), the given changelog, along with any
 message, is compared with the last committed version of this report,
 and entries that are introduced on this round are identified.  We add
 the report id to the entries, and a randomly generated unique id to each new entry.  This is saved in `orderly_run.rds` along with other report metadata.

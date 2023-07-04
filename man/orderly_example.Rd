@@ -42,9 +42,9 @@ repositories, but are used in the package examples and vignettes.
 }
 \examples{
 # Create a new copy of the "minimal" example
-path <- orderly::orderly_example("minimal")
+path <- orderly1::orderly_example("minimal")
 dir(path)
 
 # Example reports within this repository:
-orderly::orderly_list(path)
+orderly1::orderly_list(path)
 }

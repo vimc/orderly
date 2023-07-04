@@ -30,15 +30,15 @@ Fifth, that you trust your remote machine with your data, and that the remote ma
 We will use the orderly demo example, and pack up the `use_dependency` report.
 
 ```{r}
-path <- orderly::orderly_example("demo")
+path <- orderly1::orderly_example("demo")
 ```
 
 The `use_dependency` report has a dependency, which we run
 
 ```{r}
-id <- orderly::orderly_run("other", parameters = list(nmin = 0),
+id <- orderly1::orderly_run("other", parameters = list(nmin = 0),
                            echo = FALSE, root = path)
-orderly::orderly_commit(id, root = path)
+orderly1::orderly_commit(id, root = path)
 ```
 
 We need a place that we'll put the bundles:
@@ -50,7 +50,7 @@ path_bundles <- tempfile()
 Now, we can pack up `use_dependency` to run
 
 ```{r}
-bundle <- orderly::orderly_bundle_pack(path_bundles, "use_dependency",
+bundle <- orderly1::orderly_bundle_pack(path_bundles, "use_dependency",
                                        root = path)
 bundle
 ```
@@ -69,24 +69,24 @@ Once the files have been moved we can run it with:
 
 ```{r}
 workdir <- tempfile()
-res <- orderly::orderly_bundle_run(bundle$path, workdir)
+res <- orderly1::orderly_bundle_run(bundle$path, workdir)
 ```
 
 With the `workdir` being a directory that you want the report to be run in. This can be the same as the path the incoming zip file is found, if you want, but this will make it harder to know what has been run already or not.
 
 This creates _another_ zip file, but this time contains the results of running the report.
 
-The result can be imported into order by using `orderly::orderly_bundle_import` with the path to the zip file:
+The result can be imported into order by using `orderly1::orderly_bundle_import` with the path to the zip file:
 
 ```{r}
-orderly::orderly_bundle_import(res$path, root = path)
+orderly1::orderly_bundle_import(res$path, root = path)
 ```
 
 The copy of `use_dependency` is now in the archive and can be used like any other orderly report
 
 ```{r}
-orderly::orderly_list_archive(path)
-orderly::orderly_graph("other", root = path)
+orderly1::orderly_list_archive(path)
+orderly1::orderly_graph("other", root = path)
 ```
 
 ## Limitations

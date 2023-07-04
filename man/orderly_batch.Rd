@@ -32,9 +32,9 @@ Run one report multiple times with different sets of parameters.
 }
 \examples{
 
-path <- orderly::orderly_example("demo")
+path <- orderly1::orderly_example("demo")
 params <- data.frame(nmin = c(0.2, 0.25))
-ids <- orderly::orderly_batch("other", params, root = path)
+ids <- orderly1::orderly_batch("other", params, root = path)
 }
 \seealso{
 \code{\link[=orderly_run]{orderly_run()}} for details of report running

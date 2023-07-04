@@ -384,7 +384,7 @@ test_that("Create and verify tags on startup", {
   append_lines("  - tag3", file.path(root, "orderly_config.yml"))
   expect_error(
     orderly_db("destination", root = root),
-    "tags have changed: rebuild with orderly::orderly_rebuild()",
+    "tags have changed: rebuild with orderly1::orderly_rebuild()",
     fixed = TRUE)
   orderly_rebuild(root)
 

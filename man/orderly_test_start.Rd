@@ -79,7 +79,7 @@ the report hands back to the user.
 }
 \details{
 Previous versions of orderly changed into the created directory
-when using \code{orderly::orderly_test_start}, which allowed
+when using \code{orderly1::orderly_test_start}, which allowed
 interactive testing of a report, including ensuring that it has
 created all expected outputs.  However, CRAN rules do not allow
 changing the working directory, which significantly reduces the
@@ -99,14 +99,14 @@ the expected artefacts
 }
 \examples{
 
-path <- orderly::orderly_example("minimal")
-p <- orderly::orderly_test_start("example", root = path)
+path <- orderly1::orderly_example("minimal")
+p <- orderly1::orderly_test_start("example", root = path)
 
 # The data in the orderly example is now available to use
 dat
 
 # Check to see which artefacts have been created so far:
-orderly::orderly_test_check(p)
+orderly1::orderly_test_check(p)
 
 # Manually the code that this report has in its script
 png(file.path(p, "mygraph.png"))
@@ -114,5 +114,5 @@ barplot(setNames(dat$number, dat$name), las = 2)
 dev.off()
 
 # We now confirm that the artefact has been created:
-orderly::orderly_test_check(p)
+orderly1::orderly_test_check(p)
 }

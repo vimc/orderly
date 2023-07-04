@@ -35,17 +35,17 @@
 ##'
 ##' @inheritParams orderly_list
 ##'
-##' @seealso [orderly::orderly_init()] for initialising a new orderly
+##' @seealso [orderly1::orderly_init()] for initialising a new orderly
 ##'   repository.
 ##'
 ##' @export
 ##' @return The path of the new source directory, invisibly
 ##' @examples
-##' path <- orderly::orderly_example("minimal")
+##' path <- orderly1::orderly_example("minimal")
 ##'
 ##' # Create a new report with the name "myreport" in this orderly
 ##' # repository:
-##' orderly::orderly_new("myreport", root = path)
+##' orderly1::orderly_new("myreport", root = path)
 ##'
 ##' # The directory will be initialised with a orderly.yml file
 ##' # containing documentation

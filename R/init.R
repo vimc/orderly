@@ -12,16 +12,16 @@
 ##' * `src`: The path where report sources live. This should be placed
 ##'   under version control, and contain a number of reports, each in
 ##'   their own directory with an `orderly.yml` describing their
-##'   inputs and outputs (artefacts).  The [orderly::orderly_new()]
+##'   inputs and outputs (artefacts).  The [orderly1::orderly_new()]
 ##'   function can be used to accelerate creation of new reports.
 ##'
 ##' * `draft`: A directory where reports will be run using
-##'   [orderly::orderly_run()].  This directory should be excluded
+##'   [orderly1::orderly_run()].  This directory should be excluded
 ##'   from version control. `orderly` will create it as needed if
 ##'   it does not exist when a report is run.
 ##'
 ##' * `archive`: A directory where successfully run reports will be
-##'   moved to after being committed with [orderly::orderly_commit()].
+##'   moved to after being committed with [orderly1::orderly_commit()].
 ##'   This directory should be excluded from version
 ##'   control. `orderly` will create it as needed if it does not
 ##'   exist when a report is committed.
@@ -45,14 +45,14 @@
 ##'
 ##' @export
 ##'
-##' @seealso [orderly::orderly_new()] for creating new reports within
+##' @seealso [orderly1::orderly_new()] for creating new reports within
 ##'   a configured orderly repository.
 ##'
 ##' @return The path to the newly created archive
 ##'
 ##' @examples
 ##' # Initialise a new orderly repository in an temporary directory:
-##' path <- orderly::orderly_init(tempfile())
+##' path <- orderly1::orderly_init(tempfile())
 ##'
 ##' # This has created the directory skeleton that you need to get
 ##' # started using orderly:

@@ -2,7 +2,7 @@
 ##' (possibly just for a set of report names) and then deletes
 ##' dangling data sets that are not pointed to by any draft or
 ##' committed reports.  Running cleanup does not affect any reports
-##' that have been committed with [orderly::orderly_commit()] (i.e.,
+##' that have been committed with [orderly1::orderly_commit()] (i.e.,
 ##' the contents of the `archive/` directory).
 ##'
 ##' @title Orderly cleanup
@@ -15,28 +15,28 @@
 ##'
 ##' @param failed_only Delete only failed reports (those without the
 ##'   end-of-run metadata).  This will also clean up drafts created by
-##'   [orderly::orderly_test_start()]
+##'   [orderly1::orderly_test_start()]
 ##' @inheritParams orderly_list
 ##' @return No return value, this function is called only for its side effects
 ##' @export
 ##' @examples
 ##' # In a new example orderly, run two reports and commit only the
 ##' # second one:
-##' path <- orderly::orderly_example("minimal")
-##' id1 <- orderly::orderly_run("example", root = path)
-##' id2 <- orderly::orderly_run("example", root = path)
-##' orderly::orderly_commit(id2, root = path)
+##' path <- orderly1::orderly_example("minimal")
+##' id1 <- orderly1::orderly_run("example", root = path)
+##' id2 <- orderly1::orderly_run("example", root = path)
+##' orderly1::orderly_commit(id2, root = path)
 ##'
 ##' # We now have one draft and one archive report:
-##' orderly::orderly_list_drafts(root = path)
-##' orderly::orderly_list_archive(root = path)
+##' orderly1::orderly_list_drafts(root = path)
+##' orderly1::orderly_list_archive(root = path)
 ##'
 ##' # To clean up the drafts:
-##' orderly::orderly_cleanup(root = path)
+##' orderly1::orderly_cleanup(root = path)
 ##'
 ##' # We now have no draft and one archive reports:
-##' orderly::orderly_list_drafts(root = path)
-##' orderly::orderly_list_archive(root = path)
+##' orderly1::orderly_list_drafts(root = path)
+##' orderly1::orderly_list_archive(root = path)
 orderly_cleanup <- function(name = NULL, root = NULL, locate = TRUE,
                             draft = TRUE, data = TRUE, failed_only = FALSE) {
   config <- orderly_config(root, locate)

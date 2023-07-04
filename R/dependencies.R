@@ -25,8 +25,8 @@
 ##' @section Remark:
 ##'
 ##' By default the tree is built using data from the local report
-##'   database (see [orderly::orderly_commit],
-##'   [orderly::orderly_db]). This means that it will not find changes
+##'   database (see [orderly1::orderly_commit],
+##'   [orderly1::orderly_db]). This means that it will not find changes
 ##'   from a report that has not be run and committed. That is, if a
 ##'   user changes a report to use or create different artefacts this
 ##'   will not be picked up by the function until the reports are
@@ -77,16 +77,16 @@
 ##'         report.
 ##' @export
 ##' @examples
-##' path <- orderly::orderly_example("demo")
+##' path <- orderly1::orderly_example("demo")
 ##'
-##' id <- orderly::orderly_run("other", root = path, parameters=list(nmin=0))
-##' orderly::orderly_commit(id, root = path)
-##' id <- orderly::orderly_run("use_dependency", root = path)
-##' orderly::orderly_commit(id, root = path)
-##' id <- orderly::orderly_run("use_dependency_2", root = path)
-##' orderly::orderly_commit(id, root = path)
-##' orderly::orderly_graph("other", root = path)
-##' orderly::orderly_graph("use_dependency_2", root = path,
+##' id <- orderly1::orderly_run("other", root = path, parameters=list(nmin=0))
+##' orderly1::orderly_commit(id, root = path)
+##' id <- orderly1::orderly_run("use_dependency", root = path)
+##' orderly1::orderly_commit(id, root = path)
+##' id <- orderly1::orderly_run("use_dependency_2", root = path)
+##' orderly1::orderly_commit(id, root = path)
+##' orderly1::orderly_graph("other", root = path)
+##' orderly1::orderly_graph("use_dependency_2", root = path,
 ##'                                  direction = "upstream")
 orderly_graph <- function(name, id = "latest", root = NULL, locate = TRUE,
                           direction = "downstream", propagate = TRUE,

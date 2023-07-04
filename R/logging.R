@@ -21,33 +21,33 @@
 ##'   This allows patterns like:
 ##'
 ##' ```
-##' if (!orderly::orderly_log_off()) {
-##'   on.exit(orderly::orderly_log_on())
+##' if (!orderly1::orderly_log_off()) {
+##'   on.exit(orderly1::orderly_log_on())
 ##' }
 ##' ```
 ##'
 ##' to disable logging within a function (the `on.exit` block
 ##'   will be run when the function exits).
 ##'
-##' @seealso [orderly::orderly_run()], which makes use of these log
+##' @seealso [orderly1::orderly_run()], which makes use of these log
 ##'   messages
 ##'
 ##' @examples
 ##' # We are going to log things below
-##' logging_was_enabled <- orderly::orderly_log_on()
+##' logging_was_enabled <- orderly1::orderly_log_on()
 ##'
 ##' # About orderly log messages:
 ##' # Orderly log messages have the form "[title] message"
-##' orderly::orderly_log_on()
-##' orderly::orderly_log("title", "message")
+##' orderly1::orderly_log_on()
+##' orderly1::orderly_log("title", "message")
 ##'
 ##' # If logging is disabled they are not printed:
-##' orderly::orderly_log_off()
-##' orderly::orderly_log("title", "message")
+##' orderly1::orderly_log_off()
+##' orderly1::orderly_log("title", "message")
 ##'
 ##' # Restore to previous settings:
 ##' if (logging_was_enabled) {
-##'   orderly::orderly_log_on()
+##'   orderly1::orderly_log_on()
 ##' }
 orderly_log_on <- function() {
   invisible(!isTRUE(options(orderly.nolog = NULL)$orderly.nolog))

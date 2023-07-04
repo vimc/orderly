@@ -15,9 +15,9 @@
 ##' @export
 ##'
 ##' @examples
-##' path <- orderly::orderly_example("demo")
-##' id <- orderly::orderly_run("minimal", root = path)
-##' orderly::orderly_info(id, "minimal", root = path)
+##' path <- orderly1::orderly_example("demo")
+##' id <- orderly1::orderly_run("minimal", root = path)
+##' orderly1::orderly_info(id, "minimal", root = path)
 orderly_info <- function(id, name, root = NULL, locate = TRUE) {
   report <- orderly_find_report(id, name, root, locate, draft = "newer",
                                 must_work = TRUE)
@@ -80,8 +80,8 @@ orderly_info <- function(id, name, root = NULL, locate = TRUE) {
 ##' @export
 ##'
 ##' @examples
-##' path <- orderly::orderly_example("minimal")
-##' orderly::orderly_packages(root = path)
+##' path <- orderly1::orderly_example("minimal")
+##' orderly1::orderly_packages(root = path)
 orderly_packages <- function(root = NULL, locate = TRUE) {
   cfg <- orderly_config(root, locate)
   names <- basename(list_dirs(path_src(cfg$root)))

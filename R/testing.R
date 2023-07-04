@@ -26,11 +26,11 @@
 ##' @export
 ##' @examples
 ##' # Create a new copy of the "minimal" example
-##' path <- orderly::orderly_example("minimal")
+##' path <- orderly1::orderly_example("minimal")
 ##' dir(path)
 ##'
 ##' # Example reports within this repository:
-##' orderly::orderly_list(path)
+##' orderly1::orderly_list(path)
 orderly_example <- function(name, path = tempfile(), run_demo = FALSE,
                             quiet = FALSE, git = FALSE) {
   path <- prepare_orderly_example(name, path, git = git)

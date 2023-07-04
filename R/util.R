@@ -75,7 +75,7 @@ find_file_descend <- function(target, start = ".", limit = "/") {
 }
 
 orderly_file <- function(...) {
-  system.file(..., package = "orderly", mustWork = TRUE)
+  system.file(..., package = "orderly1", mustWork = TRUE)
 }
 
 `%||%` <- function(a, b) { # nolint

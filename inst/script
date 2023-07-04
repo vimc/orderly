@@ -1,5 +1,5 @@
 tryCatch(
-  orderly:::main(),
+  orderly1:::main(),
   orderly_cli_error = function(e) {
     message(paste("orderly:", e$message))
     q(save = "no", status = 1)

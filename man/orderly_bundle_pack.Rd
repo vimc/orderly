@@ -114,33 +114,33 @@ functions (mostly due to transport costs) so they are intended
 primarily for very computationally demanding patterns.
 }
 \examples{
-path <- orderly::orderly_example("minimal")
+path <- orderly1::orderly_example("minimal")
 
 # A working directory to export bundles to:
 workdir <- tempfile()
 
 # Pack up the "example" report to go:
-res <- orderly::orderly_bundle_pack(workdir, "example", root = path)
+res <- orderly1::orderly_bundle_pack(workdir, "example", root = path)
 
 # The return value is a list with the id and the path to the zip
 # file created:
 res
 
 # A list of reports bundled in this directory and their status
-orderly::orderly_bundle_list(workdir)
+orderly1::orderly_bundle_list(workdir)
 
 # Run the bundle (this would ordinarily be done on another computer)
-zip <- orderly::orderly_bundle_run(res$path, workdir)
+zip <- orderly1::orderly_bundle_run(res$path, workdir)
 zip
 
 # The status has now been updated to reflect the status
-orderly::orderly_bundle_list(workdir)
+orderly1::orderly_bundle_list(workdir)
 
 # We can import this into the orderly tree
-orderly::orderly_bundle_import(zip$path, root = path)
+orderly1::orderly_bundle_import(zip$path, root = path)
 
 # This has now been included in your orderly archive and the
 # workdir can be safely deleted
 unlink(workdir, recursive = TRUE)
-orderly::orderly_list_archive(path)
+orderly1::orderly_list_archive(path)
 }

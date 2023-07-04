@@ -44,13 +44,13 @@
 ##' @export
 ##' @examples
 ##'
-##' path <- orderly::orderly_example("demo")
-##' id1 <- orderly::orderly_run("minimal", root = path)
-##' id2 <- orderly::orderly_run("minimal", root = path)
+##' path <- orderly1::orderly_example("demo")
+##' id1 <- orderly1::orderly_run("minimal", root = path)
+##' id2 <- orderly1::orderly_run("minimal", root = path)
 ##' orderly_commit(id1, root = path)
 ##' orderly_commit(id2, root = path)
 ##' tryCatch(
-##'   orderly::orderly_deduplicate(path, dry_run = TRUE),
+##'   orderly1::orderly_deduplicate(path, dry_run = TRUE),
 ##'   error = function(e) NULL)
 orderly_deduplicate <- function(root = NULL, locate = TRUE, dry_run = TRUE,
                                 quiet = FALSE) {

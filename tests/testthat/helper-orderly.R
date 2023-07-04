@@ -88,7 +88,7 @@ prepare_orderly_remote_example <- function(path = tempfile()) {
 
   r <- list(remote = list(
               default = list(
-                driver = "orderly::orderly_remote_path",
+                driver = "orderly1::orderly_remote_path",
                 args = list(path = path_remote))))
   append_lines(yaml::as.yaml(r), file.path(path_local, "orderly_config.yml"))
 

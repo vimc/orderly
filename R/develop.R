@@ -37,7 +37,7 @@
 ##' happen.  When in doubt, restart your R session.
 ##'
 ##' Note that these functions are much more permissive as to the state
-##' of your `orderly.yml` than [orderly::orderly_run()] - in
+##' of your `orderly.yml` than [orderly1::orderly_run()] - in
 ##' particular, they will run, with a message, even if you have not
 ##' yet defined a `script:` or any `artefacts:`.
 ##'
@@ -47,7 +47,7 @@
 ##' @title Develop an orderly report
 ##'
 ##' @param name Name of the report to develop (see
-##'   [orderly::orderly_list()]).  A leading `src/` will be
+##'   [orderly1::orderly_list()]).  A leading `src/` will be
 ##'   removed if provided, allowing easier use of autocomplete.
 ##'   Alternatively, the default of `NULL` is useful if you have
 ##'   already set the working directory to be the source directory.
@@ -59,23 +59,23 @@
 ##'
 ##' @export
 ##' @examples
-##' path <- orderly::orderly_example("demo")
+##' path <- orderly1::orderly_example("demo")
 ##'
 ##' # This report uses a dependency - it requires that the file
 ##' # incoming.csv exists.  This file is created from the report 'other'
-##' orderly::orderly_develop_status("use_dependency", root = path)
+##' orderly1::orderly_develop_status("use_dependency", root = path)
 ##'
 ##' # Copy the required dependencies over, in this case from a draft report
-##' orderly::orderly_run("other", list(nmin = 0), root = path, echo = FALSE)
-##' orderly::orderly_develop_start("use_dependency", root = path,
+##' orderly1::orderly_run("other", list(nmin = 0), root = path, echo = FALSE)
+##' orderly1::orderly_develop_start("use_dependency", root = path,
 ##'                                use_draft = TRUE)
 ##'
 ##' # Files have been copied across into the source directory
-##' orderly::orderly_develop_status("use_dependency", root = path)
+##' orderly1::orderly_develop_status("use_dependency", root = path)
 ##'
 ##' # The report can then be developed as needed, interactively.  After
 ##' # we're happy things can be cleaned up with
-##' orderly::orderly_develop_clean("use_dependency", root = path)
+##' orderly1::orderly_develop_clean("use_dependency", root = path)
 ##'
 orderly_develop_start <- function(name = NULL, parameters = NULL,
                                   envir = parent.frame(),

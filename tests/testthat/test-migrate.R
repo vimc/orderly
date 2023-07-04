@@ -178,7 +178,7 @@ test_that("require migration", {
   expect_error(orderly_run("example", root = path, echo = FALSE),
                "orderly archive needs migrating from 0.0.0 =>", fixed = TRUE)
   expect_error(orderly_run("example", root = path, echo = FALSE),
-               "Run orderly::orderly_migrate() to fix", fixed = TRUE)
+               "Run orderly1::orderly_migrate() to fix", fixed = TRUE)
   orderly_migrate(path)
   expect_error(orderly_run("example", root = path, echo = FALSE), NA)
 })
@@ -234,7 +234,7 @@ test_that("database migrations", {
   id <- orderly_run("minimal", root = path, echo = FALSE)
   expect_error(
     orderly_commit(id, root = path),
-    "orderly db needs rebuilding with orderly::orderly_rebuild()")
+    "orderly db needs rebuilding with orderly1::orderly_rebuild()")
 
   orderly_rebuild(path)
 

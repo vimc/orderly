@@ -52,13 +52,13 @@ database stored at the orderly root)
 }
 \examples{
 # Create an orderly that has a single commited report:
-path <- orderly::orderly_example("minimal")
-id <- orderly::orderly_run("example", root = path)
-orderly::orderly_commit(id, root = path)
+path <- orderly1::orderly_example("minimal")
+id <- orderly1::orderly_run("example", root = path)
+orderly1::orderly_commit(id, root = path)
 
 # The source database holds the data that might be accessible via
 # the 'data' entry in orderly.yml:
-db <- orderly::orderly_db("source", root = path)
+db <- orderly1::orderly_db("source", root = path)
 # This is a list, with one connection per database listed in the
 # orderly_config.yml (an empty list if none are specified):
 db
@@ -68,7 +68,7 @@ DBI::dbDisconnect(db$source)
 
 # The destination database holds information about the archived
 # reports:
-db <- orderly::orderly_db("destination", root = path)
+db <- orderly1::orderly_db("destination", root = path)
 DBI::dbListTables(db)
 
 # These tables are documented online:

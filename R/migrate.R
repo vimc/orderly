@@ -39,8 +39,8 @@
 ##' @examples
 ##' # Without an orderly repository created by a previous version of
 ##' # orderly, this function does nothing interesting:
-##' path <- orderly::orderly_example("minimal")
-##' orderly::orderly_migrate(path)
+##' path <- orderly1::orderly_example("minimal")
+##' orderly1::orderly_migrate(path)
 orderly_migrate <- function(root = NULL, locate = TRUE, to = NULL,
                             dry_run = FALSE, skip_failed = FALSE,
                             clean = FALSE) {
@@ -225,7 +225,7 @@ check_orderly_archive_version <- function(config) {
   } else if (used < curr) {
     stop(sprintf("orderly archive needs migrating from %s => %s\n",
                  as.character(used), as.character(curr)),
-         "Run orderly::orderly_migrate() to fix",
+         "Run orderly1::orderly_migrate() to fix",
          call. = FALSE)
   }
   config
