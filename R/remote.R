@@ -73,7 +73,7 @@
 ##'   remote interface for orderly repositories at a local path.  See
 ##'   also [OrderlyWeb](https://github.com/vimc/orderly-web) for a
 ##'   system for hosting orderly repositories over an HTTP API.
-##'   `vignette("remote", package = "orderly")` describes the
+##'   `vignette("remote", package = "orderly1")` describes the
 ##'   remote system in more detail.
 ##'
 ##' @example man-roxygen/example-remote.R

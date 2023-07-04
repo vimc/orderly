@@ -111,7 +111,8 @@ test_that("minimum version is a less than relationship", {
   path <- tempfile()
   dir.create(path)
 
-  dat <- list(minimum_orderly_version = as.character(packageVersion("orderly")))
+  dat <- list(
+    minimum_orderly_version = as.character(packageVersion("orderly1")))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
   cfg <- orderly_config_$new(path)
   expect_is(cfg, "orderly_config")

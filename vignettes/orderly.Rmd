@@ -17,7 +17,7 @@ r_output <- function(x) lang_output(x, "r")
 yaml_output <- function(x) lang_output(x, "yaml")
 plain_output <- function(x) lang_output(x, "plain")
 orderly_file <- function(...) {
-  system.file(..., package = "orderly", mustWork = TRUE)
+  system.file(..., package = "orderly1", mustWork = TRUE)
 }
 
 path <- orderly1:::prepare_orderly_example("nodata")

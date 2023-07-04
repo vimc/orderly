@@ -79,7 +79,7 @@ report_db_schema_read <- function(fields = NULL, dialect = "sqlite") {
     } else if (x$name == "orderly_schema") {
       x$values <- data_frame(
         schema_version = orderly_schema_version,
-        orderly_version = as.character(utils::packageVersion("orderly")),
+        orderly_version = as.character(utils::packageVersion("orderly1")),
         created = Sys.time())
     } else if (x$name == "orderly_schema_tables") {
       x$values <- data_frame(name = names(d))

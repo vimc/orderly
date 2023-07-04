@@ -23,7 +23,7 @@ test_that("can create an orderly git repo from given source", {
   path <- tempfile()
   dir.create(path)
   on.exit(unlink(path, recursive = TRUE))
-  source <- system.file("examples/demo", package = "orderly")
+  source <- system.file("examples/demo", package = "orderly1")
   prepare_git_example_from_source(source, path)
   expect_true(file.exists(file.path(path, ".git")))
   expect_true(dir.exists(file.path(path, "archive")))

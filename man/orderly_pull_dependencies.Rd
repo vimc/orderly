@@ -166,6 +166,6 @@ orderly1::orderly_list_archive(root = path_local)
 remote interface for orderly repositories at a local path.  See
 also \href{https://github.com/vimc/orderly-web}{OrderlyWeb} for a
 system for hosting orderly repositories over an HTTP API.
-\code{vignette("remote", package = "orderly")} describes the
+\code{vignette("remote", package = "orderly1")} describes the
 remote system in more detail.
 }
