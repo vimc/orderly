@@ -105,7 +105,8 @@ write.csv(mtcars, file.path(path, "src", "example", "mtcars.csv"),
 orderly1::orderly_use_resource("mtcars.csv", "example", path, edit = FALSE)
 
 # Modify the orderly.yml file within src/example:
-orderly1::orderly_use_resource("mtcars.csv", "example", path, prompt = FALSE)
+orderly1::orderly_use_resource("mtcars.csv", "example", path,
+                               prompt = FALSE)
 
 # The result is a file that now has a 'resources' section
 # containing our new file
