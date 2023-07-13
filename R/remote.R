@@ -401,7 +401,8 @@ get_remote <- function(remote, config) {
 
   assert_scalar(remote)
   if (remote %in% names(config$remote)) {
-    load_remote(remote, config)
+    withr::with_envvar(orderly_envir_read(config$root),
+                       load_remote(remote, config))
   } else if (file.exists(remote)) {
     orderly_remote_path(remote)
   } else {
