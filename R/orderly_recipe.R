@@ -77,7 +77,7 @@ orderly_recipe <- R6::R6Class(
   ))
 
 
-recipe_migrate <- function(raw, config, filename) {
+recipe_migrate <- function(raw, config, filename, relaxed = FALSE) {
   ## TODO(VIMC-3613): should move custom fields within their own
   ## section I think, so for now I'm going to process this with a
   ## migration and we can set up deprecating it later.
@@ -112,15 +112,19 @@ recipe_migrate <- function(raw, config, filename) {
              "connection: <object>: <dbname> instead.  See the main",
              "package vignette for details")
     orderly_warning(flow_text(msg))
-    if (length(config$database) > 1L) {
+    database <- config$database
+    if (length(database) > 1L) {
       msg <- paste("More than one database configured; update 'connection'",
                    sprintf("from '%s' to '%s: <dbname>' in '%s'",
                            raw$connection, raw$connection, filename))
-      stop(msg, call. = FALSE)
+      if (!relaxed) {
+        stop(msg)
+      }
+      message(msg)
+      database <- database[[1]]
     }
-    if (!is.null(config$database)) {
-      raw$connection <- set_names(as.list(names(config$database)),
-                                  raw$connection)
+    if (!is.null(database)) {
+      raw$connection <- set_names(as.list(names(database)), raw$connection)
     }
   }
 
