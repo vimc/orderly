@@ -5,9 +5,9 @@
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![R build status](https://github.com/vimc/orderly/workflows/R-CMD-check/badge.svg)](https://github.com/vimc/orderly/actions)
 [![Build status](https://badge.buildkite.com/bc7993cd6960b205b32bd20f92d0d707c128e1a14bdb580f73.svg)](https://buildkite.com/mrc-ide/orderly)
-[![codecov.io](https://codecov.io/github/vimc/orderly/coverage.svg?branch=master)](https://codecov.io/github/vimc/orderly?branch=master)
 [![CodeFactor](https://www.codefactor.io/repository/github/vimc/orderly/badge)](https://www.codefactor.io/repository/github/vimc/orderly)
 [![](https://www.r-pkg.org/badges/version/orderly)](https://cran.r-project.org/package=orderly)
+[![Codecov test coverage](https://codecov.io/gh/vimc/orderly/graph/badge.svg)](https://app.codecov.io/gh/vimc/orderly)
 <!-- badges: end -->
 
 > 1. an attendant in a hospital responsible for the non-medical care of patients and the maintenance of order and cleanliness.
