@@ -238,6 +238,7 @@ build_git_demo <- function(path = NULL) {
   git_run(c("add", "."), root = path, check = TRUE)
   git_run(c("add", "-f", "archive", "data", "draft"), root = path, check = TRUE)
   git_run(c("commit", "-m", "'initial-import'"), root = path, check = TRUE)
+  ensure_default_branch_is_master(path)
   stopifnot(git_is_clean(path))
 
   prev <- git_checkout_branch("other", root = path, create = TRUE)
@@ -313,12 +314,17 @@ prepare_basic_git <- function(path, quiet) {
     gert::git_add(".", repo = path))
   gert::git_commit("Init repo", repo = path,
                    author = "T User <test.user@example.com>")
-  ## We assume master downstream
-  if (gert::git_branch(repo = path) == "main") {
-    gert::git_branch_move("main", "master", repo = path)
-  }
+  ensure_default_branch_is_master(path)
   gert::git_remote_add(path, "origin", repo = path)
   gert::git_fetch(remote = "origin", repo = path, verbose = !quiet)
   gert::git_branch_set_upstream("origin/master", "master", repo = path)
   path
+}
+
+
+## We assume master downstream, and in tests
+ensure_default_branch_is_master <- function(path) {
+  if (gert::git_branch(repo = path) == "main") {
+    gert::git_branch_move("main", "master", repo = path)
+  }
 }
