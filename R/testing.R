@@ -305,13 +305,18 @@ prepare_orderly_git_example <- function(path = tempfile(), run_report = FALSE,
 
 
 prepare_basic_git <- function(path, quiet) {
-  orderly_use_gitignore(path, prompt = FALSE, show = FALSE)
+  suppressMessages(
+    orderly_use_gitignore(path, prompt = FALSE, show = FALSE))
   gert::git_init(path)
   withr::with_dir(
     path,
     gert::git_add(".", repo = path))
   gert::git_commit("Init repo", repo = path,
                    author = "T User <test.user@example.com>")
+  ## We assume master downstream
+  if (gert::git_branch(repo = path) == "main") {
+    gert::git_branch_move("main", "master", repo = path)
+  }
   gert::git_remote_add(path, "origin", repo = path)
   gert::git_fetch(remote = "origin", repo = path, verbose = !quiet)
   gert::git_branch_set_upstream("origin/master", "master", repo = path)
