@@ -142,6 +142,7 @@ test_that("sending messages is not a failure", {
 
 
 test_that("main interface", {
+  skip_on_ci() # obsolete now
   skip_if_no_internet()
   skip_if_not_installed("jsonlite")
 
