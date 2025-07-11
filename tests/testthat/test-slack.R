@@ -142,6 +142,7 @@ test_that("sending messages is not a failure", {
 
 
 test_that("main interface", {
+  skip_on_ci() # obsolete now
   skip_if_no_internet()
   skip_if_not_installed("jsonlite")
 
@@ -156,7 +157,7 @@ test_that("main interface", {
   writeLines(
     c("remote:",
       "  myserver:",
-      "    driver: orderly::orderly_remote_path",
+      "    driver: orderly1::orderly_remote_path",
       "    args:",
       paste("      path:", path),
       "    slack_url: https://httpbin.org/post",
@@ -186,12 +187,12 @@ test_that("main interface", {
   append_lines(c(
     "remote:",
     "  testing:",
-    "    driver: orderly::orderly_remote_path",
+    "    driver: orderly1::orderly_remote_path",
     "    args:",
     sprintf("      path: %s", path),
     "    slack_url: https://httpbin.org/post",
     "  production:",
-    "    driver: orderly::orderly_remote_path",
+    "    driver: orderly1::orderly_remote_path",
     "    args:",
     sprintf("      path: %s", path),
     "    slack_url: https://httpbin.org/post",
@@ -431,7 +432,7 @@ test_that("main teams interface", {
   writeLines(
     c("remote:",
       "  myserver:",
-      "    driver: orderly::orderly_remote_path",
+      "    driver: orderly1::orderly_remote_path",
       "    args:",
       paste("      path:", path),
       "    teams_url: https://httpbin.org/post",
@@ -468,7 +469,7 @@ test_that("look up environment variables before hook send", {
   writeLines(
     c("remote:",
       "  myserver:",
-      "    driver: orderly::orderly_remote_path",
+      "    driver: orderly1::orderly_remote_path",
       "    args:",
       paste("      path:", path),
       "    slack_url: $ORDERLY_SLACK_URL",

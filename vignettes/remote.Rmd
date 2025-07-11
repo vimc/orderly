@@ -59,9 +59,9 @@ where `$GITHUB_TOKEN` is an environment variable that holds a [GitHub token](htt
 
 Several commands can interact with the remote server:
 
-* `orderly::orderly_run_remote` will run a report on a remote server, committing it immediately. This will save the log alongside the report.
-* `orderly::orderly_pull_archive` will pull a version of a report from a remote server
-* `orderly::orderly_pull_dependencies` will pull all the dependencies of a report from the remote server (i.e., versions of reports declared in the `depends:` section of a report)
+* `orderly1::orderly_run_remote` will run a report on a remote server, committing it immediately. This will save the log alongside the report.
+* `orderly1::orderly_pull_archive` will pull a version of a report from a remote server
+* `orderly1::orderly_pull_dependencies` will pull all the dependencies of a report from the remote server (i.e., versions of reports declared in the `depends:` section of a report)
 
 ## Future developments
 

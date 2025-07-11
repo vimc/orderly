@@ -94,7 +94,7 @@ useful if you are using (or will use) git, but it is harmless at
 worst.
 }
 \examples{
-path <- orderly::orderly_example("minimal")
+path <- orderly1::orderly_example("minimal")
 
 # Suppose we wanted to use the mtcars data within our report.
 # First, the file must exist:
@@ -102,10 +102,11 @@ write.csv(mtcars, file.path(path, "src", "example", "mtcars.csv"),
           row.names = FALSE)
 
 # Preview expected changes
-orderly::orderly_use_resource("mtcars.csv", "example", path, edit = FALSE)
+orderly1::orderly_use_resource("mtcars.csv", "example", path, edit = FALSE)
 
 # Modify the orderly.yml file within src/example:
-orderly::orderly_use_resource("mtcars.csv", "example", path, prompt = FALSE)
+orderly1::orderly_use_resource("mtcars.csv", "example", path,
+                               prompt = FALSE)
 
 # The result is a file that now has a 'resources' section
 # containing our new file

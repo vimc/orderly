@@ -20,7 +20,7 @@ The key issues to consider are
 
 This is the simplest pattern, and the one that `orderly` has the fewest opinions about.  We imagine a single researcher using `orderly` to keep track of a set of analyses.  They would configure orderly with an empty `orderly_config.yml`, and would probably add `archive` to `.gitignore` (`drafts` should always be gitignored).
 
-As the researcher develops reports, they create new directories in `src/` using `orderly::orderly_new()`, run the reports on their own system using `orderly::orderly_run()` and commit them into their `archive` using `orderly::orderly_commit()`.
+As the researcher develops reports, they create new directories in `src/` using `orderly1::orderly_new()`, run the reports on their own system using `orderly1::orderly_run()` and commit them into their `archive` using `orderly1::orderly_commit()`.
 
 The researcher needs to take care that the reports are run in a clean R session, as objects and packages in R's global execution environment are available to their reports.
 
@@ -50,7 +50,7 @@ What we want is that after a particular version of a report has been run, it is 
 
 For this discussion we will assume two researchers "Alice" and "Bob" (rather than "Researcher A" and "Researcher B").
 
-Alice develops a report `report-a` on her computer by running `orderly::orderly_new("report-a")` and working with `orderly::orderly_develop_start()` and `orderly::orderly_run()` until she is happy with the results.  She then creates a pull request, and Bob approves it (probably after checking that the report runs on his machine too) and merges it.
+Alice develops a report `report-a` on her computer by running `orderly1::orderly_new("report-a")` and working with `orderly1::orderly_develop_start()` and `orderly1::orderly_run()` until she is happy with the results.  She then creates a pull request, and Bob approves it (probably after checking that the report runs on his machine too) and merges it.
 
 Now that this report has been merged into master we need to run a "canonical copy".  We do this on a third copy of the sources that are checked out somewhere accessible to *both* Alice and Bob; this might be using Dropbox or another file-sharing platform, or on a network drive visible to both users.
 
@@ -61,7 +61,7 @@ Now we have both Alice and Bob able to get the *source* of `report-a` and our sh
 ```yaml
 remote:
   default:
-    driver: orderly::orderly_remote_path
+    driver: orderly1::orderly_remote_path
     args:
       path: $ORDERLY_PATH_DEFAULT_REMOTE
 ```
@@ -83,7 +83,7 @@ ORDERLY_PATH_DEFAULT_REMOTE: c:/Bob/Documents/Dropbox/our-project
 With this done, Bob can get a copy of `report-a` by running
 
 ```r
-orderly::orderly_pull_archive("report-a")
+orderly1::orderly_pull_archive("report-a")
 ```
 
 which will copy the latest version of the report from the shared archive into their personal archive.  A this point, Bob has *exactly* the copy of `report-a` that was run on the shared archive.  In the same way that Alice and Bob can exchange git sha hashes to ensure that they are on the same version of the source tree, they can now exchange report ids and ensure that they are looking at the same output.
@@ -91,7 +91,7 @@ which will copy the latest version of the report from the shared archive into th
 If you are working on a report that has a dependency (say `report-b`, which depends on `report-a`), you can automatically pull its dependencies by running
 
 ```r
-orderly::orderly_pull_dependencies("report-b")
+orderly1::orderly_pull_dependencies("report-b")
 ```
 
 This is especially useful if `report-b` has many dependencies, or depends on particular versions of a report.
@@ -102,7 +102,7 @@ There are a number of features about the system here that might not be obvious a
 
 * Because each report exists in its own directory within `src/` we reduce the potential for conflicts.  In a collaborative analysis where multiple files are shared across analyses, it is easy to have conflicts.  `orderly` forces analyses into separate directories, which means most of the time it is trivial to merge even long-lived branches.  This is particularly important with relatively new users of git.
 * Because every report gets a unique identifier, it is straightforward to combine outputs that were run on different machines.  In the example above this is a centralised system (one canonical source, several destinations) but in theory more complicated distributed patterns are possible.
-* On the central server, the archive directory is an "append only" system; nothing is ever modified.  This seems wasteful at first as there can be lots of copies of a report, but disk space is cheaper than researcher time (and you can remove redundancy with `orderly::orderly_deduplicate`)
+* On the central server, the archive directory is an "append only" system; nothing is ever modified.  This seems wasteful at first as there can be lots of copies of a report, but disk space is cheaper than researcher time (and you can remove redundancy with `orderly1::orderly_deduplicate`)
 
 ## Group of researchers, sharing via server
 
@@ -130,7 +130,7 @@ remote:
 Once this is done, both Alice and Bob can run reports *on* that server, for example
 
 ```r
-orderly::orderly_run_remote("internal-2017-population-TUV-MHL", remote = "science")
+orderly1::orderly_run_remote("internal-2017-population-TUV-MHL", remote = "science")
 ```
 
 ![](patterns_run_remote.gif){width=700px}
@@ -138,12 +138,12 @@ orderly::orderly_run_remote("internal-2017-population-TUV-MHL", remote = "scienc
 this will print to screen the log, just as if it were running locally, though it is in fact running on a fresh R session remotely.  After being run, this report is available to everyone and can be pulled as above
 
 ```r
-orderly::orderly_pull_archive("report-a", remote = "default")
+orderly1::orderly_pull_archive("report-a", remote = "default")
 ```
 
 ## Using staging environments
 
-This can be extended further with the use of "staging environments".  This extends the above (two) scenario so that we have multiple remote orderly archives.  These might be shared file archives, using `orderly::orderly_remote_path` or server hosted archives using `orderlyweb::orderlyweb_remote` or even a combination.
+This can be extended further with the use of "staging environments".  This extends the above (two) scenario so that we have multiple remote orderly archives.  These might be shared file archives, using `orderly1::orderly_remote_path` or server hosted archives using `orderlyweb::orderlyweb_remote` or even a combination.
 
 We designate one of these remotes to be our production environment and the others to be staging.  In our work we have used the name pairs `production/science` and `real/testing`; the names used do not matter.
 
@@ -167,13 +167,13 @@ remote:
 Now, as part of the pull request review procedure, the reviewer will run the report on the staging environment, which means that it should work without error on the production environment if they have been set up the same way.
 
 ```r
-orderly::orderly_run_remote("report-a", remote = "staging", ref = "origin/myfeature")
+orderly1::orderly_run_remote("report-a", remote = "staging", ref = "origin/myfeature")
 ```
 
 where `myfeature` is the name of the branch.  This report can now be inspected (a URL will be generated which may be emailed around), and after being merged, the report can be run on the production server with
 
 ```r
-orderly::orderly_run_remote("report-a", remote = "production")
+orderly1::orderly_run_remote("report-a", remote = "production")
 ```
 
 We would recommend that on the production server only `master` be used.  This can be enforced by adding `master_only: true` to the configuration as:
@@ -191,7 +191,7 @@ remote:
 
 As soon as there are multiple archives, resolving dependencies becomes more challenging.  If Alice has two reports that depend on each other, she might want to use the most recent versions on her machine, or the most recent versions *as seen by one of her remotes* as that is where the report will eventually be run.
 
-To allow this, when running `orderly::orderly_run`, Alice can provide the argument `remote`, indicating which of her remotes she would like to use for dependency resolution.
+To allow this, when running `orderly1::orderly_run`, Alice can provide the argument `remote`, indicating which of her remotes she would like to use for dependency resolution.
 
 Now, even if she has more recent copies of the dependencies locally, her report will use the same copies as would be used on the server she chooses.  Any local copies of remote reports will be downloaded to her computer before the report is run.
 

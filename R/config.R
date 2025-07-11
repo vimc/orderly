@@ -7,9 +7,9 @@
 ##'
 ##' @examples
 ##' # The orderly demo, with lots of potential reports:
-##' path <- orderly::orderly_example("demo")
+##' path <- orderly1::orderly_example("demo")
 ##'
-##' orderly::orderly_config(path)
+##' orderly1::orderly_config(path)
 orderly_config <- function(root = NULL, locate = TRUE) {
   if (inherits(root, "orderly_config")) {
     root
@@ -86,10 +86,10 @@ orderly_config_ <- R6::R6Class(
       self$raw <- yaml_read(filename)
 
       v <- self$raw$minimum_orderly_version
-      if (!is.null(v) && utils::packageVersion("orderly") < v) {
+      if (!is.null(v) && utils::packageVersion("orderly1") < v) {
         stop(sprintf(
           "Orderly version '%s' is required, but only '%s' installed",
-          v, utils::packageVersion("orderly")))
+          v, utils::packageVersion("orderly1")))
       }
 
       if (validate) {

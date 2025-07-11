@@ -2,13 +2,13 @@
 ##' `drafts/<reportname>`, copy your declared resources there,
 ##' extract data from databases (if you are using them), run your
 ##' script and check that all expected artefacts were created.  Once
-##' successfully run you can use [orderly::orderly_commit()] to move
+##' successfully run you can use [orderly1::orderly_commit()] to move
 ##' it to the `archive` directory.
 ##'
 ##' Parameters are passed to the report as a named list, for example
 ##'
 ##' ```
-##' id <- orderly::orderly_run("other", list(nmin = 0.2), root = path)
+##' id <- orderly1::orderly_run("other", list(nmin = 0.2), root = path)
 ##' ```
 ##'
 ##' (see the examples).  The names of the parameters (here,
@@ -26,7 +26,7 @@
 ##' @title Run a report
 ##'
 ##' @param name Name of the report to run (see
-##'   [orderly::orderly_list()]).  A leading `src/` will be
+##'   [orderly1::orderly_list()]).  A leading `src/` will be
 ##'   removed if provided, allowing easier use of autocomplete.
 ##'   Alternatively, the default of `NULL` is useful if you have
 ##'   already set the working directory to be the source directory.
@@ -67,7 +67,7 @@
 ##'   order to run a report with the same dependencies as are
 ##'   available on a remote server, particularly when using `id =
 ##'   "latest"`.  Note that this is not the same as running
-##'   [orderly::orderly_pull_dependencies()], then `orderly_run`
+##'   [orderly1::orderly_pull_dependencies()], then `orderly_run`
 ##'   with `remote = NULL`, as the pull/run approach will use the
 ##'   latest report in *your* archive but the `remote =
 ##'   "remote"` approach will use the latest approach in the
@@ -79,17 +79,17 @@
 ##'   the `tags:` field in `orderly.yml` and must be present
 ##'   in `orderly_config.yml`.
 ##'
-##' @seealso [orderly::orderly_log()] for controlling display of log
+##' @seealso [orderly1::orderly_log()] for controlling display of log
 ##'   messages (not just R output)
 ##'
 ##' @export
 ##' @return The id of the newly created report
 ##' @examples
-##' path <- orderly::orderly_example("demo")
+##' path <- orderly1::orderly_example("demo")
 ##'
 ##' # To run most reports, provide the report name (and the path if
 ##' # not running in the working directory, as is the case here):
-##' id <- orderly::orderly_run("minimal", root = path)
+##' id <- orderly1::orderly_run("minimal", root = path)
 ##'
 ##' # Every report gets a unique identifier, based on the time (it is
 ##' # ISO 8601 time with random hex appended to end)
@@ -97,7 +97,7 @@
 ##'
 ##' # After being run, a report is a "draft" and will exist in the
 ##' # drafts directory:
-##' orderly::orderly_list_drafts(root = path)
+##' orderly1::orderly_list_drafts(root = path)
 ##'
 ##' # Draft reports are always stored in the path
 ##' # <root>/draft/<name>/<id>, so we have
@@ -107,7 +107,7 @@
 ##'
 ##' # If a report has parameters, then these must be passed in as a
 ##' # named list.
-##' id <- orderly::orderly_run("other", list(nmin = 0.2), root = path)
+##' id <- orderly1::orderly_run("other", list(nmin = 0.2), root = path)
 ##'
 ##' # These parameters can be used in SQL queries or in the report
 ##' # code.
@@ -338,7 +338,7 @@ recipe_current_run_clear <- function() {
 ##' during an orderly run.  The format returned is internal to orderly
 ##' and subject to change.  It is designed to be used within report
 ##' code.  To use in conjunction with
-##' [orderly::orderly_test_start()], you must pass in the path to the
+##' [orderly1::orderly_test_start()], you must pass in the path to the
 ##' report in question.
 ##'
 ##' @section Warning:
@@ -350,23 +350,23 @@ recipe_current_run_clear <- function() {
 ##' @param path Path to the report currently being run.  This should
 ##'   be left as `NULL` when running a report, and the path to
 ##'   the report being run should be used when using
-##'   [orderly::orderly_test_start()]
+##'   [orderly1::orderly_test_start()]
 ##'
 ##' @export
 ##' @return A list of metadata about the current report
 ##' @examples
-##' path <- orderly::orderly_example("demo")
+##' path <- orderly1::orderly_example("demo")
 ##'
 ##' # This example uses orderly_run_info within its script, saving the
 ##' # output to "output.rds"
 ##' readLines(file.path(path, "src", "use_dependency", "script.R"))
 ##'
 ##' # Run the dependency:
-##' id <- orderly::orderly_run("other", list(nmin = 0), root = path)
-##' orderly::orderly_commit(id, root = path)
+##' id <- orderly1::orderly_run("other", list(nmin = 0), root = path)
+##' orderly1::orderly_commit(id, root = path)
 ##'
 ##' # Then the report
-##' id <- orderly::orderly_run("use_dependency", root = path)
+##' id <- orderly1::orderly_run("use_dependency", root = path)
 ##'
 ##' # This is the contents:
 ##' readRDS(file.path(path, "draft", "use_dependency", id, "info.rds"))

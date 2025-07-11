@@ -1,2 +1,2 @@
 #!/usr/bin/env Rscript
-con <- orderly::orderly_db("destination")
+con <- orderly1::orderly_db("destination")

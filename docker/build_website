@@ -69,7 +69,7 @@ docker run --rm \
        -v $VIGNETTES_DIR:/orderly/vignettes \
        --user "$USER_STR" \
        $ORDERLY_DEV \
-       Rscript -e 'pkgdown::build_site(document = FALSE)'
+       Rscript -e 'pkgdown::build_site()'
 
 SCHEMA_DEST=${DOCS_DIR}/schema
 if [ -f $DEST/index.html ]; then

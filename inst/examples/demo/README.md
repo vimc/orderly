@@ -48,7 +48,7 @@ other_change_script <- function() {
 To build the demo repo, run
 
 ```r
-path <- orderly:::create_orderly_demo()
+path <- orderly1:::create_orderly_demo()
 ```
 
 which will create a new directory with all the output in it.  This is also run on teamcity to create an artefact `demo`, and also run via docker as

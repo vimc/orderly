@@ -87,10 +87,10 @@ Run a report on a remote server.  Note that this is only supported
 for remotes using OrderlyWeb at present.
 }
 \examples{
-path_remote <- orderly::orderly_example("demo")
-path_local <- orderly::orderly_example("demo")
-remote <- orderly::orderly_remote_path(path_remote)
+path_remote <- orderly1::orderly_example("demo")
+path_local <- orderly1::orderly_example("demo")
+remote <- orderly1::orderly_remote_path(path_remote)
 # Currently, path remotes don't support run
-try(orderly::orderly_run_remote(
+try(orderly1::orderly_run_remote(
   "minimal", remote = remote, root = path_local))
 }

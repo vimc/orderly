@@ -2,4 +2,4 @@
 if (file.exists("demo")) {
   unlink("demo", recursive = TRUE)
 }
-orderly:::create_orderly_demo("demo")
+orderly1:::create_orderly_demo("demo")

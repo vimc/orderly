@@ -111,7 +111,8 @@ test_that("minimum version is a less than relationship", {
   path <- tempfile()
   dir.create(path)
 
-  dat <- list(minimum_orderly_version = as.character(packageVersion("orderly")))
+  dat <- list(
+    minimum_orderly_version = as.character(packageVersion("orderly1")))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
   cfg <- orderly_config_$new(path)
   expect_is(cfg, "orderly_config")
@@ -124,12 +125,12 @@ test_that("support declaring api server", {
   dir.create(path)
   dat <- list(remote = list(
                 main = list(
-                  driver = "orderly::orderly_remote_path",
+                  driver = "orderly1::orderly_remote_path",
                   primary = TRUE,
                   default_branch_only = TRUE,
                   args = list(root = path)),
                 other = list(
-                  driver = "orderly::orderly_remote_path",
+                  driver = "orderly1::orderly_remote_path",
                   args = list(root = path))))
   writeLines(yaml::as.yaml(dat), path_orderly_config_yml(path))
   cfg <- orderly_config_$new(path)
@@ -178,11 +179,11 @@ test_that("api server has only one primary", {
   dir.create(path)
   dat <- list(remote = list(
                 main = list(
-                  driver = "orderly::orderly_remote_path",
+                  driver = "orderly1::orderly_remote_path",
                   primary = TRUE,
                   args = list(root = path)),
                 other = list(
-                  driver = "orderly::orderly_remote_path",
+                  driver = "orderly1::orderly_remote_path",
                   primary = TRUE,
                   args = list(root = path))))
 
@@ -202,7 +203,7 @@ test_that("remote parse check", {
   dir.create(path)
   dat <- list(remote = list(
                 myhost = list(
-                  driver = "orderly::orderly_remote_path",
+                  driver = "orderly1::orderly_remote_path",
                   primary = TRUE,
                   args = list(root = path),
                   default_branch_only = "yeah")))
@@ -398,7 +399,7 @@ test_that("warn when using url in remote definition", {
   append_lines(c(
     "remote:",
     "  testing:",
-    "    driver: orderly::orderly_remote_path",
+    "    driver: orderly1::orderly_remote_path",
     "    url: https://example.com",
     "    args:",
     sprintf("      path: %s", path),
@@ -564,7 +565,7 @@ test_that("can configure default branch for a remote", {
   dir.create(path)
   dat <- list(remote = list(
                 main = list(
-                  driver = "orderly::orderly_remote_path",
+                  driver = "orderly1::orderly_remote_path",
                   primary = TRUE,
                   default_branch_only = TRUE,
                   default_branch = "main",
@@ -581,7 +582,7 @@ test_that("migrate master_only", {
   dir.create(path)
   dat <- list(remote = list(
                 main = list(
-                  driver = "orderly::orderly_remote_path",
+                  driver = "orderly1::orderly_remote_path",
                   primary = TRUE,
                   master_only = TRUE,
                   args = list(root = path))))
@@ -599,7 +600,7 @@ test_that("disallow both master_only and default_branch_only", {
   dir.create(path)
   dat <- list(remote = list(
                 main = list(
-                  driver = "orderly::orderly_remote_path",
+                  driver = "orderly1::orderly_remote_path",
                   primary = TRUE,
                   master_only = TRUE,
                   default_branch_only = TRUE,

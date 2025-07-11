@@ -166,7 +166,7 @@ test_that("Can't extract a bundle onto itself", {
 
 
 test_that("can run a bundle with dependencies", {
-  path <- orderly::orderly_example("demo")
+  path <- orderly1::orderly_example("demo")
   orderly_run_internal("other", parameters = list(nmin = 0),
                        root = path, commit = TRUE, echo = FALSE)
 
@@ -192,7 +192,7 @@ test_that("can run a bundle with dependencies", {
 
 
 test_that("can run a bundle with global file dependencies", {
-  path <- orderly::orderly_example("demo")
+  path <- orderly1::orderly_example("demo")
   path_bundles <- tempfile()
   path_work <- tempfile()
 
@@ -211,7 +211,7 @@ test_that("can run a bundle with global file dependencies", {
 
 
 test_that("can't cope with connections", {
-  path <- orderly::orderly_example("demo")
+  path <- orderly1::orderly_example("demo")
   path_bundles <- tempfile()
   expect_error(
     orderly_bundle_pack(path_bundles, "connection", root = path),
@@ -220,7 +220,7 @@ test_that("can't cope with connections", {
 
 
 test_that("can't import an unrun bundle", {
-  path <- orderly::orderly_example("minimal")
+  path <- orderly1::orderly_example("minimal")
   path_bundles <- tempfile()
   res <- orderly_bundle_pack(path_bundles, "example", root = path)
   expect_error(
@@ -231,7 +231,7 @@ test_that("can't import an unrun bundle", {
 
 
 test_that("sensible error when given junk input", {
-  path <- orderly::orderly_example("minimal")
+  path <- orderly1::orderly_example("minimal")
   tmp <- tempfile(fileext = ".zip")
   zip_dir(file.path(path, "src"), tmp)
   expect_error(

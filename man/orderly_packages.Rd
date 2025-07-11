@@ -23,6 +23,6 @@ List of packages required by all src reports
 Return details of packages required by all src reports in this orderly repo
 }
 \examples{
-path <- orderly::orderly_example("minimal")
-orderly::orderly_packages(root = path)
+path <- orderly1::orderly_example("minimal")
+orderly1::orderly_packages(root = path)
 }

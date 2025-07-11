@@ -22,25 +22,25 @@ version_id_re <- "^([0-9]{8}-[0-9]{6})-([[:xdigit:]]{4})([[:xdigit:]]{4})$"
 ##'   then orderly looks in the working directory and up through its
 ##'   parents until it finds an `orderly_config.yml` file.
 ##'
-##' @seealso [orderly::orderly_list_archive()] and
-##'   [orderly::orderly_list_drafts()], which list archived
+##' @seealso [orderly1::orderly_list_archive()] and
+##'   [orderly1::orderly_list_drafts()], which list archived
 ##'   (committed) and draft reports and their versions.
 ##'
 ##' @export
 ##' @return A character vector of report names
 ##' @examples
 ##' # The orderly demo, with lots of potential reports:
-##' path <- orderly::orderly_example("demo")
+##' path <- orderly1::orderly_example("demo")
 ##'
 ##' # Reports that _could_ be run:
-##' orderly::orderly_list(path)
+##' orderly1::orderly_list(path)
 orderly_list <- function(root = NULL, locate = TRUE) {
   config <- orderly_config(root, locate)
   basename(list_dirs(path_src(config$root)))
 }
 
 ##' List draft and archived reports.  This returns a data.frame with
-##' columns `name` (see [orderly::orderly_list()]) and `id`.
+##' columns `name` (see [orderly1::orderly_list()]) and `id`.
 ##'
 ##' @title List draft and archived reports
 ##'
@@ -51,8 +51,8 @@ orderly_list <- function(root = NULL, locate = TRUE) {
 ##'   no failed run should make it into the archive).  A failed report
 ##'   is one that lacks an `orderly_run.rds` file.
 ##'
-##' @seealso [orderly::orderly_list()], which lists the names of
-##'   source reports that can be run, and [orderly::orderly_latest()]
+##' @seealso [orderly1::orderly_list()], which lists the names of
+##'   source reports that can be run, and [orderly1::orderly_latest()]
 ##'   which returns the id of the most recent report.
 ##'
 ##' @export
@@ -63,29 +63,29 @@ orderly_list <- function(root = NULL, locate = TRUE) {
 ##'
 ##' @examples
 ##' # The orderly demo, with lots of potential reports:
-##' path <- orderly::orderly_example("demo")
+##' path <- orderly1::orderly_example("demo")
 ##'
 ##' # Reports that _could_ be run:
-##' orderly::orderly_list(path)
+##' orderly1::orderly_list(path)
 ##'
 ##' # Run a report twice:
-##' id1 <- orderly::orderly_run("minimal", root = path)
-##' id2 <- orderly::orderly_run("minimal", root = path)
+##' id1 <- orderly1::orderly_run("minimal", root = path)
+##' id2 <- orderly1::orderly_run("minimal", root = path)
 ##'
 ##' # We can see both drafts:
-##' orderly::orderly_list_drafts(path)
+##' orderly1::orderly_list_drafts(path)
 ##'
 ##' # Nothing is in the archive:
-##' orderly::orderly_list_archive(path)
+##' orderly1::orderly_list_archive(path)
 ##'
 ##' # Commit a report:
-##' orderly::orderly_commit(id2, root = path)
+##' orderly1::orderly_commit(id2, root = path)
 ##'
 ##' # Only one draft now
-##' orderly::orderly_list_drafts(path)
+##' orderly1::orderly_list_drafts(path)
 ##'
 ##' # And the second report is in the archive:
-##' orderly::orderly_list_archive(path)
+##' orderly1::orderly_list_archive(path)
 orderly_list_drafts <- function(root = NULL, locate = TRUE,
                                 include_failed = FALSE) {
   orderly_list2(TRUE, root, locate, include_failed)
@@ -99,7 +99,7 @@ orderly_list_archive <- function(root = NULL, locate = TRUE) {
 
 
 ##' List reports that are present only as metadata; these are the
-##' result of doing [orderly::orderly_pull_archive()] with
+##' result of doing [orderly1::orderly_pull_archive()] with
 ##' `recursive = FALSE`, in which case only metadata was
 ##' downloaded and not the report contents itself.
 ##'
@@ -111,14 +111,14 @@ orderly_list_archive <- function(root = NULL, locate = TRUE) {
 ##'   reports that are also included in the archive.
 ##'
 ##' @return A [data.frame()] with columns `name` and
-##'   `id`, as for [orderly::orderly_list_archive()]
+##'   `id`, as for [orderly1::orderly_list_archive()]
 ##'
 ##' @export
 ##' @examples
-##' path <- orderly::orderly_example("minimal")
+##' path <- orderly1::orderly_example("minimal")
 ##' # No metadata-only reports will be present, unless you have run
-##' # orderly::orderly_pull_archive(..., recursive = FALSE)
-##' orderly::orderly_list_metadata(path)
+##' # orderly1::orderly_pull_archive(..., recursive = FALSE)
+##' orderly1::orderly_list_metadata(path)
 orderly_list_metadata <- function(root = NULL, locate = FALSE,
                                   include_archive = FALSE) {
   config <- orderly_config(root, locate)
@@ -154,28 +154,28 @@ orderly_list_metadata <- function(root = NULL, locate = FALSE,
 ##'
 ##' @inheritParams orderly_list
 ##'
-##' @seealso [orderly::orderly_list] and
-##'   [orderly::orderly_list_archive] for listing report names and
+##' @seealso [orderly1::orderly_list] and
+##'   [orderly1::orderly_list_archive] for listing report names and
 ##'   versions.
 ##'
 ##' @return A character string with the id of the most recent report
 ##'
 ##' @export
 ##' @examples
-##' path <- orderly::orderly_example("minimal")
-##' id1 <- orderly::orderly_run("example", root = path, echo = FALSE)
-##' id2 <- orderly::orderly_run("example", root = path, echo = FALSE)
+##' path <- orderly1::orderly_example("minimal")
+##' id1 <- orderly1::orderly_run("example", root = path, echo = FALSE)
+##' id2 <- orderly1::orderly_run("example", root = path, echo = FALSE)
 ##'
 ##' # With no reports committed there is no latest report:
-##' orderly::orderly_latest("example", root = path, must_work = FALSE)
+##' orderly1::orderly_latest("example", root = path, must_work = FALSE)
 ##'
 ##' # Commit the first report and it will be reported as latest:
-##' orderly::orderly_commit(id1, root = path)
-##' orderly::orderly_latest("example", root = path)
+##' orderly1::orderly_commit(id1, root = path)
+##' orderly1::orderly_latest("example", root = path)
 ##'
 ##' # Commit the second report and it will be reported as latest instead:
-##' orderly::orderly_commit(id2, root = path)
-##' orderly::orderly_latest("example", root = path)
+##' orderly1::orderly_commit(id2, root = path)
+##' orderly1::orderly_latest("example", root = path)
 orderly_latest <- function(name = NULL, root = NULL, locate = TRUE,
                            draft = FALSE, must_work = TRUE) {
   config <- orderly_config(root, locate)

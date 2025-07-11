@@ -35,14 +35,14 @@ committed, reports should not be deleted.
 }
 \examples{
 # In a new example orderly, run a report
-path <- orderly::orderly_example("minimal")
-id <- orderly::orderly_run("example", root = path)
+path <- orderly1::orderly_example("minimal")
+id <- orderly1::orderly_run("example", root = path)
 
 # To commit it, all we need is the report id
-orderly::orderly_commit(id, root = path)
+orderly1::orderly_commit(id, root = path)
 
 # The report is now committed, and as such could be used as a
 # dependency in another report and is not subject to deletion by
-# orderly::orderly_cleanup
-orderly::orderly_list_archive(root = path)
+# orderly1::orderly_cleanup
+orderly1::orderly_list_archive(root = path)
 }

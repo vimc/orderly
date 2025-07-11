@@ -1,6 +1,6 @@
 devtools::load_all()
 
-stopifnot(packageVersion("orderly") == "0.4.8")
+stopifnot(packageVersion("orderly1") == "0.4.8")
 unlink("reference/0.4.8", recursive = TRUE)
 unlink("reference/0.3.2", recursive = TRUE)
 unlink("reference/0.3.2.zip")
